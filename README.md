@@ -16,5 +16,5 @@ brew install i386-elf-gdb
 # assembly
 
 ```bash
-nasm -f bin ./src/boot.asm -o ./bin/boot.bin && ndisasm ./bin/boot.bin && qemu-system-x86_64 -fda ./bin/boot.bin
+nasm -f bin ./src/boot.asm -o ./bin/boot.bin && ndisasm ./bin/boot.bin && qemu-system-x86_64 -drive format=raw,file=./bin/boot.bin
 ```
