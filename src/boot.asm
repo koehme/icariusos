@@ -2,13 +2,12 @@ ORG 0                           ; Allows manual setting of segments to 0x7C00 la
                                 ; addressing potential BIOS discrepancies in segment values during boot loading
 BITS 16
 
-; BIOS Parameter Block (BPB) section to store information about the file system structure.
-; Using the label 'bpb' for clarity and organization, facilitating access to BPB parameters
-; and ensuring a structured and readable bootloader code
+; Some BIOS systems expect the bios parameter block to be present
+; The inclusion of this block helps to prevent damage to our code during the boot process
 bpb:
-    jmp short start
-    nop
-    times 33 db 0
+    jmp short start  ; Jump to the start code after the BPB
+    nop              ; No-operation instruction as a placeholder
+    times 33 db 0    ; Additional space or padding, filled with null bytes
 
 ; Initial Jump to direct boot loader execution to a predictable location
 ; for the cs segment and ensure a consistent environment for further boot code execution
@@ -31,6 +30,8 @@ init:
                                 ; to allow the stack to grow downward from this location in the x86 real mode
     sti                         ; Enable interrupts
 
+; This is a print routine designed for testing purposes
+; It prints a null-terminated string pointed to by si
 print_message:
     mov si, message
     call print
@@ -39,11 +40,11 @@ print_message:
 print:
     mov bx, 0x0
 .loop:
-    lodsb
+    lodsb                       ; Load the byte at the address in SI into AL and increment SI
     cmp al, 0x0
-    je .done
+    je .done                    ; If null terminator is found, exit the loop
     call .print_ch
-    jmp .loop
+    jmp .loop                   ; Jump back to the start of the loop
 .done
     ret
 .print_ch
