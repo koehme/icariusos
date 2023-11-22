@@ -42,7 +42,8 @@ init:
     mov word[ds:0x00], isr_0    ; Set the first ISR to custom ISR isr_0 at address 0x0000:0x0000 (Instruction Pointer)
     mov word[ds:0x02], 0x7c0    ; Set the CS (Code Segment) to 0x7c0 because (0x7c0 << 4) + isr_0 or (0x7c0 * 16) + isr_0 = physical address of isr_0
 
-    int 0                       ; call interrupt isr_0
+    mov ax, 0x00                 ; trigger interrupt isr_0
+    div ax
 
     mov ax, 0x7c0               ; Restore the original DS value for correct data segment mapping
     mov ds, ax
