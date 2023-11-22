@@ -1,7 +1,19 @@
-ORG 0                           ; Allows manual setting of segments to 0x7C00 later, addressing potential BIOS discrepancies in segment values during boot loading.
+ORG 0                           ; Allows manual setting of segments to 0x7C00 later,
+                                ; addressing potential BIOS discrepancies in segment values during boot loading
 BITS 16
 
-jmp 0x7c0:init
+; BIOS Parameter Block (BPB) section to store information about the file system structure.
+; Using the label 'bpb' for clarity and organization, facilitating access to BPB parameters
+; and ensuring a structured and readable bootloader code
+bpb:
+    jmp short start
+    nop
+    times 33 db 0
+
+; Initial Jump to direct boot loader execution to a predictable location
+; for the cs segment and ensure a consistent environment for further boot code execution
+start:
+    jmp 0x7c0:init
 
 ; Initializes the environment for the bootloader.
 ; configuring segment registers and setting up the stack
@@ -19,7 +31,7 @@ init:
                                 ; to allow the stack to grow downward from this location in the x86 real mode
     sti                         ; Enable interrupts
 
-start:
+print_message:
     mov si, message
     call print
     jmp $
