@@ -1,6 +1,8 @@
 ORG 0                           ; Allows manual setting of segments to 0x7C00 later, addressing potential BIOS discrepancies in segment values during boot loading.
 BITS 16
 
+jmp 0x7c0:init
+
 ; Initializes the environment for the bootloader.
 ; configuring segment registers and setting up the stack
 init:
