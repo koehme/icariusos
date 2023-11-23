@@ -16,5 +16,12 @@ brew install i386-elf-gdb
 # assembly
 
 ```bash
-nasm -f bin ./src/boot.asm -o ./bin/boot.bin && ndisasm ./bin/boot.bin && qemu-system-x86_64 -drive format=raw,file=./bin/boot.bin
+nasm -f bin ./src/bootloader/boot.asm -o ./bin/boot.bin && ndisasm ./bin/boot.bin && qemu-system-x86_64 -drive format=raw,file=./bin/boot.bin
+```
+
+# debugging
+
+```bash
+/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
+target remote | qemu-system-x86_64 -drive format=raw,file=./bin/boot.bin -S -gdb stdio
 ```
