@@ -12,17 +12,10 @@ bpb:
 ; Initial Jump to direct boot loader execution to a predictable location
 ; for the CS segment and ensure a consistent environment for further boot code execution
 start:
-    jmp 0x7c0:init
+    jmp 0x7c0:init_bootloader
 
-isr_0:
-    mov ah, 0x0e
-    mov al, '0'
-    int 0x10
-    iret
-
-; Initializes the environment for the bootloader.
-; configuring segment registers and setting up the stack
-init:
+; Configuring segment registers and setting up the stack
+init_bootloader:
     cli                         ; Disable interrupts (cli) to ensure a stable environment during critical initialization,
                                 ; preventing interruptions that might interfere with the setup process
     mov ax, 0x7c0               ; Set up data segment (ds) and extra segment (es)
@@ -36,41 +29,53 @@ init:
                                 ; to allow the stack to grow downward from this location in the x86 real mode
     sti                         ; Enable interrupts
 
-    mov ax, 0x00                ; Set the DS temporarily to the appropiate 0x00 starting address for the isr
-    mov ds, ax                  ; Who our first interrupt service handler will be placed
+    call .read_from_disk
 
-    mov word[ds:0x00], isr_0    ; Set the first ISR to custom ISR isr_0 at address 0x0000:0x0000 (Instruction Pointer)
-    mov word[ds:0x02], 0x7c0    ; Set the CS (Code Segment) to 0x7c0 because (0x7c0 << 4) + isr_0 or (0x7c0 * 16) + isr_0 = physical address of isr_0
+; Read data from the disk
+.read_from_disk:
+    mov ah, 0x2                 ; Set the disk read routine
+    mov al, 0x1                 ; Specify the number of sectors to read (1 sector)
+    mov ch, 0x0                 ; Set cylinder number to 0
+    mov cl, 0x2                 ; Set the starting sector number to 2
+    mov dh, 0x0                 ; Set head number to 0
+    mov bx, buffer              ; Specify the memory buffer where the loaded data from the hard disk will be stored (ES:BX)
 
-    mov ax, 0x00                 ; trigger interrupt isr_0
-    div ax
+    int 0x13                    ; Invoke the BIOS interrupt to read from the disk
+    jc .error_read_from_disk    ; Jump to error handling if the carry flag is set (indicates an error)
 
-    mov ax, 0x7c0               ; Restore the original DS value for correct data segment mapping
-    mov ds, ax
-
-; This is a print routine designed for testing purposes
-; It prints a null-terminated string pointed to by SI
-print_message:
-    mov si, message
+    mov si, buffer
     call print
-    jmp $
+    jmp $                       ; Continue execution if the disk read was successful
 
+.error_read_from_disk:
+    mov si, message             ; Load the address of the error message string into SI
+    call print                  ; Call the print routine to display the error message
+    jmp $                       ; Halt execution after displaying the error message
+
+; It prints a null-terminated string pointed to by SI
 print:
     mov bx, 0x0
-.loop:
+.get_next_ch:
     lodsb                       ; Load the byte at the address in SI into AL and increment SI
-    cmp al, 0x0
-    je .done                    ; If null terminator is found, exit the loop
-    call .print_ch
-    jmp .loop                   ; Jump back to the start of the loop
-.done
+
+    cmp al, 0x0                 ; Compare the loaded byte to the null terminator (end of the string)
+    je .print_done              ; If null terminator is found, exit the loop
+
+    call .print_ch              
+    jmp .get_next_ch            ; Jump back to the start of the loop to process the next character
+.print_done
     ret
 .print_ch
     mov ah, 0x0e
     int 0x10
     ret
 
-message: db "Hello World!", 0x0
+message: 
+    db 'Unable to read from the disk. Check the disk and try again.', 0      
 
-times 510-($ - $$) db 0x0
-dw 0xaa55
+times 510 - ($ - $$) db 0x0     ; Fill up the remaining bytes minus the magic signature 0xaa55 with 0
+dw 0xaa55                       ; magic bios signature
+
+; Reserving a buffer of 512 bytes for data loaded from hard disk sector 2
+buffer: 
+    resb 0x200 - ($ - $$) ; Placeholder label until address 0x200 (512 bytes for boot sector) - (current '$' position 0x200 - entry position '$$' is 0x200)
