@@ -33,12 +33,7 @@ init_bootloader:
 
 ; Read data from the disk
 .read_from_disk:
-    mov ah, 0x2                 ; Set the disk read routine
-    mov al, 0x1                 ; Specify the number of sectors to read (1 sector)
-    mov ch, 0x0                 ; Set cylinder number to 0
-    mov cl, 0x2                 ; Set the starting sector number to 2
-    mov dh, 0x0                 ; Set head number to 0
-    mov bx, buffer              ; Specify the memory buffer where the loaded data from the hard disk will be stored (ES:BX)
+    call setup_disk_read
 
     int 0x13                    ; Invoke the BIOS interrupt to read from the disk
     jc .error_read_from_disk    ; Jump to error handling if the carry flag is set (indicates an error)
@@ -51,6 +46,16 @@ init_bootloader:
     mov si, message             ; Load the address of the error message string into SI
     call print                  ; Call the print routine to display the error message
     jmp $                       ; Halt execution after displaying the error message
+
+; Set up disk read routine
+setup_disk_read:
+    mov ah, 0x2                 ; BIOS disk read routine
+    mov al, 0x1                 ; Number of sectors to read (1 sector)
+    mov ch, 0x0                 ; Cylinder number
+    mov cl, 0x2                 ; Starting sector number (sector 2)
+    mov dh, 0x0                 ; Head number
+    mov bx, buffer              ; Memory buffer where data will be loaded (ES:BX)
+    ret                         ; Return from the function
 
 ; It prints a null-terminated string pointed to by SI
 print:
