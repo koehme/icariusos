@@ -28,14 +28,19 @@ init_bootloader:
     mov sp, 0x7c00              ; Set the stack pointer (sp) to 0x7C00, which is the end of the bootloader code,
                                 ; to allow the stack to grow downward from this location in the x86 real mode
     sti                         ; Enable interrupts
- 
+
+ ; Enable protected mode
 .load_protected_mode:
-    cli
-    lgdt [gdt_descriptor]
-    mov eax, cr0
-    or eax, 0x1
-    mov cr0, eax
-    jmp CODE_SEG:load_32
+    cli                         ; Disable interrupts to avoid unwanted interruptions
+    lgdt [gdt_descriptor]       ; Load the Global Descriptor Table (GDT)
+    mov eax, cr0                ; Load the current value of control register CR0 into the eax register
+    or eax, 0x1                 ; Set the first bit of CR0 to activate protected mode
+    mov cr0, eax                ; Write the modified value back to CR0
+
+    ; TODO: Implement reading from the ATA hard disk and loading our kernel into memory at 0x0100000 (1024*1024)
+    ; We must start reading from sector 1 because the first 512 bytes are the boot sector
+    ; For now, let's read 100 sectors. After loading, we want to jump with jmp CODE_SEG:0x0100000 to the code segment (GDT pointer) to the kernel location at 0x0100000
+    jmp $                       ; Temporary, will be replaced soon after implementing the ATA disk read driver
 
 ; It contains entries telling the CPU about memory segments
 gdt_head:
@@ -60,18 +65,6 @@ gdt_head:
 gdt_descriptor:
     dw gdt_tail - gdt_head - 1
     dd gdt_head
-
-[BITS 32]
-load_32:
-    mov ax, DATA_SEG
-    mov ss, ax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ebp, 0x00200000
-    mov esp, ebp
-    jmp $
 
 times 510 - ($ - $$) db 0x0     ; Fill up the remaining bytes minus the magic signature 0xaa55 with 0
 dw 0xaa55                       ; magic bios signature
