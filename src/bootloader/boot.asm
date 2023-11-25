@@ -140,37 +140,37 @@ load_kernel:
 ;=============================================================================
 ata_lba_read:
     ; Send the highest 8 bits of the lba
-    mov ebx, eax                            ; Backup the LBA it represents the first sector for now
+    mov ebx, eax                            ; Backup the original LBA
     shr eax, 24                             ; Move the highest 8 bits to the lowest 8 bits
     or eax, 0xe0                            ; Set bit 6 in AL for LBA mode
     mov dx, ATA_CONTROL_PORT                ; I/O port address for the control register of the ATA controller
-    out dx, al                              ; Send the 8 bits to the LBA controller#
+    out dx, al                              ; Send the 8 bits to the ATA controller
 
     ; Send the total sectors to read
     mov eax, ecx                            ; The total sectors are hold in ECX (N_SECTORS_TO_READ)
     mov dx, ATA_SECTOR_COUNT_PORT           ; Address to send the number of sectors to read
-    out dx, al                              ; Send the lower 8 Bits to the LBA controller
+    out dx, al                              ; Send the lower 8 Bits to the ATA controller
 
     ; Send the lowest 8 bits of the lba
     mov edx, ATA_LBA_LOW_PORT               ; Port to send bit 0 - 7 of LBA
     mov eax, ebx                            ; Restore LBA from EBX
-    out dx, al
+    out dx, al                              ; Send the bit 0 - 7 to the ATA controller
 
     ; Send the middle 8 bits of the lba
     mov edx, ATA_LBA_MID_PORT               ; Port to send bit 8 - 15 of LBA
     mov eax, ebx                            ; Restore LBA from EBX
     shr eax, 8                              ; Get bit 8 - 15 in AL
-    out dx, al
+    out dx, al                              ; Send the bit 8 - 15 to the ATA controller
 
     ; Send the highest 8 bits of the lba
     mov edx, ATA_LBA_HIGH_PORT              ; Port to send bit 16 - 23 of LBA
     mov eax, ebx                            ; Restore LBA from EBX
     shr eax, 16                             ; Get bit 16 - 23 in AL
-    out dx, al
+    out dx, al                              ; Send the bit 16 - 23 to the ATA controller
  
     mov edx, ATA_COMMAND_PORT               ; Command port
     mov al, 0x20                            ; Read with retry
-    out dx, al
+    out dx, al                              ; Send the command to the ATA controller
 
 .ata_read_next_sector:
     push ecx                                ; Store the current value of ECX on the stack so that we can decrement it with the loop below
