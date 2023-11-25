@@ -1,5 +1,4 @@
-ORG 0x7c00                      ; Allows manual setting of segments to 0x7C00 later,
-                                ; addressing potential BIOS discrepancies in segment values during boot loading
+ORG 0x7c00
 BITS 16
 
 ;=============================================================================
@@ -56,7 +55,7 @@ start:
 init_bootloader:
     cli                         ; Disable interrupts (cli) to ensure a stable environment during critical initialization,
                                 ; preventing interruptions that might interfere with the setup process
-    mov ax, 0x00               ; Set up data segment (ds) and extra segment (es)
+    mov ax, 0x00                ; Set up data segment (ds) and extra segment (es)
     mov ds, ax
     mov es, ax
     mov ss, ax
@@ -82,22 +81,100 @@ init_bootloader:
     or eax, 0x1                 ; Set the first bit of CR0 to activate protected mode
     mov cr0, eax                ; Write the modified value back to CR0
 
-    ; TODO: Implement reading from the ATA hard disk and loading our kernel into memory at 0x0100000 (1024*1024)
-    ; We must start reading from sector 1 because the first 512 bytes are the boot sector
-    ; For now, let's read 100 sectors. After loading, we want to jump with jmp CODE_SEG:0x0100000 to the code segment (GDT pointer) to the kernel location at 0x0100000
-    jmp $                       ; Temporary, will be replaced soon after implementing the ATA disk read driver
+[BITS 32]
+load_32:
+    mov eax, 1                  ; First sector after bootloader (LBA)
+    mov ecx, N_SECTORS_TO_READ  ; Read 100 sectors for now
+    mov edi, KERNEL_START       ; Address to load the kernel to
+
+    call ata_lba_read
+    jmp CODE_SEG:KERNEL_START
 
 ;=============================================================================
 ; ATA read sectors (LBA mode) 
 ;
-; @param EAX Logical Block Address of sector
-; @param CL  Number of sectors to read
-; @param RDI The address of buffer to put data obtained from disk
+; @param ECX Number of sectors to read
+; @param EBX LBA (Logical Block Address) value
+;
+; @return EDI The address of buffer to put data obtained from disk
+;=============================================================================
+ata_lba_read:
+    call .ata_lba_send
+    ret
+
+;=============================================================================
+; ATA LBA Send
+;
+; Sends the necessary commands to the ATA controller to specify the number of
+; sectors to read and the corresponding Logical Block Address (LBA).
+;
+; @param ECX Number of sectors to read
+; @param EBX LBA (Logical Block Address) value
 ;
 ; @return None
 ;=============================================================================
-ata_lba_read: ; TODO
+.ata_lba_send:
+    ; Send the highest 8 bits of the lba
+    mov ebx, eax                            ; Backup the LBA it represents the first sector for now
+    shr eax, 24                             ; Move the highest 8 bits to the lowest 8 bits
+    or eax, 0xe0                            ; Set bit 6 in AL for LBA mode
+    mov dx, ATA_DRIVE_HEAD_PORT             ; I/O port address for the control register of the ATA controller
+    out dx, al                              ; Send the 8 bits to the LBA controller#
 
+    ; Send the total sectors to read
+    mov eax, ecx                            ; The total sectors are hold in ECX (N_SECTORS_TO_READ)
+    mov dx, ATA_SECTOR_COUNT_PORT           ; Address to send the number of sectors to read
+    out dx, al                              ; Send the lower 8 Bits to the LBA controller
+
+    ; Send the lowest 8 bits of the lba
+    mov edx, ATA_LBA_LOW_PORT               ; Port to send bit 0 - 7 of LBA
+    mov eax, ebx                            ; Restore LBA from EBX
+    out dx, al
+
+    ; Send the middle 8 bits of the lba
+    mov edx, ATA_LBA_MID_PORT               ; Port to send bit 8 - 15 of LBA
+    mov eax, ebx                            ; Restore LBA from EBX
+    shr eax, 8                              ; Get bit 8 - 15 in AL
+    out dx, al
+
+    ; Send the highest 8 bits of the lba
+    mov edx, ATA_LBA_HIGH_PORT              ; Port to send bit 16 - 23 of LBA
+    mov eax, ebx                            ; Restore LBA from EBX
+    shr eax, 16                             ; Get bit 16 - 23 in AL
+    out dx, al
+ 
+    mov edx, ATA_STATUS_COMMAND_PORT        ; Command port
+    mov al, 0x20                            ; Read with retry
+    out dx, al
+
+.ata_read_next_sector:
+    push ecx                                ; Store the current value of ECX on the stack so that we can decrement it with the loop below
+
+.ata_check_is_readable:
+    ; Check if the ATA controller is ready
+    mov dx, ATA_STATUS_COMMAND_PORT         ; Load the command port address into DX
+    in al, dx                               ; Read a byte from the command port into AL
+    test al, 0b00001000                     ; Check if after bitwise and with AL and the 4 bit is true so the device is ready. 
+    jz .ata_check_is_readable               ; If this bit is not set the device is not ready and we have to wait. ATA controller is not ready yet, so jump back
+    ; Read data from the ATA data port
+    mov ecx, 256                            ; 256 times rep insw like 512 byte or 1 sector (256 * 16 bits = 512 bytes)
+    mov dx, ATA_DATA_PORT                   ; Put the data port in DX
+    rep insw                                ; Reads a word (16bit) from an io port like DX and put it into a buffer ES:DI
+    pop ecx                                 ; Restore the original value of ECX from the stack
+    loop .ata_read_next_sector              ; Decrement ECX and jump to .ata_read_next_sector if ECX is not zero
+    ret
+
+N_SECTORS_TO_READ       equ 100             ; N sectors to read (Makefile)
+ATA_DATA_PORT           equ 0x1F0           ; Data Port
+ATA_ERROR_PORT          equ 0x1F1           ; Error Register
+ATA_SECTOR_COUNT_PORT   equ 0x1F2           ; Sector Count Register
+ATA_LBA_LOW_PORT        equ 0x1F3           ; LBA Low Register
+ATA_LBA_MID_PORT        equ 0x1F4           ; LBA Mid Register
+ATA_LBA_HIGH_PORT       equ 0x1F5           ; LBA High Register
+ATA_DRIVE_HEAD_PORT     equ 0x1F6           ; Drive/Head Register
+ATA_STATUS_COMMAND_PORT equ 0x1F7           ; Command/Status Register
+
+KERNEL_START            equ 0x010000        ; Start of kernel memory address
 
 ;=============================================================================
 ; The GDT contains entries telling the CPU about memory segments
