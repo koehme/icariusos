@@ -7,8 +7,8 @@ BITS 16
 ; These constants represent the offsets of the code and data segments in the 
 ; Global Descriptor Table (GDT).
 ;=============================================================================
-CODE_SEG equ gdt_code - gdt_head
-DATA_SEG equ gdt_data - gdt_head
+CODE_SEG equ gdt_code - gdt_start
+DATA_SEG equ gdt_data - gdt_start
 
 ;=============================================================================
 ; BIOS Parameter Block (BPB)
@@ -77,18 +77,58 @@ init_bootloader:
 ;=============================================================================
     cli                         ; Disable interrupts to avoid unwanted interruptions
     lgdt [gdt_descriptor]       ; Load the Global Descriptor Table (GDT)
+
     mov eax, cr0                ; Load the current value of control register CR0 into the eax register
     or eax, 0x1                 ; Set the first bit of CR0 to activate protected mode
     mov cr0, eax                ; Write the modified value back to CR0
 
-[BITS 32]
-load_32:
-    mov eax, 1                  ; First sector after bootloader (LBA)
-    mov ecx, N_SECTORS_TO_READ  ; Read 100 sectors for now
-    mov edi, KERNEL_START       ; Address to load the kernel to
+    jmp CODE_SEG:load_kernel   ; Jump to the entry point of the loaded kernel in protected mode
 
-    call ata_lba_read
-    jmp CODE_SEG:KERNEL_START
+;=============================================================================
+; The GDT contains entries telling the CPU about memory segments
+;
+; @return None
+;=============================================================================
+gdt_start:
+gdt_null: 
+            dq 0x0              ; Acts as a placeholder and validation point
+gdt_code:
+            dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
+            dw 0x0              ; The address where the segment starts bits 0 - 15
+            db 0x0              ; The address where the segment starts bits 16 - 23
+            db 0x9a             ; Access information (ring, executable, etc.)
+            db 0b11001111       ; Defines the segment size unit and 16/32 bit.
+            db 0x0              ; The address where the segment starts bits 24 - 31
+gdt_data:
+            dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
+            dw 0x0              ; The address where the segment starts bits 0 - 15
+            db 0x0              ; The address where the segment starts bits 16 - 23
+            db 0x92             ; Access information (ring, executable, etc.)
+            db 0b11001111       ; Defines the segment size unit and 16/32 bit.
+            db 0x0              ; The address where the segment starts bits 24 - 31
+gdt_end:
+
+;=============================================================================
+; GDT Descriptor
+;
+; This section defines the GDT descriptor, specifying the length of the GDT
+; and the starting address.
+;=============================================================================
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1   ; 16 bit length
+    dd gdt_start                 ; 32 bit base address
+
+[BITS 32]
+load_kernel:
+    mov eax, 1                  ; Set the LBA (Logical Block Address) of the first sector after the bootloader
+    mov ecx, 100                ; Set the number of sectors to read (for now, reading 100 sectors)
+    mov edi, 0x0100000          ; Set the address to load the kernel to
+
+    call ata_lba_read           ; Crucial for loading the kernel from the ATA disk.
+                                ; It handles the process of reading sectors and loading them into memory
+                                ; at the specified address (edi). Without this, the kernel data won't be loaded
+                                ; and subsequent jumps to the kernel entry point would lead to incorrect behavior
+    jmp CODE_SEG:0x0100000      ; Jump to the entry point of the loaded kernel in the CODE_SEG segment
 
 ;=============================================================================
 ; ATA read sectors (LBA mode) 
@@ -99,26 +139,11 @@ load_32:
 ; @return EDI The address of buffer to put data obtained from disk
 ;=============================================================================
 ata_lba_read:
-    call .ata_lba_send
-    ret
-
-;=============================================================================
-; ATA LBA Send
-;
-; Sends the necessary commands to the ATA controller to specify the number of
-; sectors to read and the corresponding Logical Block Address (LBA).
-;
-; @param ECX Number of sectors to read
-; @param EBX LBA (Logical Block Address) value
-;
-; @return None
-;=============================================================================
-.ata_lba_send:
     ; Send the highest 8 bits of the lba
     mov ebx, eax                            ; Backup the LBA it represents the first sector for now
     shr eax, 24                             ; Move the highest 8 bits to the lowest 8 bits
     or eax, 0xe0                            ; Set bit 6 in AL for LBA mode
-    mov dx, ATA_DRIVE_HEAD_PORT             ; I/O port address for the control register of the ATA controller
+    mov dx, ATA_CONTROL_PORT                ; I/O port address for the control register of the ATA controller
     out dx, al                              ; Send the 8 bits to the LBA controller#
 
     ; Send the total sectors to read
@@ -143,7 +168,7 @@ ata_lba_read:
     shr eax, 16                             ; Get bit 16 - 23 in AL
     out dx, al
  
-    mov edx, ATA_STATUS_COMMAND_PORT        ; Command port
+    mov edx, ATA_COMMAND_PORT               ; Command port
     mov al, 0x20                            ; Read with retry
     out dx, al
 
@@ -152,7 +177,7 @@ ata_lba_read:
 
 .ata_check_is_readable:
     ; Check if the ATA controller is ready
-    mov dx, ATA_STATUS_COMMAND_PORT         ; Load the command port address into DX
+    mov dx, ATA_COMMAND_PORT                ; Load the command port address into DX
     in al, dx                               ; Read a byte from the command port into AL
     test al, 0b00001000                     ; Check if after bitwise and with AL and the 4 bit is true so the device is ready. 
     jz .ata_check_is_readable               ; If this bit is not set the device is not ready and we have to wait. ATA controller is not ready yet, so jump back
@@ -164,51 +189,13 @@ ata_lba_read:
     loop .ata_read_next_sector              ; Decrement ECX and jump to .ata_read_next_sector if ECX is not zero
     ret
 
-N_SECTORS_TO_READ       equ 100             ; N sectors to read (Makefile)
-ATA_DATA_PORT           equ 0x1F0           ; Data Port
-ATA_ERROR_PORT          equ 0x1F1           ; Error Register
-ATA_SECTOR_COUNT_PORT   equ 0x1F2           ; Sector Count Register
-ATA_LBA_LOW_PORT        equ 0x1F3           ; LBA Low Register
-ATA_LBA_MID_PORT        equ 0x1F4           ; LBA Mid Register
-ATA_LBA_HIGH_PORT       equ 0x1F5           ; LBA High Register
-ATA_DRIVE_HEAD_PORT     equ 0x1F6           ; Drive/Head Register
-ATA_STATUS_COMMAND_PORT equ 0x1F7           ; Command/Status Register
-
-KERNEL_START            equ 0x010000        ; Start of kernel memory address
-
-;=============================================================================
-; The GDT contains entries telling the CPU about memory segments
-;
-; @return None
-;=============================================================================
-gdt_head:
-    gdt_null: 
-            dq 0x0              ; Acts as a placeholder and validation point
-    gdt_code:
-            dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
-            dw 0x0              ; The address where the segment starts bits 0 - 15
-            db 0x0              ; The address where the segment starts bits 16 - 23
-            db 0xb10011010      ; Access information (ring, executable, etc.)
-            db 0b11001111       ; Defines the segment size unit and 16/32 bit.
-            db 0x0              ; The address where the segment starts bits 24 - 31
-    gdt_data:
-            dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
-            dw 0x0              ; The address where the segment starts bits 0 - 15
-            db 0x0              ; The address where the segment starts bits 16 - 23
-            db 0b10010010       ; Access information (ring, executable, etc.)
-            db 0b11001111       ; Defines the segment size unit and 16/32 bit.
-            db 0x0              ; The address where the segment starts bits 24 - 31
-    gdt_tail:
-
-;=============================================================================
-; GDT Descriptor
-;
-; This section defines the GDT descriptor, specifying the length of the GDT
-; and the starting address.
-;=============================================================================
-gdt_descriptor:
-    dw gdt_tail - gdt_head - 1  ; 16 bit
-    dd gdt_head                 ; 32 bit
+ATA_CONTROL_PORT equ 0x1F6
+ATA_SECTOR_COUNT_PORT equ 0x1F2
+ATA_LBA_LOW_PORT equ 0x1F3
+ATA_LBA_MID_PORT equ 0x1F4
+ATA_LBA_HIGH_PORT equ 0x1F5
+ATA_COMMAND_PORT equ 0x1F7
+ATA_DATA_PORT equ 0x1F0
 
 ;=============================================================================
 ; Fill Remaining Boot Sector Bytes and Add Magic Signature
