@@ -1,5 +1,7 @@
 [BITS 32]
+
 global _start
+
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
 ;=============================================================================
@@ -21,7 +23,7 @@ _start:
     mov gs, ax
     mov ebp, 0x00200000         ; Set base pointer (ebp) and stack pointer (esp)
     mov esp, ebp
-; Enable the fast a20 line, so that all memory can be accessed
+    ; Enable the fast a20 line, so that all memory can be accessed
 .enable_a20:
     in al, 0x92
     or al, 2
