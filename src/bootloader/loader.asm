@@ -1,6 +1,7 @@
 [BITS 32]
 
 global _start
+extern kmain
 
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
@@ -29,7 +30,8 @@ _start:
     in al, 0x92
     or al, 2
     out 0x92, al
-
+.run_kernel:
+    call kmain
     jmp $                       ; Infinite loop to halt execution at this point
 
 times 512 - ($ - $$) db 0x0

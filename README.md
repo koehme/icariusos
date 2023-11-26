@@ -13,7 +13,7 @@
 ```bash
 /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
 
-add-symbol-file ./obj/kernel.o 0x100000
+add-symbol-file ./obj/loader.o 0x100000
 break _start
 
 target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
