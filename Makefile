@@ -17,4 +17,5 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	nasm -f elf -g ./src/bootloader/loader.asm -o ./obj/loader.o
 
 clean:
-	rm -rf ./bin/boot.bin
+	rm -rf ./bin/*
+	rm -rf ./obj/*
