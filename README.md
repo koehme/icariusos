@@ -18,3 +18,7 @@ break _start
 
 target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
 ```
+
+```bash
+nm ./obj/loader.o && nm ./obj/kernel.o
+```
