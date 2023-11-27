@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/loader.o ./obj/kernel.o
+DEPENDENCIES = ./obj/loader.o ./obj/kernel.o ./obj/vga.o
 INCLUDES = -I./src/include
 FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -20,6 +20,9 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./obj/kernel.o: ./src/kernel/kernel.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/kernel.c -o ./obj/kernel.o
+
+./obj/vga.o: ./src/kernel/driver/vga.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/driver/vga.c -o ./obj/vga.o
 
 clean:	
 	rm -rf ./bin/*
