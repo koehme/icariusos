@@ -140,7 +140,7 @@ load_kernel:
                                 ; It handles the process of reading sectors and loading them into memory
                                 ; at the specified address (edi). Without this, the kernel data won't be loaded
                                 ; and subsequent jumps to the kernel entry point would lead to incorrect behavior
-    jmp CODE_SEG:0x0100000      ; Jump to the entry point of the loaded kernel in the CODE_SEG segment
+    jmp CODE_SEG:0x0100000      ; Its switched to the code gdt code segment and jump to the entry point of the loaded kernel
 
 ;=============================================================================
 ; ATA read sectors (LBA mode) 
