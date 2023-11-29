@@ -13,7 +13,7 @@ extern void idt_loader(IDT_R *ptr);
 static IDTDescriptor idt[256];
 static IDT_R idtr_descriptor;
 
-static const char messages[][256] = {
+static const char interrupt_messages[][256] = {
     "Division by Zero (INT 0)\n",
     "Debug Exception (INT 1)\n",
     "Non-Maskable Interrupt (NMI - INT 2)\n",
@@ -53,7 +53,7 @@ static const char messages[][256] = {
  */
 void isr0(void)
 {
-    const char *message = messages[0];
+    const char *message = interrupt_messages[0];
     kprint(message);
     return;
 };
