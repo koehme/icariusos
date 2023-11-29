@@ -18,7 +18,7 @@ void kprint(const char *str)
 
 void kmain(void)
 {
-    vga_display_init((volatile uint16_t *)0xb8000);
+    vga_display_init((volatile uint16_t *)0xb8000, 80, 25);
     vga_display_clear();
 
     kprint("Icarius Kernel!\n");
