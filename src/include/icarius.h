@@ -1,11 +1,11 @@
 /**
- * @file kernel.h
+ * @file icarius.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef KERNEL_H
-#define KERNEL_H
+#ifndef ICARIUS_H
+#define ICARIUS_H
 
 void kmain(void);
 void kprint(const char *str);

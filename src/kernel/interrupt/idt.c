@@ -6,7 +6,7 @@
 
 #include "idt.h"
 #include "mem.h"
-#include "kernel.h"
+#include "icarius.h"
 
 extern void idt_loader(IDT_R *ptr);
 

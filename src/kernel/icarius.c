@@ -1,10 +1,10 @@
 /**
- * @file kernel.c
+ * @file icarius.c
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#include "kernel.h"
+#include "icarius.h"
 #include "vga.h"
 #include "idt.h"
 
