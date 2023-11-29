@@ -9,8 +9,8 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	dd if=/dev/zero bs=512 count=100 >> ./bin/os.bin
 
 ./bin/kernel.bin: $(DEPENDENCIES)
-	$(LD) -g -relocatable $(DEPENDENCIES) -o ./obj/kernel.linked.o
-	$(GCC) $(INCLUDES) $(FLAGS) -T ./linker.ld ./obj/kernel.linked.o -o ./bin/kernel.bin
+	$(LD) -g -relocatable $(DEPENDENCIES) -o ./obj/kernel.o
+	$(GCC) $(INCLUDES) $(FLAGS) -T ./linker.ld ./obj/kernel.o -o ./bin/kernel.bin
 
 ./bin/boot.bin: ./src/bootloader/boot.asm
 	nasm -f bin ./src/bootloader/boot.asm -o ./bin/boot.bin

@@ -11,8 +11,8 @@ DATA_SEG equ 0x10
 ;=============================================================================
 ; _start
 ;
-; Entry point for the 32 bit protected mode. Sets up segment registers, initializes the
-; stack pointer and enables the fast A20 line for accessing all memory.
+; Entry point for the 32 bit protected mode. Sets up segment registers and initializes the
+; stack pointer.
 ;
 ; @param None
 ;
@@ -27,7 +27,21 @@ _start:
     mov gs, ax
     mov ebp, 0x00200000         ; Set base pointer (ebp) and stack pointer (esp)
     mov esp, ebp
-    
+;=============================================================================
+; .enable_a20
+;
+; Enabling the A20 gate, which allows access to
+; the full memory addressing capability of the x86 architecture. The A20 gate
+; is a control line in the keyboard controller that, when enabled, allows the
+; CPU to address memory beyond the 1st megabyte.
+;
+; The process involves reading the status register from the keyboard controller,
+; setting the second bit (A20 bit), and then writing the modified status back.
+;
+; @param None
+;
+; @return None
+;=============================================================================    
 .enable_a20:
     in al, 0x92
     or al, 2

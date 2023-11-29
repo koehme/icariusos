@@ -11,7 +11,7 @@ CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
 ;=============================================================================
-; BIOS Parameter Block (BPB)
+; bpb 
 ;
 ; Some BIOS systems expect the bios parameter block to be present. The inclusion 
 ; of this block helps prevent damage to our code during the boot process. It 
@@ -28,7 +28,7 @@ bpb:
     times 33 db 0    ; Additional space or padding, filled with null bytes
 
 ;=============================================================================
-; Start
+; start
 ;
 ; Jump to the initialization routine to begin the bootloader setup process.
 ;
@@ -40,7 +40,7 @@ start:
     jmp 0x0:init_bootloader
 
 ;=============================================================================
-; Initialize Bootloader
+; init_bootloader
 ;
 ; This function initializes the bootloader environment by disabling interrupts 
 ; (cli) to ensure a stable setup during critical initialization. It sets up 
@@ -64,7 +64,7 @@ init_bootloader:
     sti                         ; Enable interrupts
 
 ;=============================================================================
-; Load Protected Mode
+; load_protected
 ;
 ; This function is responsible for transitioning the processor into Protected
 ; Mode by disabling interrupts, loading the Global Descriptor Table (GDT), 
@@ -87,8 +87,6 @@ init_bootloader:
 
 ;=============================================================================
 ; The GDT contains entries telling the CPU about memory segments
-;
-; @return None
 ;=============================================================================
 gdt_start:
 gdt_null: 
@@ -143,12 +141,17 @@ load_kernel:
     jmp CODE_SEG:0x0100000      ; Its switched to the code gdt code segment and jump to the entry point of the loaded kernel
 
 ;=============================================================================
-; ATA read sectors (LBA mode) 
+; ata_lba_read
 ;
-; @param ECX Number of sectors to read
-; @param EBX LBA (Logical Block Address) value
+; Responsible for reading data from the ATA (Advanced Technology
+; Attachment) disk using LBA (Logical Block Addressing) mode. It sends the
+; necessary commands and parameters to the ATA controller to initiate the read
+; operation.
 ;
-; @return EDI The address of buffer to put data obtained from disk
+; @param ECX: Number of sectors to read
+; @param EBX: LBA (Logical Block Address) value
+;
+; @return EDI: The address of the buffer to store data obtained from the disk
 ;=============================================================================
 ata_lba_read:
     ; Send the highest 8 bits of the lba
@@ -183,10 +186,36 @@ ata_lba_read:
     mov edx, ATA_COMMAND_PORT               ; Command port
     mov al, 0x20                            ; Read with retry
     out dx, al                              ; Send the command to the ATA controller
-
+;=============================================================================
+; ata_read_next_sector
+;
+; Represents the beginning of a loop that reads multiple sectors
+; from the ATA disk. The loop will continue until ECX (the number of remaining
+; sectors to read) becomes zero. The purpose of pushing ECX onto the stack is
+; to preserve its current value so that it can be restored later after the loop.
+;
+; @param None
+;
+; @return None
+;=============================================================================
 .ata_read_next_sector:
     push ecx                                ; Store the current value of ECX on the stack so that we can decrement it with the loop below
-
+;=============================================================================
+; ata_check_is_readable
+;
+; Checks if the ATA controller is ready for data transfer. It reads
+; the status register from the ATA command port and checks the 4th bit. If the
+; 4th bit is set, it means the device is ready, and data can be read. If the
+; bit is not set, the ATA controller is not ready yet, so it jumps back to wait.
+; Once the device is ready, it reads data from the ATA data port using rep insw.
+; The process repeats for a specified number of times (256 times in this case),
+; and ECX is decremented accordingly.
+;
+; @param None
+;
+; @return None
+;
+;=============================================================================
 .ata_check_is_readable:
     ; Check if the ATA controller is ready
     mov dx, ATA_COMMAND_PORT                ; Load the command port address into DX
