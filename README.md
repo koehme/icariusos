@@ -11,16 +11,29 @@
 # run
 
 ```bash
-clear && ./build.sh && qemu-system-x86_64 -hda ./bin/os.bin --display curses
+clear && make clean && ./build.sh && qemu-system-x86_64 -hda ./bin/os.bin
 ```
 
-# debugging
+# debugging loader
 
 ```bash
+./build.sh
 /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
 
 add-symbol-file ./obj/loader.o 0x100000
 break _start
+
+target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
+```
+
+# debugging kmain
+
+```bash
+./build.sh
+/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
+
+add-symbol-file ./obj/kernel.linked.o 0x100000
+break kmain
 
 target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
 ```
