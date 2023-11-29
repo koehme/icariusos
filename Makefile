@@ -10,7 +10,7 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./bin/kernel.bin: $(DEPENDENCIES)
 	$(LD) -g -relocatable $(DEPENDENCIES) -o ./obj/kernel.linked.o
-	$(GCC) $(INCLUDES) $(FLAGS) -T ./linker.ld -o ./bin/kernel.bin -ffreestanding -O0 -nostdlib ./obj/kernel.linked.o
+	$(GCC) $(INCLUDES) $(FLAGS) -T ./linker.ld -o ./bin/kernel.bin ./obj/kernel.linked.o
 
 ./bin/boot.bin: ./src/bootloader/boot.asm
 	nasm -f bin ./src/bootloader/boot.asm -o ./bin/boot.bin
