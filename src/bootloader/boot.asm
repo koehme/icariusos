@@ -37,7 +37,7 @@ bpb:
 ; @return None
 ;=============================================================================
 start:
-    jmp 0:init_bootloader
+    jmp 0x0:init_bootloader
 
 ;=============================================================================
 ; Initialize Bootloader
@@ -75,6 +75,7 @@ init_bootloader:
 ;
 ; @return None
 ;=============================================================================
+.load_protected:
     cli                         ; Disable interrupts to avoid unwanted interruptions
     lgdt [gdt_descriptor]       ; Load the Global Descriptor Table (GDT)
 
@@ -92,6 +93,7 @@ init_bootloader:
 gdt_start:
 gdt_null: 
             dq 0x0              ; Acts as a placeholder and validation point
+; offset 0x8
 gdt_code:
             dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
             dw 0x0              ; The address where the segment starts bits 0 - 15
@@ -99,6 +101,7 @@ gdt_code:
             db 0x9a             ; Access information (ring, executable, etc.)
             db 0b11001111       ; Defines the segment size unit and 16/32 bit.
             db 0x0              ; The address where the segment starts bits 24 - 31
+; offset 0x10
 gdt_data:
             dw 0xffff           ; Size of the segment - 1 (either in bytes or in 4 KiB units - see flags)
             dw 0x0              ; The address where the segment starts bits 0 - 15
@@ -119,6 +122,15 @@ gdt_descriptor:
     dd gdt_start                 ; 32 bit base address
 
 [BITS 32]
+;=============================================================================
+; load_kernel
+;
+; Loads the kernel from an ATA disk.
+;
+; @param None
+;
+; @return None
+;=============================================================================
 load_kernel:
     mov eax, 1                  ; Set the LBA (Logical Block Address) of the first sector after the bootloader
     mov ecx, 100                ; Set the number of sectors to read (for now, reading 100 sectors)

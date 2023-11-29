@@ -29,17 +29,8 @@ typedef enum VGADisplayColor
     VGA_COLOR_WHITE = 15,
 } VGADisplayColor;
 
-typedef struct VgaDisplay
-{
-    volatile uint16_t *buffer;
-    uint8_t width;
-    uint8_t height;
-    uint16_t cursor_x;
-    uint16_t cursor_y;
-} VgaDisplay;
-
-void vga_display_init(VgaDisplay *self, uint16_t *buffer, const uint8_t width, const uint8_t height);
-void vga_display_clear(VgaDisplay *self);
-void vga_print(VgaDisplay *self, const char *str);
+void vga_display_init(volatile uint16_t *framebuffer);
+void vga_display_clear(void);
+void vga_print(const char *str);
 
 #endif

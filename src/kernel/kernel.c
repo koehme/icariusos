@@ -6,14 +6,24 @@
 
 #include "kernel.h"
 #include "vga.h"
+#include "idt.h"
+
+extern void simulate();
+
+void kprint(const char *str)
+{
+    vga_print(str);
+    return;
+};
 
 void kmain(void)
 {
-    VgaDisplay display;
-    vga_display_init(&display, (uint16_t *)0xb8000, 80, 25);
-    vga_display_clear(&display);
+    vga_display_init((volatile uint16_t *)0xb8000);
+    vga_display_clear();
 
-    vga_print(&display, "Hello World!\n");
-    vga_print(&display, "Icarius Kernel!");
+    kprint("Icarius Kernel!\n");
+
+    idt_init();
+    simulate();
     return;
 };

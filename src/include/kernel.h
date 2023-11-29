@@ -8,5 +8,6 @@
 #define KERNEL_H
 
 void kmain(void);
+void kprint(const char *str);
 
 #endif
