@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/loader.o ./obj/kernel.o ./obj/vga.o
+DEPENDENCIES = ./obj/loader.o ./obj/kernel.o ./obj/vga.o ./obj/mem.o ./obj/idtloader.o ./obj/idt.o
 INCLUDES = -I./src/include
 FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -23,6 +23,15 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./obj/vga.o: ./src/kernel/driver/vga.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/driver/vga.c -o ./obj/vga.o
+
+./obj/mem.o: ./src/kernel/memory/mem.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/memory/mem.c -o ./obj/mem.o
+
+./obj/idtloader.o: ./src/kernel/interrupt/idtloader.asm
+	nasm -f elf -g ./src/kernel/interrupt/idtloader.asm -o ./obj/idtloader.o
+
+./obj/idt.o: ./src/kernel/interrupt/idt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/interrupt/idt.c -o ./obj/idt.o
 
 clean:	
 	rm -rf ./bin/*
