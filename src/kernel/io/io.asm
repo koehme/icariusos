@@ -7,6 +7,52 @@ global inb
 global inw
 
 ;=============================================================================
+; inb
+;
+; Reads a byte (8 bits) from a specified I/O port.
+;
+; This function reads a byte from the I/O port specified by the address in DX.
+;
+; @param [ebp+8]: The address of the I/O port (16 bits).
+;
+; @return The byte read from the specified I/O port (stored in EAX).
+;=============================================================================
+inb:
+    push ebp                 ; Save the base pointer
+    mov ebp, esp             ; Get the actual stack frame for outb
+
+    xor eax, eax             ; Clear EAX to store the result, in x86 assembly eax is implicit the return value
+    mov edx, [ebp+8]         ; Copy the 16 bit address to receiving data from (first argument +8) into EDX
+
+    in al, dx                ; Read a byte (8 bits) from the specified I/O port into AL
+
+    pop ebp                  ; Restore the original base pointer so that it is not lost
+    ret
+
+;=============================================================================
+; inw
+;
+; Reads a word (16 bits) from a specified I/O port.
+;
+; This function reads a word from the I/O port specified by the address in DX.
+;
+; @param [ebp+8]: The address of the I/O port (16 bits).
+;
+; @return The word read from the specified I/O port (stored in EAX).
+;=============================================================================
+inw:
+    push ebp                 ; Save the base pointer
+    mov ebp, esp             ; Get the actual stack frame for outb
+
+    xor eax, eax             ; Clear EAX to store the result, in x86 assembly eax is implicit the return value
+    mov edx, [ebp+8]         ; Copy the 16 bit address to receiving data from (first argument +8) into EDX
+
+    in ax, dx                ; Read a word (16 bits) from the specified I/O port into AX
+
+    pop ebp                  ; Restore the original base pointer so that it is not lost
+    ret
+
+;=============================================================================
 ; outb
 ;
 ; Sends a byte value to a specified I/O port.
