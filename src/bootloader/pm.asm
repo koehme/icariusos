@@ -60,16 +60,4 @@ _start:
     call kmain
     jmp $                       ; Infinite loop to halt execution at this point
 
-;=============================================================================
-; simulate
-;
-; Test routine generates an interrupt and will be removed soon.
-;
-; @param None
-;
-; @return None
-;=============================================================================
-simulate:
-    int 0
-
 times 512 - ($ - $$) db 0x0
