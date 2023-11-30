@@ -8,8 +8,6 @@
 #include "vga.h"
 #include "idt.h"
 
-extern void simulate();
-
 void kprint(const char *str)
 {
     vga_print(str);
@@ -24,6 +22,7 @@ void kmain(void)
     kprint("Icarius Kernel!\n");
 
     idt_init();
-    simulate();
+
+    kprint("Test\n");
     return;
 };
