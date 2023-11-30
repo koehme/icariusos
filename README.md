@@ -26,16 +26,8 @@ break _start
 target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
 ```
 
-# debugging kmain
-
 ```bash
-./build.sh
-/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
-
-add-symbol-file ./obj/kernel.linked.o 0x100000
-break kmain
-
-target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
+/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
 ```
 
 ```bash
