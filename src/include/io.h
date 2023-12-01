@@ -14,10 +14,10 @@
 #define PIC_2_DATA 0xA1 // Secondary PIC data register
 #define PIC_ACK 0x20    // Acknowledge-Bit (0x20)
 
-void outb(unsigned short port, unsigned char value);
-void outw(unsigned short port, unsigned short value);
+void asm_outb(unsigned short port, unsigned char value);
+void asm_outw(unsigned short port, unsigned short value);
 
-unsigned char inb(unsigned short port);
-unsigned short inw(unsigned short port);
+unsigned char asm_inb(unsigned short port);
+unsigned short asm_inw(unsigned short port);
 
 #endif

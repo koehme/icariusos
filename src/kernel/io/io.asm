@@ -1,13 +1,13 @@
 section asm
 
-global outb
-global outw
+global asm_outb
+global asm_outw
 
-global inb
-global inw
+global asm_inb
+global asm_inw
 
 ;=============================================================================
-; inb
+; asm_inb
 ;
 ; Reads a byte (8 bits) from a specified I/O port.
 ;
@@ -17,7 +17,7 @@ global inw
 ;
 ; @return The byte read from the specified I/O port (stored in EAX).
 ;=============================================================================
-inb:
+asm_inb:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -30,7 +30,7 @@ inb:
     ret
 
 ;=============================================================================
-; inw
+; asm_inw
 ;
 ; Reads a word (16 bits) from a specified I/O port.
 ;
@@ -40,7 +40,7 @@ inb:
 ;
 ; @return The word read from the specified I/O port (stored in EAX).
 ;=============================================================================
-inw:
+asm_inw:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -53,7 +53,7 @@ inw:
     ret
 
 ;=============================================================================
-; outb
+; asm_outb
 ;
 ; Sends a byte value to a specified I/O port.
 ;
@@ -66,7 +66,7 @@ inw:
 ;
 ; @return None
 ;=============================================================================
-outb:
+asm_outb:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -79,7 +79,7 @@ outb:
     ret
 
 ;=============================================================================
-; outw
+; asm_outw
 ;
 ; Sends a word (16 bits) value to a specified I/O port.
 ;
@@ -92,7 +92,7 @@ outb:
 ;
 ; @return None
 ;=============================================================================
-outw:
+asm_outw:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 

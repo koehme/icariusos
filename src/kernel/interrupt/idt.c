@@ -67,47 +67,69 @@ static const char *interrupt_messages[] = {
     "Primary ATA Hard Disk (IRQ14)\n",
     "Secondary ATA Hard Disk (IRQ15)\n"};
 
+/**
+ * Represents the IDT and is used to define various interrupts.
+ * Each element in this array corresponds to an interrupt vector,
+ * holding specific information such as the address of the Interrupt Service Routine (ISR) handler.
+ */
 static IDTDescriptor idt[256];
+/**
+ * Represents the IDTR register value.
+ * The IDTR contains information about the size and starting point of the IDT.
+ * Defining an IDTR allows efficient initialization and loading of the IDT.
+ */
 static IDT_R idtr_descriptor;
 
+/**
+ * @brief Timer ISR handler.
+ * @return void
+ */
 void isr_20h_handler(void)
 {
     const char *message = interrupt_messages[32];
     kprint(message);
-    outb(0x20, 0x20);
+    asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
+/**
+ * @brief Keyboard ISR handler.
+ * @return void
+ */
 void isr_21h_handler(void)
 {
     const char *message = interrupt_messages[33];
     kprint(message);
-    outb(0x20, 0x20);
+    asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
+/**
+ * @brief Default ISR handler.
+ * @return void
+ */
 void isr_default_handler(void)
 {
     const char *message = "Default Handler\n";
     kprint(message);
-    outb(PIC_1_CTRL, PIC_ACK);
+    asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
 /**
  * @brief Sets up an entry in the Interrupt Descriptor Table (IDT).
  * Configures the specified entry in the IDT with the given vector and ISR (Interrupt Service Routine).
- * @param vector The interrupt number.
+ * @param interrupt_n The interrupt number.
  * @param isr A pointer to the ISR (Interrupt Service Routine) function.
  * @return void
  */
-void idt_set(const int vector, void *isr)
+void idt_set(const int interrupt_n, void *isr)
 {
-    if (vector < 0 || vector >= 256)
+    if (interrupt_n < 0 || interrupt_n >= 256)
     {
         return;
     };
-    IDTDescriptor *descriptor = &idt[vector];
+    IDTDescriptor *descriptor = &idt[interrupt_n];
 
     descriptor->isr_low = (uint32_t)isr & 0xffff;
     descriptor->kernel_cs = 0x08;
@@ -117,9 +139,27 @@ void idt_set(const int vector, void *isr)
 };
 
 /**
- * @brief Initializes the Interrupt Descriptor Table Register (IDTR).
- * Set up the IDTR descriptor and initializes the first entry
- * It then passes the IDT address to the assembly routine for further loading.
+ * @brief Initializes the IDT entries with interrupt handlers.
+ * @return void
+ */
+void idt_entries_init(void)
+{
+    // Set default interrupt handlers for all entries in the IDT
+    for (int interrupt_n = 0; interrupt_n < 256; interrupt_n++)
+    {
+        idt_set(interrupt_n, asm_interrupt_default);
+    };
+    // Assign specific handlers for interrupts 0x20 and 0x21
+    idt_set(0x20, asm_interrupt_20h);
+    idt_set(0x21, asm_interrupt_21h);
+    return;
+};
+
+/**
+ * @brief Initializes the Interrupt Descriptor Table (IDT).
+ * Sets the limit and base address of the IDT descriptor and
+ * initializes the IDT entries using the separate function initialize_idt_entries.
+ * Finally, it passes the IDT address to the assembly routine for loading.
  * @return void
  */
 void idt_init(void)
@@ -127,14 +167,8 @@ void idt_init(void)
     // Set the limit and base address of the IDT descriptor
     idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
     idtr_descriptor.base = (uintptr_t)&idt[0];
-
-    for (int vector = 0; vector < 256; vector++)
-    {
-        idt_set(vector, asm_interrupt_default);
-    };
-    idt_set(0x20, asm_interrupt_20h);
-    idt_set(0x21, asm_interrupt_21h);
-    // Pass the IDT address in idtr_descriptor.base to the assembly routine
+    idt_entries_init();
+    // Load the idt in a specific 'lidt' register with the help of an assembly routine
     asm_idt_loader(&idtr_descriptor);
     return;
 };
