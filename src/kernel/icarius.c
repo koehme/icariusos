@@ -19,14 +19,7 @@ void kmain(void)
 {
     vga_display_init((volatile uint16_t *)0xb8000, 80, 25);
     vga_display_clear();
-
-    kprint("Icarius Kernel!\n");
-
     idt_init();
-
-    kprint("Test\n");
-
-    outb(0x60, 0xFF); // Test for gdb (96,255)
-
+    asm_do_sti();
     return;
 };

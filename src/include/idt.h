@@ -9,6 +9,9 @@
 
 #include <stdint.h>
 
+extern void asm_do_sti(void);
+extern void asm_do_cli(void);
+
 typedef struct IDTDescriptor
 {
     uint16_t isr_low;   // The lower 16 bits of the ISR's address

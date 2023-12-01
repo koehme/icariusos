@@ -6,14 +6,16 @@
 
 #include "idt.h"
 #include "mem.h"
+#include "io.h"
 #include "icarius.h"
 
-extern void idt_loader(IDT_R *ptr);
+extern void asm_interrupt_20h(void);
+extern void asm_interrupt_21h(void);
+extern void asm_idt_loader(IDT_R *ptr);
+extern void asm_interrupt_default();
 
-static IDTDescriptor idt[256];
-static IDT_R idtr_descriptor;
-
-static const char interrupt_messages[][256] = {
+static const char *interrupt_messages[] = {
+    // CPU Interrupts
     "Division by Zero (INT 0)\n",
     "Debug Exception (INT 1)\n",
     "Non-Maskable Interrupt (NMI - INT 2)\n",
@@ -36,6 +38,7 @@ static const char interrupt_messages[][256] = {
     "SIMD Floating-Point Exception (INT 19)\n",
     "Virtualization Exception (INT 20)\n",
     "Control Protection Exception (INT 21)\n",
+    // Reserved Interrupts
     "Reserved (INT 22)\n",
     "Reserved (INT 23)\n",
     "Reserved (INT 24)\n",
@@ -46,15 +49,48 @@ static const char interrupt_messages[][256] = {
     "Reserved (INT 29)\n",
     "Security Exception (INT 30)\n",
     "Reserved (INT 31)\n",
+    // IRQ Interrupts
+    "Timer (IRQ0)\n",
+    "Keyboard (IRQ1)\n",
+    "Cascade (IRQ2)\n",
+    "COM2 (IRQ3)\n",
+    "COM1 (IRQ4)\n",
+    "LPT2 (IRQ5)\n",
+    "Floppy (IRQ6)\n",
+    "LPT1 (IRQ7)\n",
+    "CMOS RTC (IRQ8)\n",
+    "Free (IRQ9)\n",
+    "Free (IRQ10)\n",
+    "Free (IRQ11)\n",
+    "PS2 Mouse (IRQ12)\n",
+    "FPU / Coprocessor / Inter-Processor (IRQ13)\n",
+    "Primary ATA Hard Disk (IRQ14)\n",
+    "Secondary ATA Hard Disk (IRQ15)\n"};
+
+static IDTDescriptor idt[256];
+static IDT_R idtr_descriptor;
+
+void isr_20h_handler(void)
+{
+    const char *message = interrupt_messages[32];
+    kprint(message);
+    outb(0x20, 0x20);
+    return;
 };
 
-/**
- * @brief Interrupt Service Routine (ISR) for the "Division by Zero"
- */
-void isr0(void)
+void isr_21h_handler(void)
 {
-    const char *message = interrupt_messages[0];
+    const char *message = interrupt_messages[33];
     kprint(message);
+    outb(0x20, 0x20);
+    return;
+};
+
+void isr_default_handler(void)
+{
+    const char *message = "Default Handler\n";
+    kprint(message);
+    outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
@@ -91,9 +127,14 @@ void idt_init(void)
     // Set the limit and base address of the IDT descriptor
     idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
     idtr_descriptor.base = (uintptr_t)&idt[0];
-    // Initialize the first IDT entry for the "division by zero" interrupt
-    idt_set(0, isr0);
+
+    for (int vector = 0; vector < 256; vector++)
+    {
+        idt_set(vector, asm_interrupt_default);
+    };
+    idt_set(0x20, asm_interrupt_20h);
+    idt_set(0x21, asm_interrupt_21h);
     // Pass the IDT address in idtr_descriptor.base to the assembly routine
-    idt_loader(&idtr_descriptor);
+    asm_idt_loader(&idtr_descriptor);
     return;
 };

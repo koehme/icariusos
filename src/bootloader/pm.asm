@@ -8,7 +8,7 @@ extern kmain
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
 
-%define ICW_1 0x11				    ; 00010001 binary. Enables initialization mode and we are sending ICW 4
+%define ICW_1 00010001b				; Enables initialization mode and we are sending ICW 4
 %define MODE_8086 0b00000001        ; 80x86 mode
 
 %define PIC_1_CTRL 0x20				; Primary PIC control register
@@ -39,8 +39,24 @@ _start:
     mov gs, ax
     mov ebp, 0x00200000         ; Set base pointer (ebp) and stack pointer (esp)
     mov esp, ebp
+
 ;=============================================================================
-; .enable_a20
+; run_kernel
+;
+; Jump to the kernel at C function kmain
+;
+; @param None
+;
+; @return None
+;=============================================================================
+.run_kernel:
+    call enable_a20
+    call remap_pic1
+    call kmain
+    jmp $                       ; Infinite loop to halt execution at this point
+
+;=============================================================================
+; enable_a20
 ;
 ; Enabling the A20 gate, which allows access to
 ; the full memory addressing capability of the x86 architecture. The A20 gate
@@ -54,10 +70,11 @@ _start:
 ;
 ; @return None
 ;=============================================================================    
-.enable_a20:
+enable_a20:
     in al, 0x92
     or al, 2
     out 0x92, al
+    ret
 
 ;=============================================================================
 ; remap_pic1
@@ -69,7 +86,7 @@ _start:
 ;
 ; @return None
 ;=============================================================================
-.remap_pic1:
+remap_pic1:
     ; Send ICW 1 --------------------------------------------------------
     mov al, ICW_1               ; Initialize Control Word 1
     out PIC_1_CTRL, al          ; Send ICW 1 to the control port of PIC1
@@ -83,18 +100,6 @@ _start:
     ; Send ICW 4 - Set x86 mode ----------------------------------------
     mov al, MODE_8086           ; Bit 0 enables 80x86 mode
     out PIC_1_DATA, al          ; Send it to the PIC1
-
-;=============================================================================
-; run_kernel
-;
-; Jump to the kernel at C function kmain
-;
-; @param None
-;
-; @return None
-;=============================================================================
-.run_kernel:
-    call kmain
-    jmp $                       ; Infinite loop to halt execution at this point
+    ret
 
 times 512 - ($ - $$) db 0x0
