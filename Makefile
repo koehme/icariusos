@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/mem.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o
+DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/mem.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o
 INCLUDES = -I./src/include
 FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -35,6 +35,9 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./obj/io.asm.o: ./src/kernel/io/io.asm
 	nasm -f elf -g ./src/kernel/io/io.asm -o ./obj/io.asm.o
+
+./obj/string.o: ./src/kernel/string/string.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/string/string.c -o ./obj/string.o
 
 clean:	
 	rm -rf ./bin/*

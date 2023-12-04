@@ -9,6 +9,6 @@
 
 #include <stddef.h>
 
-void *memory_set(void *ptr, const int value, const size_t num);
+void *memset(void *ptr, const int value, const size_t num);
 
 #endif

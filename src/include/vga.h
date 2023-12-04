@@ -40,8 +40,8 @@ typedef struct VGADisplay
 
 extern VGADisplay vga_display;
 
-void vga_display_init(volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height);
-void vga_display_clear(void);
-void vga_print(const char *str);
+void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height);
+void vga_display_clear(VGADisplay *self);
+void vga_print(VGADisplay *self, const char *str);
 
 #endif
