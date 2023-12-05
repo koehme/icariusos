@@ -5,7 +5,7 @@
  */
 
 #include "idt.h"
-#include "mem.h"
+#include "string.h"
 #include "io.h"
 #include "icarius.h"
 
@@ -80,14 +80,22 @@ static IDTDescriptor idt[256];
  */
 static IDT_R idtr_descriptor;
 
+static char counter = 'A'; // Initial character
+
 /**
  * @brief Timer ISR handler.
  * @return void
  */
 void isr_20h_handler(void)
 {
-    const char *message = interrupt_messages[32];
-    kprint(message);
+    // Temporary test routine for VGA scrolling - to be deleted
+    kprint(&counter);
+    counter++;
+
+    if (counter > 'Z')
+    {
+        counter = 'A';
+    };
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
@@ -110,8 +118,6 @@ void isr_21h_handler(void)
  */
 void isr_default_handler(void)
 {
-    const char *message = "Default Handler\n";
-    kprint(message);
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
@@ -131,11 +137,11 @@ void idt_set(const int interrupt_n, void *isr)
     };
     IDTDescriptor *descriptor = &idt[interrupt_n];
 
-    descriptor->isr_low = (uint32_t)isr & 0xffff;
+    descriptor->isr_low = (uintptr_t)isr & 0xffff;
     descriptor->kernel_cs = 0x08;
     descriptor->reserved = 0x00;
     descriptor->attributes = 0b11101110;
-    descriptor->isr_high = ((uint32_t)isr >> 16) & 0xffff;
+    descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
 };
 
 /**

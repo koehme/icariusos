@@ -8,22 +8,25 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 
 ## archievements 🚀
 
-1. **bootloader implementation:**
+1. **bootloader:**
    Smooth system startup achieved with a functional bootloader
 
 2. **ata driver:**
    Successfully reads LBA sector from the hard drive, loading the kernel into memory at 0x010000.
 
 3. **protected mode transition:**
-   Seamless transition to Protected Mode (32-bit) with A20 Gate activation for full memory utilization.
+   Seamless transition to Protected Mode (32-bit) with A20 Gate activation for full 32bit memory utilization.
 
-4. **interrupt handling:**
+4. **interrupts:**
    Implemented the Interrupt Descriptor Table (IDT) for handling interrupts.
+
+5. **pic:**
+   Currently working on implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
 
 ## next step 🛠️
 
-1. **PIC implementation:**
-   Currently working on implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
+6. **extend vga driver**
+   Add a functionality to scroll
 
 # build
 
@@ -37,7 +40,7 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 clear && make clean && ./build.sh && qemu-system-x86_64 -hda ./bin/os.bin
 ```
 
-# debugging 
+# debugging
 
 ```bash
 /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit

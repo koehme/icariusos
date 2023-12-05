@@ -1,8 +1,7 @@
 {
     "files.associations": {
-        "stdint.h": "c",
-        "stdbool.h": "c",
-        "stddef.h": "c",
-        "kernel.h": "c"
-    },
+        "sstream": "c",
+        "ratio": "c",
+        "__locale": "c"
+    }
 }

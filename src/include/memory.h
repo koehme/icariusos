@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 
-void *memset(void *ptr, const int value, const size_t num);
+void *mset(void *dest, const int value, const size_t n_bytes);
+void *mcpy(void *dest, const void *src, size_t n_bytes);
 
 #endif
