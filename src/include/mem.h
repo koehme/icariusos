@@ -1,11 +1,11 @@
 /**
- * @file memory.h
+ * @file mem.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef MEM_H
+#define MEM_H
 
 #include <stddef.h>
 #include <stdint.h>

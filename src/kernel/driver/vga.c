@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "vga.h"
-#include "memory.h"
+#include "mem.h"
 #include "string.h"
 
 VGADisplay vga_display;

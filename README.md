@@ -40,7 +40,7 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 # run
 
 ```bash
-clear && make clean && ./build.sh && qemu-system-x86_64 -hda ./bin/os.bin
+clear && make clean && ./build.sh && qemu-system-x86_64 -drive format=raw,file=./bin/os.bin
 ```
 
 # debugging

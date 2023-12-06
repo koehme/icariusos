@@ -1,11 +1,10 @@
 /**
- * @file memory.c
+ * @file mem.c
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#include "memory.h"
-#include <stdint.h>
+#include "mem.h"
 
 /**
  * @brief Sets a block of memory to the specified value.
