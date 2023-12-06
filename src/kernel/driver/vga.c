@@ -13,7 +13,15 @@
 
 VGADisplay vga_display;
 
-static uint16_t make_ch(const uint8_t ch, const VGADisplayColor color)
+/**
+ * @brief Create a VGA character with color attributes.
+ * Combines a given ASCII character with VGA color information
+ * to produce a 16-bit value representing a character with associated color.
+ * @param ch The ASCII character to be combined with color information.
+ * @param color The VGAColor enum representing the foreground and background colors.
+ * @return uint16_t A 16-bit value representing the combined character and color.
+ */
+static uint16_t make_ch(const uint8_t ch, const VGAColor color)
 {
     return ch | (uint16_t)(color << 8);
 };
@@ -25,26 +33,26 @@ static uint16_t make_ch(const uint8_t ch, const VGADisplayColor color)
  */
 static void vga_clear_last_line(VGADisplay *self)
 {
-    uint16_t *linear_clear_position = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width * 2;
-    const uint16_t blank = make_ch(' ', VGA_COLOR_BLACK);
-    mset(linear_clear_position, blank, self->width * sizeof(uint16_t));
+    uint16_t *last_line = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width;
+    const uint16_t blank = make_ch(0x20, VGA_COLOR_BLACK);
+    msetw(last_line, blank, self->width);
     return;
 };
 
 /**
- * @brief Scrolls up the content of a VGA display.
- * Scrolls up the content of the VGA display, starting from row 1,
- * effectively shifting everything up by one row. The specified number of rows
- * (`rows_to_scroll`) determines the extent of the scroll operation.
- * @param self A pointer to the VGADisplay structure.
- * @param rows The number of rows to scroll up.
+ * Scrolls the VGA display up by the specified number of lines.
+ * Performs a vertical scroll on the VGA display, moving the content
+ * up by the specified number of lines. It is particularly useful when updating
+ * the display content and needing to make room for new information.
+ * @param self A pointer to the VGADisplay structure representing the display.
+ * @param lines The number of lines by which to scroll up.
  * @return void
  */
-static void vga_scroll_up(VGADisplay *self, unsigned int rows)
+static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
 {
     uint16_t *dest = (uint16_t *volatile)self->framebuffer;
-    uint16_t *src = (uint16_t *volatile)self->framebuffer + rows * self->width;
-    const size_t bytes = (self->height - rows) * self->width * 2;
+    uint16_t *src = (uint16_t *volatile)self->framebuffer + lines * self->width;
+    const size_t bytes = (self->height - lines) * self->width * 2;
     mcpy(dest, src, bytes);
     return;
 };
@@ -60,9 +68,7 @@ static void vga_scroll(VGADisplay *self)
     // Check if the cursor is beyond the visible area
     if (self->cursor_y >= self->height)
     {
-        // Scroll up the content
         vga_scroll_up(self, 1);
-        // Clear the last row
         vga_clear_last_line(self);
         // Update the cursor position
         self->cursor_y = self->height - 1;
@@ -70,6 +76,15 @@ static void vga_scroll(VGADisplay *self)
     return;
 };
 
+/**
+ * @brief Initializes the VGA display by configuring the necessary parameters,
+ * such as the framebuffer, cursor position, width and height.
+ *
+ * @param self A pointer to the VGADisplay structure representing the VGA display.
+ * @param framebuffer A pointer to the volatile uint16_t array serving as the framebuffer.
+ * @param width The width of the VGA display in pixels.
+ * @param height The height of the VGA display in pixels.
+ */
 void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height)
 {
     self->framebuffer = framebuffer;
@@ -80,14 +95,24 @@ void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const ui
     return;
 };
 
-static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGADisplayColor color)
+/**
+ * @brief Places the specified character at the given coordinates (y, x)
+ * on the VGA display, using the provided color. It calculates the linear address
+ * in the framebuffer and updates the corresponding memory location.
+ * @param self A pointer to the VGADisplay structure representing the VGA display.
+ * @param y The vertical position (row) where the character will be placed.
+ * @param x The horizontal position (column) where the character will be placed.
+ * @param ch The ASCII code of the character to be displayed.
+ * @param color The color of the character on the VGA display.
+ */
+static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGAColor color)
 {
     const uint16_t linear_address = (y * self->width) + x;
     self->framebuffer[linear_address] = make_ch(ch, color);
     return;
 };
 
-static void vga_display_write(VGADisplay *self, uint8_t ch, const VGADisplayColor color)
+static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color)
 {
     if (ch == '\n')
     {
@@ -119,9 +144,18 @@ void vga_display_clear(VGADisplay *self)
     return;
 };
 
+/**
+ * @brief Prints a null-terminated string on the VGA display.
+ *
+ * Iterates through the characters in the given null-terminated string
+ * and writes each character to the VGA display using the specified color.
+ *
+ * @param self A pointer to the VGADisplay structure representing the VGA display.
+ * @param str A pointer to the null-terminated string to be printed on the VGA display.
+ */
 void vga_print(VGADisplay *self, const char *str)
 {
-    const size_t len = strlen(str);
+    const size_t len = slen(str);
 
     for (int i = 0; i < len; i++)
     {

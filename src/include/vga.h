@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-typedef enum VGADisplayColor
+typedef enum VGAColor
 {
     VGA_COLOR_BLACK = 0,
     VGA_COLOR_BLUE = 1,
@@ -27,7 +27,7 @@ typedef enum VGADisplayColor
     VGA_COLOR_LIGHT_MAGENTA = 13,
     VGA_COLOR_YELLOW = 14,
     VGA_COLOR_WHITE = 15,
-} VGADisplayColor;
+} VGAColor;
 
 typedef struct VGADisplay
 {
