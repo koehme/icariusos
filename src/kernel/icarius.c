@@ -8,8 +8,11 @@
 #include "vga.h"
 #include "idt.h"
 #include "io.h"
+#include "heap.h"
 
 extern VGADisplay vga_display;
+extern HeapDescriptor kheap_descriptor;
+extern Heap kheap;
 
 void kprint(const char *str)
 {
@@ -21,6 +24,9 @@ void kmain(void)
 {
     vga_display_init(&vga_display, (volatile uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
+
+    heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
+
     idt_init();
     asm_do_sti();
     return;

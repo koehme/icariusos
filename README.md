@@ -23,10 +23,13 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 5. **pic:**
    Currently working on implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
 
-## next step 🛠️
-
 6. **extend vga driver**
    Add a functionality to scroll
+
+## next step 🛠️
+
+7. **heap**
+   Add a functionality to dynamically allocate memory like kheap(50) for 50 bytes
 
 # build
 
@@ -43,7 +46,7 @@ clear && make clean && ./build.sh && qemu-system-x86_64 -hda ./bin/os.bin
 # debugging
 
 ```bash
-/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
+clear && make clean && ./build.sh && /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
 ```
 
 ```bash
