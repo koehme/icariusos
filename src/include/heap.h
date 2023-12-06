@@ -28,8 +28,10 @@ typedef struct Heap
 {
     HeapDescriptor *descriptor;
     void *saddress;
+    size_t block_size;
 } Heap;
 
-void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void *descriptor_saddress, const size_t n_bytes, const size_t align_at_bytes);
+void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void *descriptor_saddress, const size_t n_bytes, const size_t block_size);
+void *heap_malloc(Heap *self, const size_t n_bytes);
 
 #endif
