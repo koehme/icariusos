@@ -80,15 +80,13 @@ static IDTDescriptor idt[256];
  */
 static IDT_R idtr_descriptor;
 
-static char counter = 'A'; // Initial character
-
+static char counter = 'A';
 /**
  * @brief Timer ISR handler.
  * @return void
  */
 void isr_20h_handler(void)
 {
-    // Temporary test routine for VGA scrolling - to be deleted
     kprint(&counter);
     counter++;
 

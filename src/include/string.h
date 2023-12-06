@@ -9,6 +9,6 @@
 
 #include <stddef.h>
 
-size_t strlen(const char *str);
+size_t slen(const char *str);
 
 #endif

@@ -7,12 +7,14 @@
 #ifndef IO_H
 #define IO_H
 
-// Programmable Interrupt Controller
-#define PIC_1_CTRL 0x20 // Primary PIC control register
-#define PIC_1_DATA 0x21 // Primary PIC data register
-#define PIC_2_CTRL 0xA0 // Secondary PIC control register
-#define PIC_2_DATA 0xA1 // Secondary PIC data register
-#define PIC_ACK 0x20    // Acknowledge-Bit (0x20)
+typedef enum PICPorts
+{
+    PIC_1_CTRL = 0x20,
+    PIC_1_DATA = 0x21,
+    PIC_2_CTRL = 0xA0,
+    PIC_2_DATA = 0xA1,
+    PIC_ACK = 0x20
+} PICPorts;
 
 void asm_outb(unsigned short port, unsigned char value);
 void asm_outw(unsigned short port, unsigned short value);

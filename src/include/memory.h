@@ -8,8 +8,10 @@
 #define MEMORY_H
 
 #include <stddef.h>
+#include <stdint.h>
 
-void *mset(void *dest, const int value, const size_t n_bytes);
+void *msetb(void *dest, const uint8_t value, size_t n_bytes);
+void *msetw(void *dest, const uint16_t value, size_t n_bytes);
 void *mcpy(void *dest, const void *src, size_t n_bytes);
 
 #endif
