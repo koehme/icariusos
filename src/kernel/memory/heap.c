@@ -5,6 +5,7 @@
  */
 
 #include "heap.h"
+#include "mem.h"
 
 HeapDescriptor kheap_descriptor;
 Heap kheap;
@@ -22,11 +23,15 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
 {
     // Initialize the heap descriptor
     descriptor->saddress = descriptor_saddress;
-    // Assume block_size is a power of 2^12 (e.g., 4096)
-    descriptor->total_descriptors = n_bytes / block_size; // 25600 total descriptors
+    descriptor->total_descriptors = n_bytes / block_size; // 25600 total descriptors - assume block_size is a power of 2^12 (e.g., 4096)
     // Initialize the heap data pool
     self->descriptor = descriptor;
     self->saddress = heap_saddress;
+    self->block_size = block_size;
+    // Initialize the descriptor table with 0x0
+    mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
+    // Initialize the heap data pool with 0x0
+    mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
     return;
 };
 
@@ -44,8 +49,8 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
  */
 static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
 {
-    const size_t lower_boundary = n_bytes - (n_bytes % self->block_size);
-    const size_t aligned_size = lower_boundary + self->block_size;
+    const size_t lower_aligned_boundary = n_bytes - (n_bytes % self->block_size);
+    const size_t aligned_size = lower_aligned_boundary + self->block_size;
     return aligned_size;
 };
 
@@ -59,10 +64,22 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
  */
 void *heap_malloc(Heap *self, const size_t n_bytes)
 {
-    const size_t aligned_size = heap_align_bytes_to_block_size(self, n_bytes);
+    void *block = 0x0;
+    const size_t n_bytes_aligned = heap_align_bytes_to_block_size(self, n_bytes);
     // TODO: Implement the logic to search the heap descriptor pool for a free block
     // and check if enough blocks are available for allocation.
     // Also, determine the needed total blocks and proceed accordingly.
     // Return a pointer to the allocated memory block or 0x0 if allocation fails.
-    return 0x0;
+
+    // Calculate the number of blocks needed for the allocation.
+    // For example the n_bytes_aligned is 8192 / 4096 = 2 blocks in total we need for the allocation
+    const size_t blocks_needed = n_bytes_aligned / self->block_size;
+
+    if (blocks_needed > self->descriptor->total_descriptors)
+    {
+        // kpanic descriptor table is full
+    };
+    // TODO: Implement the allocation logic, update descriptor flags, etc.
+    // Return a pointer to the allocated memory block
+    return block;
 };
