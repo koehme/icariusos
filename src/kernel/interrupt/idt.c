@@ -80,19 +80,19 @@ static IDTDescriptor idt[256];
  */
 static IDT_R idtr_descriptor;
 
-static char counter = 'A';
 /**
  * @brief Timer ISR handler.
  * @return void
  */
 void isr_20h_handler(void)
 {
-    kprint(&counter);
-    counter++;
+    static char matrix = 'A';
+    kprint(&matrix);
+    matrix++;
 
-    if (counter > 'Z')
+    if (matrix > 'Z')
     {
-        counter = 'A';
+        matrix = 'A';
     };
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;

@@ -35,7 +35,7 @@ static void vga_clear_last_line(VGADisplay *self)
 {
     uint16_t *last_line = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width;
     const uint16_t blank = make_ch(0x20, VGA_COLOR_BLACK);
-    msetw(last_line, blank, self->width);
+    mset16(last_line, blank, self->width);
     return;
 };
 
@@ -178,7 +178,7 @@ void vga_print(VGADisplay *self, const char *str)
     for (int i = 0; i < len; i++)
     {
         const char ch = str[i];
-        vga_display_write(self, ch, VGA_COLOR_CYAN);
+        vga_display_write(self, ch, VGA_COLOR_LIGHT_GREEN);
     };
     return;
 };

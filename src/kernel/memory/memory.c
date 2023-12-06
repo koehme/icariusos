@@ -14,14 +14,14 @@
  * @param n_bytes The number of bytes to process, indicating the size of the memory block.
  * @return A pointer to the destination memory block ('dest').
  */
-void *msetb(void *dest, const uint8_t value, size_t n_bytes)
+void *mset8(void *dest, const uint8_t value, size_t n_bytes)
 {
-    uint8_t *temp = (uint8_t *)dest;
+    uint8_t *buffer = (uint8_t *)dest;
 
     for (; n_bytes != 0; n_bytes--)
     {
-        *temp = value;
-        temp++;
+        *buffer = value;
+        buffer++;
     };
     return dest;
 };
@@ -35,14 +35,14 @@ void *msetb(void *dest, const uint8_t value, size_t n_bytes)
  * @param n_bytes  The number of bytes to process, indicating the size of the memory block.
  * @return A pointer to the destination memory block ('dest').
  */
-void *msetw(void *dest, const uint16_t value, size_t n_bytes)
+void *mset16(void *dest, const uint16_t value, size_t n_bytes)
 {
-    uint16_t *temp = (uint16_t *)dest;
+    uint16_t *buffer = (uint16_t *)dest;
 
     for (; n_bytes != 0; n_bytes--)
     {
-        *temp = value;
-        temp++;
+        *buffer = value;
+        buffer++;
     };
     return dest;
 };
@@ -56,14 +56,14 @@ void *msetw(void *dest, const uint16_t value, size_t n_bytes)
  */
 void *mcpy(void *dest, const void *src, size_t n_bytes)
 {
-    unsigned char *byte_dest = (unsigned char *)dest;
-    const unsigned char *byte_src = (const unsigned char *)src;
+    uint8_t *byte_dest = (uint8_t *)dest;
+    const uint8_t *src_ptr = (const uint8_t *)src;
 
     while (n_bytes)
     {
-        *byte_dest = *byte_src;
+        *byte_dest = *src_ptr;
         byte_dest++;
-        byte_src++;
+        src_ptr++;
         n_bytes--;
     };
     return dest;
