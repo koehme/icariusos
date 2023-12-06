@@ -84,6 +84,7 @@ static void vga_scroll(VGADisplay *self)
  * @param framebuffer A pointer to the volatile uint16_t array serving as the framebuffer.
  * @param width The width of the VGA display in pixels.
  * @param height The height of the VGA display in pixels.
+ * @return void
  */
 void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height)
 {
@@ -104,6 +105,7 @@ void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const ui
  * @param x The horizontal position (column) where the character will be placed.
  * @param ch The ASCII code of the character to be displayed.
  * @param color The color of the character on the VGA display.
+ * @return void
  */
 static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGAColor color)
 {
@@ -112,6 +114,15 @@ static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8
     return;
 };
 
+/**
+ * @brief Writes a character to the VGA display at the current cursor position.
+ * If the character is a newline ('\n'), the cursor is moved to the beginning of the
+ * next line. The character is displayed with the specified color.
+ * @param self   A pointer to the VGADisplay structure representing the VGA display instance.
+ * @param ch     The character to be written to the display.
+ * @param color  The color in which the character should be displayed.
+ * @return void
+ */
 static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color)
 {
     if (ch == '\n')
@@ -132,6 +143,14 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
     return;
 };
 
+/**
+ * Clears the content of the VGA display.
+ * Iterates through each pixel on the VGA display and sets the character
+ * to a space (' ') with a specified color (VGA_COLOR_BLACK). It effectively clears
+ * the entire display, providing a blank canvas for subsequent rendering.
+ * @param self A pointer to the VGADisplay structure representing the VGA display instance.
+ * @return void
+ */
 void vga_display_clear(VGADisplay *self)
 {
     for (int y = 0; y < self->height; y++)
@@ -146,12 +165,11 @@ void vga_display_clear(VGADisplay *self)
 
 /**
  * @brief Prints a null-terminated string on the VGA display.
- *
  * Iterates through the characters in the given null-terminated string
  * and writes each character to the VGA display using the specified color.
- *
  * @param self A pointer to the VGADisplay structure representing the VGA display.
  * @param str A pointer to the null-terminated string to be printed on the VGA display.
+ * @return void
  */
 void vga_print(VGADisplay *self, const char *str)
 {
