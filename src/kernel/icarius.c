@@ -36,9 +36,10 @@ void kmain(void)
     vga_display_clear(&vga_display);
 
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
-    void *p1 = heap_malloc(&kheap, 50);
+    void *p1 = heap_malloc(&kheap, 4096);
+    void *p2 = heap_malloc(&kheap, 50);
 
-    if (p1)
+    if (p1 || p2)
     {
     };
     idt_init();

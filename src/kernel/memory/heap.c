@@ -31,10 +31,14 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
     self->descriptor = descriptor;
     self->saddress = heap_saddress;
     self->block_size = block_size;
+    // DEBUGGING
+    const size_t partial_init_size = 1024;
     // Initialize the descriptor table with 0x0
-    mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
+    // Replace partial_init_size * sizeof(uint8_t) with descriptor->total_descriptors * sizeof(uint8_t)
+    mset8(descriptor->saddress, 0x0, partial_init_size);
     // Initialize the heap data pool with 0x0
-    mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
+    // Replace partial_init_size * sizeof(uint8_t) with n_bytes * sizeof(uint8_t)
+    mset8(self->saddress, 0x0, partial_init_size);
     return;
 };
 
@@ -57,13 +61,32 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
     return aligned_size;
 };
 
-static void *heap_search(Heap *self, const size_t blocks_needed, size_t start_block, size_t end_block)
+static void heap_mark(Heap *self, size_t start_block, size_t end_block)
 {
-    // Implement logic to search for a free block in the heap and allocate it.
-    // Also, update descriptor flags and perform necessary bookkeeping.
-    // Absolute address is the user's address
+    uint8_t *head_descriptor = &self->descriptor->saddress[start_block];
+    // Mark the first block in the heap descriptor as head, next and used
+    *head_descriptor |= DESCRIPTOR_IS_HEAD | DESCRIPTOR_IS_USED | DESCRIPTOR_HAS_NEXT;
 
+    for (size_t curr_block = start_block; curr_block <= end_block; curr_block++)
+    {
+        uint8_t *curr_descriptor = &self->descriptor->saddress[curr_block];
+
+        if (curr_block == end_block)
+        {
+            // Mark the last block not with DESCRIPTOR_HAS_NEXT to indiciate here is the end of the allocation
+            *curr_descriptor |= DESCRIPTOR_IS_USED;
+            break;
+        };
+        *curr_descriptor |= DESCRIPTOR_IS_USED | DESCRIPTOR_HAS_NEXT;
+    };
+    return;
+};
+
+static size_t heap_search(Heap *self, const size_t blocks_needed)
+{
+    size_t start_block = -1;
     size_t contiguous_free_blocks = 0;
+
     // Go through all descriptors and search for a matching free block
     for (size_t i = 0; i < self->descriptor->total_descriptors; i++)
     {
@@ -72,23 +95,32 @@ static void *heap_search(Heap *self, const size_t blocks_needed, size_t start_bl
 
         if (is_block_free)
         {
+            if (start_block == -1)
+            {
+                start_block = i;
+            };
             contiguous_free_blocks++;
         }
         else
         {
+            start_block = -1;
             contiguous_free_blocks = 0;
+            continue;
         };
 
         if (contiguous_free_blocks == blocks_needed)
         {
-            // Mark all blocks from start to end with ALLOC_DESCRIPTOR_IS_USED
-            // Mark the start block with additional ALLOC_DESCRIPTOR_IS_HEAD
-            // Mark also the start block and all additional blocks except the end_block with ALLOC_DESCRIPTOR_HAS_NEXT
+            break;
         };
     };
-    void *absolute_data_pool_address = 0x0;
-    // Todo Calculate the absolute_address with start_block and self->s_address
-    return absolute_data_pool_address;
+
+    if (start_block == -1)
+    {
+        return -1;
+    };
+    const size_t end_block = start_block + blocks_needed - 1;
+    heap_mark(self, start_block, end_block);
+    return start_block;
 };
 
 /**
@@ -110,16 +142,15 @@ void *heap_malloc(Heap *self, const size_t n_bytes)
     {
         kpanic("Exhausted heap descriptor pool; no additional blocks available for allocation.");
     };
-    // Calculate the absolute address in the data pool with the following equation
-    // heap_data_pool_start_address + (blocks_needed * block_size)
-    size_t start_block = 0;
-    size_t end_block = 0;
+    size_t block = -1;
+    block = heap_search(self, blocks_needed);
 
-    void *free_block = heap_search(self, blocks_needed, start_block, end_block);
-
-    if (free_block == 0x0)
+    if (block == -1)
     {
-        kpanic("Exhausted heap pool; no additional blocks available for allocation.");
+        kpanic("Fragmented heap descriptor pool; no contiguous blocks available for allocation.");
+        return 0x0;
     };
-    return free_block;
+    void *absolute_address = 0x0;
+    absolute_address = self->saddress + (block * self->block_size);
+    return absolute_address;
 };

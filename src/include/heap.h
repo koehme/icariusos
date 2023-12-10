@@ -14,7 +14,7 @@ typedef enum HeapDescriptorFlags
 {
     DESCRIPTOR_IS_FREE = 0b00000000, // 0
     DESCRIPTOR_IS_USED = 0b00000001, // 1
-    DESCRIPTOR_IS_HEAD = 0b0100000,  // 64
+    DESCRIPTOR_IS_HEAD = 0b01000000, // 64
     DESCRIPTOR_HAS_NEXT = 0b10000000 // 128
 } HeapDescriptorFlags;
 
