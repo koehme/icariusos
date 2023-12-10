@@ -31,14 +31,9 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
     self->descriptor = descriptor;
     self->saddress = heap_saddress;
     self->block_size = block_size;
-    // DEBUGGING
-    const size_t partial_init_size = 1024;
-    // Initialize the descriptor table with 0x0
-    // Replace partial_init_size * sizeof(uint8_t) with descriptor->total_descriptors * sizeof(uint8_t)
-    mset8(descriptor->saddress, 0x0, partial_init_size);
-    // Initialize the heap data pool with 0x0
-    // Replace partial_init_size * sizeof(uint8_t) with n_bytes * sizeof(uint8_t)
-    mset8(self->saddress, 0x0, partial_init_size);
+    // Initialization of the entire contiguous blocks with zeros
+    mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
+    mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
     return;
 };
 
@@ -61,7 +56,17 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
     return aligned_size;
 };
 
-static void heap_mark(Heap *self, size_t start_block, size_t end_block)
+/**
+ * @brief Marks a range of blocks in the heap as used and updates descriptors.
+ * Given a heap object and a range of block indices, this function marks the corresponding
+ * blocks as used in the heap descriptor pool. The first block is marked as the head with
+ * next and used flags and the last block is marked as used with no next flag to indicate
+ * the end of the allocation.
+ * @param self A pointer to the Heap object.
+ * @param start_block The index of the first block to mark.
+ * @param end_block The index of the last block to mark.
+ */
+static void heap_mark(Heap *self, const size_t start_block, const size_t end_block)
 {
     uint8_t *head_descriptor = &self->descriptor->saddress[start_block];
     // Mark the first block in the heap descriptor as head, next and used
@@ -82,6 +87,17 @@ static void heap_mark(Heap *self, size_t start_block, size_t end_block)
     return;
 };
 
+/**
+ * @brief Searches for a contiguous block of free memory in the heap.
+ * Given a heap object and the number of contiguous blocks needed, this function
+ * searches for a suitable block in the heap descriptor pool. It returns the index
+ * of the first block in the found contiguous free memory block and marks the blocks
+ * as used in the heap descriptor pool.
+ * @param self A pointer to the Heap object.
+ * @param blocks_needed The number of contiguous blocks needed.
+ * @return The index of the first block in the allocated memory, or SIZE_MAX if no
+ * contiguous block is found.
+ */
 static size_t heap_search(Heap *self, const size_t blocks_needed)
 {
     size_t start_block = -1;
