@@ -4,8 +4,11 @@
  * @copyright MIT
  */
 
+#include <stdbool.h>
+
 #include "heap.h"
 #include "mem.h"
+#include "icarius.h"
 
 HeapDescriptor kheap_descriptor;
 Heap kheap;
@@ -54,6 +57,40 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
     return aligned_size;
 };
 
+static void *heap_search(Heap *self, const size_t blocks_needed, size_t start_block, size_t end_block)
+{
+    // Implement logic to search for a free block in the heap and allocate it.
+    // Also, update descriptor flags and perform necessary bookkeeping.
+    // Absolute address is the user's address
+
+    size_t contiguous_free_blocks = 0;
+    // Go through all descriptors and search for a matching free block
+    for (size_t i = 0; i < self->descriptor->total_descriptors; i++)
+    {
+        const uint8_t curr_descriptor = self->descriptor->saddress[i];
+        const bool is_block_free = !(curr_descriptor & DESCRIPTOR_IS_USED);
+
+        if (is_block_free)
+        {
+            contiguous_free_blocks++;
+        }
+        else
+        {
+            contiguous_free_blocks = 0;
+        };
+
+        if (contiguous_free_blocks == blocks_needed)
+        {
+            // Mark all blocks from start to end with ALLOC_DESCRIPTOR_IS_USED
+            // Mark the start block with additional ALLOC_DESCRIPTOR_IS_HEAD
+            // Mark also the start block and all additional blocks except the end_block with ALLOC_DESCRIPTOR_HAS_NEXT
+        };
+    };
+    void *absolute_data_pool_address = 0x0;
+    // Todo Calculate the absolute_address with start_block and self->s_address
+    return absolute_data_pool_address;
+};
+
 /**
  * @brief Allocates a block of memory from the heap.
  * Given a heap object and the desired number of bytes, this function allocates
@@ -64,22 +101,25 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
  */
 void *heap_malloc(Heap *self, const size_t n_bytes)
 {
-    void *block = 0x0;
     const size_t n_bytes_aligned = heap_align_bytes_to_block_size(self, n_bytes);
-    // TODO: Implement the logic to search the heap descriptor pool for a free block
-    // and check if enough blocks are available for allocation.
-    // Also, determine the needed total blocks and proceed accordingly.
-    // Return a pointer to the allocated memory block or 0x0 if allocation fails.
-
     // Calculate the number of blocks needed for the allocation.
     // For example the n_bytes_aligned is 8192 / 4096 = 2 blocks in total we need for the allocation
     const size_t blocks_needed = n_bytes_aligned / self->block_size;
 
     if (blocks_needed > self->descriptor->total_descriptors)
     {
-        // kpanic descriptor table is full
+        kpanic("Exhausted heap descriptor pool; no additional blocks available for allocation.");
     };
-    // TODO: Implement the allocation logic, update descriptor flags, etc.
-    // Return a pointer to the allocated memory block
-    return block;
+    // Calculate the absolute address in the data pool with the following equation
+    // heap_data_pool_start_address + (blocks_needed * block_size)
+    size_t start_block = 0;
+    size_t end_block = 0;
+
+    void *free_block = heap_search(self, blocks_needed, start_block, end_block);
+
+    if (free_block == 0x0)
+    {
+        kpanic("Exhausted heap pool; no additional blocks available for allocation.");
+    };
+    return free_block;
 };

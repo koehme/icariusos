@@ -20,6 +20,16 @@ void kprint(const char *str)
     return;
 };
 
+void kpanic(const char *str)
+{
+    vga_print(&vga_display, str);
+
+    for (;;)
+    {
+    };
+    return;
+};
+
 void kmain(void)
 {
     vga_display_init(&vga_display, (volatile uint16_t *)0xb8000, 80, 25);

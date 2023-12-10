@@ -9,5 +9,6 @@
 
 void kmain(void);
 void kprint(const char *str);
+void kpanic(const char *str);
 
 #endif
