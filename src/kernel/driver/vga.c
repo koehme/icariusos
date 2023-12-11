@@ -9,6 +9,7 @@
 
 #include "vga.h"
 #include "mem.h"
+#include "cursor.h"
 #include "string.h"
 
 VGADisplay vga_display;
@@ -27,6 +28,24 @@ static uint16_t make_ch(const uint8_t ch, const VGAColor color)
 };
 
 /**
+ * @brief Places the specified character at the given coordinates (y, x)
+ * on the VGA display, using the provided color. It calculates the linear address
+ * in the framebuffer and updates the corresponding memory location.
+ * @param self A pointer to the VGADisplay structure representing the VGA display.
+ * @param y The vertical position (row) where the character will be placed.
+ * @param x The horizontal position (column) where the character will be placed.
+ * @param ch The ASCII code of the character to be displayed.
+ * @param color The color of the character on the VGA display.
+ * @return void
+ */
+static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGAColor color)
+{
+    const uint16_t linear_address = (y * self->width) + x;
+    self->framebuffer[linear_address] = make_ch(ch, color);
+    return;
+};
+
+/**
  * @brief Clears a specified row in the VGA display by filling it with blank characters.
  * @param self A pointer to the VGADisplay structure.
  * @return void
@@ -34,7 +53,7 @@ static uint16_t make_ch(const uint8_t ch, const VGAColor color)
 static void vga_clear_last_line(VGADisplay *self)
 {
     uint16_t *last_line = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width;
-    const uint16_t blank = make_ch(0x20, VGA_COLOR_BLACK);
+    const uint16_t blank = make_ch(' ', VGA_COLOR_BLACK);
     mset16(last_line, blank, self->width);
     return;
 };
@@ -50,10 +69,10 @@ static void vga_clear_last_line(VGADisplay *self)
  */
 static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
 {
-    uint16_t *dest = (uint16_t *volatile)self->framebuffer;
-    uint16_t *src = (uint16_t *volatile)self->framebuffer + lines * self->width;
-    const size_t bytes = (self->height - lines) * self->width * 2;
-    mcpy(dest, src, bytes);
+    uint16_t *start_first_line = (uint16_t *volatile)self->framebuffer;
+    uint16_t *start_second_line = (uint16_t *volatile)self->framebuffer + lines * self->width;
+    const size_t bytes = self->width * (self->height - lines) * 2;
+    mcpy(start_first_line, start_second_line, bytes);
     return;
 };
 
@@ -65,12 +84,11 @@ static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
  */
 static void vga_scroll(VGADisplay *self)
 {
-    // Check if the cursor is beyond the visible area
+    // Check if the cursor is beyond the visible areac
     if (self->cursor_y >= self->height)
     {
         vga_scroll_up(self, 1);
         vga_clear_last_line(self);
-        // Update the cursor position
         self->cursor_y = self->height - 1;
     };
     return;
@@ -97,24 +115,6 @@ void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const ui
 };
 
 /**
- * @brief Places the specified character at the given coordinates (y, x)
- * on the VGA display, using the provided color. It calculates the linear address
- * in the framebuffer and updates the corresponding memory location.
- * @param self A pointer to the VGADisplay structure representing the VGA display.
- * @param y The vertical position (row) where the character will be placed.
- * @param x The horizontal position (column) where the character will be placed.
- * @param ch The ASCII code of the character to be displayed.
- * @param color The color of the character on the VGA display.
- * @return void
- */
-static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGAColor color)
-{
-    const uint16_t linear_address = (y * self->width) + x;
-    self->framebuffer[linear_address] = make_ch(ch, color);
-    return;
-};
-
-/**
  * @brief Writes a character to the VGA display at the current cursor position.
  * If the character is a newline ('\n'), the cursor is moved to the beginning of the
  * next line. The character is displayed with the specified color.
@@ -129,10 +129,12 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
     {
         self->cursor_x = 0;
         self->cursor_y++;
-        return;
+    }
+    else
+    {
+        vga_display_put_ch_at(self, self->cursor_y, self->cursor_x, ch, color);
+        self->cursor_x++;
     };
-    vga_display_put_ch_at(self, self->cursor_y, self->cursor_x, ch, color);
-    self->cursor_x++;
 
     if (self->cursor_x >= self->width)
     {
@@ -157,7 +159,7 @@ void vga_display_clear(VGADisplay *self)
     {
         for (int x = 0; x < self->width; x++)
         {
-            vga_display_put_ch_at(self, y, x, ' ', VGA_COLOR_BLACK);
+            vga_display_put_ch_at(self, y, x, ' ', VGA_COLOR_WHITE | (VGA_COLOR_BLACK << 4));
         };
     };
     return;
@@ -180,5 +182,6 @@ void vga_print(VGADisplay *self, const char *str)
         const char ch = str[i];
         vga_display_write(self, ch, VGA_COLOR_LIGHT_GREEN);
     };
+    cursor_set(self->cursor_y, self->cursor_x);
     return;
 };
