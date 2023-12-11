@@ -53,7 +53,7 @@ static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8
 static void vga_clear_last_line(VGADisplay *self)
 {
     uint16_t *last_line = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width;
-    const uint16_t blank = make_ch(' ', VGA_COLOR_BLACK);
+    const uint16_t blank = make_ch(' ', VGA_COLOR_WHITE | (VGA_COLOR_BLACK << 4));
     mset16(last_line, blank, self->width);
     return;
 };
