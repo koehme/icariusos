@@ -12,6 +12,15 @@
 extern void asm_do_sti(void);
 extern void asm_do_cli(void);
 
+typedef enum PICPorts
+{
+    PIC_1_CTRL = 0x20,
+    PIC_1_DATA = 0x21,
+    PIC_2_CTRL = 0xa0,
+    PIC_2_DATA = 0xa1,
+    PIC_ACK = 0x20
+} PICPorts;
+
 typedef struct IDTDescriptor
 {
     uint16_t isr_low;   // The lower 16 bits of the ISR's address

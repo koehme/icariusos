@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o
+DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o ./obj/cursor.o
 INCLUDES = -I./src/include
 FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -41,6 +41,9 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./obj/heap.o: ./src/kernel/memory/heap.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/memory/heap.c -o ./obj/heap.o
+
+./obj/cursor.o: ./src/kernel/driver/cursor.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/driver/cursor.c -o ./obj/cursor.o
 
 clean:	
 	rm -rf ./bin/*

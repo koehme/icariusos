@@ -9,6 +9,14 @@
 
 #include <stdint.h>
 
+typedef enum VGAPorts
+{
+    VGA_CTRL = 0x3d4,
+    VGA_DATA = 0x3d5,
+    VGA_LOW_OFFSET = 0x0f,
+    VGA_HIGH_OFFSET = 0x0e,
+} VGAPorts;
+
 typedef enum VGAColor
 {
     VGA_COLOR_BLACK = 0,

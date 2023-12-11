@@ -9,6 +9,7 @@
 #include "idt.h"
 #include "io.h"
 #include "heap.h"
+#include "cursor.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
@@ -41,6 +42,7 @@ void kmain(void)
 {
     vga_display_init(&vga_display, (volatile uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
+    cursor_set(0, 0);
 
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
 
