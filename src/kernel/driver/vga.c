@@ -11,6 +11,7 @@
 #include "mem.h"
 #include "cursor.h"
 #include "string.h"
+#include "icarius.h"
 
 VGADisplay vga_display;
 
@@ -127,8 +128,23 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
 {
     if (ch == '\n')
     {
+        // Newline handler
         self->cursor_x = 0;
         self->cursor_y++;
+    }
+    else if (ch == '\b')
+    {
+        // Backspace handler: Move cursor one pos to the left
+        if (self->cursor_x > 0)
+        {
+            self->cursor_x--;
+        }
+        else if (self->cursor_y > 0)
+        {
+            // If at the beginning of the line, move to the end of the previous line
+            self->cursor_x = self->width - 1;
+            self->cursor_y--;
+        };
     }
     else
     {
@@ -173,14 +189,14 @@ void vga_display_clear(VGADisplay *self)
  * @param str A pointer to the null-terminated string to be printed on the VGA display.
  * @return void
  */
-void vga_print(VGADisplay *self, const char *str)
+void vga_print(VGADisplay *self, const char *str, const VGAColor color)
 {
     const size_t len = slen(str);
 
     for (int i = 0; i < len; i++)
     {
         const char ch = str[i];
-        vga_display_write(self, ch, VGA_COLOR_LIGHT_GREEN);
+        vga_display_write(self, ch, color);
     };
     cursor_set(self->cursor_y, self->cursor_x);
     return;

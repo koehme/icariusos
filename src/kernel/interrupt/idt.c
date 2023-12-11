@@ -86,14 +86,6 @@ static IDT_R idtr_descriptor;
  */
 void isr_20h_handler(void)
 {
-    static char matrix = 'A';
-    kprint(&matrix);
-    matrix++;
-
-    if (matrix > 'Z')
-    {
-        matrix = 'A';
-    };
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
