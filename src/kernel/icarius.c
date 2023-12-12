@@ -88,7 +88,7 @@ void kprint_motd()
 {
     kascii_spinner(60, 50);
     vga_display_clear(&vga_display);
-    vga_display_reset_cursor(&vga_display);
+    vga_display_set_cursor(&vga_display, 0, 0);
     kprint_logo();
     kprint_color("Welcome to icariusOS\n", VGA_COLOR_LIGHT_MAGENTA);
     return;

@@ -161,10 +161,10 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
     return;
 };
 
-void vga_display_reset_cursor(VGADisplay *self)
+void vga_display_set_cursor(VGADisplay *self, const uint8_t y, const uint8_t x)
 {
-    self->cursor_x = 0;
-    self->cursor_y = 0;
+    self->cursor_x = x;
+    self->cursor_y = y;
     return;
 };
 
