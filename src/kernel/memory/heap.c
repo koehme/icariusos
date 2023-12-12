@@ -203,5 +203,5 @@ void heap_free(Heap *self, void *ptr)
     If the flag is set, we continue the loop and examine if HAS_NEXT is also set, except for the last block
     where HAS_NEXT should not be set.
     */
-    return 0x0;
+    return;
 };
