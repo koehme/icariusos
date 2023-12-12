@@ -161,6 +161,13 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
     return;
 };
 
+void vga_display_reset_cursor(VGADisplay *self)
+{
+    self->cursor_x = 0;
+    self->cursor_y = 0;
+    return;
+};
+
 /**
  * Clears the content of the VGA display.
  * Iterates through each pixel on the VGA display and sets the character

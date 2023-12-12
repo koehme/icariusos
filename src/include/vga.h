@@ -51,5 +51,6 @@ extern VGADisplay vga_display;
 void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height);
 void vga_display_clear(VGADisplay *self);
 void vga_print(VGADisplay *self, const char *str, const VGAColor color);
+void vga_display_reset_cursor(VGADisplay *self);
 
 #endif

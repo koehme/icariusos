@@ -52,5 +52,6 @@ typedef struct Heap
 
 void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void *descriptor_saddress, const size_t n_bytes, const size_t block_size);
 void *heap_malloc(Heap *self, const size_t n_bytes);
+void heap_free(Heap *self, void *ptr);
 
 #endif

@@ -22,6 +22,12 @@ void *kmalloc(const size_t size)
     return ptr;
 };
 
+void kfree(void *ptr)
+{
+    heap_free(&kheap, ptr);
+    return;
+};
+
 void kprint_color(const char *str, const VGAColor color)
 {
     vga_print(&vga_display, str, color);
@@ -44,9 +50,9 @@ void kpanic(const char *str)
     return;
 };
 
-void kdelay(const int n)
+void ksleep(const int iterations)
 {
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < iterations; i++)
     {
         for (int j = 0; j < 1000000; j++)
         {
@@ -55,27 +61,35 @@ void kdelay(const int n)
     return;
 };
 
-void kascii_spinner(const int num_frames, const int delay)
+void kascii_spinner(const int frames, const int delay)
 {
     const char *spin_frames[] = {"-", "\\", "|", "/"};
-    const int n_spin_frames = sizeof(spin_frames) / sizeof(spin_frames[0]);
+    const int total_spin_frames = 4;
 
-    for (int i = 0; i < num_frames; i++)
+    for (int i = 0; i < frames; i++)
     {
-        const char *curr_frame = spin_frames[i % n_spin_frames];
+        const char *curr_frame = spin_frames[i % total_spin_frames];
         kprint_color(curr_frame, VGA_COLOR_LIGHT_GREEN);
-        kdelay(delay);
+        ksleep(delay);
         kprint("\b");
     };
     return;
 };
 
-void kprint_motd()
+void kprint_logo(void)
 {
-    kascii_spinner(60, 50); // 60 Frames, 100 ms delay per frame
     kprint("   \\    /   \n");
     kprint("   (\\--/)   \n");
     kprint("    /  \\    \n");
+    return;
+};
+
+void kprint_motd()
+{
+    kascii_spinner(60, 50);
+    vga_display_clear(&vga_display);
+    vga_display_reset_cursor(&vga_display);
+    kprint_logo();
     kprint_color("Welcome to icariusOS\n", VGA_COLOR_LIGHT_MAGENTA);
     return;
 };
@@ -99,6 +113,8 @@ void kmain(void)
     void *p1 = kmalloc(1024); // Should be 0x01000000
     void *p2 = kmalloc(8192); // Should be 0x01001000
     void *p3 = kmalloc(1024); // Should be 0x01004000
+
+    kfree(p1);
 
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
