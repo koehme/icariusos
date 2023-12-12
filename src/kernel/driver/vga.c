@@ -134,14 +134,14 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
     }
     else if (ch == '\b')
     {
-        // Backspace handler: Move cursor one pos to the left
+        // Backspace handler move cursor one pos to the left, if a new column was added
         if (self->cursor_x > 0)
         {
             self->cursor_x--;
         }
         else if (self->cursor_y > 0)
         {
-            // If at the beginning of the line, move to the end of the previous line
+            // If at the beginning of the new line or row, move to the end of the previous line
             self->cursor_x = self->width - 1;
             self->cursor_y--;
         };

@@ -40,8 +40,8 @@ typedef enum VGAColor
 typedef struct VGADisplay
 {
     volatile uint16_t *framebuffer;
-    uint16_t cursor_x;
-    uint16_t cursor_y;
+    uint16_t cursor_x; // The horizontal position (column) where the character will be placed.
+    uint16_t cursor_y; // The vertical position (row) where the character will be placed.
     uint8_t width;
     uint8_t height;
 } VGADisplay;
