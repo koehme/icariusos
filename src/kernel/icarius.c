@@ -5,11 +5,6 @@
  */
 
 #include "icarius.h"
-#include "vga.h"
-#include "idt.h"
-#include "io.h"
-#include "heap.h"
-#include "cursor.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
