@@ -170,3 +170,38 @@ void *heap_malloc(Heap *self, const size_t n_bytes)
     absolute_address = self->saddress + (block * self->block_size);
     return absolute_address;
 };
+
+void heap_free(Heap *self, void *ptr)
+{
+    if (ptr == 0x0)
+    {
+        return;
+    };
+    /*
+    In our understanding, the 'ptr' variable represents the absolute address in the heap data memory.
+    For instance, consider the following code snippet:
+
+    void* ptr = kmalloc(1024); // Allocating a block of 1024 bytes (1 block, as it is below 4096)
+
+    kfree(ptr);
+
+    Since this is the initial allocation, the pointer to be freed should be 0x01000000,
+    and it is expected to be the first block in the heap.
+
+    Let's examine another example:
+    void* ptr2 = kmalloc(4096); // Allocating a block of 4096 bytes (2 blocks required)
+    kfree(ptr2);
+    For this case, ptr2 should be 0x01001000, and we utilize the modulo operator to determine the start block.
+
+                        0x01001000 / 4096
+    Another example is (16781312 / 4096) % 4096
+                                  ^
+                                 4097     % 4096 = 1
+    Thus, the start offset for ptr2 should be 1.
+
+    Subsequently, we iterate through the heap descriptor, checking if the IS_HEAD flag is set.
+    If the flag is set, we continue the loop and examine if HAS_NEXT is also set, except for the last block
+    where HAS_NEXT should not be set.
+    */
+    return 0x0;
+};
