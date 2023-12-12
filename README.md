@@ -31,32 +31,44 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 7. **heap**
    Add a functionality to dynamically allocate memory like kheap(50) for 50 bytes
 
-# build
+# build on macos
 
 ```bash
-./build.sh
+mkdir bin
+mkdir obj
+./macos.sh
 ```
 
-# run
+# build on linux
 
 ```bash
-clear && make clean && ./build.sh && qemu-system-x86_64 -drive format=raw,file=./bin/os.bin
+mkdir bin
+mkdir obj
+./linux.sh
 ```
 
-# debugging
+# run on macos
 
 ```bash
-clear && make clean && ./build.sh && /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
+clear && make clean && ./macos.sh && qemu-system-i386 -drive format=raw,file=./bin/os.bin
 ```
 
+# run on linux
+
 ```bash
-./build.sh
-/opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb
+clear && make clean && ./linux.sh && qemu-system-i386 -drive format=raw,file=./bin/os.bin
+```
 
-add-symbol-file ./obj/loader.o 0x100000
-break _start
+# debugging on mac
 
-target remote | qemu-system-x86_64 -S -gdb stdio -hda ./bin/os.bin
+```bash
+clear && make clean && ./macos.sh && /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
+```
+
+# debugging on linux
+
+```bash
+clear && make clean && ./linux.sh && gdb -x .gdbinit
 ```
 
 ```bash
