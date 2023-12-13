@@ -73,23 +73,31 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
  * @param start_block The index of the first block to mark.
  * @param end_block The index of the last block to mark.
  */
-static void heap_mark(Heap *self, const size_t start_block, const size_t end_block)
+static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t end_block, const size_t blocks_needed)
 {
-    uint8_t *head_descriptor = &self->descriptor->saddress[start_block];
     // Mark the first block in the heap descriptor as head, next and used
-    *head_descriptor |= DESCRIPTOR_IS_HEAD | DESCRIPTOR_IS_USED | DESCRIPTOR_HAS_NEXT;
+    uint8_t descriptor = 0b00000000;
+    descriptor |= (1u << 0);
+    descriptor |= (1u << 6); // should be 65 0b01000001 IS_USED and IS_HEAD :D
+
+    if (blocks_needed > 1)
+    {
+        descriptor |= (1u << 7); // should be 193 IS_USED and IS_HEAD and HAS_NEXT :D
+    };
 
     for (size_t curr_block = start_block; curr_block <= end_block; curr_block++)
     {
-        uint8_t *curr_descriptor = &self->descriptor->saddress[curr_block];
+        // Set the head in the first iteraton and the appropiate bit pattern in next iterations
+        self->descriptor->saddress[curr_block] = descriptor;
+        // Reset descriptor for a clean state
+        descriptor = 0b00000000;
+        // Mark block as IS_USED
+        descriptor |= (1u << 0);
 
-        if (curr_block == end_block)
+        if (curr_block < end_block)
         {
-            // Mark the last block not with DESCRIPTOR_HAS_NEXT to indiciate here is the end of the allocation
-            *curr_descriptor |= DESCRIPTOR_IS_USED;
-            break;
+            descriptor |= (1u << 7); // Mark block as HAS_NEXT AND IS_USED == 129
         };
-        *curr_descriptor |= DESCRIPTOR_IS_USED | DESCRIPTOR_HAS_NEXT;
     };
     return;
 };
@@ -118,10 +126,12 @@ static size_t heap_search(Heap *self, const size_t blocks_needed)
 
         if (is_block_free)
         {
+            // Set the start block
             if (start_block == -1)
             {
                 start_block = i;
             };
+            // Add a free block to the sum variable
             contiguous_free_blocks++;
         }
         else
@@ -142,7 +152,7 @@ static size_t heap_search(Heap *self, const size_t blocks_needed)
         return -1;
     };
     const size_t end_block = start_block + blocks_needed - 1;
-    heap_mark(self, start_block, end_block);
+    heap_mark_as_used(self, start_block, end_block, blocks_needed);
     return start_block;
 };
 
@@ -178,6 +188,24 @@ void *heap_malloc(Heap *self, const size_t n_bytes)
     return absolute_address;
 };
 
+static int heap_mark_as_free(Heap *self, const size_t start_block)
+{
+    uint8_t descriptor = self->descriptor->saddress[start_block];
+    const bool is_head = (descriptor & DESCRIPTOR_IS_HEAD) != 0;
+
+    if (!is_head)
+    {
+        kprint_color("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.", VGA_COLOR_RED);
+        return -1;
+    };
+    // Mark head as not in use DESCRIPTOR_IS_USED = 0b00000001
+    descriptor &= ~(1u << 0);
+    // Mark head as free  DESCRIPTOR_IS_HEAD = 0b01000000
+    descriptor &= ~(1u << 6);
+
+    return 1;
+};
+
 void heap_free(Heap *self, void *ptr)
 {
     if (ptr == 0x0)
@@ -210,7 +238,13 @@ void heap_free(Heap *self, void *ptr)
     If the flag is set, we continue the loop and examine if HAS_NEXT is also set, except for the last block
     where HAS_NEXT should not be set.
     */
+    const size_t start_block = (((size_t)ptr) / self->block_size) % self->block_size;
+    const int res = heap_mark_as_free(self, start_block);
 
-    const size_t block_start = (((size_t)ptr) / self->block_size) % self->block_size;
+    if (res == -1)
+    {
+        kpanic("Error: heap_free failed to deallocate memory.");
+        return;
+    };
     return;
 };

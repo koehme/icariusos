@@ -58,12 +58,11 @@ void ksleep(const int iterations)
 
 void kascii_spinner(const int frames, const int delay)
 {
-    const char *spin_frames[] = {"-", "\\", "|", "/"};
-    const int total_spin_frames = 4;
+    const char *spin_frames[4] = {"-", "\\", "|", "/"};
 
     for (int i = 0; i < frames; i++)
     {
-        const char *curr_frame = spin_frames[i % total_spin_frames];
+        const char *curr_frame = spin_frames[i % 4];
         kprint_color(curr_frame, VGA_COLOR_LIGHT_GREEN);
         ksleep(delay);
         kprint("\b");
