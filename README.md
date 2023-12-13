@@ -32,10 +32,13 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 8. **logo**
    Integrate a function for printing initialization messages and unveil an elegant logo. This makes starting the system a visual experience! :D
 
+9. **heap - deallocation**
+   I just gave my system heap the freeing spirit a spell with something similar to "kfree(ptr)" to free the memory.
+
 ## next step 🛠️
 
-9. **heap - deallocation**
-   The next step is to implement a deallocation function. To give the spirit of liberation a spell with something like "kfree(ptr)" to free the memory.
+10. **understand - paging**
+   Paging dynamically optimizes virtual memory by efficiently managing pages between RAM and the hard disk. As I explore this realm, I look forward to unlocking its potential for enhancing system performance.
 
 ## about
 
