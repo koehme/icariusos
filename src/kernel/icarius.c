@@ -110,6 +110,8 @@ void kmain(void)
     void *p3 = kmalloc(1024); // Should be 0x01004000
 
     kfree(p1);
+    kfree(p2);
+    kfree(p3);
 
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);

@@ -31,9 +31,16 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
     self->descriptor = descriptor;
     self->saddress = heap_saddress;
     self->block_size = block_size;
-    // Initialization of the entire contiguous blocks with zeros
-    mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
-    mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
+
+    // DEBUGGING: Initialize memory blocks with 1024 bytes for descriptor and self
+    // This is done to speed up debugging in GDB by limiting the amount of data zeroed out
+    const size_t debug_mem_size = 1024 * sizeof(uint8_t);
+    mset8(descriptor->saddress, 0x0, debug_mem_size);
+    mset8(self->saddress, 0x0, debug_mem_size);
+    // Uncomment the following lines for full initialization based on data sizes
+    // This is the normal initialization for production code
+    // mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
+    // mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
     return;
 };
 
@@ -203,5 +210,7 @@ void heap_free(Heap *self, void *ptr)
     If the flag is set, we continue the loop and examine if HAS_NEXT is also set, except for the last block
     where HAS_NEXT should not be set.
     */
+
+    const size_t block_start = (((size_t)ptr) / self->block_size) % self->block_size;
     return;
 };

@@ -21,15 +21,21 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
    Implemented the Interrupt Descriptor Table (IDT) for handling interrupts.
 
 5. **pic:**
-   Currently working on implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
+   Implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
 
 6. **extend vga driver**
-   Add a functionality to scroll
+   Add a functionality to scroll.
+
+7. **heap - memory magic unleashed**
+   Introducing a function to dynamically allocate memory with flair, something like "kheap(50)" for 50 bytes, aligning the allocation in cpu cache friendly 4096-byte blocks.
+
+8. **logo**
+   Integrate a function for printing initialization messages and unveil an elegant logo. This makes starting the system a visual experience! :D
 
 ## next step 🛠️
 
-7. **heap**
-   Add a functionality to dynamically allocate memory like kheap(50) for 50 bytes
+9. **heap - deallocation**
+   The next step is to implement a deallocation function. To give the spirit of liberation a spell with something like "kfree(ptr)" to free the memory.
 
 # build on macos
 
