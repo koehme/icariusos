@@ -109,6 +109,13 @@ static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t
     return;
 };
 
+/**
+ * @brief Marks a block in the heap as free.
+ * It checks if the block is a head block, indicating a valid starting point. If successful, it updates the block descriptors and returns 1.
+ * @param self A pointer to the Heap structure.
+ * @param start_block The index of the block to mark as free.
+ * @return 1 on success, -1 on failure.
+ */
 static int heap_mark_as_free(Heap *self, const size_t start_block)
 {
     uint8_t descriptor = self->descriptor->saddress[start_block];
