@@ -65,38 +65,45 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
 
 /**
  * @brief Marks a range of blocks in the heap as used and updates descriptors.
- * Given a heap object and a range of block indices, this function marks the corresponding
+ * Given a heap object and a range of block indices, marks the corresponding
  * blocks as used in the heap descriptor pool. The first block is marked as the head with
- * next and used flags and the last block is marked as used with no next flag to indicate
+ * next and used flags, and the last block is marked as used with no next flag to indicate
  * the end of the allocation.
  * @param self A pointer to the Heap object.
  * @param start_block The index of the first block to mark.
  * @param end_block The index of the last block to mark.
+ * @param blocks_needed The number of blocks needed for marking HAS_NEXT.
  */
 static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t end_block, const size_t blocks_needed)
 {
+    const uint8_t DESCRIPTOR_IS_USED = (1u << 0);
+    const uint8_t DESCRIPTOR_IS_HEAD = (1u << 6);
+    const uint8_t DESCRIPTOR_HAS_NEXT = (1u << 7);
     // Mark the first block in the heap descriptor as head, next and used
     uint8_t descriptor = 0b00000000;
-    descriptor |= (1u << 0);
-    descriptor |= (1u << 6); // should be 65 0b01000001 IS_USED and IS_HEAD :D
+    // should be 65 0b01000001 DESCRIPTOR_IS_USED and DESCRIPTOR_IS_HEAD
+    descriptor |= DESCRIPTOR_IS_USED;
+    descriptor |= DESCRIPTOR_IS_HEAD;
 
     if (blocks_needed > 1)
     {
-        descriptor |= (1u << 7); // should be 193 IS_USED and IS_HEAD and HAS_NEXT :D
+        descriptor |= (1u << 7); // should be 193 IS_USED and IS_HEAD and HAS_NEXT
     };
 
     for (size_t curr_block = start_block; curr_block <= end_block; curr_block++)
     {
-        // Set the head in the first iteraton and the appropiate bit pattern in next iterations
+        // Set the descriptor for the current block
         self->descriptor->saddress[curr_block] = descriptor;
         // Reset descriptor for a clean state
         descriptor = 0b00000000;
-        // Mark block as IS_USED
-        descriptor |= (1u << 0);
+        // Mark the block as DESCRIPTOR_IS_USED
+        descriptor |= DESCRIPTOR_IS_USED;
+        // If the current block is not the last one, mark it as DESCRIPTOR_HAS_NEXT AND DESCRIPTOR_IS_USED == 129
+        const bool has_next_block = (curr_block < end_block - 1);
 
-        if (curr_block < end_block)
+        if (has_next_block)
         {
-            descriptor |= (1u << 7); // Mark block as HAS_NEXT AND IS_USED == 129
+            descriptor |= DESCRIPTOR_HAS_NEXT; // Mark block as DESCRIPTOR_HAS_NEXT AND DESCRIPTOR_IS_USED == 129
         };
     };
     return;
