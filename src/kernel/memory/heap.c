@@ -109,6 +109,30 @@ static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t
     return;
 };
 
+static int heap_mark_as_free(Heap *self, const size_t start_block)
+{
+    uint8_t descriptor = self->descriptor->saddress[start_block];
+    const bool is_head = descriptor & DESCRIPTOR_IS_HEAD;
+
+    if (!is_head)
+    {
+        kprint_color("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.", VGA_COLOR_LIGHT_RED);
+        return -1;
+    };
+    bool has_next_block = descriptor & DESCRIPTOR_HAS_NEXT;
+    size_t curr_block = start_block;
+    self->descriptor->saddress[curr_block] = 0b00000000;
+
+    while (has_next_block)
+    {
+        curr_block++;
+        descriptor = self->descriptor->saddress[curr_block];
+        has_next_block = descriptor & DESCRIPTOR_HAS_NEXT;
+        self->descriptor->saddress[curr_block] = 0b00000000;
+    };
+    return 1;
+};
+
 /**
  * @brief Searches for a contiguous block of free memory in the heap.
  * Given a heap object and the number of contiguous blocks needed, this function
@@ -193,24 +217,6 @@ void *heap_malloc(Heap *self, const size_t n_bytes)
     void *absolute_address = 0x0;
     absolute_address = self->saddress + (block * self->block_size);
     return absolute_address;
-};
-
-static int heap_mark_as_free(Heap *self, const size_t start_block)
-{
-    uint8_t descriptor = self->descriptor->saddress[start_block];
-    const bool is_head = (descriptor & DESCRIPTOR_IS_HEAD) != 0;
-
-    if (!is_head)
-    {
-        kprint_color("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.", VGA_COLOR_RED);
-        return -1;
-    };
-    // Mark head as not in use DESCRIPTOR_IS_USED = 0b00000001
-    descriptor &= ~(1u << 0);
-    // Mark head as free  DESCRIPTOR_IS_HEAD = 0b01000000
-    descriptor &= ~(1u << 6);
-
-    return 1;
 };
 
 void heap_free(Heap *self, void *ptr)

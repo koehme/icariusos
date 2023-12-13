@@ -37,7 +37,7 @@ void kprint(const char *str)
 
 void kpanic(const char *str)
 {
-    vga_print(&vga_display, str, VGA_COLOR_RED | (VGA_COLOR_BLACK << 4));
+    vga_print(&vga_display, str, VGA_COLOR_LIGHT_RED | (VGA_COLOR_BLACK << 4));
 
     for (;;)
     {
@@ -104,13 +104,27 @@ void kmain(void)
     kprint_color("Initializing Kheap Datapool at 0x01000000...\n", VGA_COLOR_LIGHT_GREEN);
     kprint_color("Initializing Kheap Descriptor at 0x00007e00...\n", VGA_COLOR_LIGHT_GREEN);
 
-    void *p1 = kmalloc(1024); // Should be 0x01000000
-    void *p2 = kmalloc(8192); // Should be 0x01001000
-    void *p3 = kmalloc(1024); // Should be 0x01004000
+    void *p1 = 0x0;
+    p1 = kmalloc(1024); // Should be 0x01000000
+
+    void *p2 = 0x0;
+    p2 = kmalloc(8192); // Should be 0x01001000
+
+    void *p3 = 0x0;
+    p3 = kmalloc(1024); // Should be 0x01004000
 
     kfree(p1);
     kfree(p2);
     kfree(p3);
+
+    p1 = 0x0;
+    p1 = kmalloc(1024); // Should be again 0x01000000
+
+    p2 = 0x0;
+    p2 = kmalloc(8192); // Should be again 0x01001000
+
+    p3 = 0x0;
+    p3 = kmalloc(1024); // Should be again 0x01004000
 
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);

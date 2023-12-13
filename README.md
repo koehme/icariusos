@@ -75,45 +75,25 @@ For now, my heap data pool supports 104857600 bytes (10241024100). When divided 
 
 HeapDescriptor operates in real mode memory 0x00007E00 to 0x0007FFFF (480.5 KiB) since I'm already in Protected Mode. The starting address of the heap data pool is 0x01000000 (16777216 in decimal) + (104857600 in decimal) = End address 0x73FFFFF.
 
-# build on macos
+# build
 
 ```bash
 mkdir bin
 mkdir obj
-./macos.sh
+./build.sh
 ```
 
-# build on linux
+# run
 
 ```bash
-mkdir bin
-mkdir obj
-./linux.sh
+./build.sh && qemu-system-i386 -drive format=raw,file=./bin/os.bin
 ```
 
-# run on macos
+# debugging
 
 ```bash
-clear && make clean && ./macos.sh && qemu-system-i386 -drive format=raw,file=./bin/os.bin
-```
-
-# run on linux
-
-```bash
-clear && make clean && ./linux.sh && qemu-system-i386 -drive format=raw,file=./bin/os.bin
-```
-
-# debugging on mac
-
-```bash
-clear && make clean && ./macos.sh && /opt/homebrew/opt/i386-elf-gdb/bin/i386-elf-gdb -x .gdbinit
-```
-
-# debugging on linux
-
-```bash
-clear && make clean && ./linux.sh && gdb -x .gdbinit
-```
+clear && make clean && ./build.sh && i386-elf-gdb -x .gdbinit
+``````
 
 ```bash
 nm ./obj/loader.o && nm ./obj/kernel.o
