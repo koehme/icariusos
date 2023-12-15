@@ -113,34 +113,6 @@ void kmain(void)
     kprint_color("Initializing Kheap Datapool at 0x01000000...\n", VGA_COLOR_LIGHT_GREEN);
     kprint_color("Initializing Kheap Descriptor at 0x00007e00...\n", VGA_COLOR_LIGHT_GREEN);
 
-    void *p1 = 0x0, *p2 = 0x0, *p3 = 0x0;
-    p1 = kcalloc(1024);
-    p2 = kcalloc(8192);
-    p3 = kcalloc(1024);
-
-    // kfree(p1);
-    // kfree(p2);
-    kfree(p3);
-
-    void *p4 = 0x0, *p5 = 0x0, *p6 = 0x0;
-    p4 = kcalloc(1024);
-    p5 = kcalloc(8192);
-    p6 = kcalloc(1024);
-    /* Tests ---
-    All pointer should be...
-
-    p1 = 0x1000000
-    p2 = 0x1001000
-    p3 = 0x1004000
-    p4 = 0x1004000 <-- p3 was freed, so p4 reuse the slot
-    p5 = 0x1005000
-    p6 = 0x1008000
-    */
-
-    // Make compiler happy
-    if (p1 && p2 && p3 && p4 && p5 && p6)
-    {
-    };
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
