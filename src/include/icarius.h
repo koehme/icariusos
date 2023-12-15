@@ -16,6 +16,7 @@
 #include "cursor.h"
 
 void *kmalloc(const size_t size);
+void *kcalloc(const size_t size);
 void kfree(void *ptr);
 void kprint_color(const char *str, const VGAColor color);
 void kprint(const char *str);

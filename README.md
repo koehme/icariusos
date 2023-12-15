@@ -95,7 +95,7 @@ mkdir obj
 # debugging
 
 ```bash
-clear && make clean && ./build.sh && i386-elf-gdb -x .gdbinit
+clear && make clean && ./build.sh && gdb -x .gdbinit
 ``````
 
 ```bash

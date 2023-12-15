@@ -32,15 +32,7 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
     self->saddress = heap_saddress;
     self->block_size = block_size;
 
-    // DEBUGGING: Initialize memory blocks with 1024 bytes for descriptor and self
-    // This is done to speed up debugging in GDB by limiting the amount of data zeroed out
-    const size_t debug_mem_size = 1024 * sizeof(uint8_t);
-    mset8(descriptor->saddress, 0x0, debug_mem_size);
-    mset8(self->saddress, 0x0, debug_mem_size);
-    // Uncomment the following lines for full initialization based on data sizes
-    // This is the normal initialization for production code
-    // mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
-    // mset8(self->saddress, 0x0, n_bytes * sizeof(uint8_t));
+    mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
     return;
 };
 
@@ -76,18 +68,18 @@ static size_t heap_align_bytes_to_block_size(Heap *self, const size_t n_bytes)
  */
 static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t end_block, const size_t blocks_needed)
 {
-    const uint8_t DESCRIPTOR_IS_USED = (1u << 0);
-    const uint8_t DESCRIPTOR_IS_HEAD = (1u << 6);
-    const uint8_t DESCRIPTOR_HAS_NEXT = (1u << 7);
+    const uint8_t BIT_FLAG_USED = (1u << 0);
+    const uint8_t BIT_FLAG_HEAD = (1u << 6);
+    const uint8_t BIT_FLAG_HAS_NEXT = (1u << 7);
     // Mark the first block in the heap descriptor as head, next and used
     uint8_t descriptor = 0b00000000;
-    // should be 65 0b01000001 DESCRIPTOR_IS_USED and DESCRIPTOR_IS_HEAD
-    descriptor |= DESCRIPTOR_IS_USED;
-    descriptor |= DESCRIPTOR_IS_HEAD;
+    // should be 65 0b01000001 BIT_FLAG_USED and BIT_FLAG_HEAD
+    descriptor |= BIT_FLAG_USED;
+    descriptor |= BIT_FLAG_HEAD;
 
     if (blocks_needed > 1)
     {
-        descriptor |= (1u << 7); // should be 193 IS_USED and IS_HEAD and HAS_NEXT
+        descriptor |= BIT_FLAG_HAS_NEXT; // should be 193 IS_USED and IS_HEAD and HAS_NEXT
     };
 
     for (size_t curr_block = start_block; curr_block <= end_block; curr_block++)
@@ -96,14 +88,14 @@ static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t
         self->descriptor->saddress[curr_block] = descriptor;
         // Reset descriptor for a clean state
         descriptor = 0b00000000;
-        // Mark the block as DESCRIPTOR_IS_USED
-        descriptor |= DESCRIPTOR_IS_USED;
-        // If the current block is not the last one, mark it as DESCRIPTOR_HAS_NEXT AND DESCRIPTOR_IS_USED == 129
+        // Mark the block as BIT_FLAG_USED
+        descriptor |= BIT_FLAG_USED;
+        // If the current block is not the last one, mark it as BIT_FLAG_HAS_NEXT AND BIT_FLAG_USED == 129
         const bool has_next_block = (curr_block < end_block - 1);
 
         if (has_next_block)
         {
-            descriptor |= DESCRIPTOR_HAS_NEXT; // Mark block as DESCRIPTOR_HAS_NEXT AND DESCRIPTOR_IS_USED == 129
+            descriptor |= BIT_FLAG_HAS_NEXT; // Mark block as BIT_FLAG_HAS_NEXT AND BIT_FLAG_USED == 129
         };
     };
     return;
