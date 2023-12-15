@@ -2,6 +2,7 @@
     "files.associations": {
         "sstream": "c",
         "ratio": "c",
-        "__locale": "c"
+        "__locale": "c",
+        "stdbool.h": "c"
     }
 }

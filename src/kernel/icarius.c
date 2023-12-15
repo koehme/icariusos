@@ -6,10 +6,12 @@
 
 #include "icarius.h"
 #include "mem.h"
+#include "page.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
+extern PageDirectory kpage_directory;
 
 void *kmalloc(const size_t size)
 {
@@ -115,6 +117,8 @@ void kmain(void)
 
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
+
+    page_init_directory(&kpage_directory, 0x0, 4096, 1024);
 
     asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);

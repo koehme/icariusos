@@ -9,8 +9,6 @@
 
 #include <stdint.h>
 
-extern PageDirectory *p_directory;
-
 typedef enum PageFlags
 {
     PAGE_WRITEABLE = 0b00000010,
@@ -20,5 +18,7 @@ typedef struct PageDirectory
 {
     uint32_t *directory;
 } PageDirectory;
+
+void page_init_directory(PageDirectory *self, const uint8_t flags, const int page_size, const int entries);
 
 #endif
