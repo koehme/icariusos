@@ -38,7 +38,7 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 ## next step 🛠️
 
 10. **understand - paging**
-   Paging dynamically optimizes virtual memory by efficiently managing pages between RAM and the hard disk. As I explore this realm, I look forward to unlocking its potential for enhancing system performance.
+   Paging dynamically optimizes virtual memory by efficiently managing pages between RAM and disk. As I explore this area, I look forward to unlocking its potential to create the illusion that each process has its own address space.
 
 ## about
 
