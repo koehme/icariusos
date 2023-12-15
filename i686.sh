@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo apt-get update -y
+sudo apt-get upgrade -y
 
 sudo apt-get install nasm -y
 sudo apt-get install qemu -y
@@ -28,6 +29,9 @@ cd binutils-build
 ../binutils-2.41/configure --target=$TARGET --enable-interwork --enable-multilib --disable-nls --disable-werror --prefix=$PREFIX 2>&1 | tee configure.log
 sudo make all install 2>&1 | tee make.log
 
+sudo rm -rf /tmp/src
+mkdir /tmp/src
+
 cd /tmp/src
 curl -O https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
 tar xf gcc-13.2.0.tar.gz
@@ -44,16 +48,20 @@ sudo make install-gcc
 echo MAKE INSTALL-TARGET-LIBGCC:
 sudo make install-target-libgcc
 
-cd /tmp/src
-curl -O https://ftp.gnu.org/gnu/gdb/gdb-14.1.tar.gz
-tar xf gdb-14.1.tar.gz
-mkdir gdb-build
-cd gdb-build
-../gdb-14.1/configure --target=$TARGET --prefix="$PREFIX"
-sudo make
-sudo make install
 
-sudo rm -rf /tmp/src
+# sudo rm -rf /tmp/src
+# mkdir /tmp/src
+
+# cd /tmp/src
+# curl -O https://ftp.gnu.org/gnu/gdb/gdb-14.1.tar.gz
+# tar xf gdb-14.1.tar.gz
+# mkdir gdb-build
+# cd gdb-build
+# ../gdb-14.1/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --disable-werror
+# sudo make
+# sudo make install
+
+# sudo rm -rf /tmp/src
 
 export PATH="$PATH:/usr/local/i686-elf-gcc/bin"
 
