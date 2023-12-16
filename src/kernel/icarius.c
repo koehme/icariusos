@@ -118,7 +118,7 @@ void kmain(void)
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
     PageDirectory *kpage_dir = 0x0;
-    kpage_dir = page_init_directory(PAGE_WRITEABLE, 4096, 1024);
+    kpage_dir = page_init_directory(PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
 
     if (kpage_dir->directory)
     {

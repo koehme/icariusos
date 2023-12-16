@@ -3,6 +3,4 @@ add-symbol-file ./obj/kernel.o 0x100000
 
 break icarius.c:121
 break icarius.c:124
-break page.c:19
-break page.c:21
-break page.c:22
+break page.c:30
