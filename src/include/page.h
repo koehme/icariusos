@@ -16,9 +16,9 @@ typedef enum PageFlags
 
 typedef struct PageDirectory
 {
-    uint32_t *s_address_directory;
+    uint32_t *directory;
 } PageDirectory;
 
-uint32_t *page_init_directory(const uint8_t flags, const int page_size, const int entries);
+PageDirectory *page_init_directory(const uint8_t flags, const int page_size, const int entries);
 
 #endif

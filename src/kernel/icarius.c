@@ -118,10 +118,10 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
-    PageDirectory kpage = {.directory = 0x0};
-    kpage.directory = page_init_directory(0x0, 4096, 1024);
+    PageDirectory *kpage;
+    kpage = page_init_directory(0x0, 4096, 1024);
 
-    if (kpage.directory)
+    if (kpage->directory)
     {
     };
     asm_do_sti();
