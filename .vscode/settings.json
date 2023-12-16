@@ -3,6 +3,7 @@
         "sstream": "c",
         "ratio": "c",
         "__locale": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "icarius.h": "c"
     }
 }

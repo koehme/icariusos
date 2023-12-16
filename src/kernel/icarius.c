@@ -118,8 +118,12 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
-    page_init_directory(&kpage_directory, 0x0, 4096, 1024);
+    PageDirectory kpage = {.directory = 0x0};
+    kpage.directory = page_init_directory(0x0, 4096, 1024);
 
+    if (kpage.directory)
+    {
+    };
     asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
 
