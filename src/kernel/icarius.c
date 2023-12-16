@@ -11,7 +11,6 @@
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
-extern PageDirectory kpage_directory;
 
 void *kmalloc(const size_t size)
 {
@@ -99,6 +98,8 @@ void kprint_motd()
     return;
 };
 
+static PageDirectory *kpage_dir = 0x0;
+
 void kmain(void)
 {
     vga_display_init(&vga_display, (volatile uint16_t *)0xb8000, 80, 25);
@@ -118,8 +119,7 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
-    PageDirectory *kpage_dir = 0x0;
-    kpage_dir = page_init_directory(0x0, 4096, 1024);
+    page_init_directory(kpage_dir, PAGE_WRITEABLE, 4096, 1024);
 
     if (kpage_dir->directory)
     {

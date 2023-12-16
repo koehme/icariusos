@@ -19,6 +19,6 @@ typedef struct PageDirectory
     uint32_t *directory;
 } PageDirectory;
 
-PageDirectory *page_init_directory(const uint8_t flags, const int page_size, const int entries);
+PageDirectory *page_init_directory(PageDirectory *self, const uint8_t flags, const int page_size, const int entries);
 
 #endif

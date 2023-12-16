@@ -14,10 +14,9 @@
  * @param page_size Size of each page in the page table, typically 4096 for i686.
  * @param entries   Number of entries in the page directory, typically 1024 for i686.
  */
-PageDirectory *page_init_directory(const uint8_t flags, const int page_size, const int entries)
+PageDirectory *page_init_directory(PageDirectory *self, const uint8_t flags, const int page_size, const int entries)
 {
     uint32_t *directory = kcalloc(sizeof(uint32_t) * entries);
-    PageDirectory *kpage_dir = kcalloc(sizeof(PageDirectory));
-    kpage_dir->directory = directory;
-    return kpage_dir;
+    self->directory = directory;
+    return self;
 };
