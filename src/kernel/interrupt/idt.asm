@@ -1,3 +1,4 @@
+[BITS 32]
 section .asm
 
 extern isr_20h_handler
