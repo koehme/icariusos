@@ -88,7 +88,7 @@ void kprint_logo(void)
     return;
 };
 
-void kprint_motd()
+void kprint_motd(void)
 {
     kascii_spinner(60, 50);
     vga_display_clear(&vga_display);
@@ -97,8 +97,6 @@ void kprint_motd()
     kprint_color("Welcome to icariusOS\n", VGA_COLOR_LIGHT_MAGENTA);
     return;
 };
-
-static PageDirectory *kpage_dir = 0x0;
 
 void kmain(void)
 {
@@ -119,7 +117,8 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
-    page_init_directory(kpage_dir, PAGE_WRITEABLE, 4096, 1024);
+    PageDirectory *kpage_dir = 0x0;
+    kpage_dir = page_init_directory(PAGE_WRITEABLE, 4096, 1024);
 
     if (kpage_dir->directory)
     {
