@@ -16,6 +16,8 @@
  */
 PageDirectory *page_init_directory(const uint8_t flags, const int page_size, const int entries)
 {
-    PageDirectory *dir = kcalloc(sizeof(uint32_t) * entries);
-    return dir;
+    uint32_t *directory = kcalloc(sizeof(uint32_t) * entries);
+    PageDirectory *kpage_dir = kcalloc(sizeof(PageDirectory));
+    kpage_dir->directory = directory;
+    return kpage_dir;
 };
