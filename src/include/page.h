@@ -29,6 +29,7 @@ typedef struct PageDirectory
     uint32_t *directory;
 } PageDirectory;
 
-PageDirectory *page_init_directory(const uint8_t flags);
+void page_init_directory(PageDirectory *self, uint8_t flags);
+void page_switch(PageEntry *dir);
 
 #endif
