@@ -10,8 +10,13 @@
 #include "mem.h"
 #include "icarius.h"
 
-HeapDescriptor kheap_descriptor;
-Heap kheap;
+HeapDescriptor kheap_descriptor = {
+    .saddress = 0x0,
+    .total_descriptors = 0};
+
+Heap kheap = {.descriptor = 0x0,
+              .saddress = 0x0,
+              .block_size = 0};
 
 /**
  * @brief Initializes a heap structure using the provided parameters.
@@ -31,7 +36,6 @@ void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void
     self->descriptor = descriptor;
     self->saddress = heap_saddress;
     self->block_size = block_size;
-
     mset8(descriptor->saddress, 0x0, descriptor->total_descriptors * sizeof(uint8_t));
     return;
 };

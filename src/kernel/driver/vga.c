@@ -13,7 +13,13 @@
 #include "string.h"
 #include "icarius.h"
 
-VGADisplay vga_display;
+VGADisplay vga_display = {
+    .framebuffer = 0x0,
+    .cursor_x = 0,
+    .cursor_y = 0,
+    .width = 0,
+    .height = 0,
+};
 
 /**
  * @brief Create a VGA character with color attributes.
@@ -23,7 +29,8 @@ VGADisplay vga_display;
  * @param color The VGAColor enum representing the foreground and background colors.
  * @return uint16_t A 16-bit value representing the combined character and color.
  */
-static uint16_t make_ch(const uint8_t ch, const VGAColor color)
+static uint16_t
+make_ch(const uint8_t ch, const VGAColor color)
 {
     return ch | (uint16_t)(color << 8);
 };
@@ -53,7 +60,7 @@ static void vga_display_put_ch_at(VGADisplay *self, const uint8_t y, const uint8
  */
 static void vga_clear_last_line(VGADisplay *self)
 {
-    uint16_t *last_line = (uint16_t *volatile)self->framebuffer + (self->height - 1) * self->width;
+    uint16_t *last_line = (uint16_t *)self->framebuffer + (self->height - 1) * self->width;
     const uint16_t blank = make_ch(' ', VGA_COLOR_WHITE | (VGA_COLOR_BLACK << 4));
     mset16(last_line, blank, self->width);
     return;
@@ -70,8 +77,8 @@ static void vga_clear_last_line(VGADisplay *self)
  */
 static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
 {
-    uint16_t *start_first_line = (uint16_t *volatile)self->framebuffer;
-    uint16_t *start_second_line = (uint16_t *volatile)self->framebuffer + lines * self->width;
+    uint16_t *start_first_line = (uint16_t *)self->framebuffer;
+    uint16_t *start_second_line = (uint16_t *)self->framebuffer + lines * self->width;
     const size_t bytes = self->width * (self->height - lines) * 2;
     mcpy(start_first_line, start_second_line, bytes);
     return;
@@ -100,12 +107,12 @@ static void vga_scroll(VGADisplay *self)
  * such as the framebuffer, cursor position, width and height.
  *
  * @param self A pointer to the VGADisplay structure representing the VGA display.
- * @param framebuffer A pointer to the volatile uint16_t array serving as the framebuffer.
+ * @param framebuffer A pointer to the  uint16_t array serving as the framebuffer.
  * @param width The width of the VGA display in pixels.
  * @param height The height of the VGA display in pixels.
  * @return void
  */
-void vga_display_init(VGADisplay *self, volatile uint16_t *framebuffer, const uint8_t width, const uint8_t height)
+void vga_display_init(VGADisplay *self, uint16_t *framebuffer, const uint8_t width, const uint8_t height)
 {
     self->framebuffer = framebuffer;
     self->cursor_x = 0;
