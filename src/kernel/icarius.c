@@ -11,6 +11,7 @@
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
+extern PageDirectory kpage_dir;
 
 void *kmalloc(const size_t size)
 {
@@ -100,7 +101,7 @@ void kprint_motd(void)
 
 void kmain(void)
 {
-    vga_display_init(&vga_display, (volatile uint16_t *)0xb8000, 80, 25);
+    vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
 
     kprint_color("Initializing Stack at 0x00200000...\n", VGA_COLOR_LIGHT_GREEN);
@@ -117,12 +118,11 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
-    PageDirectory *kpage_dir = 0x0;
-    kpage_dir = page_init_directory(PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
+    PageDirectory *ptr_kpage_dir = &kpage_dir;
+    page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
 
-    if (kpage_dir->directory)
-    {
-    };
+    page_switch(ptr_kpage_dir->directory);
+
     asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
 
