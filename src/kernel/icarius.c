@@ -122,6 +122,7 @@ void kmain(void)
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
 
     page_switch(ptr_kpage_dir->directory);
+    asm_page_enable();
 
     asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);

@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+extern void asm_page_enable(void);
+
 typedef uint32_t PageEntry;
 
 typedef enum

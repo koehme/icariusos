@@ -78,7 +78,7 @@ For now, my heap data pool supports 104857600 bytes (10241024100). When divided 
 
 HeapDescriptor operates in real mode memory 0x00007E00 to 0x0007FFFF (480.5 KiB) since I'm already in Protected Mode. The starting address of the heap data pool is 0x01000000 (16777216 in decimal) + (104857600 in decimal) = End address 0x73FFFFF.
 
-# build a cross compiler
+# cross compiler
 
 ```bash
 ./i686.sh
