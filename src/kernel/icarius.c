@@ -7,11 +7,13 @@
 #include "icarius.h"
 #include "mem.h"
 #include "page.h"
+#include "ata.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
+extern ATADisk kdisk_ata;
 
 void *kmalloc(const size_t size)
 {
@@ -150,6 +152,10 @@ void kmain(void)
     kprint_color("Physical 0x1802000 [", VGA_COLOR_LIGHT_GREEN);
     kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
     kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
+
+    kprint_color("Initializing ATA Driver..\n", VGA_COLOR_LIGHT_GREEN);
+    ATADisk *ptr_kata_disk = &kdisk_ata;
+    ata_read_sectors(0, ptr_kata_disk->buffer, 1);
 
     kprint_motd();
     return;

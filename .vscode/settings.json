@@ -8,6 +8,7 @@
         "__node_handle": "c",
         "__bit_reference": "c",
         "bitset": "c",
-        "unordered_map": "c"
+        "unordered_map": "c",
+        "io.h": "c"
     }
 }

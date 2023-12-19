@@ -4,11 +4,17 @@
  * @copyright MIT
  */
 
+#include <stdbool.h>
+
 #include "idt.h"
 #include "string.h"
 #include "io.h"
 #include "icarius.h"
+#include "ata.h"
 
+extern struct ATADisk kata_disk;
+
+extern void asm_irq_14h(void);
 extern void asm_interrupt_20h(void);
 extern void asm_interrupt_21h(void);
 extern void asm_idt_loader(IDT_R *ptr);
@@ -80,6 +86,15 @@ static IDTDescriptor idt[256];
  */
 static IDT_R idtr_descriptor;
 
+void irq_14h_handler(void)
+{
+    const char *message = interrupt_messages[46];
+    kprint(message);
+
+    asm_outb(PIC_1_CTRL, PIC_ACK);
+    return;
+};
+
 /**
  * @brief Timer ISR handler.
  * @return void
@@ -145,9 +160,10 @@ void idt_entries_init(void)
     {
         idt_set(interrupt_n, asm_interrupt_default);
     };
-    // Assign specific handlers for interrupts 0x20 and 0x21
+    // Assign specific handlers for interrupts
     idt_set(0x20, asm_interrupt_20h);
     idt_set(0x21, asm_interrupt_21h);
+    idt_set(0x2e, asm_irq_14h);
     return;
 };
 

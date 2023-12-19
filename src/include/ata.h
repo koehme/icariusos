@@ -7,13 +7,24 @@
 #ifndef ATA_H
 #define ATA_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum ATAMasks
+typedef enum ATADrives
 {
     ATA_DRIVE_MASTER = 0xe0
-};
+} ATADrives;
+
+typedef enum ATACommands
+{
+    ATA_CMD_READ_SECTORS = 0x20,
+} ATACommands;
+
+typedef enum ATAStatus
+{
+    ATA_STATUS_BSY = 7,
+} ATAStatus;
 
 typedef enum ATAPorts
 {
@@ -27,5 +38,12 @@ typedef enum ATAPorts
     ATA_COMMAND_PORT = 0x1f7,
 } ATAPorts;
 
-void ata_read_sectors(const uint32_t lba, uint8_t *buffer, const size_t n_sectors);
+typedef struct ATADisk
+{
+    uint8_t buffer[512];
+    bool has_read;
+} ATADisk;
+
+void ata_read_sectors(const uint32_t lba, void *buffer, const size_t n_sectors);
+
 #endif
