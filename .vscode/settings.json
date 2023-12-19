@@ -4,6 +4,7 @@
         "ratio": "c",
         "__locale": "c",
         "stdbool.h": "c",
-        "icarius.h": "c"
+        "icarius.h": "c",
+        "__node_handle": "c"
     }
 }

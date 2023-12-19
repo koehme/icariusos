@@ -120,12 +120,36 @@ void kmain(void)
 
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
-
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
 
+    // Assume ptr_phy_addr = 0x1802000
+    char *ptr_phy_addr = kcalloc(4096);
+    virt_address_map(ptr_kpage_dir->directory, (void *)0x2000, (uint32_t)ptr_phy_addr | PAGE_ACCESSED | PAGE_PRESENT | PAGE_READ_WRITE);
+
     asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
+
+    char *ptr_virt = (char *)0x2000;
+
+    // Change the virtual address to see reflected changes because we map 0x2000 => to a physical addr 0x1802000
+    ptr_virt[0] = 'A';
+    ptr_virt[1] = 'W';
+    ptr_virt[2] = 'E';
+    ptr_virt[3] = 'S';
+    ptr_virt[4] = 'O';
+    ptr_virt[5] = 'M';
+    ptr_virt[6] = 'E';
+    ptr_virt[7] = '!';
+
+    kprint_color("Initializing Virtual Memory Paging...\n", VGA_COLOR_LIGHT_GREEN);
+    kprint_color("Testing Paging...\nVirtual Address 0x2000 now points to Physical Address 0x1802000...\n", VGA_COLOR_LIGHT_GREEN);
+    kprint_color("Virtual 0x2000 [", VGA_COLOR_LIGHT_GREEN);
+    kprint_color(ptr_virt, VGA_COLOR_LIGHT_GREEN);
+    kprint_color("] == ", VGA_COLOR_LIGHT_GREEN);
+    kprint_color("Physical 0x1802000 [", VGA_COLOR_LIGHT_GREEN);
+    kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
+    kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
 
     kprint_motd();
     return;
