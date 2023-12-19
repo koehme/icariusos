@@ -12,7 +12,7 @@
 #include "icarius.h"
 #include "ata.h"
 
-extern struct ATADisk kata_disk;
+extern ATADisk ata_disk;
 
 extern void asm_irq_14h(void);
 extern void asm_interrupt_20h(void);
@@ -90,6 +90,12 @@ void irq_14h_handler(void)
 {
     const char *message = interrupt_messages[46];
     kprint(message);
+
+    for (size_t i = 0; i < 256; ++i)
+    {
+        ata_disk.buffer[i] = asm_inw(i);
+    };
+    ata_disk.has_read = true;
 
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;

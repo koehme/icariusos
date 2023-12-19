@@ -13,6 +13,14 @@ ATADisk ata_disk = {
     .has_read = false,
 };
 
+void ata_wait(void)
+{
+    while (asm_inb(ATA_COMMAND_PORT) & (1 << ATA_STATUS_BSY))
+    {
+    };
+    return;
+};
+
 void ata_read_sectors(const uint32_t lba, void *buffer, const size_t n_sectors)
 {
     // Select master drive and pass part of the lba
@@ -25,7 +33,9 @@ void ata_read_sectors(const uint32_t lba, void *buffer, const size_t n_sectors)
     asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0b11111111);
     // Send read command to ATA_COMMAND_PORT
     asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
-    // TODO
+
+    ata_wait(); // TODO
+
     ata_disk.has_read = false;
     return;
 };

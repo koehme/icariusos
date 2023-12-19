@@ -51,6 +51,7 @@ _start:
 .run_kernel:
     call enable_a20
     call remap_pic1
+    call remap_pic2
     call kmain
     jmp $                       ; Infinite loop to halt execution at this point
 
@@ -99,6 +100,29 @@ remap_pic1:
     ; Send ICW 4 - Set x86 mode ----------------------------------------
     mov al, MODE_8086           ; Bit 0 enables 80x86 mode
     out PIC_1_DATA, al          ; Send it to the PIC1
+    ret
+
+remap_pic2:
+    ; Send ICW 1 --------------------------------------------------------
+    mov al, ICW_1               ; Initialize Control Word 1
+    out PIC_2_CTRL, al          ; Send ICW 1 to the control port of PIC2
+
+    ; Remap PIC2 --------------------------------------------------------
+    mov al, IRQ_8               ; IRQ_8 corresponds to the mapping offset for PIC2
+    out PIC_2_DATA, al          ; Send it to the PIC2
+
+    ; Send ICW 2 - Set IRQ mapping offset for PIC2 ----------------------
+    mov al, IRQ_8               ; Same offset as above
+    out PIC_2_DATA, al          ; Send it to the PIC2
+
+    ; Send ICW 3 - Set up the master/slave relationship ----------------
+    mov al, 2                    ; Bit 1 (value 2) indicates that PIC2 is connected to IRQ2 of PIC1
+    out PIC_2_DATA, al          ; Send it to the PIC2
+
+    ; Send ICW 4 - Set x86 mode ----------------------------------------
+    mov al, MODE_8086           ; Bit 0 enables 80x86 mode
+    out PIC_2_DATA, al          ; Send it to the PIC2
+
     ret
 
 times 512 - ($ - $$) db 0x0

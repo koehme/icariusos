@@ -13,7 +13,7 @@ extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
-extern ATADisk kdisk_ata;
+extern ATADisk ata_disk;
 
 void *kmalloc(const size_t size)
 {
@@ -154,8 +154,8 @@ void kmain(void)
     kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
 
     kprint_color("Initializing ATA Driver..\n", VGA_COLOR_LIGHT_GREEN);
-    ATADisk *ptr_kata_disk = &kdisk_ata;
-    ata_read_sectors(0, ptr_kata_disk->buffer, 1);
+    ATADisk *ptr_ata_disk = &ata_disk;
+    ata_read_sectors(0, ptr_ata_disk->buffer, 1);
 
     kprint_motd();
     return;
