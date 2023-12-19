@@ -11,7 +11,8 @@
 extern void asm_page_load(PageEntry *self);
 
 PageDirectory kpage_dir = {
-    .directory = 0x0};
+    .directory = 0x0,
+};
 
 static PageEntry *ptr_kpage_curr_dir = 0x0;
 
