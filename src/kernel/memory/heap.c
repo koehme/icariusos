@@ -12,11 +12,14 @@
 
 HeapDescriptor kheap_descriptor = {
     .saddress = 0x0,
-    .total_descriptors = 0};
+    .total_descriptors = 0,
+};
 
-Heap kheap = {.descriptor = 0x0,
-              .saddress = 0x0,
-              .block_size = 0};
+Heap kheap = {
+    .descriptor = 0x0,
+    .saddress = 0x0,
+    .block_size = 0,
+};
 
 /**
  * @brief Initializes a heap structure using the provided parameters.

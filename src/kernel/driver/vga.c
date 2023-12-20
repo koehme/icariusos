@@ -29,8 +29,7 @@ VGADisplay vga_display = {
  * @param color The VGAColor enum representing the foreground and background colors.
  * @return uint16_t A 16-bit value representing the combined character and color.
  */
-static uint16_t
-make_ch(const uint8_t ch, const VGAColor color)
+static uint16_t make_ch(const uint8_t ch, const VGAColor color)
 {
     return ch | (uint16_t)(color << 8);
 };

@@ -102,6 +102,16 @@ remap_pic1:
     out PIC_1_DATA, al          ; Send it to the PIC1
     ret
 
+;=============================================================================
+; remap_pic2
+;
+; Initialize and configure the Programmable Interrupt Controller (PIC) 
+; for handling hardware interrupts in 80x86 mode.
+;
+; @param None
+;
+; @return None
+;=============================================================================
 remap_pic2:
     ; Send ICW 1 --------------------------------------------------------
     mov al, ICW_1               ; Initialize Control Word 1
@@ -116,7 +126,7 @@ remap_pic2:
     out PIC_2_DATA, al          ; Send it to the PIC2
 
     ; Send ICW 3 - Set up the master/slave relationship ----------------
-    mov al, 2                    ; Bit 1 (value 2) indicates that PIC2 is connected to IRQ2 of PIC1
+    mov al, 2                   ; Bit 1 (value 2) indicates that PIC2 is connected to IRQ2 of PIC1
     out PIC_2_DATA, al          ; Send it to the PIC2
 
     ; Send ICW 4 - Set x86 mode ----------------------------------------

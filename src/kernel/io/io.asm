@@ -1,5 +1,5 @@
 [BITS 32]
-section asm
+section .asm
 
 global asm_outb
 global asm_outw

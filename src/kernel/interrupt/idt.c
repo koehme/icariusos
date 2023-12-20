@@ -181,6 +181,7 @@ void idt_set(const int interrupt_n, void *isr)
     descriptor->reserved = 0x00;
     descriptor->attributes = 0b11101110;
     descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
+    return;
 };
 
 /**

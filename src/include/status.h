@@ -9,4 +9,11 @@
 
 #define KDEBUG_SLOW_DOWN 15
 
+// Essential error codes in the os
+typedef enum StatusCodes
+{
+    EIO = 5,     // I/O error
+    ENOMEM = 12, // Insufficient memory
+} StatusCodes;
+
 #endif
