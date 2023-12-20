@@ -1,4 +1,4 @@
-# welcome
+# welcome to my OS Development Journey! 🚀
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -6,45 +6,46 @@ Exploring the world of operating systems is like a cool journey through the Matr
 
 It's not just about typing in bytes and commands. It becomes the feeling of an architect of a small but exciting digital world 🌐 . Sometimes time passes unnoticed in the creation of this digital world. Oh yes, the development of operating systems is indeed very time-consuming. ⏳
 
-## archievements 🚀
+# achievements 
 
-1. **bootloader:**
-   Smooth system startup achieved with a functional bootloader
+Bootloader:
+Achieved a smooth system startup with a functional bootloader.
 
-2. **ata driver:**
-   Successfully reads LBA sector from the hard drive, loading the kernel into memory at 0x010000.
+ATA Driver:
+Successfully reads LBA sectors from the hard drive, loading the kernel into memory at 0x010000.
 
-3. **protected mode transition:**
-   Seamless transition to Protected Mode (32-bit) with A20 Gate activation for full 32bit memory utilization.
+Protected Mode Transition:
+Seamlessly transitioned to Protected Mode (32-bit) with A20 Gate activation for full 32-bit memory utilization.
 
-4. **interrupts:**
-   Implemented the Interrupt Descriptor Table (IDT) for handling interrupts.
+Interrupts:
+Implemented the Interrupt Descriptor Table (IDT) for handling interrupts.
 
-5. **pic:**
-   Implementing the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
+PIC:
+Implemented the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
 
-6. **extend vga driver**
-   Add a functionality to scroll.
+Extended VGA Driver:
+Added functionality to scroll within the VGA text mode.
 
-7. **heap - memory magic unleashed**
-   Introducing a function to dynamically allocate memory with flair, something like "kheap(50)" for 50 bytes, aligning the allocation in cpu cache friendly 4096-byte blocks.
+Heap - Memory Magic Unleashed:
+Introduced a function to dynamically allocate memory with flair, like "kheap(50)" for 50 bytes, aligning allocations in CPU cache-friendly 4096-byte blocks.
 
-8. **logo**
-   Integrate a function for printing initialization messages and unveil an elegant logo. This makes starting the system a visual experience! :D
+Logo:
+Integrated a function for printing initialization messages and unveiled an elegant logo, transforming system startup into a visual experience! :D
 
-9. **heap - deallocation**
-   I just gave my system heap the freeing spirit a spell with something similar to "kfree(ptr)" to free the memory.
+Heap - Deallocation:
+Bestowed the system heap with a freeing spirit, allowing the release of memory with something like "kfree(ptr)."
 
-## next step 🛠️
+Paging:
+Dynamically optimized virtual memory by efficiently managing pages between RAM and disk. Excited about unlocking its potential to create the illusion of each process having its own address space.
 
-10. **understand - paging**
-   Paging dynamically optimizes virtual memory by efficiently managing pages between RAM and disk. As I explore this area, I look forward to unlocking its potential to create the illusion that each process has its own address space.
+ATA Read from Disk:
+Successfully implemented interrupt-driven reading of data from the ATA disk because constantly polling the ATA controller to check if it's finished is too slow and blocks the CPU.
 
 ## about
 
 In the heart of crafting my own operating system kernel, I've reached some remarkable milestones. The bootloader is successfully implemented, and my ATA driver reads LBA sector 1 from the hard drive, cleverly placing the kernel in memory at 0x010000. After seamlessly transitioning to 'Protected Mode - 32 Bit' and activating the A20 gate to access the entire memory, I can now invoke the kmain() function in assembly. This allows me to output text and even display line breaks ('\n'). I've also implemented a scrolling effect.
 
-Currently, I've successfully implemented the Interrupt Descriptor Table and integrated the ability to respond to hardware interrupts. The Programmable Interrupt Controller (PIC) is also implemented, enabling effective handling of various hardware interrupts.
+I've successfully implemented the Interrupt Descriptor Table and integrated the ability to respond to hardware interrupts. The Programmable Interrupt Controller (PIC 1 & 2) is also implemented, enabling effective handling of various hardware interrupts.
 
 VGA Text Mode
 
@@ -78,7 +79,53 @@ For now, my heap data pool supports 104857600 bytes (10241024100). When divided 
 
 HeapDescriptor operates in real mode memory 0x00007E00 to 0x0007FFFF (480.5 KiB) since I'm already in Protected Mode. The starting address of the heap data pool is 0x01000000 (16777216 in decimal) + (104857600 in decimal) = End address 0x73FFFFF.
 
-# cross compiler
+Paging
+
+I have successfully implemented paging in my 32-bit kernel. The PageDirectory consists of 1024 entries, and each entry points to a PageTable. Each PageTable manages 1024 entries, which in turn represent 4096 bytes - one page in the world of memory.
+
+Index 0 of the PageDirectory starts at the physical address 0x0, while index 2 is at 0x400000 (0x400000 == decimal 1024*4096 = 4194304). This creates a linear assignment of the physical addresses to the PageTable entries.
+
+In summary, the system consists of a PageDirectory with 1024 entries, with each entry pointing to a PageTable. Each PageTable has 1024 entries, each representing 4096 bytes. This results in a total memory of 4 GB or 4,294,967,296 bytes.
+
+With the function 
+
+```c
+void page_init_directory(PageDirectory *self, const uint8_t flags);
+```
+
+I have initialized a linear PageDirectory with physical addresses. The linking of virtual addresses to physical addresses has been successfully implemented. For example, I can now map for example the virtual address 0x2000 to any physical equivalent.
+
+```c
+// Assume ptr_phy_addr = 0x1802000
+char *ptr_phy_addr = kcalloc(4096);
+virt_address_map(ptr_kpage_dir->directory, (void *)0x2000, (uint32_t)ptr_phy_addr | PAGE_ACCESSED | PAGE_PRESENT | PAGE_READ_WRITE);
+
+asm_do_sti();
+kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
+
+char *ptr_virt = (char *)0x2000;
+
+// Change the virtual address to see reflected changes because we map 0x2000 => to a physical addr 0x1802000
+ptr_virt[0] = 'A';
+ptr_virt[1] = 'W';
+ptr_virt[2] = 'E';
+ptr_virt[3] = 'S';
+ptr_virt[4] = 'O';
+ptr_virt[5] = 'M';
+ptr_virt[6] = 'E';
+ptr_virt[7] = '!';
+
+kprint_color("Initializing Virtual Memory Paging...\n", VGA_COLOR_LIGHT_GREEN);
+kprint_color("Testing Paging...\nVirtual Address 0x2000 now points to Physical Address 0x1802000...\n", VGA_COLOR_LIGHT_GREEN);
+kprint_color("Virtual 0x2000 [", VGA_COLOR_LIGHT_GREEN);
+kprint_color(ptr_virt, VGA_COLOR_LIGHT_GREEN);
+kprint_color("] == ", VGA_COLOR_LIGHT_GREEN);
+kprint_color("Physical 0x1802000 [", VGA_COLOR_LIGHT_GREEN);
+kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
+kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
+```
+
+# build an cross compiler
 
 ```bash
 ./i686.sh
