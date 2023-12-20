@@ -5,9 +5,6 @@
  */
 
 #include "icarius.h"
-#include "mem.h"
-#include "page.h"
-#include "ata.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
@@ -38,6 +35,7 @@ void kfree(void *ptr)
 
 void kprint_color(const char *str, const VGAColor color)
 {
+    ksleep(KDEBUG_SLOW_DOWN);
     vga_print(&vga_display, str, color);
     return;
 };
@@ -94,8 +92,6 @@ void kprint_logo(void)
 void kprint_motd(void)
 {
     kascii_spinner(60, 50);
-    vga_display_clear(&vga_display);
-    vga_display_set_cursor(&vga_display, 0, 0);
     kprint_logo();
     kprint_color("Welcome to icariusOS\n", VGA_COLOR_LIGHT_MAGENTA);
     return;
@@ -133,43 +129,20 @@ void kmain(void)
     idt_init();
     kprint_color("Initializing Global Descriptor Table...\n", VGA_COLOR_LIGHT_GREEN);
 
+    kprint_color("Initializing Virtual Memory Paging...\n", VGA_COLOR_LIGHT_GREEN);
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
 
-    // Assume ptr_phy_addr = 0x1802000
-    char *ptr_phy_addr = kcalloc(4096);
-    virt_address_map(ptr_kpage_dir->directory, (void *)0x2000, (uint32_t)ptr_phy_addr | PAGE_ACCESSED | PAGE_PRESENT | PAGE_READ_WRITE);
-
-    asm_do_sti();
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
-
-    char *ptr_virt = (char *)0x2000;
-
-    // Change the virtual address to see reflected changes because we map 0x2000 => to a physical addr 0x1802000
-    ptr_virt[0] = 'A';
-    ptr_virt[1] = 'W';
-    ptr_virt[2] = 'E';
-    ptr_virt[3] = 'S';
-    ptr_virt[4] = 'O';
-    ptr_virt[5] = 'M';
-    ptr_virt[6] = 'E';
-    ptr_virt[7] = '!';
-
-    kprint_color("Initializing Virtual Memory Paging...\n", VGA_COLOR_LIGHT_GREEN);
-    kprint_color("Testing Paging...\nVirtual Address 0x2000 now points to Physical Address 0x1802000...\n", VGA_COLOR_LIGHT_GREEN);
-    kprint_color("Virtual 0x2000 [", VGA_COLOR_LIGHT_GREEN);
-    kprint_color(ptr_virt, VGA_COLOR_LIGHT_GREEN);
-    kprint_color("] == ", VGA_COLOR_LIGHT_GREEN);
-    kprint_color("Physical 0x1802000 [", VGA_COLOR_LIGHT_GREEN);
-    kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
-    kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
+    asm_do_sti();
 
     kprint_color("Initializing ATA Driver..\n", VGA_COLOR_LIGHT_GREEN);
     ATADisk *ptr_ata_disk = &ata_disk;
     ata_read(0, ptr_ata_disk->buffer, 1);
 
-    // kprint_motd();
+    kprint_motd();
+    kprint(">");
     return;
 };

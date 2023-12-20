@@ -14,6 +14,10 @@
 #include "io.h"
 #include "heap.h"
 #include "cursor.h"
+#include "mem.h"
+#include "page.h"
+#include "ata.h"
+#include "status.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);
