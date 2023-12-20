@@ -125,6 +125,8 @@ kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
 kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
 ```
 
+The ATA driver was successfully implemented and the data read from the ATA disk was stored in the ata_disk.buffer. This buffer contains the content retrieved from the ATA disk, which I could now access and use if needed. I have also implemented a way to display the buffer when the read operation is complete.
+
 # build an cross compiler
 
 ```bash
