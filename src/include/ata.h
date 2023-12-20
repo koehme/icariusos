@@ -38,12 +38,16 @@ typedef enum ATAPorts
     ATA_COMMAND_PORT = 0x1f7,
 } ATAPorts;
 
+/**
+ * @brief Represents an ATA Disk with a buffer for data storage.
+ */
 typedef struct ATADisk
 {
     uint8_t buffer[512];
-    bool has_read;
+    int buffer_size;
 } ATADisk;
 
-void ata_read_sectors(const uint32_t lba, void *buffer, const size_t n_sectors);
+void ata_read(const uint32_t lba, void *buffer, const size_t n_sectors);
+void ata_print_buffer(const ATADisk *disk);
 
 #endif

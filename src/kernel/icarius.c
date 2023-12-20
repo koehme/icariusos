@@ -101,6 +101,19 @@ void kprint_motd(void)
     return;
 };
 
+void kprint_hex(const uint8_t value)
+{
+    const char *hex_chars = "0123456789ABCDEF";
+    char hex[5];
+    hex[0] = '0';
+    hex[1] = 'x';
+    hex[2] = hex_chars[(value >> 4) & 0xF];
+    hex[3] = hex_chars[value & 0xF];
+    hex[4] = '\0';
+    kprint_color(hex, VGA_COLOR_LIGHT_GREEN);
+    return;
+};
+
 void kmain(void)
 {
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
@@ -155,8 +168,8 @@ void kmain(void)
 
     kprint_color("Initializing ATA Driver..\n", VGA_COLOR_LIGHT_GREEN);
     ATADisk *ptr_ata_disk = &ata_disk;
-    ata_read_sectors(0, ptr_ata_disk->buffer, 1);
+    ata_read(0, ptr_ata_disk->buffer, 1);
 
-    kprint_motd();
+    // kprint_motd();
     return;
 };

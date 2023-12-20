@@ -20,6 +20,7 @@ void *kcalloc(const size_t size);
 void kfree(void *ptr);
 void kprint_color(const char *str, const VGAColor color);
 void kprint(const char *str);
+void kprint_hex(const uint8_t value);
 void kpanic(const char *str);
 void ksleep(const int iterations);
 void kascii_spinner(const int frames, const int delay);

@@ -5,6 +5,7 @@
  */
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "idt.h"
 #include "string.h"
@@ -86,18 +87,44 @@ static IDTDescriptor idt[256];
  */
 static IDT_R idtr_descriptor;
 
+void pic_send_eoi(void)
+{
+    asm_outb(PIC_1_CTRL, PIC_ACK);
+    return;
+};
+
+/**
+ * @brief IRQ handler for ATA Disk Read completion (IRQ 14).
+ * Handles the interrupt generated when an ATA Disk Read operation
+ * is completed. It prints a message indicating the successful transfer of 512 bytes
+ * from the ATA Disk to the Buffer and acknowledges the interrupt to the PIC (Programmable Interrupt Controller).
+ * @details
+ * Begins by printing an interrupt message in light magenta color.
+ * It then initiates the data transfer from the ATA Disk to the Buffer in an interrupt-driven manner.
+ * After the transfer is completed, a success message is printed in light green color,
+ * and the contents of the ATA Buffer are printed using `ata_print_buffer`.
+ * Finally, the interrupt is acknowledged to the PIC.
+ */
 void irq_14h_handler(void)
 {
     const char *message = interrupt_messages[46];
-    kprint(message);
+    kprint_color(message, VGA_COLOR_LIGHT_MAGENTA);
 
-    for (size_t i = 0; i < 256; ++i)
+    ATADisk *ptr_ata_disk = &ata_disk;
+    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
+
+    for (size_t i = 0; i < ptr_ata_disk->buffer_size; ++i)
     {
-        ata_disk.buffer[i] = asm_inw(i);
+        // Copy from disk into buffer
+        *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
+        ptr_ata_buffer++;
     };
-    ata_disk.has_read = true;
-
-    asm_outb(PIC_1_CTRL, PIC_ACK);
+    // Interrupt driven
+    kprint_color("ATA Disk Read Successful: 512 Bytes Transferred to Buffer\n"
+                 "Operation Completed Safely.\n\n",
+                 VGA_COLOR_LIGHT_GREEN);
+    ata_print_buffer(ptr_ata_disk);
+    pic_send_eoi();
     return;
 };
 
@@ -107,7 +134,7 @@ void irq_14h_handler(void)
  */
 void isr_20h_handler(void)
 {
-    asm_outb(PIC_1_CTRL, PIC_ACK);
+    pic_send_eoi();
     return;
 };
 
@@ -118,8 +145,9 @@ void isr_20h_handler(void)
 void isr_21h_handler(void)
 {
     const char *message = interrupt_messages[33];
-    kprint(message);
-    asm_outb(PIC_1_CTRL, PIC_ACK);
+    kprint("\n");
+    kprint_color(message, VGA_COLOR_LIGHT_MAGENTA);
+    pic_send_eoi();
     return;
 };
 
@@ -129,7 +157,7 @@ void isr_21h_handler(void)
  */
 void isr_default_handler(void)
 {
-    asm_outb(PIC_1_CTRL, PIC_ACK);
+    pic_send_eoi();
     return;
 };
 
