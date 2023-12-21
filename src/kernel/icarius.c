@@ -5,6 +5,7 @@
  */
 
 #include "icarius.h"
+#include "string.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
@@ -34,14 +35,50 @@ void kfree(void *ptr)
 
 void kprint_color(const char *str, const VGAColor color)
 {
-    ksleep(KDEBUG_SLOW_DOWN);
     vga_print(&vga_display, str, color);
+    ksleep(KDEBUG_SLOW_DOWN);
     return;
 };
 
 void kprint(const char *str)
 {
     vga_print(&vga_display, str, VGA_COLOR_WHITE | (VGA_COLOR_BLACK << 4));
+    return;
+};
+
+void kprint_rainbow(const char *str)
+{
+    const VGAColor rainbow_colors[7] = {
+        VGA_COLOR_LIGHT_RED,
+        VGA_COLOR_BROWN,
+        VGA_COLOR_YELLOW,
+        VGA_COLOR_LIGHT_GREEN,
+        VGA_COLOR_LIGHT_CYAN,
+        VGA_COLOR_LIGHT_BLUE,
+        VGA_COLOR_LIGHT_MAGENTA,
+    };
+    const size_t len = slen(str);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const VGAColor color = rainbow_colors[i % 7];
+        const char ch = str[i];
+        vga_print_ch(&vga_display, ch, color);
+    };
+    return;
+};
+
+void kprint_hex(const uint8_t value)
+{
+    char buffer[5] = {'0', 'x', 0x0, 0x0, '\0'};
+
+    const char *hex_chars = "0123456789ABCDEF";
+    const uint8_t upper_nibble = (value >> 4) & 0b00001111;
+    const uint8_t lower_nibble = value & 0b00001111;
+
+    buffer[2] = hex_chars[upper_nibble];
+    buffer[3] = hex_chars[lower_nibble];
+    kprint_color(buffer, VGA_COLOR_LIGHT_GREEN);
     return;
 };
 
@@ -55,9 +92,9 @@ void kpanic(const char *str)
     return;
 };
 
-void ksleep(const int iterations)
+void ksleep(const int n_times)
 {
-    for (int i = 0; i < iterations; i++)
+    for (int i = 0; i < n_times; i++)
     {
         for (int j = 0; j < 1000000; j++)
         {
@@ -68,13 +105,13 @@ void ksleep(const int iterations)
 
 void kascii_spinner(const int frames, const int delay)
 {
-    const char *spin_frames[4] = {"-", "\\", "|", "/"};
+    const char *spinner_frames[4] = {"-", "\\", "|", "/"};
 
     for (int i = 0; i < frames; i++)
     {
-        const char *curr_frame = spin_frames[i % 4];
-        kprint_color(curr_frame, VGA_COLOR_LIGHT_GREEN);
-        ksleep(delay);
+        const char *curr_frame = spinner_frames[i % 4];
+        kprint(curr_frame);
+        ksleep(50);
         kprint("\b");
     };
     return;
@@ -82,9 +119,9 @@ void kascii_spinner(const int frames, const int delay)
 
 void kprint_logo(void)
 {
-    kprint("   \\    /   \n");
-    kprint("   (\\--/)   \n");
-    kprint("    /  \\    \n");
+    kprint_rainbow("   \\    /   \n");
+    kprint_rainbow("   (\\--/)   \n");
+    kprint_rainbow("    /  \\    \n");
     return;
 };
 
@@ -92,20 +129,8 @@ void kprint_motd(void)
 {
     kascii_spinner(60, 50);
     kprint_logo();
-    kprint_color("Welcome to icariusOS\n", VGA_COLOR_LIGHT_MAGENTA);
-    return;
-};
-
-void kprint_hex(const uint8_t value)
-{
-    const char *hex_chars = "0123456789ABCDEF";
-    char hex[5];
-    hex[0] = '0';
-    hex[1] = 'x';
-    hex[2] = hex_chars[(value >> 4) & 0xF];
-    hex[3] = hex_chars[value & 0xF];
-    hex[4] = '\0';
-    kprint_color(hex, VGA_COLOR_LIGHT_GREEN);
+    kprint_color("Welcome to icarius", VGA_COLOR_GREEN);
+    kprint_color("OS\n", VGA_COLOR_LIGHT_GREEN);
     return;
 };
 

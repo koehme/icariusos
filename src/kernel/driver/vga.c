@@ -214,3 +214,10 @@ void vga_print(VGADisplay *self, const char *str, const VGAColor color)
     cursor_set(self->cursor_y, self->cursor_x);
     return;
 };
+
+void vga_print_ch(VGADisplay *self, const char ch, const VGAColor color)
+{
+    vga_display_write(self, ch, color);
+    cursor_set(self->cursor_y, self->cursor_x);
+    return;
+};

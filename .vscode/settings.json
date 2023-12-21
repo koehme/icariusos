@@ -10,6 +10,7 @@
         "bitset": "c",
         "unordered_map": "c",
         "io.h": "c",
-        "ata.h": "c"
+        "ata.h": "c",
+        "ios": "c"
     }
 }

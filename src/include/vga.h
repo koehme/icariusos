@@ -40,8 +40,8 @@ typedef enum VGAColor
 typedef struct VGADisplay
 {
     uint16_t *framebuffer;
-    uint16_t cursor_x; // The horizontal position (column) where the character will be placed.
-    uint16_t cursor_y; // The vertical position (row) where the character will be placed.
+    uint16_t cursor_x; // Horizontal position (column) where the character will be placed.
+    uint16_t cursor_y; // Vertical position (row) where the character will be placed.
     uint8_t width;
     uint8_t height;
 } VGADisplay;
@@ -51,6 +51,7 @@ extern VGADisplay vga_display;
 void vga_display_init(VGADisplay *self, uint16_t *framebuffer, const uint8_t width, const uint8_t height);
 void vga_display_clear(VGADisplay *self);
 void vga_print(VGADisplay *self, const char *str, const VGAColor color);
+void vga_print_ch(VGADisplay *self, const char ch, const VGAColor color);
 void vga_display_set_cursor(VGADisplay *self, const uint8_t y, const uint8_t x);
 
 #endif
