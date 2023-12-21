@@ -10,7 +10,6 @@ extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
-extern ATADisk ata_disk;
 
 void *kmalloc(const size_t size)
 {
@@ -138,9 +137,12 @@ void kmain(void)
     kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
     asm_do_sti();
 
+    kprint_color("Initializing ATA Disk..\n", VGA_COLOR_LIGHT_GREEN);
+    ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
+    ata_init(ptr_ata_disk);
     kprint_color("Initializing ATA Driver..\n", VGA_COLOR_LIGHT_GREEN);
-    ATADisk *ptr_ata_disk = &ata_disk;
-    ata_read(0, ptr_ata_disk->buffer, 1);
+    ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
+    kprint_color("Bootsector loaded. End of Sector Signature 0x55AA found.\n", VGA_COLOR_LIGHT_GREEN);
 
     kprint_motd();
     kprint(">");

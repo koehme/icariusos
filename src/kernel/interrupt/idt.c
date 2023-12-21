@@ -13,7 +13,7 @@
 #include "icarius.h"
 #include "ata.h"
 
-extern ATADisk ata_disk;
+extern ATADisk ata_disk_a;
 
 extern void asm_irq_14h(void);
 extern void asm_interrupt_20h(void);
@@ -110,19 +110,17 @@ void irq_14h_handler(void)
     const char *message = interrupt_messages[46];
     kprint_color(message, VGA_COLOR_LIGHT_MAGENTA);
 
-    ATADisk *ptr_ata_disk = &ata_disk;
+    ATADisk *ptr_ata_disk = &ata_disk_a;
     volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
 
-    for (size_t i = 0; i < ptr_ata_disk->buffer_size; ++i)
+    for (size_t i = 0; i < ptr_ata_disk->sector_size / 2; ++i)
     {
         // Copy from disk into buffer
         *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
         ptr_ata_buffer++;
     };
     // Interrupt driven
-    kprint_color("ATA Disk Read Successful: 512 Bytes Transferred to Buffer\n"
-                 "Operation Completed Safely.\n\n",
-                 VGA_COLOR_LIGHT_GREEN);
+    kprint_color("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n", VGA_COLOR_LIGHT_GREEN);
     ata_print_buffer(ptr_ata_disk);
     pic_send_eoi();
     return;

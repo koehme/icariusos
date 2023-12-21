@@ -11,6 +11,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+typedef enum ATADiskType
+{
+    ATA_DISK_A = 0,
+    ATA_DISK_B = 1,
+    ATA_DISK_C = 2,
+    ATA_SECTOR_SIZE = 512,
+} ATADiskType;
+
 typedef enum ATADrives
 {
     ATA_DRIVE_MASTER = 0xe0
@@ -39,15 +47,18 @@ typedef enum ATAPorts
 } ATAPorts;
 
 /**
- * @brief Represents an ATA Disk with a buffer for data storage.
+ * @brief Represents an ATA Disk.
  */
 typedef struct ATADisk
 {
-    uint8_t buffer[512];
-    int buffer_size;
+    ATADiskType disk_type; // Type of the ATA Disk
+    int sector_size;       // Size of each sector in bytes
+    uint8_t buffer[512];   // Data buffer for temporary storage
 } ATADisk;
 
-void ata_read(const uint32_t lba, void *buffer, const size_t n_sectors);
+void ata_init(ATADisk *self);
+ATADisk *ata_get_disk(const ATADiskType disk_type);
+int ata_read(ATADisk *self, const size_t start_block, void *buffer, const size_t n_blocks);
 void ata_print_buffer(const ATADisk *disk);
 
 #endif
