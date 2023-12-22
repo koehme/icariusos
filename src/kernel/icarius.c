@@ -6,11 +6,13 @@
 
 #include "icarius.h"
 #include "string.h"
+#include "pathlexer.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
+extern PathLexer plexer;
 
 void *kmalloc(const size_t size)
 {
@@ -36,7 +38,7 @@ void kfree(void *ptr)
 void kprint_color(const char *str, const VGAColor color)
 {
     vga_print(&vga_display, str, color);
-    ksleep(KDEBUG_SLOW_DOWN);
+    // ksleep(KDEBUG_SLOW_DOWN);
     return;
 };
 
@@ -168,7 +170,19 @@ void kmain(void)
     kprint_color("Initializing ATA Driver...\n", VGA_COLOR_LIGHT_GREEN);
     ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
 
-    kprint_motd();
-    kprint(">");
+    // kprint_motd();
+    // kprint(">");
+
+    path_lexer_init(&plexer, "A:/bin/cli.exe");
+
+    for (;;)
+    {
+        const PathToken token = path_lexer_lex(&plexer);
+
+        if (token.type == PT_END || token.type == PT_ERR)
+        {
+            break;
+        };
+    };
     return;
 };

@@ -4,7 +4,7 @@
  * @copyright MIT
  */
 
-#include "pparser.h"
+#include "pathparser.h"
 #include "icarius.h"
 
 /*
@@ -39,11 +39,11 @@ drive               -> 'A' | 'B' | ... | 'Z'
  *    };
  *
  * @param self A pointer to the PParser instance.
- * @param plexer A pointer to the PLexer instance containing the input to be parsed.
+ * @param path_lexer A pointer to the PLexer instance containing the input to be parsed.
  * @return A pointer to the root node of the parsed file system structure.
  */
-PParserRootNode *pparser_parse(PParser *self, PLexer *plexer)
+PathParserRootNode *pparser_parse(PathParser *self, PathLexer *path_lexer)
 {
-    PParserRootNode *root_node = kcalloc(sizeof(PParserRootNode));
+    PathParserRootNode *root_node = kcalloc(sizeof(PathParserRootNode));
     return root_node;
 };

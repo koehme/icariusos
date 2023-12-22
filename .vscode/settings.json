@@ -11,6 +11,7 @@
         "unordered_map": "c",
         "io.h": "c",
         "ata.h": "c",
-        "ios": "c"
+        "ios": "c",
+        "pathlexer.h": "c"
     }
 }
