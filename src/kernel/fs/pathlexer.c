@@ -67,8 +67,9 @@ PathToken path_lexer_lex(PathLexer *self)
         return path_lexer_create_token(self, PT_END);
     };
 
-    if (is_alpha(path_lexer_peek(self)))
+    if (is_alpha(path_lexer_peek(self)) && path_lexer_peek_next(self) == ':')
     {
+        path_lexer_advance(self);
         return path_lexer_create_token(self, PT_LETTER);
     };
     const char ch = path_lexer_advance(self);

@@ -1,8 +1,8 @@
 target remote | qemu-system-i386 -S -gdb stdio -drive format=raw,file=./bin/os.bin
 add-symbol-file ./obj/kernel.o 0x100000
 
-break icarius.c:179
-break pathparser.c:94
+
+break pathparser.c:path_parser_parse_entries
 break icarius.c:180
 
 layout split

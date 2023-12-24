@@ -14,14 +14,17 @@ PathParser pparser = {
 };
 
 /*
-path        -> drive ':' '/' entries
-drive       -> ('A' - 'Z')
+path        -> drive ':' entries
+drive       -> letter
 
-entries     -> entry '/' entries | entry
+entries     -> ( '/' entry )*
 entry       -> directory | filename
 
 directory   -> identifier
 filename    -> identifier '.' identifier
+
+identifier  -> ( 'a' - 'z' )*
+letter      -> ( 'A' - 'Z' )
 */
 
 static void path_parser_handle_syntax_error(PathParser *self, const char *message)
@@ -94,37 +97,76 @@ static void path_parser_eat(PathParser *self, PathLexer *path_lexer, const PathT
     return;
 };
 
-void path_parser_parse_directory(PathParser *self, PathLexer *path_lexer)
+/*
+path        -> drive ':' entries
+drive       -> letter
+
+entries     -> ( '/' entry )*
+entry       -> directory | filename
+
+directory   -> identifier
+filename    -> identifier '.' identifier
+
+identifier  -> ( 'a' - 'z' )*
+letter      -> ( 'A' - 'Z' )
+*/
+
+PathNode *path_parser_parse_directory(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
 {
-    path_parser_eat(self, path_lexer, PT_IDENTIFIER, "Expect an directory identifier");
-    PathNode *new_node = kcalloc(sizeof(PathNode));
-    mcpy(new_node->identifier, self->prev.start, self->prev.len);
-    new_node->next = 0x0;
-    return;
+    if (path_parser_check(self, PT_DOT))
+    {
+        // Fallback to path_parser_parse_entry build the final filename structure node
+        return curr_node;
+    };
+    mcpy(curr_node->identifier, self->prev.start, self->prev.len);
+    curr_node->next = 0x0;
+    return curr_node;
 };
 
-// filename    -> identifier '.' identifier
-void path_parser_parse_filename(PathParser *self, PathLexer *path_lexer)
+PathNode *path_parser_parse_filename(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
 {
-    path_parser_eat(self, path_lexer, PT_IDENTIFIER, "Expect an filename identifier");
-    return;
+    mcpy(curr_node->identifier, self->prev.start, self->prev.len);
+
+    path_parser_eat(self, path_lexer, PT_DOT, "Expect an '.' in an filename.");
+    mcpy(curr_node->identifier + self->prev.len, self->prev.start, self->prev.len);
+    path_parser_eat(self, path_lexer, PT_IDENTIFIER, "Expect an 'identifier' at the end of an filename.");
+    curr_node->next = 0x0;
+    return curr_node;
 };
 
-// entry       -> directory | filename
-void path_parser_parse_entry(PathParser *self, PathLexer *path_lexer){
+PathNode *path_parser_parse_entry(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
+{
+    if (path_parser_match(self, path_lexer, PT_IDENTIFIER))
+    {
+        curr_node = path_parser_parse_directory(self, path_lexer, curr_node);
+        const PathType type = self->prev.type;
 
+        if (type == PT_DOT)
+        {
+            return path_parser_parse_filename(self, path_lexer, curr_node);
+        };
+    };
+    return curr_node;
 };
 
-// entries     -> entry '/' entries | entry
-void path_parser_parse_entries(PathParser *self, PathLexer *path_lexer)
+PathNode *path_parser_parse_entries(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
 {
-    path_parser_parse_entry(self, path_lexer);
+    PathNode *head = 0x0;
 
     while (path_parser_match(self, path_lexer, PT_SLASH))
     {
-        path_parser_parse_entries(self, path_lexer);
+        PathNode *new_node = kcalloc(sizeof(PathNode));
+        // Special case if curr_node is empty, it was  the first call so we set head to new_node,
+        // so we have a ref to the head, which can we use to build the full path
+        if (!curr_node)
+        {
+            head = new_node;
+            curr_node = head;
+        };
+        curr_node->next = path_parser_parse_entry(self, path_lexer, new_node);
+        curr_node = curr_node->next;
     };
-    return;
+    return head;
 };
 
 PathRootNode *path_parser_parse_drive(PathParser *self, PathLexer *path_lexer)
@@ -135,16 +177,14 @@ PathRootNode *path_parser_parse_drive(PathParser *self, PathLexer *path_lexer)
     root->drive[1] = '\0';
     root->path = 0x0;
     path_parser_eat(self, path_lexer, PT_COLON, "Expect an ':' after an drive letter.");
-    path_parser_eat(self, path_lexer, PT_SLASH, "Expect an '/' after an drive colon.");
     return root;
 };
 
 // path        -> drive ':' '/' entries
 PathRootNode *path_parser_parse_path(PathParser *self, PathLexer *path_lexer)
 {
-    path_parser_advance(self, path_lexer);
     PathRootNode *root = path_parser_parse_drive(self, path_lexer);
-    path_parser_parse_entries(self, path_lexer);
+    root->path = path_parser_parse_entries(self, path_lexer, 0x0);
     return root;
 };
 
@@ -176,5 +216,6 @@ PathRootNode *path_parser_parse_path(PathParser *self, PathLexer *path_lexer)
  */
 PathRootNode *path_parser_parse(PathParser *self, PathLexer *path_lexer)
 {
+    path_parser_advance(self, path_lexer);
     return path_parser_parse_path(self, path_lexer);
 };
