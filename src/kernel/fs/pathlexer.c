@@ -1,4 +1,5 @@
 #include "pathlexer.h"
+#include "string.h"
 #include <stdbool.h>
 
 PathLexer plexer = {
@@ -9,11 +10,6 @@ PathLexer plexer = {
 inline static bool path_lexer_is_eof(const PathLexer *self)
 {
     return *self->curr == '\0';
-};
-
-inline static bool is_alpha(const char c)
-{
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 };
 
 static char path_lexer_advance(PathLexer *self)
@@ -73,12 +69,7 @@ PathToken path_lexer_lex(PathLexer *self)
 
     if (is_alpha(path_lexer_peek(self)))
     {
-        if (path_lexer_peek_next(self) == ':')
-        {
-            path_lexer_advance(self);
-            path_lexer_advance(self);
-            return path_lexer_create_token(self, PT_DRIVE_LETTER);
-        };
+        return path_lexer_create_token(self, PT_LETTER);
     };
     const char ch = path_lexer_advance(self);
 

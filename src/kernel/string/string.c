@@ -6,6 +6,11 @@
 
 #include "string.h"
 
+bool is_alpha(const char c)
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+};
+
 /**
  * @brief Calculate the length of a null-terminated C string.
  * This function takes a pointer to a null-terminated C string and iterates through

@@ -7,12 +7,14 @@
 #include "icarius.h"
 #include "string.h"
 #include "pathlexer.h"
+#include "pathparser.h"
 
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
 extern PathLexer plexer;
+extern PathParser pparser;
 
 void *kmalloc(const size_t size)
 {
@@ -174,15 +176,6 @@ void kmain(void)
     // kprint(">");
 
     path_lexer_init(&plexer, "A:/bin/cli.exe");
-
-    for (;;)
-    {
-        const PathToken token = path_lexer_lex(&plexer);
-
-        if (token.type == PT_END || token.type == PT_ERR)
-        {
-            break;
-        };
-    };
+    PathRootNode *ptr_root_node = path_parser_parse(&pparser, &plexer);
     return;
 };

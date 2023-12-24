@@ -10,7 +10,7 @@
 typedef enum PathType
 {
     PT_IDENTIFIER,
-    PT_DRIVE_LETTER,
+    PT_LETTER,
     PT_COLON,
     PT_SLASH,
     PT_DOT,

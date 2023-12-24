@@ -13,27 +13,28 @@
 typedef enum PathParserDescriptor
 {
     MAX_NAME_LENGTH = 8,
+    MAX_DRIVE_LENGTH = 2,
 } PathParserDescriptor;
 
 typedef struct PathParser
 {
-    char *next;
-    char *prev;
+    PathToken curr;
+    PathToken prev;
     bool has_error;
 } PathParser;
 
-typedef struct PathParserNode
+typedef struct PathNode
 {
     char identifier[MAX_NAME_LENGTH];
-    struct PathParserNode *next;
-} PathParserNode;
+    struct PathNode *next;
+} PathNode;
 
-typedef struct PathParserRootNode
+typedef struct PathRootNode
 {
-    char drive;
-    PathParserNode *path;
-} PathParserRootNode;
+    char drive[MAX_DRIVE_LENGTH];
+    PathNode *path;
+} PathRootNode;
 
-PathParserRootNode *path_parser_parse(PathParser *self, PathLexer *path_lexer);
+PathRootNode *path_parser_parse(PathParser *self, PathLexer *path_lexer);
 
 #endif

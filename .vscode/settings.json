@@ -12,6 +12,8 @@
         "io.h": "c",
         "ata.h": "c",
         "ios": "c",
-        "pathlexer.h": "c"
+        "pathlexer.h": "c",
+        "pathparser.h": "c",
+        "string.h": "c"
     }
 }
