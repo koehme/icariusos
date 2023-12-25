@@ -29,11 +29,11 @@ letter      -> ( 'A' - 'Z' )
 
 static void path_parser_handle_syntax_error(PathParser *self, const char *message)
 {
-    kprint("Syntax Error occured");
+    kprint("Syntax Error occurred! ");
 
     if (self->prev.type == PT_END)
     {
-        kprint("at the end\n");
+        kprint("at the end.\n");
     }
     else
     {
@@ -71,7 +71,7 @@ static void path_parser_advance(PathParser *self, PathLexer *path_lexer)
         {
             break;
         };
-        path_parser_report_error(self, "Oops. Unexpected token.");
+        path_parser_report_error(self, "Oops. Unexpected token.\n");
     };
     return;
 };
@@ -97,27 +97,8 @@ static void path_parser_eat(PathParser *self, PathLexer *path_lexer, const PathT
     return;
 };
 
-/*
-path        -> drive ':' entries
-drive       -> letter
-
-entries     -> ( '/' entry )*
-entry       -> directory | filename
-
-directory   -> identifier
-filename    -> identifier '.' identifier
-
-identifier  -> ( 'a' - 'z' )*
-letter      -> ( 'A' - 'Z' )
-*/
-
 PathNode *path_parser_parse_directory(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
 {
-    if (path_parser_check(self, PT_DOT))
-    {
-        // Fallback to path_parser_parse_entry build the final filename structure node
-        return curr_node;
-    };
     mcpy(curr_node->identifier, self->prev.start, self->prev.len);
     curr_node->next = 0x0;
     return curr_node;
@@ -125,11 +106,12 @@ PathNode *path_parser_parse_directory(PathParser *self, PathLexer *path_lexer, P
 
 PathNode *path_parser_parse_filename(PathParser *self, PathLexer *path_lexer, PathNode *curr_node)
 {
-    mcpy(curr_node->identifier, self->prev.start, self->prev.len);
-
+    size_t bytes = self->prev.len;
     path_parser_eat(self, path_lexer, PT_DOT, "Expect an '.' in an filename.");
-    mcpy(curr_node->identifier + self->prev.len, self->prev.start, self->prev.len);
+    mcpy(curr_node->identifier + bytes, self->prev.start, self->prev.len);
+    bytes += self->prev.len;
     path_parser_eat(self, path_lexer, PT_IDENTIFIER, "Expect an 'identifier' at the end of an filename.");
+    mcpy(curr_node->identifier + bytes, self->prev.start, self->prev.len);
     curr_node->next = 0x0;
     return curr_node;
 };
@@ -139,9 +121,8 @@ PathNode *path_parser_parse_entry(PathParser *self, PathLexer *path_lexer, PathN
     if (path_parser_match(self, path_lexer, PT_IDENTIFIER))
     {
         curr_node = path_parser_parse_directory(self, path_lexer, curr_node);
-        const PathType type = self->prev.type;
 
-        if (type == PT_DOT)
+        if (path_parser_check(self, PT_DOT))
         {
             return path_parser_parse_filename(self, path_lexer, curr_node);
         };
