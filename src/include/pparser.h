@@ -1,27 +1,27 @@
 /**
- * @file pathparser.h
+ * @file pparser.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef PATHPARSER_H
-#define PATHPARSER_H
+#ifndef PPARSER_H
+#define PPARSER_H
 
 #include <stdbool.h>
-#include "pathlexer.h"
+#include "plexer.h"
 
-typedef enum PathParserDescriptor
+typedef enum PParserLimits
 {
     MAX_NAME_LENGTH = 8,
     MAX_DRIVE_LENGTH = 2,
-} PathParserDescriptor;
+} PParserLimits;
 
-typedef struct PathParser
+typedef struct PParser
 {
     PathToken curr;
     PathToken prev;
     bool has_error;
-} PathParser;
+} PParser;
 
 typedef struct PathNode
 {
@@ -35,6 +35,6 @@ typedef struct PathRootNode
     PathNode *path;
 } PathRootNode;
 
-PathRootNode *path_parser_parse(PathParser *self, PathLexer *path_lexer);
+PathRootNode *pparser_parse(PParser *self, PLexer *plexer);
 
 #endif

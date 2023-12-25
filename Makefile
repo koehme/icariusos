@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o ./obj/cursor.o ./obj/page.o ./obj/page.asm.o ./obj/ata.o ./obj/pathlexer.o ./obj/pathparser.o
+DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o ./obj/cursor.o ./obj/page.o ./obj/page.asm.o ./obj/ata.o ./obj/plexer.o ./obj/pparser.o
 INCLUDES = -I./src/include
 FLAGS = -std=gnu99 -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -54,11 +54,11 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./obj/ata.o: ./src/kernel/driver/ata.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/driver/ata.c -o ./obj/ata.o
 
-./obj/pathlexer.o: ./src/kernel/fs/pathlexer.c
-	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/fs/pathlexer.c -o ./obj/pathlexer.o
+./obj/plexer.o: ./src/kernel/fs/plexer.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/fs/plexer.c -o ./obj/plexer.o
 
-./obj/pathparser.o: ./src/kernel/fs/pathparser.c
-	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/fs/pathparser.c -o ./obj/pathparser.o
+./obj/pparser.o: ./src/kernel/fs/pparser.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/fs/pparser.c -o ./obj/pparser.o
 
 clean:	
 	rm -rf ./bin/*

@@ -4,3 +4,5 @@ add-symbol-file ./obj/kernel.o 0x100000
 break icarius.c:180
 
 layout split
+focus cmd
+set print pretty on

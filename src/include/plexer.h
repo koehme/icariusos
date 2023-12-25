@@ -1,11 +1,11 @@
 /**
- * @file pathlexer.h
+ * @file plexer.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef PATHLEXER_H
-#define PATHLEXER_H
+#ifndef PLEXER_H
+#define PLEXER_H
 
 typedef enum PathType
 {
@@ -25,13 +25,13 @@ typedef struct PathToken
     int len;
 } PathToken;
 
-typedef struct PathLexer
+typedef struct PLexer
 {
     char *start;
     char *curr;
-} PathLexer;
+} PLexer;
 
-void path_lexer_init(PathLexer *self, const char *path);
-PathToken path_lexer_lex(PathLexer *self);
+void plexer_init(PLexer *self, const char *path);
+PathToken plexer_lex(PLexer *self);
 
 #endif
