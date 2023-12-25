@@ -175,7 +175,8 @@ void kmain(void)
     // kprint_motd();
     // kprint(">");
 
-    path_lexer_init(&plexer, "A:/bin/cli.exe");
+    // path_lexer_init(&plexer, "A:/bin/cli.exe");
+    path_lexer_init(&plexer, "/bin/cli.exe");
     PathRootNode *ptr_root_node = path_parser_parse(&pparser, &plexer);
     return;
 };

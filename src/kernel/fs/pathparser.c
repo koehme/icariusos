@@ -153,15 +153,21 @@ PathNode *path_parser_parse_entries(PathParser *self, PathLexer *path_lexer, Pat
 PathRootNode *path_parser_parse_drive(PathParser *self, PathLexer *path_lexer)
 {
     PathRootNode *root = kcalloc(sizeof(PathRootNode));
-    path_parser_eat(self, path_lexer, PT_LETTER, "Expect an letter like 'A' for an drive.");
-    mcpy(root->drive, self->prev.start, 1 * sizeof(char));
-    root->drive[1] = '\0';
+
+    if (path_parser_match(self, path_lexer, PT_LETTER))
+    {
+        mcpy(root->drive, self->prev.start, 1 * sizeof(char));
+        root->drive[1] = '\0';
+        path_parser_eat(self, path_lexer, PT_COLON, "Expect an ':' after an drive letter.");
+    }
+    else
+    {
+        root->drive[0] = '\0';
+    };
     root->path = 0x0;
-    path_parser_eat(self, path_lexer, PT_COLON, "Expect an ':' after an drive letter.");
     return root;
 };
 
-// path        -> drive ':' '/' entries
 PathRootNode *path_parser_parse_path(PathParser *self, PathLexer *path_lexer)
 {
     PathRootNode *root = path_parser_parse_drive(self, path_lexer);
