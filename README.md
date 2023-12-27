@@ -101,7 +101,7 @@ char *ptr_phy_addr = kcalloc(4096);
 virt_address_map(ptr_kpage_dir->directory, (void *)0x2000, (uint32_t)ptr_phy_addr | PAGE_ACCESSED | PAGE_PRESENT | PAGE_READ_WRITE);
 
 asm_do_sti();
-kprint_color("Enable Interrupts...\n", VGA_COLOR_LIGHT_GREEN);
+printf("Enable Interrupts...\n");
 
 char *ptr_virt = (char *)0x2000;
 
@@ -115,14 +115,14 @@ ptr_virt[5] = 'M';
 ptr_virt[6] = 'E';
 ptr_virt[7] = '!';
 
-kprint_color("Initializing Virtual Memory Paging...\n", VGA_COLOR_LIGHT_GREEN);
-kprint_color("Testing Paging...\nVirtual Address 0x2000 now points to Physical Address 0x1802000...\n", VGA_COLOR_LIGHT_GREEN);
-kprint_color("Virtual 0x2000 [", VGA_COLOR_LIGHT_GREEN);
-kprint_color(ptr_virt, VGA_COLOR_LIGHT_GREEN);
-kprint_color("] == ", VGA_COLOR_LIGHT_GREEN);
-kprint_color("Physical 0x1802000 [", VGA_COLOR_LIGHT_GREEN);
-kprint_color(ptr_phy_addr, VGA_COLOR_LIGHT_GREEN);
-kprint_color("]\n", VGA_COLOR_LIGHT_GREEN);
+printf("Initializing Virtual Memory Paging...\n");
+printf("Testing Paging...\nVirtual Address 0x2000 now points to Physical Address 0x1802000...\n");
+printf("Virtual 0x2000 [");
+printf(ptr_virt);
+printf("] == ");
+printf("Physical 0x1802000 [");
+printf(ptr_phy_addr);
+printf("]\n");
 ```
 
 The ATA driver was successfully implemented and the data read from the ATA disk was stored in the ata_disk.buffer. This buffer contains the content retrieved from the ATA disk, which I could now access and use if needed. I have also implemented a way to display the buffer when the read operation is complete.

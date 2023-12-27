@@ -6,6 +6,7 @@
 
 #include "pparser.h"
 #include "icarius.h"
+#include "string.h"
 
 PParser pparser = {
     .curr = {},
@@ -29,15 +30,15 @@ letter      -> ( 'A' - 'Z' )
 
 static void pparser_handle_syntax_error(PParser *self, const char *message)
 {
-    kprint("Syntax Error occurred! ");
+    printf("Syntax Error occurred! ");
 
     if (self->prev.type == PT_END)
     {
-        kprint("at the end.\n");
+        printf("at the end.\n");
     }
     else
     {
-        kprint(message);
+        printf(message);
     };
     self->has_error = true;
     return;

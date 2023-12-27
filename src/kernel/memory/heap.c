@@ -9,6 +9,7 @@
 #include "heap.h"
 #include "mem.h"
 #include "icarius.h"
+#include "string.h"
 
 HeapDescriptor kheap_descriptor = {
     .saddress = 0x0,
@@ -122,7 +123,7 @@ static int heap_mark_as_free(Heap *self, const size_t start_block)
 
     if (!is_head)
     {
-        kprint_color("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.", VGA_COLOR_LIGHT_RED);
+        printf("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.");
         return -1;
     };
     bool has_next_block = descriptor & DESCRIPTOR_HAS_NEXT;

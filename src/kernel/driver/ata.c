@@ -8,6 +8,7 @@
 #include "io.h"
 #include "mem.h"
 #include "icarius.h"
+#include "string.h"
 
 ATADisk ata_disk_a = {
     .disk_type = 0,
@@ -112,12 +113,11 @@ int ata_read(ATADisk *self, const size_t start_block, void *buffer, const size_t
  */
 void ata_print_buffer(const ATADisk *self)
 {
-    kprint_color("ATA Buffer: \n", VGA_COLOR_LIGHT_GREEN);
+    printf("ATA Buffer: \n");
 
     for (size_t i = 0; i < ATA_SECTOR_SIZE; ++i)
     {
-        kprint_hex(self->buffer[i]);
-        kprint(" ");
+        printf("0x%x ", self->buffer[i]);
     };
     return;
 };

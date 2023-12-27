@@ -108,7 +108,7 @@ void pic_send_eoi(void)
 void irq_14h_handler(void)
 {
     const char *message = interrupt_messages[46];
-    kprint_color(message, VGA_COLOR_LIGHT_MAGENTA);
+    printf(message);
 
     ATADisk *ptr_ata_disk = &ata_disk_a;
     volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
@@ -120,7 +120,7 @@ void irq_14h_handler(void)
         ptr_ata_buffer++;
     };
     // Interrupt driven
-    kprint_color("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n", VGA_COLOR_LIGHT_GREEN);
+    printf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n");
     ata_print_buffer(ptr_ata_disk);
     pic_send_eoi();
     return;
@@ -143,8 +143,8 @@ void isr_20h_handler(void)
 void isr_21h_handler(void)
 {
     const char *message = interrupt_messages[33];
-    kprint("\n");
-    kprint_color(message, VGA_COLOR_LIGHT_MAGENTA);
+    printf("\n");
+    printf(message);
     pic_send_eoi();
     return;
 };

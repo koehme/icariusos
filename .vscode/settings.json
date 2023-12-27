@@ -20,6 +20,14 @@
         "functional": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "pparser.h": "c",
+        "atomic": "c",
+        "__memory": "c",
+        "limits": "c",
+        "locale": "c",
+        "optional": "c",
+        "system_error": "c",
+        "vector": "c"
     }
 }

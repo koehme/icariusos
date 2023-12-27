@@ -18,18 +18,15 @@
 #include "page.h"
 #include "ata.h"
 #include "status.h"
+#include "plexer.h"
+#include "pparser.h"
+#include "string.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);
 void kfree(void *ptr);
-void kprint_color(const char *str, const VGAColor color);
-void kprint(const char *str);
-void kprint_hex(const uint8_t value);
 void kpanic(const char *str);
-void ksleep(const int iterations);
-void kascii_spinner(const int frames, const int delay);
-void kprint_logo(void);
-void kprint_motd();
+void ksleep(const int n_times);
 void kmain(void);
 
 #endif
