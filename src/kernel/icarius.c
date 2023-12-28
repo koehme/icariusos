@@ -112,12 +112,12 @@ void kmain(void)
     ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
     ata_init(ptr_ata_disk);
     printf("Initializing ATA Driver...\n");
-    ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
+    // ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
 
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
 
-    kmotd();
+    // kmotd();
     printf(">");
     return;
 };

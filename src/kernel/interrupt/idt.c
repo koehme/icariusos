@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "kbd.h"
 #include "idt.h"
 #include "string.h"
 #include "io.h"
@@ -142,9 +143,7 @@ void isr_20h_handler(void)
  */
 void isr_21h_handler(void)
 {
-    const char *message = interrupt_messages[33];
-    printf("\n");
-    printf(message);
+    kbd_read();
     pic_send_eoi();
     return;
 };
