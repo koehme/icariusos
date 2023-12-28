@@ -15,6 +15,12 @@ typedef enum KBDPorts
     KBD_COMMAND = 0x64,
 } KBDPorts;
 
+typedef struct KBD
+{
+    bool caps;
+    bool caps_lock;
+} KBD;
+
 void kbd_read();
 
 #endif
