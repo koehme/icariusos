@@ -113,11 +113,11 @@ int ata_read(ATADisk *self, const size_t start_block, void *buffer, const size_t
  */
 void ata_print_buffer(const ATADisk *self)
 {
-    printf("ATA Buffer: \n");
+    kprintf("ATA Buffer: \n");
 
     for (size_t i = 0; i < ATA_SECTOR_SIZE; ++i)
     {
-        printf("0x%x ", self->buffer[i]);
+        kprintf("0x%x ", self->buffer[i]);
     };
     return;
 };

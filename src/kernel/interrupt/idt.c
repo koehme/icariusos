@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "kbd.h"
+#include "keyboard.h"
 #include "idt.h"
 #include "string.h"
 #include "io.h"
@@ -109,7 +109,7 @@ void pic_send_eoi(void)
 void irq_14h_handler(void)
 {
     const char *message = interrupt_messages[46];
-    printf(message);
+    kprintf(message);
 
     ATADisk *ptr_ata_disk = &ata_disk_a;
     volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
@@ -121,7 +121,7 @@ void irq_14h_handler(void)
         ptr_ata_buffer++;
     };
     // Interrupt driven
-    printf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n");
+    kprintf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n");
     ata_print_buffer(ptr_ata_disk);
     pic_send_eoi();
     return;
@@ -143,7 +143,7 @@ void isr_20h_handler(void)
  */
 void isr_21h_handler(void)
 {
-    kbd_read();
+    keyboard_read();
     pic_send_eoi();
     return;
 };

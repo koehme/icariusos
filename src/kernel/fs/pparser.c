@@ -30,15 +30,15 @@ letter      -> ( 'A' - 'Z' )
 
 static void pparser_handle_syntax_error(PParser *self, const char *message)
 {
-    printf("Syntax Error occurred! ");
+    kprintf("Syntax Error occurred! ");
 
     if (self->prev.type == PT_END)
     {
-        printf("at the end.\n");
+        kprintf("at the end.\n");
     }
     else
     {
-        printf(message);
+        kprintf(message);
     };
     self->has_error = true;
     return;

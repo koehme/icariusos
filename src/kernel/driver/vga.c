@@ -132,7 +132,7 @@ void vga_display_init(VGADisplay *self, uint16_t *framebuffer, const uint8_t wid
  */
 static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color)
 {
-    if (ch == '\n')
+    if (ch == '\n' || ch == '\r')
     {
         // Newline handler
         self->cursor_x = 0;
@@ -151,6 +151,7 @@ static void vga_display_write(VGADisplay *self, uint8_t ch, const VGAColor color
             self->cursor_x = self->width - 1;
             self->cursor_y--;
         };
+        vga_display_put_ch_at(self, self->cursor_y, self->cursor_x, ' ', color);
     }
     else
     {

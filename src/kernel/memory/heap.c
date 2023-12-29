@@ -123,7 +123,7 @@ static int heap_mark_as_free(Heap *self, const size_t start_block)
 
     if (!is_head)
     {
-        printf("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.");
+        kprintf("Oops. Something went wrong. Maybe a wrong start_block or miscalculated alignment.");
         return -1;
     };
     bool has_next_block = descriptor & DESCRIPTOR_HAS_NEXT;

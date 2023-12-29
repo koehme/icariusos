@@ -8,6 +8,7 @@
 #include <stdbool.h>
 
 #include "string.h"
+#include "status.h"
 #include "vga.h"
 
 extern VGADisplay vga_display;
@@ -83,7 +84,7 @@ char *itoa(int num, char *str, int base)
     return str;
 };
 
-int printf(const char *fmt, ...)
+int kprintf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
