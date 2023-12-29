@@ -9,28 +9,18 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 # achievements 
 
 - [x] Bootloader: Smooth system startup with a written from scratch bootloader
-
 - [x] ATA Driver via polling: Successfully reads LBA sectors from the hard drive and loading the kernel into memory at 0x010000.
-
 - [x] Protected Mode Transition: Seamlessly transitioned to Protected Mode (32-bit) with A20 Gate activation for full 32-bit memory utilization.
-
 - [x] Interrupts: Implemented the Interrupt Descriptor Table (IDT) for handling interrupts.
-
 - [x] PIC: Implemented the Programmable Interrupt Controller (PIC) to handle Interrupt Requests (IRQ).
-
 - [x] Extended VGA Driver: Added functionality to scroll within the VGA text mode.
-
 - [x] Heap - Memory Magic Unleashed: Introduced a function to dynamically allocate memory like "kheap(50)" for 50 bytes, aligning allocations in CPU cache-friendly 4096-byte blocks.
-
 - [x] Logo: Integrated a function for printing initialization messages and unveiled an elegant logo, transforming system startup into a visual experience! :D
-
 - [x] Heap - Deallocation: Allowing the release of memory with something like "kfree(ptr)."
-
 - [x] Paging: Dynamically optimized virtual memory by efficiently managing pages between RAM and disk. Excited about unlocking its potential to create the illusion of each process having its own address space.
-
 - [x] ATA Read from Disk in an interrupt driven manner: Successfully implemented interrupt-driven reading of data from the ATA disk because constantly polling the ATA controller to check if it's finished is too slow and blocks the CPU.
-
-- [ ] Keyboard driver
+- [x] kprintf: Implemented a printing function, enhancing the system's ability to communicate and display information.
+- [x] Keyboard driver: (In Progress) - Currently implementing the QWERTZ keyboard layout for enhanced user input compatibility.
 
 ## about
 
