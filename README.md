@@ -20,7 +20,7 @@ It's not just about typing in bytes and commands. It becomes the feeling of an a
 - [x] Paging: Dynamically optimized virtual memory by efficiently managing pages between RAM and disk. Excited about unlocking its potential to create the illusion of each process having its own address space.
 - [x] ATA Read from Disk in an interrupt driven manner: Successfully implemented interrupt-driven reading of data from the ATA disk because constantly polling the ATA controller to check if it's finished is too slow and blocks the CPU.
 - [x] kprintf: Implemented a printing function, enhancing the system's ability to communicate and display information.
-- [x] Keyboard driver: (In Progress) - Currently implementing the QWERTZ keyboard layout for enhanced user input compatibility.
+- [ ] Keyboard driver: (In Progress) - Currently implementing the QWERTZ keyboard layout for enhanced user input compatibility.
 
 ## about
 
