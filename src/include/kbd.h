@@ -19,6 +19,7 @@ typedef struct KBD
 {
     bool caps;
     bool caps_lock;
+    bool alt_gr;
 } KBD;
 
 void kbd_read();
