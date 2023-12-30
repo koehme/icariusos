@@ -24,7 +24,6 @@ typedef enum Keyboard_Controller_Status_Mask
 
 typedef enum Keyboard_Encoder_Ports
 {
-
     KEYBOARD_ENC_INPUT_BUF = 0x60,
     KEYBOARD_ENC_CMD_REG = 0x60
 } Keyboard_Encoder_Ports;
@@ -37,8 +36,9 @@ typedef enum Keyboard_Controller_Ports
 
 typedef enum Keyboard_Controller_Commands
 {
-    KEYBOARD_CTRL_ENABLE = 0xAE,  // Enable Keyboard
-    KEYBOARD_CTRL_DISABLE = 0xAD, // Disable Keyboard
+    KEYBOARD_CTRL_SELF_TEST = 0xAA, // Self-Test
+    KEYBOARD_CTRL_ENABLE = 0xAE,    // Enable Keyboard
+    KEYBOARD_CTRL_DISABLE = 0xAD,   // Disable Keyboard
 } Keyboard_Controller_Commands;
 
 typedef struct Keyboard
