@@ -9,8 +9,12 @@
 #include "io.h"
 #include "keyboard.h"
 #include "string.h"
+#include "idt.h"
 
-Keyboard keyboard_state = {
+extern void asm_interrupt_21h(void);
+
+Keyboard keyboard = {
+    .enabled = false,
     .caps = false,
     .caps_lock = false,
     .alt_gr = false,
@@ -39,9 +43,62 @@ const static uint8_t qwertz_upper[] = {
 
 const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
 
-static void keyboard_update_keystroke(const uint8_t scancode, const uint8_t presscode)
+/**
+ * @brief Checks if the keyboard controller is ready.
+ * Waits until the keyboard controller is ready by continuously
+ * checking the status register. It returns when the Output Buffer Full bit is set,
+ * indicating that the keyboard controller is ready to send data.
+ * @return Returns 1 if the keyboard controller is ready, 0 otherwise.
+ */
+int keyboard_controller_is_ready(void)
 {
-    switch (scancode)
+    // Wait until the keyboard controller is ready
+    for (;;)
+    {
+        // Read the status register
+        const uint8_t status = asm_inb(KEYBOARD_CTRL_STATS_REG);
+
+        // Check if the Output Buffer Full bit is set
+        if (status & KEYBOARD_CTRL_STATS_MASK_OUT_BUF)
+        {
+            // Keyboard controller is ready
+            return 1;
+        };
+    };
+    // This line should not be reached
+    return 0;
+};
+
+void keyboard_enable(Keyboard *self)
+{
+    for (;;)
+    {
+        // Read the status register
+        const uint8_t status = asm_inb(KEYBOARD_CTRL_STATS_REG);
+
+        // Check if the Input Buffer Full bit is not set
+        if ((status & KEYBOARD_CTRL_STATS_MASK_IN_BUF) == 0)
+        {
+            break;
+        };
+    };
+    asm_outb(KEYBOARD_CTRL_CMD_REG, KEYBOARD_CTRL_ENABLE);
+    self->enabled = true;
+};
+
+void keyboard_init(Keyboard *self)
+{
+    keyboard_enable(self);
+    self->caps = false;
+    self->caps_lock = false;
+    self->alt_gr = false;
+    idt_set(0x21, asm_interrupt_21h);
+    return;
+};
+
+static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t breakcode)
+{
+    switch (makecode)
     {
     case 1:
     case 29:
@@ -61,37 +118,37 @@ static void keyboard_update_keystroke(const uint8_t scancode, const uint8_t pres
         break;
     case KALTGR:
     {
-        keyboard_state.alt_gr = !keyboard_state.alt_gr;
+        keyboard.alt_gr = !keyboard.alt_gr;
         break;
     };
     case KLEFT_SHIFT:
     {
-        keyboard_state.caps = !keyboard_state.caps;
+        keyboard.caps = !keyboard.caps;
         break;
     };
     case KCAPS_LOCK:
     {
-        if (presscode == 0)
+        if (breakcode == 0)
         {
-            keyboard_state.caps_lock = !keyboard_state.caps_lock;
+            keyboard.caps_lock = !keyboard.caps_lock;
         };
         break;
     };
     default:
     {
-        if (presscode == 0)
+        if (breakcode == 0)
         {
-            if (keyboard_state.caps || keyboard_state.caps_lock)
+            if (keyboard.caps || keyboard.caps_lock)
             {
-                kprintf("%c", qwertz_upper[scancode]);
+                kprintf("%c", qwertz_upper[makecode]);
             }
-            else if (keyboard_state.alt_gr)
+            else if (keyboard.alt_gr)
             {
-                kprintf("%c", qwertz_altgr[scancode]);
+                kprintf("%c", qwertz_altgr[makecode]);
             }
             else
             {
-                kprintf("%c", qwertz_lower[scancode]);
+                kprintf("%c", qwertz_lower[makecode]);
             };
             break;
         };
@@ -101,17 +158,11 @@ static void keyboard_update_keystroke(const uint8_t scancode, const uint8_t pres
     return;
 };
 
-static void keyboard_update(const uint8_t scancode, const uint8_t presscode)
-{
-    keyboard_update_keystroke(scancode, presscode);
-    return;
-};
-
 void keyboard_read()
 {
-    const uint8_t kb_data = asm_inb(KB_DATA);
-    const uint8_t scancode = kb_data & 0x7f;
-    const uint8_t presscode = kb_data & 0x80; // released == 128 pressed == 0
-    keyboard_update(scancode, presscode);
+    const uint8_t key_state = asm_inb(KEYBOARD_ENC_INPUT_BUF);
+    const uint8_t makecode = key_state & 0x7f;
+    const uint8_t breakcode = key_state & 0x80; // released == 128 pressed == 0
+    keyboard_update_keystroke(makecode, breakcode);
     return;
 };

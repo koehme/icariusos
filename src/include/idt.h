@@ -37,5 +37,6 @@ typedef struct IDT_R
 } __attribute__((packed)) IDT_R;
 
 void idt_init(void);
+void idt_set(const int interrupt_n, void *isr);
 
 #endif

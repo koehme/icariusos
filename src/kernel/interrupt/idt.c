@@ -18,7 +18,6 @@ extern ATADisk ata_disk_a;
 
 extern void asm_irq_14h(void);
 extern void asm_interrupt_20h(void);
-extern void asm_interrupt_21h(void);
 extern void asm_idt_loader(IDT_R *ptr);
 extern void asm_interrupt_default();
 
@@ -143,7 +142,10 @@ void isr_20h_handler(void)
  */
 void isr_21h_handler(void)
 {
-    keyboard_read();
+    if (keyboard_controller_is_ready())
+    {
+        keyboard_read();
+    };
     pic_send_eoi();
     return;
 };
@@ -194,7 +196,6 @@ void idt_entries_init(void)
     };
     // Assign specific handlers for interrupts
     idt_set(0x20, asm_interrupt_20h);
-    idt_set(0x21, asm_interrupt_21h);
     idt_set(0x2e, asm_irq_14h);
     return;
 };

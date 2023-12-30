@@ -16,6 +16,8 @@
 #include "cursor.h"
 #include "mem.h"
 #include "page.h"
+#include "icarius.h"
+#include "keyboard.h"
 #include "ata.h"
 #include "status.h"
 #include "plexer.h"
