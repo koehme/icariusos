@@ -13,6 +13,7 @@ extern PageDirectory kpage_dir;
 extern PLexer plexer;
 extern PParser pparser;
 extern Keyboard keyboard;
+extern Timer timer;
 
 void *kmalloc(const size_t size)
 {
@@ -113,12 +114,17 @@ void kmain(void)
     ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
     ata_init(ptr_ata_disk);
     kprintf("Initializing ATA Driver...\n");
-    ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
+    // ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
 
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
+
     kprintf("Initializing Keyboard Driver...\n");
     keyboard_init(&keyboard);
-    kmotd();
+
+    kprintf("Initializing Timer...\n");
+    timer_init(&timer, 500);
+
+    // kmotd();
     return;
 };

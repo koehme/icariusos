@@ -11,13 +11,14 @@
 #include "idt.h"
 #include "string.h"
 #include "io.h"
+#include "timer.h"
 #include "icarius.h"
 #include "ata.h"
 
 extern ATADisk ata_disk_a;
+extern Timer timer;
 
 extern void asm_irq_14h(void);
-extern void asm_interrupt_20h(void);
 extern void asm_idt_loader(IDT_R *ptr);
 extern void asm_interrupt_default();
 
@@ -132,6 +133,8 @@ void irq_14h_handler(void)
  */
 void isr_20h_handler(void)
 {
+    kprintf("%d\n", timer.ticks);
+    timer.ticks++;
     pic_send_eoi();
     return;
 };
@@ -195,7 +198,6 @@ void idt_entries_init(void)
         idt_set(interrupt_n, asm_interrupt_default);
     };
     // Assign specific handlers for interrupts
-    idt_set(0x20, asm_interrupt_20h);
     idt_set(0x2e, asm_irq_14h);
     return;
 };

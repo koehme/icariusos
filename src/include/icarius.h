@@ -23,6 +23,7 @@
 #include "plexer.h"
 #include "pparser.h"
 #include "string.h"
+#include "timer.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);

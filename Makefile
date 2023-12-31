@@ -1,4 +1,4 @@
-DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o ./obj/cursor.o ./obj/page.o ./obj/page.asm.o ./obj/ata.o ./obj/plexer.o ./obj/pparser.o ./obj/keyboard.o
+DEPENDENCIES = ./obj/pm.o ./obj/icarius.o ./obj/vga.o ./obj/idt.asm.o ./obj/idt.o ./obj/io.asm.o ./obj/string.o ./obj/mem.o ./obj/heap.o ./obj/cursor.o ./obj/page.o ./obj/page.asm.o ./obj/ata.o ./obj/plexer.o ./obj/pparser.o ./obj/keyboard.o ./obj/timer.o
 INCLUDES = -I./src/include
 FLAGS = -std=gnu99 -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 
@@ -62,6 +62,9 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./obj/keyboard.o: ./src/kernel/driver/keyboard.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/driver/keyboard.c -o ./obj/keyboard.o
+
+./obj/timer.o: ./src/kernel/timer/timer.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/kernel/timer/timer.c -o ./obj/timer.o
 
 clean:	
 	rm -rf ./bin/*
