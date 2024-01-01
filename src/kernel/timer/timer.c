@@ -12,22 +12,22 @@ extern void asm_interrupt_20h(void);
 
 Timer timer = {
     .ticks = 0,
-    .frequency = 0,
+    .hz = 0,
 };
 
 /**
  * @brief Initializes a Timer structure with the specified frequency.
  * @param self Pointer to the Timer structure to be initialized.
- * @param frequency The desired frequency for the timer.
+ * @param hz The desired frequency for the timer.
  */
-void timer_init(Timer *self, const uint32_t frequency)
+void timer_init(Timer *self, const uint32_t hz)
 {
     self->ticks = 0;
-    self->frequency = frequency;
+    self->hz = hz;
     idt_set(0x20, asm_interrupt_20h);
 
     const uint32_t base_frequency = 1193180;
-    const uint32_t divisor = base_frequency / frequency;
+    const uint32_t divisor = base_frequency / hz;
 
     const uint8_t cmd = PIT_CHANNEL | PIT_ACCESS_MODE | PIT_OPERATING_MODE | PIT_BINARY_MODE;
     asm_outb(PIT_MODE_COMMAND_REGISTER, cmd);

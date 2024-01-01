@@ -118,6 +118,13 @@ void ata_print_buffer(const ATADisk *self)
     for (size_t i = 0; i < ATA_SECTOR_SIZE; ++i)
     {
         kprintf("0x%x ", self->buffer[i]);
+        // Little delay emulated to see the chunks, because while ata reading another interrupts disabled
+        for (int i = 0; i < 1000; i++)
+        {
+            for (int j = 0; j < 10000; j++)
+            {
+            };
+        };
     };
     return;
 };

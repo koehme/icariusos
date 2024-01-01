@@ -29,7 +29,7 @@ void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);
 void kfree(void *ptr);
 void kpanic(const char *str);
-void ksleep(const int n_times);
+void ksleep(const uint32_t ms);
 void kmain(void);
 
 #endif

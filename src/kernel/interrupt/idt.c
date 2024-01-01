@@ -133,7 +133,7 @@ void irq_14h_handler(void)
  */
 void isr_20h_handler(void)
 {
-    kprintf("%d\n", timer.ticks);
+    // kprintf("%d\n", timer.ticks);
     timer.ticks++;
     pic_send_eoi();
     return;

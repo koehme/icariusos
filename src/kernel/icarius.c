@@ -46,18 +46,18 @@ void kpanic(const char *str)
     return;
 };
 
-void ksleep(const int n_times)
+void ksleep(const uint32_t ms)
 {
-    for (int i = 0; i < n_times; i++)
+    const uint32_t ticks_to_wait = (ms * timer.hz) / 1000;
+    const uint32_t end_ticks = timer.ticks + ticks_to_wait;
+
+    while (timer.ticks < end_ticks)
     {
-        for (int j = 0; j < 1000000; j++)
-        {
-        };
     };
     return;
 };
 
-void kspinner(const int frames, const int delay)
+void kspinner(const int frames)
 {
     const char *spinner_frames[4] = {"-", "\\", "|", "/"};
 
@@ -65,7 +65,7 @@ void kspinner(const int frames, const int delay)
     {
         const char *curr_frame = spinner_frames[i % 4];
         kprintf(curr_frame);
-        ksleep(50);
+        ksleep(500);
         kprintf("\b");
     };
     return;
@@ -73,7 +73,7 @@ void kspinner(const int frames, const int delay)
 
 void kmotd(void)
 {
-    kspinner(60, KDEBUG_SLOW_DOWN);
+    kspinner(8);
     kprintf("   \\    /   \n");
     kprintf("   (\\--/)   \n");
     kprintf("    /  \\    \n");
@@ -114,7 +114,7 @@ void kmain(void)
     ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
     ata_init(ptr_ata_disk);
     kprintf("Initializing ATA Driver...\n");
-    // ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
+    ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
 
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
@@ -123,8 +123,8 @@ void kmain(void)
     keyboard_init(&keyboard);
 
     kprintf("Initializing Timer...\n");
-    timer_init(&timer, 500);
+    timer_init(&timer, 100);
 
-    // kmotd();
+    kmotd();
     return;
 };
