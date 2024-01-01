@@ -57,6 +57,17 @@ void ksleep(const uint32_t ms)
     return;
 };
 
+void kdelay(const uint64_t delay)
+{
+    for (int i = 0; i < 1000; i++)
+    {
+        for (int j = 0; j < delay; j++)
+        {
+        };
+    };
+    return;
+};
+
 void kspinner(const int frames)
 {
     const char *spinner_frames[4] = {"-", "\\", "|", "/"};

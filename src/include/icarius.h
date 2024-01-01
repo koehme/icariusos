@@ -30,6 +30,7 @@ void *kcalloc(const size_t size);
 void kfree(void *ptr);
 void kpanic(const char *str);
 void ksleep(const uint32_t ms);
+void kdelay(const uint64_t delay);
 void kmain(void);
 
 #endif

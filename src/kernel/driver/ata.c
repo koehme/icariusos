@@ -118,13 +118,8 @@ void ata_print_buffer(const ATADisk *self)
     for (size_t i = 0; i < ATA_SECTOR_SIZE; ++i)
     {
         kprintf("0x%x ", self->buffer[i]);
-        // Little delay emulated to see the chunks, because while ata reading another interrupts disabled
-        for (int i = 0; i < 1000; i++)
-        {
-            for (int j = 0; j < 10000; j++)
-            {
-            };
-        };
+        // Introducing a slight delay to visualize buffer chunks. Delay is emulated since ATA reading disable interrupts, allowing observation of the buffer contents in a more readable manner
+        kdelay(10000);
     };
     return;
 };
