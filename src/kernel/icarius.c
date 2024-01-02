@@ -137,5 +137,17 @@ void kmain(void)
     timer_init(&timer, 100);
 
     kmotd();
+
+    Stream stream = {
+        .disk = 0x0,
+        .pos = 0,
+    };
+    const ATADisk *disk = ata_get_disk(ATA_DISK_A);
+    uint8_t buffer[512] = {};
+
+    stream_init(&stream, disk);
+    stream_seek(&stream, 0x200); // Should be 0x66
+    stream_read(&stream, buffer, 1);
+    printf("%x\n", buffer[0]); // Expect 0x66
     return;
 };

@@ -24,6 +24,7 @@
 #include "pparser.h"
 #include "string.h"
 #include "timer.h"
+#include "stream.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);
