@@ -142,12 +142,10 @@ void kmain(void)
         .disk = 0x0,
         .pos = 0,
     };
-    const ATADisk *disk = ata_get_disk(ATA_DISK_A);
-    uint8_t buffer[512] = {};
+    ATADisk *disk = ata_get_disk(ATA_DISK_A);
+    uint8_t buffer[1024];
 
     stream_init(&stream, disk);
-    stream_seek(&stream, 0x200); // Should be 0x66
-    stream_read(&stream, buffer, 1);
-    printf("%x\n", buffer[0]); // Expect 0x66
+    stream_seek(&stream, 0x200); // 0x200 == 512 th byte
     return;
 };

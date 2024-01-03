@@ -12,12 +12,12 @@
 
 typedef struct Stream
 {
-    uint64_t pos;
+    size_t pos;
     ATADisk *disk;
 } Stream;
 
-void stream_init(Stream *self, const ATADisk *disk);
+void stream_init(Stream *self, ATADisk *disk);
 void stream_seek(Stream *self, const size_t pos);
-size_t stream_read(Stream *self, uint8_t *buffer, const size_t n_bytes);
+int stream_read(Stream *self, uint8_t *buffer, size_t n_bytes);
 
 #endif
