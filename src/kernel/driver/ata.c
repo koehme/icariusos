@@ -14,6 +14,7 @@ ATADisk ata_disk_a = {
     .disk_type = 0,
     .sector_size = 0,
     .buffer = {},
+    .buffer_state = BUFFER_IDLE,
 };
 
 /**
@@ -26,7 +27,13 @@ void ata_init(ATADisk *self)
     self->disk_type = ATA_DISK_A;
     self->sector_size = ATA_SECTOR_SIZE;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
+    self->buffer_state = BUFFER_IDLE;
     return;
+};
+
+bool ata_is_buffer_ready(const ATADisk *self)
+{
+    return self->buffer_state == BUFFER_READY;
 };
 
 /**
@@ -36,10 +43,9 @@ void ata_init(ATADisk *self)
  * of sectors to read, and the drive selection. The data is then read into
  * the provided buffer using ATA commands.
  * @param lba The Logical Block Address (LBA) specifying the starting sector to read from.
- * @param buffer A pointer to the buffer where the read data will be stored.
  * @param n_sectors The number of sectors to read from the ATA disk.
  */
-static int ata_read_sector(const uint32_t lba, void *buffer, const size_t n_sectors)
+static int ata_read_sector(const uint32_t lba, const size_t n_sectors)
 {
     // Select master drive and pass part of the lba
     asm_outb(ATA_CONTROL_PORT, (lba >> 24) | ATA_DRIVE_MASTER);
@@ -94,13 +100,13 @@ ATADisk *ata_get_disk(const ATADiskType disk_type)
  *    - Returns 0 if the read operation is successful.
  *    - Returns -1 if the self parameter is NULL, indicating an invalid ATADisk instance.
  */
-int ata_read(ATADisk *self, const size_t start_block, void *buffer, const size_t n_blocks)
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks)
 {
     if (!self)
     {
         return -1;
     };
-    const int res = ata_read_sector(start_block, buffer, n_blocks);
+    const int res = ata_read_sector(start_block, n_blocks);
     return res;
 };
 

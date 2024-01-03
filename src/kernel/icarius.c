@@ -123,9 +123,8 @@ void kmain(void)
 
     kprintf("Initializing ATA Disk...\n");
     ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
-    ata_init(ptr_ata_disk);
     kprintf("Initializing ATA Driver...\n");
-    ata_read(ptr_ata_disk, 0, ptr_ata_disk->buffer, 1);
+    ata_init(ptr_ata_disk);
 
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
@@ -136,16 +135,20 @@ void kmain(void)
     kprintf("Initializing Timer...\n");
     timer_init(&timer, 100);
 
-    kmotd();
+    uint8_t stream_buffer[512];
+    uint8_t *ptr_stream = stream_buffer;
 
-    Stream stream = {
-        .disk = 0x0,
-        .pos = 0,
+    kprintf("Initializing Disk Stream...\n");
+    Stream stream = {};
+    stream_init(&stream, ptr_ata_disk);
+    stream_seek(&stream, 0x400);
+    stream_read(&stream, ptr_stream, 512);
+
+    for (size_t i = 0; i < 512; ++i)
+    {
+        kprintf("0x%x ", stream_buffer[i]);
+        // Introducing a slight delay to visualize buffer chunks. Delay is emulated since ATA reading disable interrupts, allowing observation of the buffer contents in a more readable manner
+        kdelay(10000);
     };
-    ATADisk *disk = ata_get_disk(ATA_DISK_A);
-    uint8_t buffer[1024];
-
-    stream_init(&stream, disk);
-    stream_seek(&stream, 0x200); // 0x200 == 512 th byte
     return;
 };

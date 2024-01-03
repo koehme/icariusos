@@ -12,6 +12,7 @@
 #include "string.h"
 #include "io.h"
 #include "timer.h"
+#include "stream.h"
 #include "icarius.h"
 #include "ata.h"
 
@@ -108,11 +109,12 @@ void pic_send_eoi(void)
  */
 void irq_14h_handler(void)
 {
+    ATADisk *ptr_ata_disk = &ata_disk_a;
+    ptr_ata_disk->buffer_state = BUFFER_BUSY;
+
+    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
     const char *message = interrupt_messages[46];
     kprintf(message);
-
-    ATADisk *ptr_ata_disk = &ata_disk_a;
-    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
 
     for (size_t i = 0; i < ptr_ata_disk->sector_size / 2; ++i)
     {
@@ -120,9 +122,9 @@ void irq_14h_handler(void)
         *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
         ptr_ata_buffer++;
     };
-    // Interrupt driven
-    kprintf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n\n");
-    ata_print_buffer(ptr_ata_disk);
+    ptr_ata_disk->buffer_state = BUFFER_READY;
+    kprintf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n");
+    // ata_print_buffer(ptr_ata_disk);
     pic_send_eoi();
     return;
 };
