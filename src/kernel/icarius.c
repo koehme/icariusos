@@ -143,12 +143,6 @@ void kmain(void)
     stream_init(&stream, ptr_ata_disk);
     stream_seek(&stream, 0x400);
     stream_read(&stream, ptr_stream, 512);
-
-    for (size_t i = 0; i < 512; ++i)
-    {
-        kprintf("0x%x ", stream_buffer[i]);
-        // Introducing a slight delay to visualize buffer chunks. Delay is emulated since ATA reading disable interrupts, allowing observation of the buffer contents in a more readable manner
-        kdelay(10000);
-    };
+    stream_dump(&stream, stream_buffer);
     return;
 };
