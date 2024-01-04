@@ -135,14 +135,26 @@ void kmain(void)
     kprintf("Initializing Timer...\n");
     timer_init(&timer, 100);
 
-    uint8_t stream_buffer[512];
-    uint8_t *ptr_stream = stream_buffer;
-
     kprintf("Initializing Disk Stream...\n");
     Stream stream = {};
+    uint8_t stream_buffer[512];
+
     stream_init(&stream, ptr_ata_disk);
-    stream_seek(&stream, 0x400);
-    stream_read(&stream, ptr_stream, 512);
-    stream_dump(&stream, stream_buffer);
+    stream_seek(&stream, 0x100);
+
+    stream_read(&stream, stream_buffer, 256);
+
+    for (size_t i = 0; i < 256; ++i)
+    {
+        kprintf("0x%x ", stream_buffer[i]);
+        kdelay(5000);
+    };
+    stream_read(&stream, stream_buffer, 256);
+
+    for (size_t i = 0; i < 256; ++i)
+    {
+        kprintf("0x%x ", stream_buffer[i]);
+        kdelay(5000);
+    };
     return;
 };

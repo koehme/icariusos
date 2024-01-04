@@ -31,6 +31,17 @@ void ata_init(ATADisk *self)
     return;
 };
 
+static int ata_wait(void)
+{
+    uint8_t status;
+
+    do
+    {
+        status = asm_inb(ATA_COMMAND_PORT);
+    } while ((status & 0x80) || !(status & 0x08));
+    return 0;
+}
+
 bool ata_is_buffer_ready(const ATADisk *self)
 {
     return self->buffer_state == BUFFER_READY;
@@ -57,6 +68,16 @@ static int ata_read_sector(const uint32_t lba, const size_t n_sectors)
     asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0b11111111);
     // Send read command to ATA_COMMAND_PORT
     asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
+    return 0;
+};
+
+static int ata_read_sector_synchronous(const uint32_t lba, const size_t n_sectors)
+{
+    ata_read_sector(lba, n_sectors);
+
+    while (ata_wait() != 0)
+    {
+    };
     return 0;
 };
 
@@ -96,17 +117,27 @@ ATADisk *ata_get_disk(const ATADiskType disk_type)
  * @param start_block The starting block (Logical Block Address) from which to read.
  * @param buffer A pointer to the buffer where the read data will be stored.
  * @param n_blocks The number of blocks (sectors) to read from the ATA disk.
+ * @param synchronous If true, performs a synchronous read operation; if false, performs an asynchronous read operation.
  * @return
  *    - Returns 0 if the read operation is successful.
  *    - Returns -1 if the self parameter is NULL, indicating an invalid ATADisk instance.
  */
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks)
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool synchronous)
 {
     if (!self)
     {
         return -1;
     };
-    const int res = ata_read_sector(start_block, n_blocks);
+    int res = -1;
+
+    if (synchronous)
+    {
+        res = ata_read_sector_synchronous(start_block, n_blocks);
+    }
+    else
+    {
+        res = ata_read_sector(start_block, n_blocks);
+    };
     return res;
 };
 

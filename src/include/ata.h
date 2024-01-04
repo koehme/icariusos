@@ -39,6 +39,8 @@ typedef enum ATACommands
 typedef enum ATAStatus
 {
     ATA_STATUS_BSY = 7,
+    ATA_STATUS_DRQ = 3, // Data Request Bit
+    ATA_STATUS_ERR = 0, // Error Bit
 } ATAStatus;
 
 typedef enum ATAPorts
@@ -66,7 +68,7 @@ typedef struct ATADisk
 
 void ata_init(ATADisk *self);
 ATADisk *ata_get_disk(const ATADiskType disk_type);
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks);
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, bool sync);
 bool ata_is_buffer_ready(const ATADisk *self);
 void ata_print_buffer(const ATADisk *disk);
 

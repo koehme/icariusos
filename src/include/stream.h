@@ -19,6 +19,5 @@ typedef struct Stream
 void stream_init(Stream *self, ATADisk *disk);
 void stream_seek(Stream *self, const size_t pos);
 int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes);
-void stream_dump(const Stream *self, const uint8_t *buffer);
 
 #endif
