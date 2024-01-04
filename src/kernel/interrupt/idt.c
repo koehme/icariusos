@@ -16,7 +16,7 @@
 #include "icarius.h"
 #include "ata.h"
 
-extern ATADisk ata_disk_a;
+extern ATADisk ata_disk;
 extern Timer timer;
 
 extern void asm_irq_14h(void);
@@ -109,7 +109,7 @@ void pic_send_eoi(void)
  */
 void irq_14h_handler(void)
 {
-    ATADisk *ptr_ata_disk = &ata_disk_a;
+    ATADisk *ptr_ata_disk = &ata_disk;
     volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
     const char *message = interrupt_messages[46];
     kprintf(message);
@@ -121,7 +121,6 @@ void irq_14h_handler(void)
         ptr_ata_buffer++;
     };
     kprintf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n");
-    // ata_print_buffer(ptr_ata_disk);
     pic_send_eoi();
     return;
 };

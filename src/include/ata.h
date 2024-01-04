@@ -11,13 +11,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum
-{
-    BUFFER_IDLE = 0,  // Buffer is not in use
-    BUFFER_BUSY = 1,  // Buffer is being modified (e.g., during ISR)
-    BUFFER_READY = 2, // Buffer is ready for use
-} BufferState;
-
 typedef enum ATADiskType
 {
     ATA_DISK_A = 0,
@@ -63,13 +56,10 @@ typedef struct ATADisk
     ATADiskType disk_type; // Type of the ATA Disk
     int sector_size;       // Size of each sector in bytes
     uint8_t buffer[512];   // Data buffer for temporary storage
-    BufferState buffer_state;
 } ATADisk;
 
 void ata_init(ATADisk *self);
 ATADisk *ata_get_disk(const ATADiskType disk_type);
 int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, bool sync);
-bool ata_is_buffer_ready(const ATADisk *self);
-void ata_print_buffer(const ATADisk *disk);
 
 #endif

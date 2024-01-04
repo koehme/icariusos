@@ -122,9 +122,9 @@ void kmain(void)
     asm_do_sti();
 
     kprintf("Initializing ATA Disk...\n");
-    ATADisk *ptr_ata_disk = ata_get_disk(ATA_DISK_A);
+    ATADisk *ata_disk = ata_get_disk(ATA_DISK_A);
     kprintf("Initializing ATA Driver...\n");
-    ata_init(ptr_ata_disk);
+    ata_init(ata_disk);
 
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
@@ -139,22 +139,16 @@ void kmain(void)
     Stream stream = {};
     uint8_t stream_buffer[512];
 
-    stream_init(&stream, ptr_ata_disk);
+    stream_init(&stream, ata_disk);
     stream_seek(&stream, 0x100);
 
     stream_read(&stream, stream_buffer, 256);
-
-    for (size_t i = 0; i < 256; ++i)
-    {
-        kprintf("0x%x ", stream_buffer[i]);
-        kdelay(5000);
-    };
+    stream_dump_hex(&stream, stream_buffer, 256);
     stream_read(&stream, stream_buffer, 256);
-
-    for (size_t i = 0; i < 256; ++i)
-    {
-        kprintf("0x%x ", stream_buffer[i]);
-        kdelay(5000);
-    };
+    stream_dump_hex(&stream, stream_buffer, 256);
+    stream_read(&stream, stream_buffer, 256);
+    stream_dump_hex(&stream, stream_buffer, 256);
+    stream_read(&stream, stream_buffer, 256);
+    stream_dump_hex(&stream, stream_buffer, 256);
     return;
 };

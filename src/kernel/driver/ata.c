@@ -10,11 +10,10 @@
 #include "icarius.h"
 #include "string.h"
 
-ATADisk ata_disk_a = {
+ATADisk ata_disk = {
     .disk_type = 0,
     .sector_size = 0,
     .buffer = {},
-    .buffer_state = BUFFER_IDLE,
 };
 
 /**
@@ -27,7 +26,6 @@ void ata_init(ATADisk *self)
     self->disk_type = ATA_DISK_A;
     self->sector_size = ATA_SECTOR_SIZE;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
-    self->buffer_state = BUFFER_IDLE;
     return;
 };
 
@@ -40,11 +38,6 @@ static int ata_wait(void)
         status = asm_inb(ATA_COMMAND_PORT);
     } while ((status & 0x80) || !(status & 0x08));
     return 0;
-}
-
-bool ata_is_buffer_ready(const ATADisk *self)
-{
-    return self->buffer_state == BUFFER_READY;
 };
 
 /**
@@ -71,7 +64,7 @@ static int ata_read_sector(const uint32_t lba, const size_t n_sectors)
     return 0;
 };
 
-static int ata_read_sector_synchronous(const uint32_t lba, const size_t n_sectors)
+static int ata_read_sector_synch(const uint32_t lba, const size_t n_sectors)
 {
     ata_read_sector(lba, n_sectors);
 
@@ -97,7 +90,7 @@ ATADisk *ata_get_disk(const ATADiskType disk_type)
     {
     case ATA_DISK_A:
     {
-        return &ata_disk_a;
+        return &ata_disk;
     };
     default:
     {
@@ -117,12 +110,12 @@ ATADisk *ata_get_disk(const ATADiskType disk_type)
  * @param start_block The starting block (Logical Block Address) from which to read.
  * @param buffer A pointer to the buffer where the read data will be stored.
  * @param n_blocks The number of blocks (sectors) to read from the ATA disk.
- * @param synchronous If true, performs a synchronous read operation; if false, performs an asynchronous read operation.
+ * @param synch If true, performs a synchronous read operation; if false, performs an asynchronous read operation.
  * @return
  *    - Returns 0 if the read operation is successful.
  *    - Returns -1 if the self parameter is NULL, indicating an invalid ATADisk instance.
  */
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool synchronous)
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool synch)
 {
     if (!self)
     {
@@ -130,33 +123,13 @@ int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, con
     };
     int res = -1;
 
-    if (synchronous)
+    if (synch)
     {
-        res = ata_read_sector_synchronous(start_block, n_blocks);
+        res = ata_read_sector_synch(start_block, n_blocks);
     }
     else
     {
         res = ata_read_sector(start_block, n_blocks);
     };
     return res;
-};
-
-/**
- * @brief Prints the content of the ATA buffer.
- * Prints the hexadecimal content of the ATA buffer
- * associated with the given ATADisk instance. It displays the content
- * in a readable format, showing each byte as a hexadecimal value.
- * @param self Pointer to the ATADisk instance whose buffer is to be printed.
- */
-void ata_print_buffer(const ATADisk *self)
-{
-    kprintf("ATA Buffer: \n");
-
-    for (size_t i = 0; i < ATA_SECTOR_SIZE; ++i)
-    {
-        kprintf("0x%x ", self->buffer[i]);
-        // Introducing a slight delay to visualize buffer chunks. Delay is emulated since ATA reading disable interrupts, allowing observation of the buffer contents in a more readable manner
-        kdelay(10000);
-    };
-    return;
 };
