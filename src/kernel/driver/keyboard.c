@@ -50,7 +50,7 @@ const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
  * indicating that the keyboard controller is ready to send data.
  * @return Returns 1 if the keyboard controller is ready, 0 otherwise.
  */
-int keyboard_controller_is_ready(void)
+int keyboard_wait(void)
 {
     // Wait until the keyboard controller is ready
     for (;;)
@@ -158,7 +158,7 @@ static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t brea
     return;
 };
 
-void keyboard_read()
+void keyboard_read(Keyboard *self)
 {
     const uint8_t key_state = asm_inb(KEYBOARD_ENC_INPUT_BUF);
     const uint8_t makecode = key_state & 0x7f;

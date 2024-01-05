@@ -50,7 +50,7 @@ typedef struct Keyboard
 } Keyboard;
 
 void keyboard_init();
-void keyboard_read();
-int keyboard_controller_is_ready(void);
+void keyboard_read(Keyboard *self);
+int keyboard_wait(void);
 
 #endif

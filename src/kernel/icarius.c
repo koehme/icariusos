@@ -85,16 +85,19 @@ void kspinner(const int frames)
 
 void kmotd(void)
 {
-    kspinner(8);
-    kprintf("   \\    /   \n");
-    kprintf("   (\\--/)   \n");
-    kprintf("    /  \\    \n");
-    kprintf("Welcome to icariusOS\n");
     const Date date = cmos_date(&cmos);
-    const char *months[] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    const char *days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    kspinner(4);
-    kprintf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month], date.year);
+    kspinner(8);
+    vga_display_clear(&vga_display);
+    vga_display_set_cursor(&vga_display, 0, 0);
+
+    kprintf(" _             _         _____ _____ \n");
+    kprintf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
+    kprintf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
+    kprintf("|_|___|__,|_| |_|___|___|_____|_____|\n");
+
+    vga_print(&vga_display, "                                     \n", VGA_COLOR_BLACK | (VGA_COLOR_LIGHT_GREEN << 4));
+    kprintf("\nMessage: Welcome to icariusOS                                     \n");
+    kprintf("Date: %s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };
 
@@ -140,24 +143,26 @@ void kmain(void)
     kprintf("Initializing Timer...\n");
     timer_init(&timer, 100);
 
-    kprintf("Initializing CMOS Driver..\n");
+    kprintf("Initializing CMOS Driver...\n");
 
     kprintf("Initializing Disk Stream...\n");
     Stream stream = {};
     uint8_t stream_buffer[512];
+    /*
+        stream_init(&stream, ata_disk);
+        stream_seek(&stream, 0x100);
 
-    stream_init(&stream, ata_disk);
-    stream_seek(&stream, 0x100);
+        stream_read(&stream, stream_buffer, 256);
+        stream_dump_hex(&stream, stream_buffer, 256);
+        stream_read(&stream, stream_buffer, 256);
+        stream_dump_hex(&stream, stream_buffer, 256);
+        stream_read(&stream, stream_buffer, 256);
+        stream_dump_hex(&stream, stream_buffer, 256);
+        stream_read(&stream, stream_buffer, 256);
+        stream_dump_hex(&stream, stream_buffer, 256);
 
-    stream_read(&stream, stream_buffer, 256);
-    stream_dump_hex(&stream, stream_buffer, 256);
-    stream_read(&stream, stream_buffer, 256);
-    stream_dump_hex(&stream, stream_buffer, 256);
-    stream_read(&stream, stream_buffer, 256);
-    stream_dump_hex(&stream, stream_buffer, 256);
-    stream_read(&stream, stream_buffer, 256);
-    stream_dump_hex(&stream, stream_buffer, 256);
 
+        */
     kmotd();
     return;
 };

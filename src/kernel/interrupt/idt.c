@@ -11,15 +11,13 @@
 #include "idt.h"
 #include "string.h"
 #include "io.h"
-#include "timer.h"
-#include "stream.h"
 #include "icarius.h"
 #include "ata.h"
 
 extern ATADisk ata_disk;
 extern Timer timer;
+extern Keyboard keyboard;
 
-extern void asm_irq_14h(void);
 extern void asm_idt_loader(IDT_R *ptr);
 extern void asm_interrupt_default();
 
@@ -96,16 +94,10 @@ void pic_send_eoi(void)
 };
 
 /**
- * @brief IRQ handler for ATA Disk Read completion (IRQ 14).
- * Handles the interrupt generated when an ATA Disk Read operation
- * is completed. It prints a message indicating the successful transfer of 512 bytes
- * from the ATA Disk to the Buffer and acknowledges the interrupt to the PIC (Programmable Interrupt Controller).
- * @details
- * Begins by printing an interrupt message in light magenta color.
- * It then initiates the data transfer from the ATA Disk to the Buffer in an interrupt-driven manner.
- * After the transfer is completed, a success message is printed in light green color,
- * and the contents of the ATA Buffer are printed using `ata_print_buffer`.
- * Finally, the interrupt is acknowledged to the PIC.
+ * @brief IRQ 14 (IDE ATA disk) interrupt handler.
+ * Handler for IRQ 14 interrupts, which are associated
+ * with IDE ATA disk operations. It reads data from the ATA disk into a buffer
+ * and prints a success message.
  */
 void irq_14h_handler(void)
 {
@@ -143,9 +135,9 @@ void isr_20h_handler(void)
  */
 void isr_21h_handler(void)
 {
-    if (keyboard_controller_is_ready())
+    if (keyboard_wait())
     {
-        keyboard_read();
+        keyboard_read(&keyboard);
     };
     pic_send_eoi();
     return;
@@ -195,8 +187,6 @@ void idt_entries_init(void)
     {
         idt_set(interrupt_n, asm_interrupt_default);
     };
-    // Assign specific handlers for interrupts
-    idt_set(0x2e, asm_irq_14h);
     return;
 };
 
