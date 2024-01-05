@@ -25,6 +25,7 @@
 #include "string.h"
 #include "timer.h"
 #include "stream.h"
+#include "cmos.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);

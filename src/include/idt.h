@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+extern void asm_do_nop(void);
 extern void asm_do_sti(void);
 extern void asm_do_cli(void);
 

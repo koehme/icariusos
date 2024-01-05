@@ -14,6 +14,7 @@ extern PLexer plexer;
 extern PParser pparser;
 extern Keyboard keyboard;
 extern Timer timer;
+extern CMOS cmos;
 
 void *kmalloc(const size_t size)
 {
@@ -88,8 +89,12 @@ void kmotd(void)
     kprintf("   \\    /   \n");
     kprintf("   (\\--/)   \n");
     kprintf("    /  \\    \n");
-    kprintf("Welcome to icarius");
-    kprintf("OS\n");
+    kprintf("Welcome to icariusOS\n");
+    const Date date = cmos_date(&cmos);
+    const char *months[] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    const char *days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    kspinner(4);
+    kprintf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month], date.year);
     return;
 };
 
@@ -135,6 +140,8 @@ void kmain(void)
     kprintf("Initializing Timer...\n");
     timer_init(&timer, 100);
 
+    kprintf("Initializing CMOS Driver..\n");
+
     kprintf("Initializing Disk Stream...\n");
     Stream stream = {};
     uint8_t stream_buffer[512];
@@ -150,5 +157,7 @@ void kmain(void)
     stream_dump_hex(&stream, stream_buffer, 256);
     stream_read(&stream, stream_buffer, 256);
     stream_dump_hex(&stream, stream_buffer, 256);
+
+    kmotd();
     return;
 };

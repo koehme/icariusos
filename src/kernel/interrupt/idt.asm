@@ -6,6 +6,7 @@ extern isr_20h_handler
 extern isr_21h_handler
 extern isr_default_handler
 
+global asm_do_nop
 global asm_do_sti
 global asm_do_cli
 global asm_irq_14h
@@ -13,6 +14,10 @@ global asm_interrupt_20h
 global asm_interrupt_21h
 global asm_idt_loader
 global asm_interrupt_default
+
+asm_do_nop:
+    nop
+    ret
 
 ;=============================================================================
 ; asm_do_sti
