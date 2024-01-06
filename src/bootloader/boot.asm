@@ -61,6 +61,52 @@ init_bootloader:
 .root_dir_after:
     mov cl, al                  ; size of the root dir
     pop ax                      ; restore the lba of the root dir
+    mov dl, [DriveNumber]       ; Put the drivenumber in => first hard disk
+    mov bx, buffer
+    call disk_read
+
+    xor bx, bx
+    mov di, buffer
+    ; Search for the kernel file
+
+search_kernel:
+    mov si, FILE_KERNEL_BIN     ; 'KERNEL  BIN'
+    mov cx, 11                  ; FILE_KERNEL_BIN == 11
+    push di                     ; Save the buffer for the whole root directory
+
+    repe cmpsb                  ; Repeat the comparison of [ds:si] with [es:di], decrementing cx, until a mismatch is found or cx becomes zero
+    pop di
+    je found_kernel
+
+    add di, 32
+    inc bx
+    cmp bx, [RootDirEntries]
+    jl search_kernel
+    jmp kernel_not_found
+
+kernel_not_found:
+    hlt
+    jmp halt
+
+found_kernel:
+    mov ax, [di+26]
+    mov [KERNEL_CLUSTER], ax
+    mov ax, [ReservedSectors]
+    mov bx, buffer
+    mov cl, [SectorsPerFat]
+    mov dl, [DriveNumber]
+
+    call disk_read
+
+    mov bx, KERNEL_LOAD_SEGMENT
+    mov es, bx
+    mov bx, KERNEL_LOAD_OFFSET
+
+halt:
+    hlt
+
+disk_read:
+    ; TODO Implement disk reading through bios 0x13, if this works we can remove ata_lba_read, because the kernel is already there
 
 .load_protected:    
     cli                        
@@ -157,6 +203,12 @@ ATA_LBA_MID_PORT equ 0x1F4
 ATA_LBA_HIGH_PORT equ 0x1F5
 ATA_COMMAND_PORT equ 0x1F7
 ATA_DATA_PORT equ 0x1F0
+FILE_KERNEL_BIN DB 'KERNEL  BIN'
+KERNEL_CLUSTER DW 0
+KERNEL_LOAD_SEGMENT equ 0x0100000
+KERNEL_LOAD_OFFSET equ 0
 
 times 510 - ($ - $$) db 0x0
 dw 0xaa55
+
+buffer:
