@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 #include "status.h"
-#include "icarius.h"
+#include "kernel.h"
 
 bool is_alpha(const char c);
 size_t slen(const char *str);
