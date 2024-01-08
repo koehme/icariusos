@@ -29,6 +29,9 @@ _start:
     call remap_pic1
     call remap_pic2
 
+    push eax
+    push ebx
+
     call kmain
 
 hltlp: 

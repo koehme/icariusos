@@ -83,7 +83,7 @@ void kspinner(const int frames)
     return;
 };
 
-void kmotd(void)
+void kmotd(multiboot_info_t *mbd)
 {
     const Date date = cmos_date(&cmos);
     kspinner(8);
@@ -97,13 +97,13 @@ void kmotd(void)
 
     vga_print(&vga_display, "                                     \n", VGA_COLOR_BLACK | (VGA_COLOR_LIGHT_GREEN << 4));
     kprintf("\nMessage: Welcome to icariusOS                                     \n");
-    kprintf("\nBooted with the GRUB2 Bootloader.");
+    kprintf("Booted with the %s Bootloader.\n", mbd->boot_loader_name);
     kprintf("\n- Runs on an i686 CPU.\n");
     kprintf("Date: %s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };
 
-void kmain(void)
+void kmain(multiboot_info_t *mbd, unsigned int magic)
 {
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
@@ -154,6 +154,7 @@ void kmain(void)
     stream_init(&stream, ata_disk);
     stream_seek(&stream, 0x0);
 
-    kmotd();
+    kmotd(mbd);
+
     return;
 };
