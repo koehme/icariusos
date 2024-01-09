@@ -85,8 +85,39 @@ void kspinner(const int frames)
 
 void kmotd(multiboot_info_t *mbd)
 {
+    kprintf("Initializing Stack...\n");
+    ksleep(500);
+    kprintf("Initializing VGA Framebuffer %dx%d at 0xb8000...\n", mbd->framebuffer_width, mbd->framebuffer_height);
+    ksleep(500);
+    kprintf("Clearing VGA Textmode Buffer...\n");
+    ksleep(500);
+    kprintf("Initializing VGA Textmode Cursor at (0,0)...\n");
+    ksleep(500);
+    kprintf("Initializing Kheap Datapool at 0x01000000...\n");
+    ksleep(500);
+    kprintf("Initializing Kheap Descriptor at 0x00007e00...\n");
+    ksleep(500);
+    kprintf("Initializing Global Descriptor Table...\n");
+    ksleep(500);
+    kprintf("Initializing Virtual Memory Paging...\n");
+    ksleep(500);
+    kprintf("Enable Interrupts...\n");
+    ksleep(500);
+    kprintf("Initializing ATA Disk...\n");
+    ksleep(500);
+    kprintf("Initializing ATA Driver...\n");
+    ksleep(500);
+    kprintf("Initializing Keyboard Driver...\n");
+    ksleep(500);
+    kprintf("Initializing Timer...\n");
+    ksleep(500);
+    kprintf("Initializing CMOS Driver...\n");
+    ksleep(500);
+    kprintf("Initializing Disk Stream...\n");
+    ksleep(500);
+
+    kspinner(4);
     const Date date = cmos_date(&cmos);
-    kspinner(8);
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
 
@@ -103,58 +134,36 @@ void kmotd(multiboot_info_t *mbd)
     return;
 };
 
-void kmain(multiboot_info_t *mbd, unsigned int magic)
+void kmain(uint32_t magic, multiboot_info_t *mbd)
 {
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
-
-    kprintf("Initializing Stack...\n");
-    kprintf("Initializing VGA Textmode Buffer at 0xb8000...\n");
-    kprintf("Clearing VGA Textmode Buffer...\n");
-
     cursor_set(0, 0);
-    kprintf("Initializing VGA Textmode Cursor at (0,0)...\n");
 
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
-    kprintf("Initializing Kheap Datapool at 0x01000000...\n");
-    kprintf("Initializing Kheap Descriptor at 0x00007e00...\n");
 
     idt_init();
-    kprintf("Initializing Global Descriptor Table...\n");
 
-    kprintf("Initializing Virtual Memory Paging...\n");
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
 
-    kprintf("Enable Interrupts...\n");
     asm_do_sti();
 
-    kprintf("Initializing ATA Disk...\n");
     ATADisk *ata_disk = ata_get_disk(ATA_DISK_A);
-    kprintf("Initializing ATA Driver...\n");
     ata_init(ata_disk);
-
     plexer_init(&plexer, "A:/bin/cli.exe");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
 
-    kprintf("Initializing Keyboard Driver...\n");
     keyboard_init(&keyboard);
-
-    kprintf("Initializing Timer...\n");
     timer_init(&timer, 100);
 
-    kprintf("Initializing CMOS Driver...\n");
-
-    kprintf("Initializing Disk Stream...\n");
     Stream stream = {};
     uint8_t stream_buffer[512];
-
     stream_init(&stream, ata_disk);
     stream_seek(&stream, 0x0);
 
     kmotd(mbd);
-
     return;
 };

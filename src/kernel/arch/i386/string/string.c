@@ -120,7 +120,7 @@ int kprintf(const char *fmt, ...)
             case 'x':
             {
                 char buffer[3] = {0x0, 0x0, '\0'};
-                const char value = va_arg(args, int);
+                const int value = va_arg(args, int);
                 const char *hex_chars = "0123456789ABCDEF";
                 const uint8_t upper_nibble = (value >> 4) & 0b00001111;
                 const uint8_t lower_nibble = value & 0b00001111;

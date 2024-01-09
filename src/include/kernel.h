@@ -34,6 +34,6 @@ void kfree(void *ptr);
 void kpanic(const char *str);
 void ksleep(const uint32_t ms);
 void kdelay(const uint64_t delay);
-void kmain(multiboot_info_t *mbd, unsigned int magic);
+void kmain(uint32_t magic, multiboot_info_t *mbd);
 
 #endif

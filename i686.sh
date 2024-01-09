@@ -14,6 +14,8 @@ sudo apt-get install libmpc-dev -y
 sudo apt-get install libmpfr-dev -y
 sudo apt-get install texinfo -y
 sudo apt-get install curl -y
+sudo apt-get install xorriso -y
+sudo apt-get install mtools -y
 
 export PREFIX="/usr/local/i686-elf-gcc"
 export TARGET=i686-elf
