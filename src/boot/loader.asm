@@ -9,19 +9,24 @@ align 4
     dd MAGIC
     dd FLAGS
     dd CHECKSUM
-
+    dd 0  
+    dd 0  
+    dd 0  
+    dd 0   
+    dd 0   
+    dd 0  
+    dd 800 
+    dd 600
+    dd 32 
 section .text
 global _start
 
 %include "./src/kernel/arch/i386/hal/gdt.asm"
 %include "./src/kernel/arch/i386/hal/pic.asm"
 
-extern kmain
-
 _start:
-    mov ebp, stack_top
-
     cli
+    mov esp, stack_top
     
     lgdt [gdt_descriptor]
     call flush_gdt
@@ -32,11 +37,12 @@ _start:
     push ebx
     push eax
 
+    extern kmain
     call kmain
 
-hltlp: 
+.hang: 
     hlt
-    jmp hltlp
+    jmp .hang
 
 section .bss
     align 16
