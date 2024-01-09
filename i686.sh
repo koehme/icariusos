@@ -37,31 +37,11 @@ curl -O https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
 tar xf gcc-13.2.0.tar.gz
 mkdir gcc-build
 cd gcc-build
-echo Configure: . . . . . . .
 ../gcc-13.2.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --disable-libssp --enable-language=c,c++ --without-headers
-echo MAKE ALL-GCC:
 sudo make all-gcc
-echo MAKE ALL-TARGET-LIBGCC:
 sudo make all-target-libgcc
-echo MAKE INSTALL-GCC:
 sudo make install-gcc
-echo MAKE INSTALL-TARGET-LIBGCC:
 sudo make install-target-libgcc
-
-
-# sudo rm -rf /tmp/src
-# mkdir /tmp/src
-
-# cd /tmp/src
-# curl -O https://ftp.gnu.org/gnu/gdb/gdb-14.1.tar.gz
-# tar xf gdb-14.1.tar.gz
-# mkdir gdb-build
-# cd gdb-build
-# ../gdb-14.1/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --disable-werror
-# sudo make
-# sudo make install
-
-# sudo rm -rf /tmp/src
 
 export PATH="$PATH:/usr/local/i686-elf-gcc/bin"
 
