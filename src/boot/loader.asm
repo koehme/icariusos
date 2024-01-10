@@ -1,44 +1,57 @@
-%define ALIGN               (1 << 0)                    ; align loaded modules on page boundaries
-%define MEMINFO             (1 << 1)                    ; provide memory map
-%define FLAGS               (ALIGN | MEMINFO)           ; this is the Multiboot 'flag' field
-%define MAGIC               0x1BADB002                  ; 'magic number' lets bootloader find the header
-%define CHECKSUM            -(MAGIC + FLAGS)            ; checksum of above, to prove we are multiboot
+global _start
 
 section .multiboot_header
-align 4
-    dd MAGIC
-    dd FLAGS
-    dd CHECKSUM
-    dd 0  
-    dd 0  
-    dd 0  
-    dd 0   
-    dd 0   
-    dd 0  
-    dd 800 
-    dd 600
-    dd 32 
-section .text
-global _start
+align 8
+
+header_start:
+    dd 0xe85250d6                ; magic number
+    dd 0                         ; protected mode code
+    dd header_end - header_start ; header length
+
+    ; checksum
+    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
+
+    ; required end tag
+    dw 0    ; type
+    dw 0    ; flags
+    dd 8    ; size
+header_end:
 
 %include "./src/kernel/arch/i386/hal/gdt.asm"
 %include "./src/kernel/arch/i386/hal/pic.asm"
 
+section .text
 _start:
-    cli
+
     mov esp, stack_top
-    
+
+    push 0
+    popf
+
+    push ebx
+    push eax
+
+    cli
     lgdt [gdt_descriptor]
     call flush_gdt
 
     call remap_pic1
     call remap_pic2
 
-    push ebx
-    push eax
+.check_pm:
+    mov eax, cr0    
+    test eax, 1        
+    jnz .run_kernel
+    
+.set_pm
+    or eax, 1
+    mov cr0, eax
 
+.run_kernel:
     extern kmain
     call kmain
+
+    cli
 
 .hang: 
     hlt
@@ -47,5 +60,5 @@ _start:
 section .bss
     align 16
     stack_bottom:
-        resb 16384
+        resb 4096
     stack_top:

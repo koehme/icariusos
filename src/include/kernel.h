@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-#include "multiboot.h"
+#include "multiboot2.h"
 #include "vga.h"
 #include "idt.h"
 #include "io.h"
@@ -34,6 +34,6 @@ void kfree(void *ptr);
 void kpanic(const char *str);
 void ksleep(const uint32_t ms);
 void kdelay(const uint64_t delay);
-void kmain(uint32_t magic, multiboot_info_t *mbd);
+void kmain(unsigned long magic, unsigned long addr);
 
 #endif

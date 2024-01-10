@@ -6,26 +6,24 @@ SECTIONS
 {
    . = 0x0100000;
 
-   .text BLOCK(4K) : ALIGN(4K)
+   .text : 
 	{
-		*(.multiboot_header)
+		 . = ALIGN(8);
+  		KEEP(*(.multiboot_header))
 		*(.text)
 	}
  
-	/* Read-only data. */
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.rodata : 
 	{
 		*(.rodata)
 	}
  
-	/* Read-write data (initialized) */
-	.data BLOCK(4K) : ALIGN(4K)
+	.data : 
 	{
 		*(.data)
 	}
  
-	/* Read-write data (uninitialized) and stack */
-	.bss BLOCK(4K) : ALIGN(4K)
+	.bss : 
 	{
 		*(COMMON)
 		*(.bss)

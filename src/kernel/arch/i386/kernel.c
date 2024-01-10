@@ -6,6 +6,8 @@
 
 #include "kernel.h"
 
+#define KMAIN_DEBUG_THROTTLE 5
+
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
@@ -77,44 +79,44 @@ void kspinner(const int frames)
     {
         const char *curr_frame = spinner_frames[i % 4];
         kprintf(curr_frame);
-        ksleep(500);
+        ksleep(KMAIN_DEBUG_THROTTLE);
         kprintf("\b");
     };
     return;
 };
 
-void kmotd(multiboot_info_t *mbd)
+void kmotd(unsigned long addr)
 {
     kprintf("Initializing Stack...\n");
-    ksleep(500);
-    kprintf("Initializing VGA Framebuffer %dx%d at 0xb8000...\n", mbd->framebuffer_width, mbd->framebuffer_height);
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
+    // kprintf("Initializing VGA Framebuffer %dx%d at 0xb8000...\n", mbd->framebuffer_width, mbd->framebuffer_height);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Clearing VGA Textmode Buffer...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing VGA Textmode Cursor at (0,0)...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Kheap Datapool at 0x01000000...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Kheap Descriptor at 0x00007e00...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Global Descriptor Table...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Virtual Memory Paging...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Enable Interrupts...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing ATA Disk...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing ATA Driver...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Keyboard Driver...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Timer...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing CMOS Driver...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing Disk Stream...\n");
-    ksleep(500);
+    ksleep(KMAIN_DEBUG_THROTTLE);
 
     kspinner(4);
     const Date date = cmos_date(&cmos);
@@ -128,18 +130,45 @@ void kmotd(multiboot_info_t *mbd)
 
     vga_print(&vga_display, "                                     \n", VGA_COLOR_BLACK | (VGA_COLOR_LIGHT_GREEN << 4));
     kprintf("\nMessage: Welcome to icariusOS                                     \n");
-    kprintf("Booted with the %s Bootloader.\n", mbd->boot_loader_name);
+
+    struct multiboot_tag *tag;
+    unsigned size = *(unsigned *)addr;
+
+    for (tag = (struct multiboot_tag *)(addr + 8);
+         tag->type != MULTIBOOT_TAG_TYPE_END;
+         tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
+    {
+        switch (tag->type)
+        {
+        case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
+        {
+            kprintf("Booted with the %s Bootloader.\n", ((struct multiboot_tag_string *)tag)->string);
+            break;
+        };
+        };
+    };
     kprintf("\n- Runs on an i686 CPU.\n");
     kprintf("Date: %s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };
 
-void kmain(uint32_t magic, multiboot_info_t *mbd)
+void kmain(unsigned long magic, unsigned long addr)
 {
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
     cursor_set(0, 0);
 
+    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
+    {
+        kprintf("Invalid magic number: 0x%x\n", (unsigned)magic);
+        return;
+    };
+
+    if (addr & 7)
+    {
+        kprintf("Unaligned mbi: 0x%x\n", addr);
+        return;
+    };
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
 
     idt_init();
@@ -164,6 +193,6 @@ void kmain(uint32_t magic, multiboot_info_t *mbd)
     stream_init(&stream, ata_disk);
     stream_seek(&stream, 0x0);
 
-    kmotd(mbd);
+    kmotd(addr);
     return;
 };
