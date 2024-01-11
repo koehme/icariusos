@@ -34,6 +34,6 @@ void kfree(void *ptr);
 void kpanic(const char *str);
 void ksleep(const uint32_t ms);
 void kdelay(const uint64_t delay);
-void kmain(unsigned long magic, unsigned long addr);
+void kmain(const uint32_t magic, const uint32_t addr);
 
 #endif
