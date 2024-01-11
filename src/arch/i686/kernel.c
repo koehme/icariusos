@@ -142,19 +142,20 @@ void kmotd(unsigned long addr)
         {
         case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
         {
-            kprintf("Booted with the %s Bootloader.\n", ((struct multiboot_tag_string *)tag)->string);
+            kprintf("Booted with the %s Bootloader.\n\n", ((struct multiboot_tag_string *)tag)->string);
             break;
         };
         case MULTIBOOT_TAG_TYPE_MMAP:
         {
             multiboot_memory_map_t *mmap;
+            kprintf("Available Memory\n");
 
             for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
                  (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
                  mmap = (multiboot_memory_map_t *)((uint32_t)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size))
             {
                 const uint64_t base_addr = (((uint64_t)mmap->addr_high << 32) | mmap->addr_low);
-                kprintf("0x%x\n", base_addr);
+                kprintf("- 0x%x\n", base_addr);
             };
             break;
         };
@@ -164,7 +165,7 @@ void kmotd(unsigned long addr)
         };
         };
     };
-    kprintf("\n- Runs on an i686 CPU.\n");
+    kprintf("\nKernel running on an i686 CPU.\n");
     kprintf("Date: %s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };

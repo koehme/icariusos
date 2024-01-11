@@ -125,7 +125,9 @@ int kprintf(const char *fmt, ...)
 
                 for (int i = 15; i >= 0; --i)
                 {
-                    const char digit = hex_chars[(value >> (4 * (15 - i))) & 0xF];
+                    const int shift_amount = 4 * (15 - i);
+                    const int hex_index = (value >> shift_amount) & 0xF;
+                    const char digit = hex_chars[hex_index];
                     buffer[i] = digit;
                 };
                 char updated_buffer[17] = {};
