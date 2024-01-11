@@ -4,5 +4,5 @@ focus cmd
 set print pretty on
 break _start
 break kmain
-break kernel.c:kmotd
+break kernel.c:156
 c

@@ -15,7 +15,7 @@
 
 bool is_alpha(const char c);
 size_t slen(const char *str);
-char *itoa(int num, char *str, int base);
+char *itoa(uint32_t num, char *str, int base);
 int kprintf(const char *fmt, ...);
 
 #endif

@@ -39,7 +39,7 @@ size_t slen(const char *str)
     return i;
 };
 
-char *itoa(int num, char *str, int base)
+char *itoa(uint32_t num, char *str, int base)
 {
     int i = 0;
     bool is_neg = false;
@@ -112,21 +112,42 @@ int kprintf(const char *fmt, ...)
             case 'd':
             {
                 char buffer[1024] = {};
-                const int num = va_arg(args, int);
-                const char *str = itoa(num, buffer, 10);
-                vga_print(&vga_display, str, VGA_COLOR_LIGHT_GREEN);
+                const uint64_t num = va_arg(args, int);
+                itoa(num, buffer, 10);
+                vga_print(&vga_display, buffer, VGA_COLOR_LIGHT_GREEN);
                 break;
             };
             case 'x':
             {
-                char buffer[3] = {0x0, 0x0, '\0'};
-                const int value = va_arg(args, int);
+                char buffer[17] = {};
+                const uint64_t value = va_arg(args, uint64_t);
                 const char *hex_chars = "0123456789ABCDEF";
-                const uint8_t upper_nibble = (value >> 4) & 0b00001111;
-                const uint8_t lower_nibble = value & 0b00001111;
-                buffer[0] = hex_chars[upper_nibble];
-                buffer[1] = hex_chars[lower_nibble];
-                vga_print(&vga_display, buffer, VGA_COLOR_LIGHT_GREEN);
+
+                for (int i = 15; i >= 0; --i)
+                {
+                    const char digit = hex_chars[(value >> (4 * (15 - i))) & 0xF];
+                    buffer[i] = digit;
+                };
+                char updated_buffer[17] = {};
+                int j = 0;
+                int leading_zeros = 1;
+
+                for (int i = 0; i < 16; ++i)
+                {
+                    if (leading_zeros && buffer[i] == '0')
+                    {
+                        continue;
+                    };
+                    leading_zeros = 0;
+                    updated_buffer[j++] = buffer[i];
+                };
+
+                if (j == 0)
+                {
+                    updated_buffer[0] = '0';
+                };
+                vga_print(&vga_display, updated_buffer, VGA_COLOR_LIGHT_GREEN);
+                break;
             };
             default:
             {
