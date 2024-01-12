@@ -38,4 +38,3 @@ kernel:
 image:
 	i686-elf-ld -n -T ./linker.ld ./obj/multiboot.o ./obj/loader.o ./obj/kernel.o ./obj/ata.o ./obj/cmos.o ./obj/cursor.o ./obj/keyboard.o ./obj/timer.o ./obj/vga.o ./obj/plexer.o ./obj/pparser.o ./obj/stream.o ./obj/idt.o ./obj/idt.asm.o ./obj/io.asm.o ./obj/heap.o ./obj/mem.o ./obj/page.o ./obj/page.asm.o ./obj/string.o -o ./bin/kernel.bin
 	cp ./bin/kernel.bin ./iso/boot/kernel.bin
-	grub-mkrescue iso -o ./img/kernel.iso

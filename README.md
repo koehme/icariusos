@@ -23,11 +23,14 @@ I've loved technology and all its different parts since I was a kid. It makes me
 - [x] kprintf Upgrade: Implemented a printing function, enhancing the system's ability to communicate and display information.
 - [x] CMOS Date Reading: Successfully implemented a date reading function from the CMOS.
 - [x] Real Ksleep with Timer: Used PIT to create a real ksleep function.
-- [x] Keyboard Driver (In Progress): Currently implementing the QWERTZ keyboard layout for enhanced user input compatibility.
 - [x] Multiboot2 Integration: Integrated the GRUB bootloader to support the Multiboot2 spec, removing the self-made bootloader.
-- [x] Memory Map Mastery: Successfully read the memory map from Multiboot2.
+- [x] Memory Map: Successfully read the memory map from Multiboot2.
 - [x] Message of the Day: Created a captivating and sexy message of the day! 😎
 - [x] kprintf Refinement: Improved kprintf and fixed bugs in %s and %d functionalities.
+- [x] Create fat16 disk: To implement next the fat16 driver to read clusters from the filesystem.
+
+- [ ] FAT16 driver (In Progress)
+- [ ] Keyboard Driver (In Progress)
 
 # about
 
@@ -48,7 +51,13 @@ mkdir img
 # run
 
 ```bash
-./build.sh && qemu-system-i386 -m 256M ./img/kernel.iso
+./build.sh && qemu-system-i386 -m 256M ./disk.img
+```
+
+# update
+
+```bash
+./swap.sh && qemu-system-i386 -m 256M ./disk.img
 ```
 
 # debug
