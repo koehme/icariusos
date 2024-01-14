@@ -2,8 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+```bash
 - Booted with GRUB2 bootloader
 - Runs on i686 architecture
+```
 
 I've loved technology and all its different parts since I was a kid. It makes me really happy when, after trying different things for a long time, I finally figure out a solution to a problem and see things that were made completely from the beginning. Making an operating system, especially, is likely one of the biggest challenges you can take on with a computer. For me, it's just pure joy in the world of IT, and that excitement always keeps me motivated to keep working on the icariusOS project. 😊
 
@@ -29,7 +31,7 @@ I've loved technology and all its different parts since I was a kid. It makes me
 - [x] kprintf Refinement: Improved kprintf and fixed bugs in %s and %d functionalities.
 - [x] Create fat16 disk: To implement next the fat16 driver to read clusters from the filesystem.
 
-- [ ] FAT16 driver (In Progress)
+- [ ] VFS & FAT16 driver (In Progress)
 - [ ] Keyboard Driver (In Progress)
 
 # about

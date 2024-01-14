@@ -1,22 +1,10 @@
-## about
-
-In the heart of crafting my own operating system kernel, I've reached some remarkable milestones. The bootloader is successfully implemented, and my ATA driver reads LBA sector 1 from the hard drive, cleverly placing the kernel in memory at 0x010000. After seamlessly transitioning to 'Protected Mode - 32 Bit' and activating the A20 gate to access the entire memory, I can now invoke the kmain() function in assembly. This allows me to output text and even display line breaks ('\n'). I've also implemented a scrolling effect.
-
-I've successfully implemented the Interrupt Descriptor Table and integrated the ability to respond to hardware interrupts. The Programmable Interrupt Controller (PIC 1 & 2) is also implemented, enabling effective handling of various hardware interrupts.
-
-VGA Text Mode
-
-I'm utilizing a VGA text mode driver that directly manipulates memory at 0xb8000. I've already implemented scrolling downwards, and the small blinking cursor is appropriately updated.
-
-System Memory Manager
+# System Memory Manager
 
 My system memory manager heap is implemented as an array, not a linked list, for speed and CPU cache-friendliness.
 
-This initial structure maintains a table or descriptor for the heap. In this table, each byte represents a real memory block in the data pool of the other structure.
+This initial structure maintains a table or descriptor for the heap. In this table, each byte represents a real memory block in the data pool of the other structure. My heap data pool starts at memory address 0x01000000, which corresponds to 16777216 in decimal. The first block in the data pool also starts at 0x01000000, and regardless of the desired allocation size, it will be aligned to 4096 bytes.
 
-My heap data pool starts at memory address 0x01000000, which corresponds to 16777216 in decimal. The first block in the data pool also starts at 0x01000000, and regardless of the desired allocation size, it will be aligned to 4096 bytes.
-
-Here's an example of what my allocator supports:
+# Example
 
 Here, 50 bytes are requested and aligned to 4096, considered as a single allocation block.
 
@@ -36,13 +24,15 @@ For now, my heap data pool supports 104857600 bytes (10241024100). When divided 
 
 HeapDescriptor operates in real mode memory 0x00007E00 to 0x0007FFFF (480.5 KiB) since I'm already in Protected Mode. The starting address of the heap data pool is 0x01000000 (16777216 in decimal) + (104857600 in decimal) = End address 0x73FFFFF.
 
-Paging
+# Paging
 
 I have successfully implemented paging in my 32-bit kernel. The PageDirectory consists of 1024 entries, and each entry points to a PageTable. Each PageTable manages 1024 entries, which in turn represent 4096 bytes - one page in the world of memory.
 
 Index 0 of the PageDirectory starts at the physical address 0x0, while index 2 is at 0x400000 (0x400000 == decimal 1024*4096 = 4194304). This creates a linear assignment of the physical addresses to the PageTable entries.
 
 In summary, the system consists of a PageDirectory with 1024 entries, with each entry pointing to a PageTable. Each PageTable has 1024 entries, each representing 4096 bytes. This results in a total memory of 4 GB or 4,294,967,296 bytes.
+
+# Example
 
 With the function 
 
@@ -80,6 +70,3 @@ kprintf("] == ");
 kprintf("Physical 0x1802000 [");
 kprintf(ptr_phy_addr);
 kprintf("]\n");
-```
-
-The ATA driver was successfully implemented and the data read from the ATA disk was stored in the ata_disk.buffer. This buffer contains the content retrieved from the ATA disk, which I could now access and use if needed. I have also implemented a way to display the buffer when the read operation is complete.
