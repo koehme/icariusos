@@ -13,6 +13,13 @@
 #include "ata.h"
 #include "pparser.h"
 #include "vnode.h"
+#include "kernel.h"
+
+typedef enum VFSLimit
+{
+    MAX_FS = 8,
+    MAX_VNODE_DESCRIPTORS = 512
+} VFSLimit;
 
 /**
  * @brief Function pointer for esolving operations in the file system.
