@@ -24,26 +24,29 @@ To utilize the VFS follow the instructions outlined in the developer documentati
 * Resolve: Kernel polls each fs which will be loaded and ask if the disk can manage it. The disk itself binds itself to the fs implementation, if it can be handled.
 For example if we attach a disk with a FAT16 header the fat16 fs should handle this. it iterates through all fs and check if a specific implementation can handle it.
 
-# communication:
+# Data Flow: User Program <====> Kernel <====> File Systems
 
-User program <====> 
-                    Kernel  <====> FAT16
-                            <====> NTFS
-                            <====> FAT32
+User program 
+             <====> 
+                    Kernel
+                            <====> 
+                                    FAT16
+                                    NTFS
+                                    FAT32
 
 # fopen
 
     fopen("A:/hello.txt","r");
 
-   User program             <====>          Kernel            <===============>  
-   
-                                                 ^                   Path Parser 
-                                                 |
-                                                PathRootNode  <=====
-                                         drive 
-                                            = 'A'
-                                         PathNode *path 
-                                            = "hello.txt"
+User program        <====>    Kernel    <===============>  
+                                      ^        Path Parser 
+                                      |
+                                     PathRootNode  <=====
+                              drive 
+                                = 'A'
+                              PathNode *path 
+                                = "hello.txt"
+
 
                             
 # file open (fopen) Communication
@@ -65,7 +68,7 @@ User program <====>
          |
    Access filesystem which is bound to the disk
          v
-    FAT16 fopen() <====> FAT16    `Calls FAT16 fopen function`
+    FAT16 fopen() <====> FAT16    Calls FAT16 fopen function
          ^
          |
 Returns an internal private data descriptor
@@ -90,10 +93,12 @@ Returns an internal private data descriptor
          |
    Access filesystem which is bound to the file descriptor
          v
-    FAT16 fread() <====> FAT16    `Calls FAT16 fread function`
+    FAT16 fread() <====> FAT16    Calls FAT16 fread function
          ^
          |
     read into the buffer which is passed from the userland
+
+# todo
                   
 * Add File System Drivers: Implement a file system driver that adheres to the generic interface of the VFS.
 * Load Drivers: Dynamically load the file system driver at runtime using the provided functions.
