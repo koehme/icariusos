@@ -18,7 +18,7 @@
 typedef enum VFSLimit
 {
     MAX_FS = 8,
-    MAX_VNODE_DESCRIPTORS = 512
+    MAX_FILE_DESCRIPTORS = 512
 } VFSLimit;
 
 /**

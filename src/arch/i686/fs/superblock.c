@@ -112,6 +112,6 @@ static FileDescriptor *vfs_get_fd(const int fd_index)
     {
         return 0x0;
     };
-    const FileDescriptor *fd = file_descriptors[fd_index - 1];
+    FileDescriptor *fd = file_descriptors[fd_index - 1];
     return fd;
 };
