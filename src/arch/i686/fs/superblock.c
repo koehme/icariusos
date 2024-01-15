@@ -17,7 +17,7 @@ static Superblock *filesystems[MAX_FS] = {
     0x0,
 };
 
-static VNodeDescriptor *file_descriptors[MAX_VNODE_DESCRIPTORS] = {};
+static FileDescriptor *file_descriptors[MAX_FILE_DESCRIPTORS] = {};
 
 static void vfs_load_default_fs(void)
 {
@@ -33,7 +33,7 @@ static void vfs_load(void)
 
 void vfs_init(void)
 {
-    mset8(file_descriptors, 0x0, sizeof(VNodeDescriptor) * MAX_VNODE_DESCRIPTORS);
+    mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * MAX_FILE_DESCRIPTORS);
     vfs_load();
     return;
 };
@@ -74,4 +74,44 @@ void vfs_insert(Superblock *fs)
     };
     *vfs_free_slot = fs;
     return;
+};
+
+static int vfs_create_fd(FileDescriptor **ptr)
+{
+    int res = -1;
+
+    for (int i = 0; i < MAX_FILE_DESCRIPTORS; i++)
+    {
+        FileDescriptor *curr_slot = file_descriptors[i];
+
+        if (curr_slot == 0x0)
+        {
+            FileDescriptor *file_descriptor = kcalloc(sizeof(FileDescriptor));
+
+            if (file_descriptor != 0x0)
+            {
+                file_descriptor->index = i + 1;
+                file_descriptors[i] = file_descriptor;
+                *ptr = file_descriptor;
+                res = 0;
+                break;
+            }
+            else
+            {
+                res = -1;
+                break;
+            };
+        };
+    };
+    return res;
+};
+
+static FileDescriptor *vfs_get_fd(const int fd_index)
+{
+    if (fd_index <= 0 || fd_index >= MAX_FILE_DESCRIPTORS)
+    {
+        return 0x0;
+    };
+    const FileDescriptor *fd = file_descriptors[fd_index - 1];
+    return fd;
 };

@@ -54,16 +54,16 @@ typedef struct Superblock
 } Superblock;
 
 /**
- * @struct VNodeDescriptor
- * @brief Describes a virtual node in the file system.
+ * @struct FileDescriptor
+ * @brief Is used to refer to the handle that the kernel returns to a program when it opens a file.
  */
-typedef struct VNodeDescriptor
+typedef struct FileDescriptor
 {
     int index;
     Superblock *fs;
     void *internal;
     ATADisk *disk;
-} VNodeDescriptor;
+} FileDescriptor;
 
 void vfs_init();
 void vfs_insert(Superblock *fs);
