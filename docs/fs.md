@@ -1,12 +1,16 @@
 # fs
 
-# requirements
-
 * The ATA driver: Was successfully implemented and the data read from the ATA disk was stored in the ata_disk.buffer. This buffer contains the content retrieved from the ATA disk, which I could now access and use if needed. I have also implemented a way to display the buffer when the read operation is complete.
 
 # vfs overview
 
 The Virtual File System (VFS) is a crucial abstraction layer in icariusOS that allows seamless integration and utilization of various file systems. This documentation provides an overview of the VFS implementation and serves as a resource for developers looking to contribute to the file system support in the kernel.
+
+The VFS (Virtual File System) handles key object types, such as:
+
+- **Superblock:** Describes a file system.
+- **V-node:** Describes a file.
+- **Directory:** Describes a file system directory.
 
 # vfs features
 
@@ -94,7 +98,7 @@ Returns an internal private data descriptor
          |
     read into the buffer which is passed from the userland
 
-# todo
+# todos
                   
 * Add File System Drivers: Implement a file system driver that adheres to the generic interface of the VFS.
 * Load Drivers: Dynamically load the file system driver at runtime using the provided functions.
