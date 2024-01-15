@@ -46,4 +46,21 @@ typedef struct Superblock
     char fs_name[10];
 } Superblock;
 
+/**
+ * @struct VNodeDescriptor
+ * @brief Describes a virtual node in the file system.
+ */
+typedef struct VNodeDescriptor
+{
+    int index;
+    Superblock *fs;
+    void *internal;
+    ATADisk *disk;
+} VNodeDescriptor;
+
+void vfs_init();
+void vfs_insert(Superblock *fs);
+int fopen(const char *filename, const char *mode);
+Superblock *vfs_resolve(ATADisk *disk);
+
 #endif
