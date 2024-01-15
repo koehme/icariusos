@@ -1,10 +1,10 @@
-# System Memory Manager
+# system memory manager
 
 My system memory manager heap is implemented as an array, not a linked list, for speed and CPU cache-friendliness.
 
 This initial structure maintains a table or descriptor for the heap. In this table, each byte represents a real memory block in the data pool of the other structure. My heap data pool starts at memory address 0x01000000, which corresponds to 16777216 in decimal. The first block in the data pool also starts at 0x01000000, and regardless of the desired allocation size, it will be aligned to 4096 bytes.
 
-# Example
+# example
 
 Here, 50 bytes are requested and aligned to 4096, considered as a single allocation block.
 
@@ -24,7 +24,7 @@ For now, my heap data pool supports 104857600 bytes (10241024100). When divided 
 
 HeapDescriptor operates in real mode memory 0x00007E00 to 0x0007FFFF (480.5 KiB) since I'm already in Protected Mode. The starting address of the heap data pool is 0x01000000 (16777216 in decimal) + (104857600 in decimal) = End address 0x73FFFFF.
 
-# Paging
+# paging
 
 I have successfully implemented paging in my 32-bit kernel. The PageDirectory consists of 1024 entries, and each entry points to a PageTable. Each PageTable manages 1024 entries, which in turn represent 4096 bytes - one page in the world of memory.
 
@@ -32,7 +32,7 @@ Index 0 of the PageDirectory starts at the physical address 0x0, while index 2 i
 
 In summary, the system consists of a PageDirectory with 1024 entries, with each entry pointing to a PageTable. Each PageTable has 1024 entries, each representing 4096 bytes. This results in a total memory of 4 GB or 4,294,967,296 bytes.
 
-# Example
+# example
 
 With the function 
 
@@ -70,3 +70,6 @@ kprintf("] == ");
 kprintf("Physical 0x1802000 [");
 kprintf(ptr_phy_addr);
 kprintf("]\n");
+```
+
+For a detailed understanding and contributions, please refer to the heap.c or page.c file in the official icariusOS repository.
