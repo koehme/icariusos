@@ -9,6 +9,7 @@ The Virtual File System (VFS) is a crucial abstraction layer in icariusOS that a
 The VFS (Virtual File System) handles key object types, such as:
 
 - **Superblock:** Describes a file system.
+- **FileDescriptor:** Is used to refer to the handle that the kernel returns to a user program when it opens a file.
 - **V-node:** Describes a file.
 - **Directory:** Describes a file system directory.
 
@@ -58,10 +59,12 @@ User program        <====>    Kernel    <===============>
 
 ```bash
     User program consumes the file descriptor from the kernel
-        for example: VNodeDescriptor: 1
+
+        for example: FileDescriptor: 1
          |
          v
-      Kernel returns its own vnode descriptor to the userland after FAT16 Filesystems fopen() call
+      Kernel returns its own FileDescriptor 
+ to the userland after FAT16 Filesystems fopen() call
          ^
          |
          v
@@ -83,15 +86,13 @@ Returns an internal private file descriptor
 # fread
 
 ```bash
-    User program calls 
-
-    VNodeDescriptor 1
+    User program calls FileDescriptor 1
 
         fread(buffer, 10, 1, file_descriptor);
 
    User program             <====>          Kernel 
 
-    User program pass the buffer and VNode Descriptor to the kernel
+    User program pass the buffer and FileDescriptor to the kernel
 
         for example: FileDescriptor: 1
          |
@@ -99,7 +100,7 @@ Returns an internal private file descriptor
       Kernel looks into FileDescriptor it knows the filesystem through the filedescriptor
          ^
          |
-   Access filesystem which is bound to the VNode Descriptor
+   Access filesystem which is bound to the FileDescriptor
          v
     FAT16 fread() <====> FAT16    Calls FAT16 fread function
          ^
