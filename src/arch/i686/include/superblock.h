@@ -22,7 +22,7 @@ typedef enum VFSLimit
 } VFSLimit;
 
 /**
- * @brief Function pointer for esolving operations in the file system.
+ * @brief Function pointer for resolving operations in the file system.
  * Represents the function signature for resolving operations
  * on the file system, taking an ATADisk pointer as a parameter.
  * @param disk Pointer to the ATADisk structure.
