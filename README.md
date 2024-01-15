@@ -37,7 +37,7 @@ I've loved technology and all its different parts since I was a kid. It makes me
 # about
 
 ```bash
-cat ./doc/about.md
+cat ./docs/start.md
 ```
 
 # dependencies
