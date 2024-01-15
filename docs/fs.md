@@ -30,6 +30,7 @@ For example if we attach a disk with a FAT16 header the fat16 fs should handle t
 
 # data flow: User Program <====> Kernel <====> File Systems
 
+```bash
 User program 
              <====> 
                     Kernel
@@ -38,8 +39,11 @@ User program
                                     NTFS
                                     FAT32
 
+```
+
 # data flow: fopen process
 
+```bash
 User program        <====>    Kernel    <===============>  
                               ^            Path Parser 
                               |
@@ -48,14 +52,16 @@ User program        <====>    Kernel    <===============>
                             = 'A'
                           PathNode *path 
                             = "hello.txt"
-                            
+```
+
 # file open (fopen) communication
 
+```bash
     User program consumes the file descriptor from the kernel
-        for example: FileDescriptor: 1
+        for example: VNodeDescriptor: 1
          |
          v
-      Kernel returns its own file descriptor to the userland after FAT16 Filesystems fopen() call
+      Kernel returns its own vnode descriptor to the userland after FAT16 Filesystems fopen() call
          ^
          |
          v
@@ -71,19 +77,21 @@ User program        <====>    Kernel    <===============>
     FAT16 fopen() <====> FAT16    Calls FAT16 fopen function
          ^
          |
-Returns an internal private data descriptor
+Returns an internal private file descriptor
+```
 
 # fread
 
+```bash
     User program calls 
 
-    FileDescriptor 1
+    VNodeDescriptor 1
 
         fread(buffer, 10, 1, file_descriptor);
 
    User program             <====>          Kernel 
 
-    User program pass the buffer and file descriptor to the kernel
+    User program pass the buffer and VNode Descriptor to the kernel
 
         for example: FileDescriptor: 1
          |
@@ -91,12 +99,13 @@ Returns an internal private data descriptor
       Kernel looks into FileDescriptor it knows the filesystem through the filedescriptor
          ^
          |
-   Access filesystem which is bound to the file descriptor
+   Access filesystem which is bound to the VNode Descriptor
          v
     FAT16 fread() <====> FAT16    Calls FAT16 fread function
          ^
          |
     read into the buffer which is passed from the userland
+```
 
 # todos
                   
