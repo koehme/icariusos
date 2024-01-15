@@ -24,7 +24,7 @@ To utilize the VFS follow the instructions outlined in the developer documentati
 * Resolve: Kernel polls each fs which will be loaded and ask if the disk can manage it. The disk itself binds itself to the fs implementation, if it can be handled.
 For example if we attach a disk with a FAT16 header the fat16 fs should handle this. it iterates through all fs and check if a specific implementation can handle it.
 
-# Data Flow: User Program <====> Kernel <====> File Systems
+# data flow: User Program <====> Kernel <====> File Systems
 
 User program 
              <====> 
@@ -34,22 +34,18 @@ User program
                                     NTFS
                                     FAT32
 
-# fopen
-
-    fopen("A:/hello.txt","r");
+# data flow: fopen process
 
 User program        <====>    Kernel    <===============>  
-                                      ^        Path Parser 
-                                      |
-                                     PathRootNode  <=====
-                              drive 
-                                = 'A'
-                              PathNode *path 
-                                = "hello.txt"
-
-
+                              ^            Path Parser 
+                              |
+                             PathRootNode  <=====
+                          drive 
+                            = 'A'
+                          PathNode *path 
+                            = "hello.txt"
                             
-# file open (fopen) Communication
+# file open (fopen) communication
 
     User program consumes the file descriptor from the kernel
         for example: FileDescriptor: 1
