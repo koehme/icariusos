@@ -1,6 +1,5 @@
 bin/
 obj/
 elf/
-*.img
-img/
+disk.img
 iso/boot/kernel.bin
