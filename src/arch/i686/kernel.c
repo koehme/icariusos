@@ -89,11 +89,9 @@ void kmotd(unsigned long addr)
 {
     kspinner(256);
 
-    kprintf("[CMOS] Initialization CMOS Driver...\n");
+    kprintf("[CMOS]\n-  Initialization CMOS Driver...\n");
     const Date date = cmos_date(&cmos);
     ksleep(KMAIN_DEBUG_THROTTLE);
-
-    kprintf("[VGA] Initialization VGA Textmode Buffer...\n");
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
 
@@ -103,7 +101,7 @@ void kmotd(unsigned long addr)
     kprintf("|_|___|__,|_| |_|___|___|_____|_____|\n");
 
     vga_print(&vga_display, "                                     \n", VGA_COLOR_BLACK | (VGA_COLOR_LIGHT_GREEN << 4));
-    kprintf("\n[Bootloader] Initialization Multiboot2 Header...\n");
+    kprintf("\nInitialization Multiboot2 Header...\n");
 
     struct multiboot_tag *tag;
     uint32_t size = *(uint32_t *)addr;
@@ -116,7 +114,7 @@ void kmotd(unsigned long addr)
         {
         case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
         {
-            kprintf("[Bootloader] Booted with the %s Bootloader.\n\n", ((struct multiboot_tag_string *)tag)->string);
+            kprintf("Booted with the %s Bootloader.\n\n", ((struct multiboot_tag_string *)tag)->string);
             break;
         };
         case MULTIBOOT_TAG_TYPE_MMAP:
@@ -140,7 +138,7 @@ void kmotd(unsigned long addr)
         {
             struct multiboot_tag_framebuffer *tagfb = (struct multiboot_tag_framebuffer *)tag;
             ksleep(KMAIN_DEBUG_THROTTLE);
-            kprintf("[VGA Driver] Initialization...\n - Framebuffer available at 0x%x (Width: %d, Height: %d)\n", tagfb->common.framebuffer_addr, tagfb->common.framebuffer_width, tagfb->common.framebuffer_height);
+            kprintf("[VGA]\n-  Driver Initialization...\nFramebuffer available at 0x%x (Width: %d, Height: %d)\n", tagfb->common.framebuffer_addr, tagfb->common.framebuffer_width, tagfb->common.framebuffer_height);
             break;
         };
         default:
@@ -149,7 +147,7 @@ void kmotd(unsigned long addr)
         };
         };
     };
-    kprintf("\n[icariusOS] Is running on an i686 CPU.\n");
+    kprintf("\nicariusOS is running on an i686 CPU.\n");
     kprintf("[Date] %s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };
@@ -159,13 +157,14 @@ void kmain(const uint32_t magic, const uint32_t addr)
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
     vga_display_clear(&vga_display);
     cursor_set(0, 0);
-    kprintf("[STACK] Initialization Kernel Stack...\n");
-    kprintf("[GDT] Initialization Global Descriptor Table...\n");
-    kprintf("[VGA] Initialization VGA Driver...\n");
+    kprintf("[Stack]\n-  Initialization Kernel Stack...\n");
+    kprintf("[GDT]\n-  Initialization Global Descriptor Table...\n");
+    kprintf("[VGA]\n-  Initialization VGA Driver...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
+
     if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
-        kprintf("Invalid Magic Number: 0x%x\n", (unsigned)magic);
+        kprintf("Invalid Magic <<Number: 0x%x\n", (unsigned)magic);
         return;
     };
 
@@ -174,42 +173,39 @@ void kmain(const uint32_t magic, const uint32_t addr)
         kprintf("Unaligned MBI: 0x%x\n", addr);
         return;
     };
-    kprintf("[HEAP] Initialization Kheap Datapool at 0x01000000...\n");
+    kprintf("[HEAP]\n-  Initialization Kheap Datapool at 0x01000000...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
-    kprintf("[HEAP] Initialization Kheap Descriptor at 0x00007e00...\n");
+    kprintf("-  Initialization Kheap Descriptor at 0x00007e00...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
 
-    kprintf("[GDT] Initialization Interrupt Descriptor Table...\n");
+    kprintf("[IDT]\n-  Initialization Interrupt Descriptor Table...\n");
     idt_init();
 
-    kprintf("[Virtual Memory] Initialization Virtual Memory Paging...\n");
+    kprintf("[VMEM]\n-  Initialization Virtual Memory Paging...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
 
-    kprintf("[Interrupts] Enabled...\n");
+    kprintf("[Interrupts]\n-  Enabled...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
     asm_do_sti();
 
-    kprintf("[ATA Disk] Initialization...\n");
+    kprintf("[ATA Disk]\n-  Initialization...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
     ATADisk *ata_disk = ata_get_disk(ATA_DISK_A);
     ata_init(ata_disk);
 
-    kprintf("[PathLexer] Initialization...\n");
     plexer_init(&plexer, "A:/bin/cli.exe");
-
-    kprintf("[PathParser] Initialization...\n");
     PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
 
-    kprintf("[Keyboard Driver] Initialization...\n");
+    kprintf("[Keyboard]\n-  Initialization...\n");
     keyboard_init(&keyboard);
+    kprintf("[PIC]\n-  Initialization...\n");
     timer_init(&timer, 100);
 
-    kprintf("[DiskStream] Initialization ...\n");
     Stream stream = {};
     uint8_t stream_buffer[512];
     stream_init(&stream, ata_disk);
