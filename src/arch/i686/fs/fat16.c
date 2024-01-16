@@ -12,11 +12,11 @@ Superblock fat16 = {
     .name = "FAT16",
 };
 
-Superblock *fat16_init(Superblock *self)
+Superblock *fat16_init(void)
 {
-    self->resolve_cb = fat16_resolve;
-    self->open_cb = fat16_open;
-    return self;
+    fat16.resolve_cb = fat16_resolve;
+    fat16.open_cb = fat16_open;
+    return &fat16;
 };
 
 int fat16_resolve(ATADisk *disk)

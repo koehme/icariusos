@@ -5,7 +5,16 @@
  */
 
 #include "superblock.h"
+#include "fat16.h"
 
+extern Superblock fat16;
+
+/**
+ * @brief Array of Superblocks representing filesystems in the Virtual File System (VFS).
+ * This static array serves as a container for Superblock pointers, each representing a
+ * filesystem within the Virtual File System (VFS). The array allows the system to manage
+ * and access different filesystems.
+ */
 static Superblock *filesystems[MAX_FS] = {
     0x0,
     0x0,
@@ -17,24 +26,25 @@ static Superblock *filesystems[MAX_FS] = {
     0x0,
 };
 
+/**
+ * @brief Array of File Descriptors for file management in the system.
+ * Represents the file descriptors used for managing files in the
+ * system. Each element in the array corresponds to a file descriptor and the array
+ * provides a mechanism for tracking and accessing open files within the system.
+ */
 static FileDescriptor *file_descriptors[MAX_FILE_DESCRIPTORS] = {};
 
-static void vfs_load_default_fs(void)
-{
-    // TODO: Implement fat16 as a default fs
-    return;
-};
-
-static void vfs_load(void)
-{
-    mset8(filesystems, 0x0, sizeof(Superblock) * MAX_FS);
-    return;
-};
-
+/**
+ * @brief Initializes the Virtual File System (VFS) subsystem.
+ * Serves as the entry point for setting up the VFS subsystem. It
+ * initializes file descriptors and loads essential components for the VFS to operate.
+ * The primary purpose is to prepare the system for efficient file system management.
+ */
 void vfs_init(void)
 {
     mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * MAX_FILE_DESCRIPTORS);
-    vfs_load();
+    mset8(filesystems, 0x0, sizeof(Superblock) * MAX_FS);
+    vfs_insert(fat16_init());
     return;
 };
 
@@ -55,7 +65,16 @@ static Superblock **vfs_get_free_fs_slot(void)
     };
     return 0x0;
 };
-
+/**
+ * @brief Inserts a filesystem into the Virtual File System (VFS) layer.
+ * Responsible for adding a filesystem represented by the provided
+ * Superblock to the VFS layer. The primary purpose is to manage and organize various
+ * filesystems in a unified manner.
+ * @param fs A pointer to the Superblock structure representing the filesystem to be inserted.
+ * @note The function ensures that a valid filesystem is provided and that there is an
+ * available slot in the VFS for insertion. If any of these conditions are not met,
+ * a kernel panic is triggered with an appropriate error message.
+ */
 void vfs_insert(Superblock *fs)
 {
     Superblock **vfs_free_slot = 0x0;
@@ -149,7 +168,7 @@ Superblock *vfs_resolve(ATADisk *disk)
 
     for (int i = 0; i < MAX_FS; i++)
     {
-        const Superblock *curr_fs = filesystems[i];
+        Superblock *curr_fs = filesystems[i];
         const bool has_fsheader = curr_fs != 0x0 && curr_fs->resolve_cb(disk) == 0;
 
         if (has_fsheader)
