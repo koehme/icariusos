@@ -15,11 +15,12 @@
 #include "vnode.h"
 #include "kernel.h"
 
-typedef enum VFSLimit
+typedef enum VFSLimits
 {
     MAX_FS = 8,
-    MAX_FILE_DESCRIPTORS = 512
-} VFSLimit;
+    MAX_FILE_DESCRIPTORS = 512,
+    MAX_FS_NAME_LENGTH = 10,
+} VFSLimits;
 
 /**
  * @brief Function pointer for resolving operations in the file system.
@@ -38,7 +39,7 @@ typedef int (*ResolveFunction)(ATADisk *disk);
  * @param path Pointer to the PathNode structure representing the file path.
  * @param mode VNODE_MODE representing the open mode.
  */
-typedef void (*OpenFunction)(ATADisk *disk, PathNode *path, const VNODE_MODE mode);
+typedef void *(*OpenFunction)(ATADisk *disk, PathNode *path, const VNODE_MODE mode);
 
 /**
  * @brief Represents the concrete file system superblock.
@@ -48,9 +49,9 @@ typedef void (*OpenFunction)(ATADisk *disk, PathNode *path, const VNODE_MODE mod
  */
 typedef struct Superblock
 {
-    ResolveFunction s_resolve;
-    OpenFunction s_open;
-    char fs_name[10];
+    ResolveFunction resolve_cb;
+    OpenFunction open_cb;
+    char name[MAX_FS_NAME_LENGTH];
 } Superblock;
 
 /**
