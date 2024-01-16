@@ -89,8 +89,6 @@ void kmotd(unsigned long addr)
 {
     kprintf("Initializing Stack...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
-    // kprintf("Initializing VGA Framebuffer %dx%d at 0xb8000...\n", mbd->framebuffer_width, mbd->framebuffer_height);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Clearing VGA Textmode Buffer...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Initializing VGA Textmode Cursor at (0,0)...\n");
@@ -118,7 +116,7 @@ void kmotd(unsigned long addr)
     kprintf("Initializing Disk Stream...\n");
     ksleep(KMAIN_DEBUG_THROTTLE);
 
-    kspinner(4);
+    kspinner(8);
     const Date date = cmos_date(&cmos);
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
@@ -155,8 +153,18 @@ void kmotd(unsigned long addr)
                  mmap = (multiboot_memory_map_t *)((uint32_t)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size))
             {
                 const uint64_t base_addr = (((uint64_t)mmap->addr_high << 32) | mmap->addr_low);
-                kprintf("- 0x%x\n", base_addr);
+                const uint64_t end_addr = base_addr + ((uint64_t)mmap->len_high << 32 | mmap->len_low);
+                const char *type = mmap->type == 1 ? "Reserved" : "Available";
+                kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
             };
+            break;
+        };
+        case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
+        {
+            struct multiboot_tag_framebuffer *tagfb = (struct multiboot_tag_framebuffer *)tag;
+            kprintf("VGA Framebuffer Width: %d\n", tagfb->common.framebuffer_width);
+            kprintf("VGA Framebuffer Height: %d\n", tagfb->common.framebuffer_height);
+            kprintf("VGA Framebuffer Address: 0x%x\n", tagfb->common.framebuffer_addr);
             break;
         };
         default:
