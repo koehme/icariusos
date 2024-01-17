@@ -166,6 +166,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
         return;
     };
     heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
+
+    vfs_init();
     idt_init();
 
     PageDirectory *ptr_kpage_dir = &kpage_dir;
@@ -184,11 +186,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
 
-    Stream stream = {};
-    uint8_t stream_buffer[512];
-    stream_init(&stream, ata_disk);
-    stream_seek(&stream, 0x0);
-
+    /*
+        Stream stream = {};
+        uint8_t stream_buffer[512];
+        stream_init(&stream, ata_disk);
+        stream_seek(&stream, 0x0);
+    */
     kmotd(addr);
 
     while (true)

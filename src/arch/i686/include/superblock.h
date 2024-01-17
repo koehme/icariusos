@@ -10,10 +10,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "ata.h"
 #include "pparser.h"
 #include "vnode.h"
 #include "kernel.h"
+
+typedef struct ATADisk ATADisk;
 
 typedef enum VFSLimits
 {

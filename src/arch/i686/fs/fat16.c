@@ -21,6 +21,7 @@ Superblock *fat16_init(void)
 
 int fat16_resolve(ATADisk *disk)
 {
+    kprintf("FAT16 Filesystem detected.\n");
     return 0;
 };
 

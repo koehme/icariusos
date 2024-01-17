@@ -16,6 +16,7 @@ ATADisk ata_disk = {
     .disk_type = 0,
     .sector_size = 0,
     .buffer = {},
+    .fs = 0x0,
 };
 
 /**
@@ -28,6 +29,7 @@ void ata_init(ATADisk *self)
     self->disk_type = ATA_DISK_A;
     self->sector_size = ATA_SECTOR_SIZE;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
+    self->fs = vfs_resolve(self);
     idt_set(0x2e, asm_irq_14h);
     return;
 };

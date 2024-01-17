@@ -27,6 +27,7 @@
 #include "timer.h"
 #include "stream.h"
 #include "cmos.h"
+#include "superblock.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);

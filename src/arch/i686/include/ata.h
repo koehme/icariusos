@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+typedef struct Superblock Superblock;
+
 typedef enum ATADiskType
 {
     ATA_DISK_A = 0,
@@ -56,6 +58,7 @@ typedef struct ATADisk
     ATADiskType disk_type; // Type of the ATA Disk
     int sector_size;       // Size of each sector in bytes
     uint8_t buffer[512];   // Data buffer for temporary storage
+    Superblock *fs;
 } ATADisk;
 
 void ata_init(ATADisk *self);

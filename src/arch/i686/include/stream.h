@@ -8,6 +8,8 @@
 #define STREAM_H
 
 #include <stdint.h>
+#include <stddef.h>
+
 #include "ata.h"
 
 typedef struct Stream
