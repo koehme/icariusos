@@ -19,7 +19,7 @@ typedef struct FAT16
     char name[MAX_FS_NAME_LENGTH];
 } FAT16;
 
-typedef struct Fat16_Base_Header
+typedef struct FAT16BaseHeader
 {
     uint8_t jmp_short[3];         // jump over the disk format information (the BPB and EBPB)
     uint8_t oem_ident[8];         // oem identifier. The first 8 Bytes (3 - 10) is the version of DOS being used
@@ -35,7 +35,7 @@ typedef struct Fat16_Base_Header
     uint16_t heads;               // number of heads or sides on the storage media
     uint32_t hidden_sectors;      // number of hidden sectors. (i.e. the LBA of the beginning of the partition
     uint32_t large_total_sectors; // large sector count. This field is set if there are more than 65535 sectors in the volume, resulting in a value which does not fit in the Number of Sectors entry at 0x13
-} __attribute__((packed)) Fat16_Base_Header;
+} __attribute__((packed)) FAT16BaseHeader;
 
 /*
 The extended boot record information comes right after the BPB.
@@ -43,7 +43,7 @@ The data at the beginning is known as the EBPB.
 It contains different information depending on whether this partition is a FAT 12, FAT 16, or FAT 32 filesystem.
 Immediately following the EBPB is the actual boot code, then the standard 0xAA55 boot signature, to fill out the 512-byte boot sector. Offsets shows are from the start of the standard boot record.
 */
-typedef struct Fat16_Extended_Header
+typedef struct FAT16ExtendedHeader
 {
     uint8_t drive_number;
     uint8_t nt_flags;
@@ -51,16 +51,43 @@ typedef struct Fat16_Extended_Header
     uint32_t volume_id;
     uint8_t volume_label[11];
     uint8_t system_ident[8];
-} __attribute__((packed)) Fat16_Extended_Header;
+} __attribute__((packed)) FAT16ExtendedHeader;
 
-typedef struct Fat16_Header
+typedef struct FAT16Header
 {
-    Fat16_Base_Header base;
+    FAT16BaseHeader base;
     union
     {
-        Fat16_Extended_Header extended;
+        FAT16ExtendedHeader extended;
     } optional;
-} Fat16_Header;
+} FAT16Header;
+
+typedef enum FAT16FileAttributes
+{
+    READ_ONLY = 0x01,
+    HIDDEN = 0x02,
+    SYSTEM = 0x04,
+    VOLUME_ID = 0x08,
+    DIRECTORY = 0x10,
+    ARCHIVE = 0x20,
+    LFN = READ_ONLY | HIDDEN | SYSTEM | VOLUME_ID
+} FAT16FileAttributes;
+
+typedef struct FAT16DirectoryEntry
+{
+    uint8_t file_name[11];      // 8.3 file name
+    uint8_t attributes;         // attributes of the file
+    uint8_t reserved;           // reserved for use by Windows NT
+    uint8_t creation_time_ms;   // creation time in hundredths of a second
+    uint16_t create_time;       // time that the file was created (in the format described)
+    uint16_t create_date;       // date on which the file was created (in the format described)
+    uint16_t last_access_date;  // last accessed date (in the format described)
+    uint16_t high_cluster;      // high 16 bits of the first cluster number
+    uint16_t modification_time; // last modification time (in the format described)
+    uint16_t modification_date; // last modification date (in the format described)
+    uint16_t low_cluster;       // low 16 bits of the first cluster number
+    uint32_t file_size;         // size of the file in bytes
+} FAT16DirectoryEntry;
 
 Superblock *fat16_init(void);
 int fat16_resolve(ATADisk *disk);
