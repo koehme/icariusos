@@ -186,9 +186,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
     timer_init(&timer, 100);
 
     kmotd(addr);
+
+    kprintf("\n");
     ata_search_fs(ata_disk);
 
-    kprintf("\n>");
+    kprintf(">");
     while (true)
         ;
     return;
