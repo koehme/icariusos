@@ -46,14 +46,3 @@ int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes)
     };
     return ata_status;
 };
-
-void stream_dump_hex(Stream *self, const uint8_t *buffer, const size_t size)
-{
-    for (size_t i = 0; i < self->disk->sector_size - size; ++i)
-    {
-        const uint8_t byte = buffer[i];
-        kprintf("0x%x ", byte);
-        kdelay(5000);
-    };
-    return;
-};

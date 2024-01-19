@@ -144,7 +144,6 @@ void kmotd(unsigned long addr)
     };
     kprintf("\nicariusOS is running on an i686 CPU.\n");
     kprintf("%s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
-    kprintf("\n>");
     return;
 };
 
@@ -186,14 +185,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
 
-    /*
-        Stream stream = {};
-        uint8_t stream_buffer[512];
-        stream_init(&stream, ata_disk);
-        stream_seek(&stream, 0x0);
-    */
     kmotd(addr);
+    ata_search_fs(ata_disk);
 
+    kprintf("\n>");
     while (true)
         ;
     return;

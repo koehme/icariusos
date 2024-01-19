@@ -24,7 +24,7 @@ LOOP1=`sudo losetup -f`
 sudo losetup $LOOP1 disk.img -o 1048576
 
 # Format the partition with FAT16 and label it as "ICARIUSDISK"
-sudo mkfs.fat -S 512 -F16 -f 2 -n ICARIUSDISK $LOOP1
+sudo mkfs.fat -F16 -f 2 -n ICARIUSDISK $LOOP1
 
 # Mount the partition
 sudo mount $LOOP1 /mnt

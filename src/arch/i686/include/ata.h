@@ -62,6 +62,7 @@ typedef struct ATADisk
 } ATADisk;
 
 void ata_init(ATADisk *self);
+void ata_search_fs(ATADisk *self);
 ATADisk *ata_get_disk(const ATADiskType disk_type);
 int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool sync);
 

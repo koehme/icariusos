@@ -148,6 +148,11 @@ int kprintf(const char *fmt, ...)
                 {
                     updated_buffer[0] = '0';
                 };
+
+                if (value < 0x10)
+                {
+                    vga_print(&vga_display, "0", VGA_COLOR_LIGHT_GREEN);
+                };
                 vga_print(&vga_display, updated_buffer, VGA_COLOR_LIGHT_GREEN);
                 break;
             };

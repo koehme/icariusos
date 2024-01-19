@@ -3,6 +3,5 @@ layout split
 focus cmd
 set print pretty on
 set disassembly-flavor intel
-break kernel.c:170
-break kernel.c:197
+break fat16.c:fat16_resolve
 c

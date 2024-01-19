@@ -5,6 +5,7 @@
  */
 
 #include "fat16.h"
+#include "stream.h"
 
 Superblock fat16 = {
     .resolve_cb = 0x0,
@@ -21,7 +22,21 @@ Superblock *fat16_init(void)
 
 int fat16_resolve(ATADisk *disk)
 {
-    kprintf("FAT16 Filesystem detected.\n");
+    FAT16BaseHeader bpb;
+    Stream stream;
+    stream_init(&stream, disk);
+    stream_seek(&stream, 0x100000);
+    stream_read(&stream, disk->buffer, 512);
+    kprintf("FAT16 Resolved\n");
+
+    // Implement logic to validate fat16 header
+    // For now only printing...
+    for (int i = 0; i < 512; i++)
+    {
+        const uint8_t byte = disk->buffer[i];
+        kprintf("0x%x ", byte);
+        kdelay(1000);
+    };
     return 0;
 };
 

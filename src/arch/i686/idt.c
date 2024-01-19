@@ -103,8 +103,6 @@ void irq_14h_handler(void)
 {
     ATADisk *ptr_ata_disk = &ata_disk;
     volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
-    const char *message = interrupt_messages[46];
-    kprintf(message);
 
     for (size_t i = 0; i < ptr_ata_disk->sector_size / 2; ++i)
     {
@@ -112,7 +110,6 @@ void irq_14h_handler(void)
         *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
         ptr_ata_buffer++;
     };
-    kprintf("ATA Disk Read Successful: 512 Bytes transferred into ATA Buffer\n");
     pic_send_eoi();
     return;
 };

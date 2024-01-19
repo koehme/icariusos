@@ -26,11 +26,16 @@ ATADisk ata_disk = {
  */
 void ata_init(ATADisk *self)
 {
+    idt_set(0x2e, asm_irq_14h);
     self->disk_type = ATA_DISK_A;
     self->sector_size = ATA_SECTOR_SIZE;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
+    return;
+};
+
+void ata_search_fs(ATADisk *self)
+{
     self->fs = vfs_resolve(self);
-    idt_set(0x2e, asm_irq_14h);
     return;
 };
 
