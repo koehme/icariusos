@@ -119,41 +119,10 @@ int kprintf(const char *fmt, ...)
             };
             case 'x':
             {
-                char buffer[17] = {};
+                char buffer[1024] = {};
                 const uint64_t value = va_arg(args, uint64_t);
-                const char *hex_chars = "0123456789ABCDEF";
-
-                for (int i = 15; i >= 0; --i)
-                {
-                    const int shift_amount = 4 * (15 - i);
-                    const int hex_index = (value >> shift_amount) & 0xF;
-                    const char digit = hex_chars[hex_index];
-                    buffer[i] = digit;
-                };
-                char updated_buffer[17] = {};
-                int j = 0;
-                int leading_zeros = 1;
-
-                for (int i = 0; i < 16; ++i)
-                {
-                    if (leading_zeros && buffer[i] == '0')
-                    {
-                        continue;
-                    };
-                    leading_zeros = 0;
-                    updated_buffer[j++] = buffer[i];
-                };
-
-                if (j == 0)
-                {
-                    updated_buffer[0] = '0';
-                };
-
-                if (value < 0x10)
-                {
-                    vga_print(&vga_display, "0", VGA_COLOR_LIGHT_GREEN);
-                };
-                vga_print(&vga_display, updated_buffer, VGA_COLOR_LIGHT_GREEN);
+                itoa(value, buffer, 16);
+                vga_print(&vga_display, buffer, VGA_COLOR_LIGHT_GREEN);
                 break;
             };
             default:

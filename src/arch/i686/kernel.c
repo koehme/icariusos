@@ -185,7 +185,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
 
-    kmotd(addr);
+    // kmotd(addr);
 
     kprintf("\n");
     ata_search_fs(ata_disk);

@@ -15,7 +15,7 @@ extern Superblock fat16;
  * filesystem within the Virtual File System (VFS). The array allows the system to manage
  * and access different filesystems.
  */
-static Superblock *filesystems[MAX_FS] = {
+static Superblock *filesystems[8] = {
     0x0,
     0x0,
     0x0,
@@ -32,7 +32,7 @@ static Superblock *filesystems[MAX_FS] = {
  * system. Each element in the array corresponds to a file descriptor and the array
  * provides a mechanism for tracking and accessing open files within the system.
  */
-static FileDescriptor *file_descriptors[MAX_FILE_DESCRIPTORS] = {};
+static FileDescriptor *file_descriptors[512] = {};
 
 /**
  * @brief Initializes the Virtual File System (VFS) subsystem.
@@ -56,7 +56,7 @@ static Superblock **vfs_get_free_fs_slot(void)
 {
     size_t i = 0;
 
-    for (; i < MAX_FS; i++)
+    for (; i < 8; i++)
     {
         if (filesystems[i] == 0x0)
         {
@@ -106,19 +106,19 @@ static int vfs_create_fd(FileDescriptor **ptr)
 {
     int res = -1;
 
-    for (int i = 0; i < MAX_FILE_DESCRIPTORS; i++)
+    for (int i = 0; i < 512; i++)
     {
-        FileDescriptor *curr_slot = file_descriptors[i];
+        FileDescriptor *curr_descriptor_slot = file_descriptors[i];
 
-        if (curr_slot == 0x0)
+        if (curr_descriptor_slot == 0x0)
         {
-            FileDescriptor *file_descriptor = kcalloc(sizeof(FileDescriptor));
+            FileDescriptor *new_descriptor = kcalloc(sizeof(FileDescriptor));
 
-            if (file_descriptor != 0x0)
+            if (new_descriptor != 0x0)
             {
-                file_descriptor->index = i + 1;
-                file_descriptors[i] = file_descriptor;
-                *ptr = file_descriptor;
+                new_descriptor->index = i + 1;
+                curr_descriptor_slot = new_descriptor;
+                *ptr = new_descriptor;
                 res = 0;
                 break;
             }

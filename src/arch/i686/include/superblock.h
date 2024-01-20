@@ -69,7 +69,7 @@ typedef struct FileDescriptor
 
 void vfs_init();
 void vfs_insert(Superblock *fs);
-int fopen(const char *filename, const char *mode);
+int vfs_fopen(const char *filename, const char *mode);
 Superblock *vfs_resolve(ATADisk *disk);
 
 #endif
