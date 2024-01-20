@@ -78,6 +78,28 @@ int fat16_resolve(ATADisk *disk)
     const uint32_t root_directory_absolute = partition_offset + root_directory_offset;
     kprintf("root_directory_offset: 0x%x\n", root_directory_offset);
     kprintf("root_directory_absolute: 0x%x\n", root_directory_absolute);
+
+    Stream root_dir_stream;
+    stream_init(&root_dir_stream, disk);
+    stream_seek(&root_dir_stream, root_directory_absolute);
+
+    const uint32_t root_directory_size = base_header.root_directories * sizeof(FAT16DirectoryEntry);
+    const uint32_t num_root_dir_entries = root_directory_size / sizeof(FAT16DirectoryEntry);
+
+    uint8_t buffer[sizeof(FAT16DirectoryEntry)];
+
+    for (int i = 0; i < num_root_dir_entries; i++)
+    {
+        stream_read(&root_dir_stream, buffer, sizeof(FAT16DirectoryEntry));
+        // FAT16DirectoryEntry struct
+        kprintf("Entry %d:\n", i);
+        // Get filename
+        uint8_t filename[12];
+        mcpy(filename, buffer, 11);
+        kprintf("  File Name: %s\n", filename);
+        filename[12] = '\0';
+        kdelay(60000);
+    };
     return 0;
 };
 
