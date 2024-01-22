@@ -10,8 +10,6 @@ label-id: 0x513f54a3
 device: disk.img 
 unit: sectors
 sector-size: 512
-
-# Create the first partition (disk.img1) starting at sector 2048, with a size of 30000 sectors, type 06 (FAT16), and marked as bootable
 disk.img1 : start=2048, size=30000, type=06, bootable
 EOF
 
@@ -24,7 +22,7 @@ LOOP1=`sudo losetup -f`
 sudo losetup $LOOP1 disk.img -o 1048576
 
 # Format the partition with FAT16 and label it as "ICARIUSDISK"
-sudo mkfs.fat -F16 -f 2 -n ICARIUSDISK $LOOP1
+sudo mkfs.fat -F16 -f2 -n ICARIUSDISK $LOOP1
 
 # Mount the partition
 sudo mount $LOOP1 /mnt
@@ -35,7 +33,7 @@ sudo grub-install --target=i386-pc --root-directory=/mnt --no-floppy --modules="
 # Copy GRUB configuration and kernel to the mounted partition
 sudo cp ./iso/boot/grub/grub.cfg /mnt/boot/grub/grub.cfg
 sudo cp ./bin/kernel.bin /mnt/boot/kernel.bin
-
+sudo cp ./bin/hello.txt /mnt/hello.txt
 # Unmount the partition and detach loop devices
 sudo umount /mnt
 sudo losetup -D

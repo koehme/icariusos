@@ -53,15 +53,6 @@ typedef struct FAT16ExtendedHeader
     uint8_t system_ident[8];
 } __attribute__((packed)) FAT16ExtendedHeader;
 
-typedef struct FAT16Header
-{
-    FAT16BaseHeader base;
-    union
-    {
-        FAT16ExtendedHeader extended;
-    } optional;
-} FAT16Header;
-
 typedef enum FAT16FileAttributes
 {
     READ_ONLY = 0x01,
@@ -88,6 +79,24 @@ typedef struct FAT16DirectoryEntry
     uint16_t low_cluster;       // low 16 bits of the first cluster number
     uint32_t file_size;         // size of the file in bytes
 } FAT16DirectoryEntry;
+
+typedef struct FAT16InternalHeader
+{
+    FAT16BaseHeader base;
+    FAT16ExtendedHeader ext;
+} FAT16InternalHeader;
+
+typedef struct FAT16Entry
+{
+    uint16_t cluster;
+} FAT16Entry;
+
+typedef struct FAT16FileSystemInfo
+{
+    uint32_t partition_offset;
+    uint32_t fat_table_offset;
+    uint32_t root_directory_offset;
+} FAT16FileSystemInfo;
 
 Superblock *fat16_init(void);
 int fat16_resolve(ATADisk *disk);

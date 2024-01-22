@@ -39,10 +39,36 @@ size_t slen(const char *str)
     return i;
 };
 
+void sreverse(char *str, const size_t length)
+{
+    size_t start = 0;
+    size_t end = length - 1;
+
+    while (start < end)
+    {
+        uint8_t buffer = str[start];
+        str[start] = str[end];
+        str[end] = buffer;
+        start++;
+        end--;
+    };
+    return;
+};
+
+/**
+ * @brief Converts an integer to a string.
+ * This function converts the given integer to a string
+ * using the specified base. The resulting string is stored in
+ * the buffer.
+ * @param num The integer to be converted.
+ * @param str The character array buffer to store the result.
+ * @param base The base for the conversion (e.g., 10 for decimal conversion).
+ * @return A pointer to the resulting string.
+ */
 char *itoa(uint32_t num, char *str, int base)
 {
     int i = 0;
-    bool is_neg = false;
+    bool is_negative = false;
 
     if (num == 0)
     {
@@ -53,34 +79,30 @@ char *itoa(uint32_t num, char *str, int base)
 
     if (num < 0 && base == 10)
     {
-        is_neg = true;
+        is_negative = true;
         num = -num;
     };
-
+    // Extract digits from the number and add them to the string in reverse order
     while (num != 0)
     {
+        // Extract in base 10 each digit for example 1024 % 10 = 4
+        //                                              ^
         const int rem = num % base;
+        // Convert the remainder to the corresponding character and add it to the string buffer
+        // If the remainder is greater than 9, use 'a' to 'f'
         str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        //                          ^                   ^
+        //                 floats +  base 16           base 10
+        // Get the next digit
         num = num / base;
     };
 
-    if (is_neg)
+    if (is_negative)
     {
         str[i++] = '-';
     };
     str[i] = '\0';
-
-    int start = 0;
-    int end = i - 1;
-
-    while (start < end)
-    {
-        char temp = str[start];
-        str[start] = str[end];
-        str[end] = temp;
-        end--;
-        start++;
-    };
+    sreverse(str, i);
     return str;
 };
 

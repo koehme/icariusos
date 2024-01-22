@@ -7,6 +7,8 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#define KMAIN_DEBUG_THROTTLE 500
+
 #include <stddef.h>
 
 #include "multiboot2.h"

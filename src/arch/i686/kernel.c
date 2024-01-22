@@ -6,8 +6,6 @@
 
 #include "kernel.h"
 
-#define KMAIN_DEBUG_THROTTLE 50
-
 extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
@@ -87,7 +85,7 @@ void kspinner(const int frames)
 
 void kmotd(unsigned long addr)
 {
-    kspinner(32);
+    kspinner(12);
     const Date date = cmos_date(&cmos);
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
@@ -179,19 +177,17 @@ void kmain(const uint32_t magic, const uint32_t addr)
     ATADisk *ata_disk = ata_get_disk(ATA_DISK_A);
     ata_init(ata_disk);
 
-    plexer_init(&plexer, "A:/bin/cli.exe");
-    PathRootNode *ptr_root_node = pparser_parse(&pparser, &plexer);
-
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
 
-    // kmotd(addr);
+    kmotd(addr);
 
     kprintf("\n");
     ata_search_fs(ata_disk);
-
     kprintf(">");
+
     while (true)
-        ;
+    {
+    };
     return;
 };
