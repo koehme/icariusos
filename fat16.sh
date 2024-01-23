@@ -33,7 +33,8 @@ sudo grub-install --target=i386-pc --root-directory=/mnt --no-floppy --modules="
 # Copy GRUB configuration and kernel to the mounted partition
 sudo cp ./iso/boot/grub/grub.cfg /mnt/boot/grub/grub.cfg
 sudo cp ./bin/kernel.bin /mnt/boot/ICARIUS.BIN
-
+sudo cp ./bin/TEST.TXT /mnt/TEST.TXT
+sudo cp ./bin/ABC.TXT /mnt/ABC.TXT
 # Unmount the partition and detach loop devices
 sudo umount /mnt
 sudo losetup -D

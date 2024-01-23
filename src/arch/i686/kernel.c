@@ -77,7 +77,6 @@ void kspinner(const int frames)
     {
         const char *curr_frame = spinner_frames[i % 4];
         kprintf(curr_frame);
-        ksleep(KMAIN_DEBUG_THROTTLE);
         kprintf("\b");
     };
     return;
@@ -123,7 +122,6 @@ void kmotd(unsigned long addr)
                 const uint64_t base_addr = (((uint64_t)mmap->addr_high << 32) | mmap->addr_low);
                 const uint64_t end_addr = base_addr + ((uint64_t)mmap->len_high << 32 | mmap->len_low);
                 const char *type = mmap->type == 1 ? "Reserved" : "Available";
-                ksleep(KMAIN_DEBUG_THROTTLE);
                 kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
             };
             break;

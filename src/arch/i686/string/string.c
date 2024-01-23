@@ -149,7 +149,6 @@ int kprintf(const char *fmt, ...)
             };
             default:
             {
-                ksleep(KDEBUG_SLOW_DOWN);
                 break;
             };
             };

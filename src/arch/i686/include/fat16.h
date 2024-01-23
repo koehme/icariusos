@@ -98,17 +98,19 @@ typedef struct FAT16InternalHeader
     FAT16ExtendedHeader ext;
 } __attribute__((packed)) FAT16InternalHeader;
 
-typedef struct FAT16Entry
+typedef struct FAT16TimeInfo
 {
-    uint16_t cluster;
-} __attribute__((packed)) FAT16Entry;
+    int hour;
+    int minute;
+    int second;
+} FAT16TimeInfo;
 
-typedef struct FAT16FileSystemInfo
+typedef struct FAT16DateInfo
 {
-    uint32_t partition_offset;
-    uint32_t fat_table_offset;
-    uint32_t root_directory_offset;
-} __attribute__((packed)) FAT16FileSystemInfo;
+    int day;
+    int month;
+    int year;
+} FAT16DateInfo;
 
 Superblock *fat16_init(void);
 int fat16_resolve(ATADisk *disk);

@@ -7,7 +7,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define KMAIN_DEBUG_THROTTLE 5
+#define DEBUG_THROTTLE 6000
 
 #include <stddef.h>
 

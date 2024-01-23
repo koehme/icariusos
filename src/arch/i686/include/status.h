@@ -7,8 +7,6 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#define KDEBUG_SLOW_DOWN 5
-
 // Essential error codes in the os
 typedef enum StatusCodes
 {
