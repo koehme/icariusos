@@ -163,3 +163,22 @@ int kprintf(const char *fmt, ...)
     va_end(args);
     return 0;
 };
+
+char *scat(char *dest, const char *src)
+{
+    // Find the null-terminator in the dest string
+    while (*dest != '\0')
+    {
+        dest++;
+    };
+    // Copy characters from src to dest
+    while (*src != '\0')
+    {
+        *dest = *src;
+        dest++;
+        src++;
+    };
+    // Null-terminate the concatenated string
+    *dest = '\0';
+    return dest;
+}

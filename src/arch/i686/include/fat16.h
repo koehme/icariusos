@@ -78,25 +78,37 @@ typedef struct FAT16DirectoryEntry
     uint16_t modification_date; // last modification date (in the format described)
     uint16_t low_cluster;       // low 16 bits of the first cluster number
     uint32_t file_size;         // size of the file in bytes
-} FAT16DirectoryEntry;
+} __attribute__((packed)) FAT16DirectoryEntry;
+
+typedef struct FAT16LongDirectoryEntry
+{
+    uint8_t ldir_ord;
+    uint16_t ldir_name1[5];
+    uint8_t ldir_attr;
+    uint8_t ldir_type;
+    uint8_t ldir_chksum;
+    uint16_t ldir_name2[6];
+    uint16_t ldir_fstcluslo;
+    uint16_t ldir_name3[2];
+} __attribute__((packed)) FAT16LongDirectoryEntry;
 
 typedef struct FAT16InternalHeader
 {
     FAT16BaseHeader base;
     FAT16ExtendedHeader ext;
-} FAT16InternalHeader;
+} __attribute__((packed)) FAT16InternalHeader;
 
 typedef struct FAT16Entry
 {
     uint16_t cluster;
-} FAT16Entry;
+} __attribute__((packed)) FAT16Entry;
 
 typedef struct FAT16FileSystemInfo
 {
     uint32_t partition_offset;
     uint32_t fat_table_offset;
     uint32_t root_directory_offset;
-} FAT16FileSystemInfo;
+} __attribute__((packed)) FAT16FileSystemInfo;
 
 Superblock *fat16_init(void);
 int fat16_resolve(ATADisk *disk);

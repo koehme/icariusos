@@ -6,6 +6,7 @@
 
 #include "fat16.h"
 #include "stream.h"
+#include "mem.h"
 
 Superblock fat16 = {
     .resolve_cb = 0x0,
@@ -36,37 +37,27 @@ bool fat16_validate_ext_header(const FAT16ExtendedHeader *ext_header)
     return ext_header->signature == 0x29 && ext_header->drive_number == 0x80;
 };
 
-static void fat16_dump_ext_header(const FAT16ExtendedHeader *ext_header, const char *message)
+static void fat16_dump_ext_header(const FAT16ExtendedHeader *ext_header, const char *msg)
 {
     uint8_t volume_label[12] = {};
     uint8_t system_ident[9] = {};
-    ksleep(KMAIN_DEBUG_THROTTLE);
-    kprintf("FAT16 Extended Header\n");
-    ksleep(KMAIN_DEBUG_THROTTLE);
+    kprintf(msg);
     kprintf("----------------------------------\n");
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Physical Drive Number: 0x%x\n", ext_header->drive_number);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Reserved: 0x%x\n", ext_header->nt_flags);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Extended Boot Signature: %d\n", ext_header->signature);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("Volume ID: 0x%x\n", ext_header->volume_id);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     mcpy(volume_label, ext_header->volume_label, 11);
     mcpy(system_ident, ext_header->system_ident, 7);
     kprintf("Volume Name of Partition: %s\n", volume_label);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("FAT Name: %s\n", system_ident);
-    ksleep(KMAIN_DEBUG_THROTTLE);
     kprintf("----------------------------------\n");
-    kprintf(message);
     return;
 };
 
-static void fat16_dump_base_header(const FAT16BaseHeader *header, const char *message)
+static void fat16_dump_base_header(const FAT16BaseHeader *header, const char *msg)
 {
-    kprintf("FAT16 Header\n");
+    kprintf(msg);
     kprintf("----------------------------------\n");
     kprintf("Jump Code + NOP: 0x%x 0x%x\n", header->jmp_short[0], header->jmp_short[1], header->jmp_short[2]);
     kprintf("OEM Name: %s\n", header->oem_ident);
@@ -83,7 +74,6 @@ static void fat16_dump_base_header(const FAT16BaseHeader *header, const char *me
     kprintf("Number of Hidden Sectors in Partition: %d\n", header->hidden_sectors);
     kprintf("Number of Sectors in Partition: %d\n", header->large_total_sectors);
     kprintf("----------------------------------\n");
-    kprintf(message);
     return;
 };
 
@@ -98,6 +88,12 @@ static uint32_t calculate_root_directory_absolute(const FAT16BaseHeader *header,
 {
     const uint32_t root_directory_absolute = partition_offset + calculate_root_directory_offset(header);
     return root_directory_absolute;
+};
+
+uint32_t calculate_fat_table_offset(const FAT16BaseHeader *header, const uint32_t partition_offset)
+{
+    const uint32_t fat_table_offset = partition_offset + header->reserved_sectors * header->bytes_per_sector;
+    return fat_table_offset;
 };
 
 int fat16_resolve(ATADisk *disk)
@@ -125,7 +121,7 @@ int fat16_resolve(ATADisk *disk)
         kprintf("Error: Invalid FAT16 Extended Header.\n");
     };
     fat16_dump_base_header(&fat16_header.base, "");
-    fat16_dump_ext_header(&fat16_header.ext, "Success: FAT16 Extended resolved\n");
+    fat16_dump_ext_header(&fat16_header.ext, "");
 
     const uint32_t root_directory_offset = calculate_root_directory_offset(&fat16_header.base);
     const uint32_t root_directory_absolute = calculate_root_directory_absolute(&fat16_header.base, partition_offset);
@@ -136,54 +132,13 @@ int fat16_resolve(ATADisk *disk)
     kprintf("Root Directory Absolute: 0x%x\n", root_directory_absolute);
     kprintf("Root Directory Size: %d\n", root_directory_size);
     kprintf("Root Directory Entries: %d\n", root_dir_entries);
-    /*
-    Stream root_dir_stream;
-    stream_init(&root_dir_stream, disk);
-    stream_seek(&root_dir_stream, root_directory_absolute);
-    uint8_t buffer[sizeof(FAT16DirectoryEntry)];
 
-    for (int i = 0; i < num_root_dir_entries; i++)
-    {
-        stream_read(&root_dir_stream, buffer, sizeof(FAT16DirectoryEntry));
-        FAT16DirectoryEntry *entry = (FAT16DirectoryEntry *)buffer;
-
-        kprintf("Entry %d:\n", i);
-        // Get filename
-        uint8_t filename[12] = {};
-        mcpy(filename, entry->file_name, 11);
-        kprintf("  Filename: %s\n", filename);
-        // Get other attributes
-        kprintf("  Attributes: 0x%x\n", entry->attributes);
-        kprintf("  Creation Time: %d\n", entry->create_time);
-        kprintf("  Creation Date: %d\n", entry->create_date);
-        kprintf("  Last Access Date: %d\n", entry->last_access_date);
-        kprintf("  High Cluster: %d\n", entry->high_cluster);
-        kprintf("  Modification Time: %d\n", entry->modification_time);
-        kprintf("  Modification Date: %d\n", entry->modification_date);
-        kprintf("  Low Cluster: %d\n", entry->low_cluster);
-        kprintf("  File Size: %d bytes\n", entry->file_size);
-    };
-
-    const uint32_t fat_table_offset = partition_offset + fat16_header.base.reserved_sectors * fat16_header.base.bytes_per_sector;
+    const uint32_t fat_table_offset = calculate_fat_table_offset(&fat16_header.base, partition_offset);
     const uint32_t fat_table_size_bytes = fat16_header.base.sectors_per_fat * fat16_header.base.bytes_per_sector;
     const uint32_t fat_table_entries = fat_table_size_bytes / sizeof(FAT16Entry);
-    kprintf("fat_table_offset: 0x%x\n", fat_table_offset);
-    kprintf("fat_table_size_bytes: %d\n", fat_table_size_bytes);
-    kprintf("fat_table_entries: %d\n", fat_table_entries);
-
-    Stream fat_stream;
-    uint8_t fat_stream_buffer[sizeof(FAT16Entry)];
-    stream_init(&fat_stream, disk);
-    stream_seek(&fat_stream, fat_table_offset);
-    stream_read(&fat_stream, fat_stream_buffer, sizeof(FAT16Entry));
-
-    for (int i = 0; i < fat_table_entries; i++)
-    {
-        FAT16Entry *entry = (FAT16Entry *)fat_stream_buffer;
-        kprintf("  FAT16Entry: 0x%x\n", entry->cluster);
-        kdelay(40000);
-    };
-    */
+    kprintf("FAT Table Offset: 0x%x\n", fat_table_offset);
+    kprintf("FAT Table Size: %d\n", fat_table_size_bytes);
+    kprintf("FAT Table Entries: %d\n", fat_table_entries);
     return 0;
 };
 

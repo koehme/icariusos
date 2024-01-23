@@ -15,7 +15,7 @@ mnt_dir=$(mktemp -d)
 sudo mount $LOOP1 $mnt_dir
 
 # Copy the updated kernel to the mounted partition
-sudo cp $KERNEL_PATH $mnt_dir/boot/kernel.bin
+sudo cp $KERNEL_PATH $mnt_dir/boot/ICARIUS.BIN
 
 # Unmount the partition and detach loop devices
 sudo umount $mnt_dir
@@ -24,4 +24,4 @@ sudo losetup -d $LOOP1
 # Clean up temporary directory
 rmdir $mnt_dir
 
-echo "Kernel swapped successfully!"
+echo "ICARIUS.BIN swapped!"
