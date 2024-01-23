@@ -41,13 +41,13 @@ Superblock *fat16_init(void)
     return &fat16;
 };
 
-bool fat16_validate_header(const FAT16BaseHeader *header)
+bool fat16_validate_header(const BIOSParameterBlock *bpb)
 {
-    return (header->jmp_short[0] == 0xEB && header->jmp_short[2] == 0x90) &&
-           (header->bytes_per_sector == 512) &&
-           (header->sectors_per_cluster >= 1) &&
-           (header->fat_table_copies == 2) &&
-           (header->media_desc_type != 0);
+    return (bpb->BS_jmpBoot[0] == 0xEB && bpb->BS_jmpBoot[2] == 0x90) &&
+           (bpb->BPB_BytsPerSec == 512) &&
+           (bpb->BPB_SecPerClus >= 1) &&
+           (bpb->BPB_NumFATs == 2) &&
+           (bpb->BPB_Media != 0);
 };
 
 bool fat16_validate_ext_header(const FAT16ExtendedHeader *ext_header)
@@ -73,44 +73,44 @@ static void fat16_dump_ext_header(const FAT16ExtendedHeader *ext_header, const c
     return;
 };
 
-static void fat16_dump_base_header(const FAT16BaseHeader *header, const char *msg)
+static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *msg)
 {
     kprintf(msg);
     kprintf("----------------------------------\n");
-    kprintf("Jump Code + NOP: 0x%x 0x%x\n", header->jmp_short[0], header->jmp_short[1], header->jmp_short[2]);
-    kprintf("OEM Name: %s\n", header->oem_ident);
-    kprintf("Bytes Per Sector: %d\n", header->bytes_per_sector);
-    kprintf("Sectors Per Cluster: %d\n", header->sectors_per_cluster);
-    kprintf("Reserved Sectors: %d\n", header->reserved_sectors);
-    kprintf("Number of Copies of FAT: %d\n", header->fat_table_copies);
-    kprintf("Maximum Root Directory Entries: %d\n", header->root_directories);
-    kprintf("Number of Sectors: %d\n", header->total_sectors);
-    kprintf("Media Descriptor: 0x%x\n", header->media_desc_type);
-    kprintf("Sectors Per FAT: %d\n", header->sectors_per_fat);
-    kprintf("Sectors Per Track: %d\n", header->sectors_per_track);
-    kprintf("Number of Heads: %d\n", header->heads);
-    kprintf("Number of Hidden Sectors in Partition: %d\n", header->hidden_sectors);
-    kprintf("Number of Sectors in Partition: %d\n", header->large_total_sectors);
+    kprintf("BS_jmpBoot: 0x%x 0x%x\n", bpb->BS_jmpBoot[0], bpb->BS_jmpBoot[1], bpb->BS_jmpBoot[2]);
+    kprintf("BS_OEMName: %s\n", bpb->BS_OEMName);
+    kprintf("BPB_BytsPerSec: %d\n", bpb->BPB_BytsPerSec);
+    kprintf("BPB_SecPerClus: %d\n", bpb->BPB_SecPerClus);
+    kprintf("BPB_RsvdSecCnt: %d\n", bpb->BPB_RsvdSecCnt);
+    kprintf("BPB_NumFATs: %d\n", bpb->BPB_NumFATs);
+    kprintf("BPB_RootEntCnt: %d\n", bpb->BPB_RootEntCnt);
+    kprintf("BPB_TotSec16: %d\n", bpb->BPB_TotSec16);
+    kprintf("BPB_Media: 0x%x\n", bpb->BPB_Media);
+    kprintf("BPB_FATSz16: %d\n", bpb->BPB_FATSz16);
+    kprintf("BPB_SecPerTrk: %d\n", bpb->BPB_SecPerTrk);
+    kprintf("BPB_NumHeads: %d\n", bpb->BPB_NumHeads);
+    kprintf("BPB_HiddSec: %d\n", bpb->BPB_HiddSec);
+    kprintf("BPB_TotSec32: %d\n", bpb->BPB_TotSec32);
     kprintf("----------------------------------\n");
     return;
 };
 
-static uint32_t calculate_root_dir_offset(const FAT16BaseHeader *header)
+static uint32_t calculate_root_dir_offset(const BIOSParameterBlock *bpb)
 {
-    const uint32_t root_directory_offset = header->bytes_per_sector * (header->reserved_sectors + header->fat_table_copies * header->sectors_per_fat);
+    const uint32_t root_directory_offset = bpb->BPB_BytsPerSec * (bpb->BPB_RsvdSecCnt + bpb->BPB_NumFATs * bpb->BPB_FATSz16);
     return root_directory_offset;
 };
 
-static uint32_t calculate_root_dir_absolute(const FAT16BaseHeader *header, const uint32_t partition_offset)
+static uint32_t calculate_root_dir_absolute(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
 
 {
-    const uint32_t root_directory_absolute = partition_offset + calculate_root_dir_offset(header);
+    const uint32_t root_directory_absolute = partition_offset + calculate_root_dir_offset(bpb);
     return root_directory_absolute;
 };
 
-uint32_t calculate_fat_table_offset(const FAT16BaseHeader *header, const uint32_t partition_offset)
+uint32_t calculate_fat_table_offset(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
 {
-    const uint32_t fat_table_offset = partition_offset + header->reserved_sectors * header->bytes_per_sector;
+    const uint32_t fat_table_offset = partition_offset + bpb->BPB_RsvdSecCnt * bpb->BPB_BytsPerSec;
     return fat_table_offset;
 };
 
@@ -142,9 +142,9 @@ int is_sfn_entry(uint8_t *entry)
     return 0;
 };
 
-static void fat16_dump_root_dir_entries(const FAT16BaseHeader *header, Stream *stream)
+static void fat16_dump_root_dir_entries(const BIOSParameterBlock *header, Stream *stream)
 {
-    const uint32_t root_dir_size = header->root_directories * sizeof(FAT16DirectoryEntry);
+    const uint32_t root_dir_size = header->BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
     const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirectoryEntry);
 
     for (int i = 0, file = 1; i < root_dir_entries; i++)
@@ -203,7 +203,7 @@ int fat16_resolve(ATADisk *disk)
         return -1;
     };
 
-    if (!fat16_validate_header(&fat16_header.base))
+    if (!fat16_validate_header(&fat16_header.bpb))
     {
         kprintf("Error: Invalid FAT16 Header.\n");
         return -1;
@@ -213,12 +213,12 @@ int fat16_resolve(ATADisk *disk)
     {
         kprintf("Error: Invalid FAT16 Extended Header.\n");
     };
-    fat16_dump_base_header(&fat16_header.base, "");
+    fat16_dump_base_header(&fat16_header.bpb, "");
     fat16_dump_ext_header(&fat16_header.ext, "");
 
-    const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.base);
-    const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.base, partition_offset);
-    const uint32_t root_dir_size = fat16_header.base.root_directories * sizeof(FAT16DirectoryEntry);
+    const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.bpb);
+    const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.bpb, partition_offset);
+    const uint32_t root_dir_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
     const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirectoryEntry);
 
     kprintf("Root Directory Offset: 0x%x\n", root_dir_offset);
@@ -229,10 +229,10 @@ int fat16_resolve(ATADisk *disk)
     Stream root_dir = {};
     stream_init(&root_dir, disk);
     stream_seek(&root_dir, root_dir_absolute);
-    fat16_dump_root_dir_entries(&fat16_header.base, &root_dir);
+    fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
-    const uint32_t fat_table_offset = calculate_fat_table_offset(&fat16_header.base, partition_offset);
-    const uint32_t fat_table_size_bytes = fat16_header.base.sectors_per_fat * fat16_header.base.bytes_per_sector;
+    const uint32_t fat_table_offset = calculate_fat_table_offset(&fat16_header.bpb, partition_offset);
+    const uint32_t fat_table_size_bytes = fat16_header.bpb.BPB_FATSz16 * fat16_header.bpb.BPB_BytsPerSec;
     const uint32_t fat_table_entries = fat_table_size_bytes / sizeof(uint16_t);
     return 0;
 };

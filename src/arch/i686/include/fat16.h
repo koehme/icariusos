@@ -19,23 +19,23 @@ typedef struct FAT16
     char name[MAX_FS_NAME_LENGTH];
 } FAT16;
 
-typedef struct FAT16BaseHeader
+typedef struct BIOSParameterBlock
 {
-    uint8_t jmp_short[3];         // jump over the disk format information (the BPB and EBPB)
-    uint8_t oem_ident[8];         // oem identifier. The first 8 Bytes (3 - 10) is the version of DOS being used
-    uint16_t bytes_per_sector;    // number of Bytes per sector (remember, all numbers are in the little-endian format)
-    uint8_t sectors_per_cluster;  // number of sectors per cluster
-    uint16_t reserved_sectors;    // number of reserved sectors. The boot record sectors are included in this value
-    uint8_t fat_table_copies;     // number of File Allocation Tables (FAT's) on the storage media
-    uint16_t root_directories;    // number of root directory entries (must be set so that the root directory occupies entire sectors)
-    uint16_t total_sectors;       // total sectors in the logical volume. If this value is 0, it means there are more than 65535 sectors in the volume, and the actual count is stored in the Large Sector Count entry at 0x20
-    uint8_t media_desc_type;      // indicates the media descriptor type
-    uint16_t sectors_per_fat;     // number of sectors per FAT
-    uint16_t sectors_per_track;   // number of sectors per track
-    uint16_t heads;               // number of heads or sides on the storage media
-    uint32_t hidden_sectors;      // number of hidden sectors. (i.e. the LBA of the beginning of the partition
-    uint32_t large_total_sectors; // large sector count. This field is set if there are more than 65535 sectors in the volume, resulting in a value which does not fit in the Number of Sectors entry at 0x13
-} __attribute__((packed)) FAT16BaseHeader;
+    uint8_t BS_jmpBoot[3];   // jump over the disk format information (the BPB and EBPB)
+    uint8_t BS_OEMName[8];   // oem identifier. The first 8 Bytes (3 - 10) is the version of DOS being used
+    uint16_t BPB_BytsPerSec; // number of Bytes per sector (remember, all numbers are in the little-endian format)
+    uint8_t BPB_SecPerClus;  // number of sectors per cluster
+    uint16_t BPB_RsvdSecCnt; // number of reserved sectors. The boot record sectors are included in this value
+    uint8_t BPB_NumFATs;     // number of File Allocation Tables (FAT's) on the storage media
+    uint16_t BPB_RootEntCnt; // number of root directory entries (must be set so that the root directory occupies entire sectors)
+    uint16_t BPB_TotSec16;   // total sectors in the logical volume. If this value is 0, it means there are more than 65535 sectors in the volume, and the actual count is stored in the Large Sector Count entry at 0x20
+    uint8_t BPB_Media;       // indicates the media descriptor type
+    uint16_t BPB_FATSz16;    // number of sectors per FAT
+    uint16_t BPB_SecPerTrk;  // number of sectors per track
+    uint16_t BPB_NumHeads;   // number of heads or sides on the storage media
+    uint32_t BPB_HiddSec;    // number of hidden sectors. (i.e. the LBA of the beginning of the partition
+    uint32_t BPB_TotSec32;   // large sector count. This field is set if there are more than 65535 sectors in the volume, resulting in a value which does not fit in the Number of Sectors entry at 0x13
+} __attribute__((packed)) BIOSParameterBlock;
 
 /*
 The extended boot record information comes right after the BPB.
@@ -94,7 +94,7 @@ typedef struct FAT16LongDirectoryEntry
 
 typedef struct FAT16InternalHeader
 {
-    FAT16BaseHeader base;
+    BIOSParameterBlock bpb;
     FAT16ExtendedHeader ext;
 } __attribute__((packed)) FAT16InternalHeader;
 
