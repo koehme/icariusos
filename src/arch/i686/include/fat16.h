@@ -16,7 +16,7 @@ typedef struct FAT16
 {
     ResolveFunction resolve_cb;
     OpenFunction open_cb;
-    char name[MAX_FS_NAME_LENGTH];
+    char name[10];
 } FAT16;
 
 typedef struct BIOSParameterBlock
@@ -43,25 +43,28 @@ The data at the beginning is known as the EBPB.
 It contains different information depending on whether this partition is a FAT 12, FAT 16, or FAT 32 filesystem.
 Immediately following the EBPB is the actual boot code, then the standard 0xAA55 boot signature, to fill out the 512-byte boot sector. Offsets shows are from the start of the standard boot record.
 */
-typedef struct FAT16ExtendedHeader
+typedef struct ExtendedBIOSParameterBlock
 {
-    uint8_t drive_number;
-    uint8_t nt_flags;
-    uint8_t signature;
-    uint32_t volume_id;
-    uint8_t volume_label[11];
-    uint8_t system_ident[8];
-} __attribute__((packed)) FAT16ExtendedHeader;
+    uint8_t BS_DrvNum;
+    uint8_t BS_Reserved1;
+    uint8_t BS_BootSig;
+    uint32_t BS_VolID;
+    uint8_t BS_VolLab[11];
+    uint8_t BS_FilSysType[8];
+} __attribute__((packed)) ExtendedBIOSParameterBlock;
 
 typedef enum FAT16FileAttributes
 {
+    READ_WRITE = 0x00,
     READ_ONLY = 0x01,
     HIDDEN = 0x02,
     SYSTEM = 0x04,
     VOLUME_ID = 0x08,
     DIRECTORY = 0x10,
     ARCHIVE = 0x20,
-    LFN = READ_ONLY | HIDDEN | SYSTEM | VOLUME_ID
+    LFN = READ_ONLY | HIDDEN | SYSTEM | VOLUME_ID,
+    DEVICE = 0x40,
+    DELETED = 0xE5,
 } FAT16FileAttributes;
 
 typedef struct FAT16DirectoryEntry
@@ -95,7 +98,7 @@ typedef struct FAT16LongDirectoryEntry
 typedef struct FAT16InternalHeader
 {
     BIOSParameterBlock bpb;
-    FAT16ExtendedHeader ext;
+    ExtendedBIOSParameterBlock ebpb;
 } __attribute__((packed)) FAT16InternalHeader;
 
 typedef struct FAT16TimeInfo

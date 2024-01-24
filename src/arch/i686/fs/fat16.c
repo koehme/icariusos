@@ -14,7 +14,32 @@ Superblock fat16 = {
     .name = "FAT16",
 };
 
-FAT16InternalHeader fat16_header = {};
+FAT16InternalHeader fat16_header = {
+    .bpb = {
+        .BS_jmpBoot = {0},
+        .BS_OEMName = {0},
+        .BPB_BytsPerSec = 0,
+        .BPB_SecPerClus = 0,
+        .BPB_RsvdSecCnt = 0,
+        .BPB_NumFATs = 0,
+        .BPB_RootEntCnt = 0,
+        .BPB_TotSec16 = 0,
+        .BPB_Media = 0,
+        .BPB_FATSz16 = 0,
+        .BPB_SecPerTrk = 0,
+        .BPB_NumHeads = 0,
+        .BPB_HiddSec = 0,
+        .BPB_TotSec32 = 0,
+    },
+    .ebpb = {
+        .BS_DrvNum = 0,
+        .BS_Reserved1 = 0,
+        .BS_BootSig = 0,
+        .BS_VolID = 0,
+        .BS_VolLab = {0},
+        .BS_FilSysType = {0},
+    },
+};
 
 FAT16TimeInfo fat16_convert_time(uint16_t time)
 {
@@ -41,34 +66,49 @@ Superblock *fat16_init(void)
     return &fat16;
 };
 
-bool fat16_validate_header(const BIOSParameterBlock *bpb)
+bool fat16_validate_header(const FAT16InternalHeader *header)
 {
-    return (bpb->BS_jmpBoot[0] == 0xEB && bpb->BS_jmpBoot[2] == 0x90) &&
-           (bpb->BPB_BytsPerSec == 512) &&
-           (bpb->BPB_SecPerClus >= 1) &&
-           (bpb->BPB_NumFATs == 2) &&
-           (bpb->BPB_Media != 0);
+    const bool has_signature = (header->bpb.BS_jmpBoot[0] == 0xEB && header->bpb.BS_jmpBoot[2] == 0x90);
+    const bool has_header = has_signature &&
+                            (header->bpb.BPB_BytsPerSec == 512) &&
+                            (header->bpb.BPB_SecPerClus >= 1) &&
+                            (header->bpb.BPB_NumFATs == 2) &&
+                            (header->bpb.BPB_Media != 0);
+
+    if (!has_header)
+    {
+        return false;
+    };
+    const bool has_ebpb = (header->ebpb.BS_BootSig == 0x29) && (header->ebpb.BS_DrvNum == 0x80);
+
+    if (has_ebpb)
+    {
+        const uint32_t total_sectors = (header->bpb.BPB_TotSec32 != 0) ? header->bpb.BPB_TotSec32 : header->bpb.BPB_TotSec16;
+        const uint32_t disk_size = total_sectors * header->bpb.BPB_BytsPerSec;
+
+        if (total_sectors > disk_size)
+        {
+            return false;
+        };
+    };
+    return true;
 };
 
-bool fat16_validate_ext_header(const FAT16ExtendedHeader *ext_header)
+static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const char *msg)
 {
-    return ext_header->signature == 0x29 && ext_header->drive_number == 0x80;
-};
-
-static void fat16_dump_ext_header(const FAT16ExtendedHeader *ext_header, const char *msg)
-{
-    uint8_t volume_label[12] = {};
-    uint8_t system_ident[9] = {};
+    uint8_t BS_VolLab[12] = {};
+    uint8_t BS_FilSysType[9] = {};
     kprintf(msg);
     kprintf("----------------------------------\n");
-    kprintf("Physical Drive Number: 0x%x\n", ext_header->drive_number);
-    kprintf("Reserved: 0x%x\n", ext_header->nt_flags);
-    kprintf("Extended Boot Signature: %d\n", ext_header->signature);
-    kprintf("Volume ID: 0x%x\n", ext_header->volume_id);
-    mcpy(volume_label, ext_header->volume_label, 11);
-    mcpy(system_ident, ext_header->system_ident, 7);
-    kprintf("Volume Name of Partition: %s\n", volume_label);
-    kprintf("FAT Name: %s\n", system_ident);
+    kdelay(350000);
+    kprintf("BS_DrvNum: 0x%x\n", ebpb->BS_DrvNum);
+    kprintf("BS_Reserved1: 0x%x\n", ebpb->BS_Reserved1);
+    kprintf("BS_BootSig: %d\n", ebpb->BS_BootSig);
+    kprintf("BS_VolID: 0x%x\n", ebpb->BS_VolID);
+    mcpy(BS_VolLab, ebpb->BS_VolLab, 11);
+    mcpy(BS_FilSysType, ebpb->BS_FilSysType, 7);
+    kprintf("BS_VolLab: %s\n", BS_VolLab);
+    kprintf("BS_FilSysType: %s\n", BS_FilSysType);
     kprintf("----------------------------------\n");
     return;
 };
@@ -77,6 +117,7 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
 {
     kprintf(msg);
     kprintf("----------------------------------\n");
+    kdelay(350000);
     kprintf("BS_jmpBoot: 0x%x 0x%x\n", bpb->BS_jmpBoot[0], bpb->BS_jmpBoot[1], bpb->BS_jmpBoot[2]);
     kprintf("BS_OEMName: %s\n", bpb->BS_OEMName);
     kprintf("BPB_BytsPerSec: %d\n", bpb->BPB_BytsPerSec);
@@ -114,50 +155,41 @@ uint32_t calculate_fat_table_offset(const BIOSParameterBlock *bpb, const uint32_
     return fat_table_offset;
 };
 
-int is_first_lfn_entry(const FAT16LongDirectoryEntry *lfn_entry)
-{
-    return (lfn_entry->ldir_ord & 0x40) == 0;
-};
-
-int is_last_lfn_entry(const FAT16LongDirectoryEntry *lfn_entry)
-{
-    return (lfn_entry->ldir_ord & 0x40) != 0;
-};
-
 int is_lfn_entry(uint8_t *entry)
 {
-    if (entry[11] == 0x0F)
+    if (entry[11] == LFN)
     {
         return 1;
     };
     return 0;
-}
+};
 
 int is_sfn_entry(uint8_t *entry)
 {
-    if (entry[11] != 0x0F && entry[0] != 0xE5)
+    if (entry[11] != LFN && entry[0] != DELETED)
     {
         return 1;
     };
     return 0;
 };
 
-static void fat16_dump_root_dir_entries(const BIOSParameterBlock *header, Stream *stream)
+static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *stream)
 {
-    const uint32_t root_dir_size = header->BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
+    const uint32_t root_dir_size = bpb->BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
     const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirectoryEntry);
 
-    for (int i = 0, file = 1; i < root_dir_entries; i++)
+    for (int i = 0; i < root_dir_entries; i++)
     {
         FAT16DirectoryEntry entry = {};
         stream_read(stream, (uint8_t *)&entry, sizeof(FAT16DirectoryEntry));
 
+        if (entry.file_size == 0)
+        {
+            continue;
+        };
+
         if (is_sfn_entry((uint8_t *)&entry))
         {
-            if (entry.file_size == 0)
-            {
-                continue;
-            };
             FAT16TimeInfo create_time = fat16_convert_time(entry.create_time);
             FAT16DateInfo create_date = fat16_convert_date(entry.create_date);
             FAT16DateInfo last_access_date = fat16_convert_date(entry.last_access_date);
@@ -165,7 +197,7 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *header, Stream
             FAT16DateInfo mod_date = fat16_convert_date(entry.modification_date);
 
             kprintf("==========================\n");
-            kprintf("=   File %d:\n", file);
+            kprintf("=   RootDirEntry %d:\n", i);
             kprintf("==========================\n");
             kprintf("=   Filename: %s\n", entry.file_name);
             kprintf("=   Attributes: 0x%x\n", entry.attributes);
@@ -178,12 +210,15 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *header, Stream
             kprintf("=   Low Cluster: %d\n", entry.low_cluster);
             kprintf("=   File Size: %d Bytes\n", entry.file_size);
             kprintf("==========================\n");
-            file++;
         };
 
         if (is_lfn_entry((uint8_t *)&entry))
         {
-            stream_read(stream, (uint8_t *)&entry, sizeof(FAT16DirectoryEntry));
+            while (is_lfn_entry((uint8_t *)&entry))
+            {
+                stream_read(stream, (uint8_t *)&entry, sizeof(FAT16LongDirectoryEntry));
+                i++;
+            };
         };
     };
     return;
@@ -203,18 +238,13 @@ int fat16_resolve(ATADisk *disk)
         return -1;
     };
 
-    if (!fat16_validate_header(&fat16_header.bpb))
+    if (!fat16_validate_header(&fat16_header))
     {
         kprintf("Error: Invalid FAT16 Header.\n");
         return -1;
     };
-
-    if (!fat16_validate_ext_header(&fat16_header.ext))
-    {
-        kprintf("Error: Invalid FAT16 Extended Header.\n");
-    };
     fat16_dump_base_header(&fat16_header.bpb, "");
-    fat16_dump_ext_header(&fat16_header.ext, "");
+    fat16_dump_ebpb_header(&fat16_header.ebpb, "");
 
     const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.bpb);
     const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.bpb, partition_offset);
@@ -234,6 +264,7 @@ int fat16_resolve(ATADisk *disk)
     const uint32_t fat_table_offset = calculate_fat_table_offset(&fat16_header.bpb, partition_offset);
     const uint32_t fat_table_size_bytes = fat16_header.bpb.BPB_FATSz16 * fat16_header.bpb.BPB_BytsPerSec;
     const uint32_t fat_table_entries = fat_table_size_bytes / sizeof(uint16_t);
+
     return 0;
 };
 
