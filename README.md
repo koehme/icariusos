@@ -65,7 +65,7 @@ Before running icariusOS, ensure you have generated the FAT16 filesystem using t
 To rebuild and launch the kernel, use the following commands:
 
 ```bash
-./build.sh && qemu-system-i386 -m 256M ./disk.img
+./build.sh && qemu-system-i386 -m 256M ./ICARIUS.img
 ```
 
 # update
@@ -79,13 +79,13 @@ If you need to update the kernel, use the following command to swap the kernel.b
 After updating the kernel, run the following command to launch icariusOS with the new kernel:
 
 ```bash
-qemu-system-i386 -m 256M ./disk.img
+qemu-system-i386 -m 256M ./ICARIUS.img
 ```
 
 All-in-one for the lazy:
 
 ```bash
-./swap.sh && qemu-system-i386 -m 256M ./disk.img
+./swap.sh && qemu-system-i386 -m 256M ./ICARIUS.img
 ```
 
 # debug

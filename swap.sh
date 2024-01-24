@@ -4,7 +4,7 @@
 KERNEL_PATH="./bin/ICARIUS.BIN"
 
 LOOP1=$(sudo losetup -f)
-sudo losetup $LOOP1 ./disk.img -o 1048576
+sudo losetup $LOOP1 ./ICARIUS.img -o 1048576
 
 MNT_DIR=$(mktemp -d)
 sudo mount $LOOP1 $MNT_DIR
