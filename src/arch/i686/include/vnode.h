@@ -16,10 +16,10 @@ typedef enum VNODE_SEEK_MODE
 
 typedef enum VNODE_MODE
 {
-    VNODE_MODE_READ,
-    VNODE_MODE_WRITE,
-    VNODE_MODE_APPEND,
-    VNODE_MODE_INVALID,
+    V_READ,
+    V_WRITE,
+    V_APPEND,
+    V_INVALID,
 } VNODE_MODE;
 
 #endif

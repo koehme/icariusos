@@ -1,11 +1,12 @@
 /**
- * @file superblock.c
+ * @file vfs.c
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#include "superblock.h"
+#include "vfs.h"
 #include "fat16.h"
+#include "pparser.h"
 
 extern Superblock fat16;
 
@@ -178,4 +179,36 @@ Superblock *vfs_resolve(ATADisk *disk)
         };
     };
     return resolved_fs;
+};
+
+int vfs_fopen(const char *file_name, const VNODE_MODE mode)
+{
+    int res = 0;
+    PLexer plexer = {};
+    PParser parser = {};
+    plexer_init(&plexer, file_name);
+    PathRootNode *root_path = pparser_parse(&parser, &plexer);
+    ATADisk *disk = ata_get_disk(ATA_DISK_A);
+
+    if (!disk || !disk->fs)
+    {
+        // Handle error: Invalid disk or filesystem
+        res = -1;
+    };
+    void *internal_descriptor = disk->fs->open_cb(disk, root_path->path, mode);
+
+    FileDescriptor *ptr_fd = 0x0;
+    res = vfs_create_fd(&ptr_fd);
+
+    if (res < 0)
+    {
+        // Handle error: Invalid disk or filesystem
+        res = -2;
+    };
+    ptr_fd->disk = disk;
+    ptr_fd->fs = disk->fs;
+    ptr_fd->internal = internal_descriptor;
+    // Return index to the file descriptor table :)
+    res = ptr_fd->index;
+    return res;
 };

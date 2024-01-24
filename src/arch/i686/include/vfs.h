@@ -1,11 +1,11 @@
 /**
- * @file superblock.h
+ * @file vfs.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef SUPERBLOCK_H
-#define SUPERBLOCK_H
+#ifndef VFS_H
+#define VFS_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -69,7 +69,7 @@ typedef struct FileDescriptor
 
 void vfs_init();
 void vfs_insert(Superblock *fs);
-int vfs_fopen(const char *filename, const char *mode);
+int vfs_fopen(const char *file_name, const VNODE_MODE mode);
 Superblock *vfs_resolve(ATADisk *disk);
 
 #endif

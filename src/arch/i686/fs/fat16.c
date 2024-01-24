@@ -100,7 +100,6 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const
     uint8_t BS_FilSysType[9] = {};
     kprintf(msg);
     kprintf("----------------------------------\n");
-    kdelay(350000);
     kprintf("BS_DrvNum: 0x%x\n", ebpb->BS_DrvNum);
     kprintf("BS_Reserved1: 0x%x\n", ebpb->BS_Reserved1);
     kprintf("BS_BootSig: %d\n", ebpb->BS_BootSig);
@@ -110,6 +109,7 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const
     kprintf("BS_VolLab: %s\n", BS_VolLab);
     kprintf("BS_FilSysType: %s\n", BS_FilSysType);
     kprintf("----------------------------------\n");
+    kdelay(350000);
     return;
 };
 
@@ -117,7 +117,6 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
 {
     kprintf(msg);
     kprintf("----------------------------------\n");
-    kdelay(350000);
     kprintf("BS_jmpBoot: 0x%x 0x%x\n", bpb->BS_jmpBoot[0], bpb->BS_jmpBoot[1], bpb->BS_jmpBoot[2]);
     kprintf("BS_OEMName: %s\n", bpb->BS_OEMName);
     kprintf("BPB_BytsPerSec: %d\n", bpb->BPB_BytsPerSec);
@@ -133,12 +132,13 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
     kprintf("BPB_HiddSec: %d\n", bpb->BPB_HiddSec);
     kprintf("BPB_TotSec32: %d\n", bpb->BPB_TotSec32);
     kprintf("----------------------------------\n");
+    kdelay(350000);
     return;
 };
 
 static uint32_t calculate_root_dir_offset(const BIOSParameterBlock *bpb)
 {
-    const uint32_t root_directory_offset = bpb->BPB_BytsPerSec * (bpb->BPB_RsvdSecCnt + bpb->BPB_NumFATs * bpb->BPB_FATSz16);
+    const uint32_t root_directory_offset = bpb->BPB_BytsPerSec * (bpb->BPB_RsvdSecCnt + (bpb->BPB_NumFATs * bpb->BPB_FATSz16));
     return root_directory_offset;
 };
 
@@ -210,6 +210,7 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
             kprintf("=   Low Cluster: %d\n", entry.low_cluster);
             kprintf("=   File Size: %d Bytes\n", entry.file_size);
             kprintf("==========================\n");
+            kdelay(350000);
         };
 
         if (is_lfn_entry((uint8_t *)&entry))
@@ -268,11 +269,27 @@ int fat16_resolve(ATADisk *disk)
     return 0;
 };
 
-void *fat16_open(ATADisk *disk, PathNode *path, const VNODE_MODE mode)
+void *fat16_open(ATADisk *disk, PathNode *path, VNODE_MODE mode)
 {
-    if (mode != VNODE_MODE_READ)
+    if (mode != V_READ)
     {
         return 0x0;
     };
+    // Start from the root directory
+    // Step 1: Define a structure to hold information about the root directory entry
+    // Step 2: Read the root directory entry from the disk
+    // Step 2a: Handle error - Unable to read directory entry
+    // Step 3: Check if the entry corresponds to a file or a directory
+    // Step 3a: Handle logic for opening a directory
+    // For directories, you might perform operations like listing its contents
+    // Additional logic specific to directories can be implemented here
+    // Step 3b: Handle logic for opening a file
+    // Step 4: Allocate memory for the structure to represent the file
+    // Step 4a: Handle error - Unable to allocate memory for the file structure
+    // Step 5: Initialize the file structure with information from the directory entry
+    // Step 6: Additional logic for file opening can be added here
+    // For example, completing the cluster chain, loading additional metadata, etc.
+    // Step 7: Return the initialized file structure
+    // End of the file or directory opening logic
     return 0x0;
 };

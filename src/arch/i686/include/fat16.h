@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #include "ata.h"
-#include "superblock.h"
+#include "vfs.h"
 
 typedef struct FAT16
 {
@@ -82,6 +82,16 @@ typedef struct FAT16DirectoryEntry
     uint16_t low_cluster;       // low 16 bits of the first cluster number
     uint32_t file_size;         // size of the file in bytes
 } __attribute__((packed)) FAT16DirectoryEntry;
+
+typedef struct FAT16FileDescriptor
+{
+    FAT16DirectoryEntry *entry;     // Pointer to the directory entry of the file
+    int total;                      // Total number of sectors or clusters (depending on the implementation)
+    int sector_pos;                 // Current position of the file descriptor in the file system (sector or cluster)
+    int ending_sector_pos;          // End position of the file in the file system (sector or cluster)
+    uint32_t pos;                   // Current position within the file (in bytes)
+    FAT16FileAttributes attributes; // File attributes (e.g., READ_ONLY, DIRECTORY)
+} FAT16FileDescriptor;
 
 typedef struct FAT16LongDirectoryEntry
 {

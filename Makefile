@@ -23,7 +23,7 @@ kernel:
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/plexer.c -o ./obj/plexer.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/pparser.c -o ./obj/pparser.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/stream.c -o ./obj/stream.o
-	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/superblock.c -o ./obj/superblock.o
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/vfs.c -o ./obj/vfs.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/vnode.c -o ./obj/vnode.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/fat16.c -o ./obj/fat16.o
 
@@ -39,5 +39,5 @@ kernel:
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/string/string.c -o ./obj/string.o
 
 image:
-	i686-elf-ld -n -T ./linker.ld ./obj/multiboot.o ./obj/loader.o ./obj/kernel.o ./obj/ata.o ./obj/cmos.o ./obj/cursor.o ./obj/keyboard.o ./obj/timer.o ./obj/vga.o ./obj/plexer.o ./obj/pparser.o ./obj/stream.o ./obj/idt.o ./obj/idt.asm.o ./obj/io.asm.o ./obj/heap.o ./obj/mem.o ./obj/page.o ./obj/page.asm.o ./obj/string.o ./obj/superblock.o ./obj/vnode.o ./obj/fat16.o -o ./bin/ICARIUS.BIN
+	i686-elf-ld -n -T ./linker.ld ./obj/multiboot.o ./obj/loader.o ./obj/kernel.o ./obj/ata.o ./obj/cmos.o ./obj/cursor.o ./obj/keyboard.o ./obj/timer.o ./obj/vga.o ./obj/plexer.o ./obj/pparser.o ./obj/stream.o ./obj/idt.o ./obj/idt.asm.o ./obj/io.asm.o ./obj/heap.o ./obj/mem.o ./obj/page.o ./obj/page.asm.o ./obj/string.o ./obj/vfs.o ./obj/vnode.o ./obj/fat16.o -o ./bin/ICARIUS.BIN
 	cp ./bin/ICARIUS.BIN ./iso/boot/ICARIUS.BIN

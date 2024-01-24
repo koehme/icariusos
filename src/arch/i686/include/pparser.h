@@ -10,12 +10,6 @@
 #include <stdbool.h>
 #include "plexer.h"
 
-typedef enum PParserLimits
-{
-    MAX_NAME_LENGTH = 8,
-    MAX_DRIVE_LENGTH = 2,
-} PParserLimits;
-
 typedef struct PParser
 {
     PathToken curr;
@@ -25,13 +19,13 @@ typedef struct PParser
 
 typedef struct PathNode
 {
-    char identifier[MAX_NAME_LENGTH];
+    char identifier[8];
     struct PathNode *next;
 } PathNode;
 
 typedef struct PathRootNode
 {
-    char drive[MAX_DRIVE_LENGTH];
+    char drive[2];
     PathNode *path;
 } PathRootNode;
 
