@@ -19,8 +19,6 @@ ATADisk ata_disk = {
     .fs = 0x0,
 };
 
-static uint32_t ata_timeout = 100000;
-
 /**
  * @brief Initializes the specified ATADisk instance by setting its
  * disk type to ATA_DISK_A, sector size to 512 bytes, and clearing its buffer.
