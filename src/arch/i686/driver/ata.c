@@ -55,7 +55,7 @@ static int ata_read_sector(uint32_t lba, const size_t n_sectors)
         asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
         asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
         asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
-        uint8_t status;
+        uint8_t status = asm_inb(ATA_COMMAND_PORT);
 
         do
         {
@@ -69,7 +69,7 @@ static int ata_read_sector(uint32_t lba, const size_t n_sectors)
 
         if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
         {
-            kprintf("ATA: Drive error\n");
+            kprintf("ATA: Read Error on LBA %u\n", lba);
             return -EIO;
         };
         lba++;

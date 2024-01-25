@@ -190,7 +190,7 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
             FAT16TimeInfo mod_time = fat16_convert_time(entry.modification_time);
             FAT16DateInfo mod_date = fat16_convert_date(entry.modification_date);
 
-            kdelay(500000);
+            // kdelay(500000);
             kprintf("==========================\n");
             kprintf("=   RootDirEntry %d:\n", i);
             kprintf("==========================\n");
@@ -238,9 +238,9 @@ int fat16_resolve(ATADisk *disk)
         return -1;
     };
     fat16_dump_base_header(&fat16_header.bpb, "");
-    kdelay(500000);
+    // kdelay(500000);
     fat16_dump_ebpb_header(&fat16_header.ebpb, "");
-    kdelay(500000);
+    // kdelay(500000);
 
     const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.bpb);
     const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.bpb, partition_offset);
