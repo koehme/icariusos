@@ -79,13 +79,13 @@ If you need to update the kernel, use the following command to swap the ICARIUS.
 After updating the kernel, run the following command to launch icariusOS with the new kernel:
 
 ```bash
-qemu-system-i386 -m 256M ./ICARIUS.img
+qemu-system-i386 -m 256M -drive format=raw,file=./ICARIUS.img
 ```
 
 All-in-one for the lazy:
 
 ```bash
-./swap.sh && qemu-system-i386 -m 256M ./ICARIUS.img
+./swap.sh && qemu-system-i386 -m 256M -drive format=raw,file=./ICARIUS.img
 ```
 
 # debug

@@ -1,7 +1,6 @@
 bin/
 obj/
 elf/
-disk.img
-iso/boot/kernel.bin
 *.BIN
 *.img
+ICARIUS.img
