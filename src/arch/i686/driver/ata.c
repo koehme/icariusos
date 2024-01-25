@@ -121,6 +121,5 @@ int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks)
     {
         return -EIO;
     };
-    int res = ata_read_sector(start_block, n_blocks);
-    return res;
+    return ata_read_sector(start_block, n_blocks);
 };
