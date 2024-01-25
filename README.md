@@ -70,7 +70,7 @@ To rebuild and launch the kernel, use the following commands:
 
 # update
 
-If you need to update the kernel, use the following command to swap the kernel.bin file in the FAT16 filesystem:
+If you need to update the kernel, use the following command to swap the ICARIUS.BIN file in the FAT16 filesystem:
 
 ```bash
 ./swap.sh 
