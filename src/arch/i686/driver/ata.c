@@ -45,45 +45,8 @@ void ata_search_fs(ATADisk *self)
     return;
 };
 
-static int ata_wait(void)
+static int ata_read_sector(uint32_t lba, const size_t n_sectors)
 {
-    uint8_t status;
-
-    do
-    {
-        status = asm_inb(ATA_COMMAND_PORT);
-    } while ((status & 0x80) || !(status & 0x08));
-    return 0;
-};
-
-/**
- * @brief Reads data from an ATA disk into the specified buffer.
- * Initiates a read operation on the ATA disk by configuring
- * the necessary parameters such as the Logical Block Address (LBA), the number
- * of sectors to read, and the drive selection. The data is then read into
- * the provided buffer using ATA commands.
- * @param lba The Logical Block Address (LBA) specifying the starting sector to read from.
- * @param n_sectors The number of sectors to read from the ATA disk.
- */
-static int ata_read_sector(const uint32_t lba, const size_t n_sectors)
-{
-    // Select master drive and pass part of the lba
-    asm_outb(ATA_CONTROL_PORT, (lba >> 24) | ATA_DRIVE_MASTER);
-    // Send the total number of sectors we want to read
-    asm_outb(ATA_SECTOR_COUNT_PORT, n_sectors);
-    // Send more of the LBA
-    asm_outb(ATA_LBA_LOW_PORT, lba & 0b11111111);
-    asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0b11111111);
-    asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0b11111111);
-    // Send read command to ATA_COMMAND_PORT
-    asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
-    return 0;
-};
-
-static int ata_read_sector_synch(uint32_t lba, const size_t n_sectors)
-{
-    uint8_t *buf = ata_disk.buffer;
-
     for (size_t i = 0; i < n_sectors; ++i)
     {
         asm_outb(ATA_CONTROL_PORT, (lba >> 24) | ATA_DRIVE_MASTER);
@@ -92,22 +55,23 @@ static int ata_read_sector_synch(uint32_t lba, const size_t n_sectors)
         asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
         asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
         asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
-        uint8_t c;
+        uint8_t status;
 
         do
         {
-            c = asm_inb(ATA_COMMAND_PORT);
+            status = asm_inb(ATA_COMMAND_PORT);
 
-            if ((c & ATA_STATUS_ERR) || (c & ATA_STATUS_DF))
+            if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
+            {
                 break;
-        } while ((c & ATA_STATUS_BSY) && !(c & ATA_STATUS_DRQ));
+            };
+        } while ((status & ATA_STATUS_BSY) && !(status & ATA_STATUS_DRQ));
 
-        if ((c & ATA_STATUS_ERR) || (c & ATA_STATUS_DF))
+        if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
         {
             kprintf("ATA: Drive error\n");
-            return -1;
+            return -EIO;
         };
-        buf += 512;
         lba++;
     };
     return 0;
@@ -149,26 +113,16 @@ ATADisk *ata_get_disk(const ATADiskType disk_type)
  * @param start_block The starting block (Logical Block Address) from which to read.
  * @param buffer A pointer to the buffer where the read data will be stored.
  * @param n_blocks The number of blocks (sectors) to read from the ATA disk.
- * @param synch If true, performs a synchronous read operation; if false, performs an asynchronous read operation.
  * @return
  *    - Returns 0 if the read operation is successful.
  *    - Returns -1 if the self parameter is NULL, indicating an invalid ATADisk instance.
  */
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool synch)
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks)
 {
     if (!self)
     {
-        return -1;
+        return -EIO;
     };
-    int res = -1;
-
-    if (synch)
-    {
-        res = ata_read_sector_synch(start_block, n_blocks);
-    }
-    else
-    {
-        res = ata_read_sector(start_block, n_blocks);
-    };
+    int res = ata_read_sector(start_block, n_blocks);
     return res;
 };

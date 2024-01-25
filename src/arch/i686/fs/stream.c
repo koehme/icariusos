@@ -29,7 +29,7 @@ int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes)
     {
         const size_t lba_block = self->pos / block_size;
         const size_t offset = self->pos % block_size;
-        ata_status = ata_read(self->disk, lba_block, 1, true);
+        ata_status = ata_read(self->disk, lba_block, 1);
 
         if (ata_status < 0)
         {

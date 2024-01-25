@@ -60,12 +60,12 @@ typedef struct ATADisk
     ATADiskType disk_type; // Type of the ATA Disk
     int sector_size;       // Size of each sector in bytes
     uint8_t buffer[512];   // Data buffer for temporary storage
-    Superblock *fs;
+    Superblock *fs;        // Filesystem mapped to the disk
 } ATADisk;
 
 void ata_init(ATADisk *self);
 void ata_search_fs(ATADisk *self);
 ATADisk *ata_get_disk(const ATADiskType disk_type);
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks, const bool sync);
+int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks);
 
 #endif
