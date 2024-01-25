@@ -10,8 +10,10 @@
 // Essential error codes in the os
 typedef enum StatusCodes
 {
-    EIO = 5,     // I/O error
-    ENOMEM = 12, // Insufficient memory
+    ENOENT = 0x02, // No such file or directory
+    EIO = 0x05,    // I/O error
+    ENOMEM = 0x0C, // Not enough core
+    EINVAL = 0x16, // Invalid argument
 } StatusCodes;
 
 #endif

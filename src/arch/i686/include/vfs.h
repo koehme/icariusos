@@ -10,18 +10,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "pparser.h"
+#include "pathparser.h"
 #include "vnode.h"
 #include "kernel.h"
 
 typedef struct ATADisk ATADisk;
-
-typedef enum VFSLimits
-{
-    MAX_FS = 8,
-    MAX_FILE_DESCRIPTORS = 512,
-    MAX_FS_NAME_LENGTH = 10,
-} VFSLimits;
 
 /**
  * @brief Function pointer for resolving operations in the file system.
@@ -52,7 +45,7 @@ typedef struct Superblock
 {
     ResolveFunction resolve_cb;
     OpenFunction open_cb;
-    char name[MAX_FS_NAME_LENGTH];
+    char name[10];
 } Superblock;
 
 /**

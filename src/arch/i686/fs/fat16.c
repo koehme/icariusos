@@ -55,7 +55,8 @@ FAT16DateInfo fat16_convert_date(uint16_t date)
     FAT16DateInfo date_info;
     date_info.day = date & 0x1F;
     date_info.month = (date >> 5) & 0x0F;
-    date_info.year = ((date >> 9) & 0x7F) + 1980;
+    uint16_t original_year = (date >> 9) & 0x7F;
+    date_info.year = (original_year == 0) ? 0 : (original_year + 1980);
     return date_info;
 };
 
@@ -109,7 +110,6 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const
     kprintf("BS_VolLab: %s\n", BS_VolLab);
     kprintf("BS_FilSysType: %s\n", BS_FilSysType);
     kprintf("----------------------------------\n");
-    kdelay(350000);
     return;
 };
 
@@ -132,7 +132,6 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
     kprintf("BPB_HiddSec: %d\n", bpb->BPB_HiddSec);
     kprintf("BPB_TotSec32: %d\n", bpb->BPB_TotSec32);
     kprintf("----------------------------------\n");
-    kdelay(350000);
     return;
 };
 
@@ -183,11 +182,6 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
         FAT16DirectoryEntry entry = {};
         stream_read(stream, (uint8_t *)&entry, sizeof(FAT16DirectoryEntry));
 
-        if (entry.file_size == 0)
-        {
-            continue;
-        };
-
         if (is_sfn_entry((uint8_t *)&entry))
         {
             FAT16TimeInfo create_time = fat16_convert_time(entry.create_time);
@@ -210,17 +204,16 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
             kprintf("=   Low Cluster: %d\n", entry.low_cluster);
             kprintf("=   File Size: %d Bytes\n", entry.file_size);
             kprintf("==========================\n");
-            kdelay(350000);
-        };
-
-        if (is_lfn_entry((uint8_t *)&entry))
+            // kdelay(500000);
+        }
+        else
         {
             while (is_lfn_entry((uint8_t *)&entry))
             {
                 stream_read(stream, (uint8_t *)&entry, sizeof(FAT16LongDirectoryEntry));
                 i++;
             };
-        };
+        }
     };
     return;
 };

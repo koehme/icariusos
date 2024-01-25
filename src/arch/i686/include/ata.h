@@ -35,6 +35,7 @@ typedef enum ATAStatus
 {
     ATA_STATUS_BSY = 7,
     ATA_STATUS_DRQ = 3, // Data Request Bit
+    ATA_STATUS_DF = 5,
     ATA_STATUS_ERR = 0, // Error Bit
 } ATAStatus;
 
@@ -48,6 +49,7 @@ typedef enum ATAPorts
     ATA_LBA_HIGH_PORT = 0x1f5,
     ATA_CONTROL_PORT = 0x1f6,
     ATA_COMMAND_PORT = 0x1f7,
+    ATA_STATUS_REGISTER = 0x1f7,
 } ATAPorts;
 
 /**

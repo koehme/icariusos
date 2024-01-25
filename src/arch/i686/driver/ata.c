@@ -19,6 +19,8 @@ ATADisk ata_disk = {
     .fs = 0x0,
 };
 
+static uint32_t ata_timeout = 100000;
+
 /**
  * @brief Initializes the specified ATADisk instance by setting its
  * disk type to ATA_DISK_A, sector size to 512 bytes, and clearing its buffer.
@@ -30,6 +32,10 @@ void ata_init(ATADisk *self)
     self->disk_type = ATA_DISK_A;
     self->sector_size = ATA_SECTOR_SIZE;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
+
+    while ((asm_inb(ATA_STATUS_REGISTER) & 0x80) != 0)
+    {
+    };
     return;
 };
 
@@ -74,12 +80,35 @@ static int ata_read_sector(const uint32_t lba, const size_t n_sectors)
     return 0;
 };
 
-static int ata_read_sector_synch(const uint32_t lba, const size_t n_sectors)
+static int ata_read_sector_synch(uint32_t lba, const size_t n_sectors)
 {
-    ata_read_sector(lba, n_sectors);
+    uint8_t *buf = ata_disk.buffer;
 
-    while (ata_wait() != 0)
+    for (size_t i = 0; i < n_sectors; ++i)
     {
+        asm_outb(ATA_CONTROL_PORT, (lba >> 24) | ATA_DRIVE_MASTER);
+        asm_outb(ATA_SECTOR_COUNT_PORT, 1);
+        asm_outb(ATA_LBA_LOW_PORT, lba & 0xFF);
+        asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
+        asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
+        asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
+        uint8_t c;
+
+        do
+        {
+            c = asm_inb(ATA_COMMAND_PORT);
+
+            if ((c & ATA_STATUS_ERR) || (c & ATA_STATUS_DF))
+                break;
+        } while ((c & ATA_STATUS_BSY) && !(c & ATA_STATUS_DRQ));
+
+        if ((c & ATA_STATUS_ERR) || (c & ATA_STATUS_DF))
+        {
+            kprintf("ATA: Drive error\n");
+            return -1;
+        };
+        buf += 512;
+        lba++;
     };
     return 0;
 };

@@ -10,8 +10,6 @@ extern VGADisplay vga_display;
 extern HeapDescriptor kheap_descriptor;
 extern Heap kheap;
 extern PageDirectory kpage_dir;
-extern PLexer plexer;
-extern PParser pparser;
 extern Keyboard keyboard;
 extern Timer timer;
 extern CMOS cmos;

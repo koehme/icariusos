@@ -7,7 +7,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define DEBUG_THROTTLE 100
+#define DEBUG_THROTTLE 0
 
 #include <stddef.h>
 
@@ -23,8 +23,6 @@
 #include "keyboard.h"
 #include "ata.h"
 #include "status.h"
-#include "plexer.h"
-#include "pparser.h"
 #include "string.h"
 #include "timer.h"
 #include "stream.h"

@@ -6,17 +6,17 @@
 
 #include "vfs.h"
 #include "fat16.h"
-#include "pparser.h"
+#include "pathparser.h"
 
 extern Superblock fat16;
 
 /**
- * @brief Array of Superblocks representing filesystems in the Virtual File System (VFS).
+ * @brief Array of Superblocks representing vfs_superblocks in the Virtual File System (VFS).
  * This static array serves as a container for Superblock pointers, each representing a
  * filesystem within the Virtual File System (VFS). The array allows the system to manage
- * and access different filesystems.
+ * and access different vfs_superblocks.
  */
-static Superblock *filesystems[8] = {
+static Superblock *vfs_superblocks[8] = {
     0x0,
     0x0,
     0x0,
@@ -43,8 +43,8 @@ static FileDescriptor *file_descriptors[512] = {};
  */
 void vfs_init(void)
 {
-    mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * MAX_FILE_DESCRIPTORS);
-    mset8(filesystems, 0x0, sizeof(Superblock) * MAX_FS);
+    mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * 512);
+    mset8(vfs_superblocks, 0x0, sizeof(Superblock) * 8);
     vfs_insert(fat16_init());
     return;
 };
@@ -59,9 +59,9 @@ static Superblock **vfs_get_free_fs_slot(void)
 
     for (; i < 8; i++)
     {
-        if (filesystems[i] == 0x0)
+        if (vfs_superblocks[i] == 0x0)
         {
-            return &filesystems[i];
+            return &vfs_superblocks[i];
         };
     };
     return 0x0;
@@ -70,7 +70,7 @@ static Superblock **vfs_get_free_fs_slot(void)
  * @brief Inserts a filesystem into the Virtual File System (VFS) layer.
  * Responsible for adding a filesystem represented by the provided
  * Superblock to the VFS layer. The primary purpose is to manage and organize various
- * filesystems in a unified manner.
+ * vfs_superblocks in a unified manner.
  * @param fs A pointer to the Superblock structure representing the filesystem to be inserted.
  * @note The function ensures that a valid filesystem is provided and that there is an
  * available slot in the VFS for insertion. If any of these conditions are not met,
@@ -142,7 +142,7 @@ static int vfs_create_fd(FileDescriptor **ptr)
  */
 static FileDescriptor *vfs_get_fd(const int fd_index)
 {
-    if (fd_index <= 0 || fd_index >= MAX_FILE_DESCRIPTORS)
+    if (fd_index <= 0 || fd_index >= 512)
     {
         return 0x0;
     };
@@ -160,55 +160,57 @@ static FileDescriptor *vfs_get_fd(const int fd_index)
  */
 Superblock *vfs_resolve(ATADisk *disk)
 {
-    Superblock *resolved_fs = 0x0;
+    Superblock *superblock = 0x0;
 
     if (!disk)
     {
-        return resolved_fs;
+        return superblock;
     };
 
-    for (int i = 0; i < MAX_FS; i++)
+    for (int i = 0; i < 8; i++)
     {
-        Superblock *curr_fs = filesystems[i];
-        const bool has_fsheader = curr_fs != 0x0 && curr_fs->resolve_cb(disk) == 0;
+        const bool has_header = vfs_superblocks[i] != 0x0 && vfs_superblocks[i]->resolve_cb(disk) == 0;
 
-        if (has_fsheader)
+        if (has_header)
         {
-            resolved_fs = curr_fs;
+            superblock = vfs_superblocks[i];
             break;
         };
     };
-    return resolved_fs;
+    return superblock;
 };
 
 int vfs_fopen(const char *file_name, const VNODE_MODE mode)
 {
     int res = 0;
-    PLexer plexer = {};
-    PParser parser = {};
-    plexer_init(&plexer, file_name);
-    PathRootNode *root_path = pparser_parse(&parser, &plexer);
+
+    if (mode != V_READ)
+    {
+        res = -EINVAL;
+        return res;
+    };
+    PathParser path_parser = {};
+    PathRootNode *root_path = path_parser_parse(&path_parser, file_name);
     ATADisk *disk = ata_get_disk(ATA_DISK_A);
 
     if (!disk || !disk->fs)
     {
-        // Handle error: Invalid disk or filesystem
-        res = -1;
+        res = -EIO;
+        return res;
     };
     void *internal_descriptor = disk->fs->open_cb(disk, root_path->path, mode);
 
-    FileDescriptor *ptr_fd = 0x0;
-    res = vfs_create_fd(&ptr_fd);
+    FileDescriptor *fd = 0x0;
+    res = vfs_create_fd(&fd);
 
     if (res < 0)
     {
-        // Handle error: Invalid disk or filesystem
-        res = -2;
+        res = -ENOMEM;
+        return res;
     };
-    ptr_fd->disk = disk;
-    ptr_fd->fs = disk->fs;
-    ptr_fd->internal = internal_descriptor;
-    // Return index to the file descriptor table :)
-    res = ptr_fd->index;
+    fd->disk = disk;
+    fd->fs = disk->fs;
+    fd->internal = internal_descriptor;
+    res = fd->index;
     return res;
 };
