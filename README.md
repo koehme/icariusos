@@ -65,7 +65,7 @@ Before running icariusOS, ensure you have generated the FAT16 filesystem using t
 To rebuild and launch the kernel, use the following commands:
 
 ```bash
-./build.sh && qemu-system-i386 -m 256M ./ICARIUS.img
+./build.sh && qemu-system-i386 -m 256M -drive format=raw,file=./ICARIUS.img
 ```
 
 # update

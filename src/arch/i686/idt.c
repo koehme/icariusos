@@ -95,21 +95,9 @@ void pic_send_eoi(void)
 
 /**
  * @brief IRQ 14 (IDE ATA disk) interrupt handler.
- * Handler for IRQ 14 interrupts, which are associated
- * with IDE ATA disk operations. It reads data from the ATA disk into a buffer
- * and prints a success message.
  */
 void irq_14h_handler(void)
 {
-    ATADisk *ptr_ata_disk = &ata_disk;
-    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
-
-    for (size_t i = 0; i < ptr_ata_disk->sector_size / 2; ++i)
-    {
-        // Copy from disk into buffer
-        *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
-        ptr_ata_buffer++;
-    };
     pic_send_eoi();
     return;
 };

@@ -43,34 +43,43 @@ void ata_search_fs(ATADisk *self)
     return;
 };
 
-static int ata_read_sector(uint32_t lba, const size_t n_sectors)
+static int ata_read_synchronous(uint32_t lba, const uint8_t sectors)
 {
-    for (size_t i = 0; i < n_sectors; ++i)
+    ATADisk *ptr_ata_disk = &ata_disk;
+    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)ptr_ata_disk->buffer;
+
+    asm_outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
+    asm_outb(ATA_PRIMARY_ERROR, 0x00);
+    asm_outb(ATA_SECTOR_COUNT_PORT, sectors);
+    asm_outb(ATA_LBA_LOW_PORT, lba & 0xFF);
+    asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
+    asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
+    asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
+
+    for (size_t i = 0; i < sectors; ++i)
     {
-        asm_outb(ATA_CONTROL_PORT, (lba >> 24) | ATA_DRIVE_MASTER);
-        asm_outb(ATA_SECTOR_COUNT_PORT, 1);
-        asm_outb(ATA_LBA_LOW_PORT, lba & 0xFF);
-        asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
-        asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
-        asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
-        uint8_t status = asm_inb(ATA_COMMAND_PORT);
-
-        do
+        for (;;)
         {
-            status = asm_inb(ATA_COMMAND_PORT);
+            const uint8_t status = asm_inb(ATA_COMMAND_PORT);
 
-            if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
+            if (status & ATA_STATUS_DRQ)
             {
                 break;
             };
-        } while ((status & ATA_STATUS_BSY) && !(status & ATA_STATUS_DRQ));
 
-        if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
-        {
-            kprintf("ATA: Read Error on LBA %u\n", lba);
-            return -EIO;
+            if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
+            {
+                kprintf("ATA: Read Error on LBA %u\n", lba);
+                return -EIO;
+            };
         };
-        lba++;
+
+        for (size_t j = 0; j < ptr_ata_disk->sector_size / 2; j++)
+        {
+            // Copy from disk into buffer
+            *ptr_ata_buffer = asm_inw(ATA_DATA_PORT);
+            ptr_ata_buffer++;
+        };
     };
     return 0;
 };
@@ -121,5 +130,5 @@ int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks)
     {
         return -EIO;
     };
-    return ata_read_sector(start_block, n_blocks);
+    return ata_read_synchronous(start_block, n_blocks);
 };

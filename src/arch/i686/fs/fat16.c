@@ -8,6 +8,8 @@
 #include "stream.h"
 #include "mem.h"
 
+#define FAT16_DEBUG_DELAY 0
+
 Superblock fat16 = {
     .resolve_cb = 0x0,
     .open_cb = 0x0,
@@ -41,7 +43,7 @@ FAT16InternalHeader fat16_header = {
     },
 };
 
-FAT16TimeInfo fat16_convert_time(uint16_t time)
+static FAT16TimeInfo fat16_convert_time(uint16_t time)
 {
     FAT16TimeInfo time_info;
     time_info.second = (time & 0x1F) * 2;
@@ -50,7 +52,7 @@ FAT16TimeInfo fat16_convert_time(uint16_t time)
     return time_info;
 };
 
-FAT16DateInfo fat16_convert_date(uint16_t date)
+static FAT16DateInfo fat16_convert_date(uint16_t date)
 {
     FAT16DateInfo date_info;
     date_info.day = date & 0x1F;
@@ -67,7 +69,7 @@ Superblock *fat16_init(void)
     return &fat16;
 };
 
-bool fat16_validate_header(const FAT16InternalHeader *header)
+static bool fat16_validate_header(const FAT16InternalHeader *header)
 {
     const bool has_signature = (header->bpb.BS_jmpBoot[0] == 0xEB && header->bpb.BS_jmpBoot[2] == 0x90);
     const bool has_header = has_signature &&
@@ -95,7 +97,7 @@ bool fat16_validate_header(const FAT16InternalHeader *header)
     return true;
 };
 
-static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const char *msg)
+static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const char *msg, const int delay)
 {
     uint8_t BS_VolLab[12] = {};
     uint8_t BS_FilSysType[9] = {};
@@ -110,10 +112,11 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const
     kprintf("BS_VolLab: %s\n", BS_VolLab);
     kprintf("BS_FilSysType: %s\n", BS_FilSysType);
     kprintf("----------------------------------\n");
+    kdelay(delay);
     return;
 };
 
-static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *msg)
+static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *msg, const int delay)
 {
     kprintf(msg);
     kprintf("----------------------------------\n");
@@ -132,6 +135,7 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
     kprintf("BPB_HiddSec: %d\n", bpb->BPB_HiddSec);
     kprintf("BPB_TotSec32: %d\n", bpb->BPB_TotSec32);
     kprintf("----------------------------------\n");
+    kdelay(delay);
     return;
 };
 
@@ -148,28 +152,75 @@ static uint32_t calculate_root_dir_absolute(const BIOSParameterBlock *bpb, const
     return root_directory_absolute;
 };
 
-uint32_t calculate_fat_table_offset(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
+static uint32_t calculate_fat_table_offset(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
 {
     const uint32_t fat_table_offset = partition_offset + bpb->BPB_RsvdSecCnt * bpb->BPB_BytsPerSec;
     return fat_table_offset;
 };
 
-int is_lfn_entry(uint8_t *entry)
+static bool is_lfn_entry(uint8_t *entry)
 {
-    if (entry[11] == LFN)
-    {
-        return 1;
-    };
-    return 0;
+    return entry[11] == LFN;
 };
 
-int is_sfn_entry(uint8_t *entry)
+static uint8_t extract_lsb(uint16_t value)
 {
-    if (entry[11] != LFN && entry[0] != DELETED)
+    return ((uint8_t)value & 0x00FF);
+};
+
+static void print_fat16_lfn_entry(int i, FAT16LongDirectoryEntry *lfn_entry, const int delay)
+{
+    kprintf("==========================\n");
+    kprintf("=   LFN Entry %d:\n", i);
+    kprintf("==========================\n");
+
+    for (int j = 0; j < 5; j++)
     {
-        return 1;
+        kprintf("%c", extract_lsb(lfn_entry->ldir_name1[j]));
     };
-    return 0;
+    for (int j = 0; j < 6; j++)
+    {
+        kprintf("%c", extract_lsb(lfn_entry->ldir_name2[j]));
+    };
+    for (int j = 0; j < 2; j++)
+    {
+        kprintf("%c", extract_lsb(lfn_entry->ldir_name3[j]));
+    };
+    kprintf("\n");
+    kprintf("=   Attributes: 0x%x\n", lfn_entry->ldir_attr);
+    kprintf("=   Type: 0x%x\n", lfn_entry->ldir_type);
+    kprintf("=   Checksum: 0x%x\n", lfn_entry->ldir_chksum);
+    kprintf("=   First Cluster Low: %d\n", lfn_entry->ldir_fstcluslo);
+    kprintf("==========================\n");
+    kdelay(delay);
+    return;
+};
+
+static void print_fat16_dir_entry(int i, FAT16DirectoryEntry *entry, const int delay)
+{
+    FAT16TimeInfo create_time = fat16_convert_time(entry->create_time);
+    FAT16DateInfo create_date = fat16_convert_date(entry->create_date);
+    FAT16DateInfo last_access_date = fat16_convert_date(entry->last_access_date);
+    FAT16TimeInfo mod_time = fat16_convert_time(entry->modification_time);
+    FAT16DateInfo mod_date = fat16_convert_date(entry->modification_date);
+
+    kprintf("==========================\n");
+    kprintf("=   RootDirEntry %d:\n", i);
+    kprintf("==========================\n");
+    kprintf("=   Filename: %s\n", entry->file_name);
+    kprintf("=   Attributes: 0x%x\n", entry->attributes);
+    kprintf("=   Creation Time: %d:%d:%d\n", create_time.hour, create_time.minute, create_time.second);
+    kprintf("=   Creation Date: %d.%d.%d\n", create_date.day, create_date.month, create_date.year);
+    kprintf("=   Last Access Date: %d.%d.%d\n", last_access_date.day, last_access_date.month, last_access_date.year);
+    kprintf("=   High Cluster: %d\n", entry->high_cluster);
+    kprintf("=   Modification Time: %d:%d:%d\n", mod_time.hour, mod_time.minute, mod_time.second);
+    kprintf("=   Modification Date: %d.%d.%d\n", mod_date.day, mod_date.month, mod_date.year);
+    kprintf("=   Low Cluster: %d\n", entry->low_cluster);
+    kprintf("=   File Size: %d Bytes\n", entry->file_size);
+    kprintf("==========================\n");
+
+    kdelay(delay);
+    return;
 };
 
 static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *stream)
@@ -182,38 +233,14 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
         FAT16DirectoryEntry entry = {};
         stream_read(stream, (uint8_t *)&entry, sizeof(FAT16DirectoryEntry));
 
-        if (is_sfn_entry((uint8_t *)&entry))
+        if (is_lfn_entry((uint8_t *)&entry))
         {
-            FAT16TimeInfo create_time = fat16_convert_time(entry.create_time);
-            FAT16DateInfo create_date = fat16_convert_date(entry.create_date);
-            FAT16DateInfo last_access_date = fat16_convert_date(entry.last_access_date);
-            FAT16TimeInfo mod_time = fat16_convert_time(entry.modification_time);
-            FAT16DateInfo mod_date = fat16_convert_date(entry.modification_date);
-
-            // kdelay(500000);
-            kprintf("==========================\n");
-            kprintf("=   RootDirEntry %d:\n", i);
-            kprintf("==========================\n");
-            kprintf("=   Filename: %s\n", entry.file_name);
-            kprintf("=   Attributes: 0x%x\n", entry.attributes);
-            kprintf("=   Creation Time: %d:%d:%d\n", create_time.hour, create_time.minute, create_time.second);
-            kprintf("=   Creation Date: %d.%d.%d\n", create_date.day, create_date.month, create_date.year);
-            kprintf("=   Last Access Date: %d.%d.%d\n", last_access_date.day, last_access_date.month, last_access_date.year);
-            kprintf("=   High Cluster: %d\n", entry.high_cluster);
-            kprintf("=   Modification Time: %d:%d:%d\n", mod_time.hour, mod_time.minute, mod_time.second);
-            kprintf("=   Modification Date: %d.%d.%d\n", mod_date.day, mod_date.month, mod_date.year);
-            kprintf("=   Low Cluster: %d\n", entry.low_cluster);
-            kprintf("=   File Size: %d Bytes\n", entry.file_size);
-            kprintf("==========================\n");
+            print_fat16_lfn_entry(i, (FAT16LongDirectoryEntry *)&entry, FAT16_DEBUG_DELAY);
         }
         else
         {
-            while (is_lfn_entry((uint8_t *)&entry))
-            {
-                stream_read(stream, (uint8_t *)&entry, sizeof(FAT16LongDirectoryEntry));
-                i++;
-            };
-        }
+            print_fat16_dir_entry(i, &entry, FAT16_DEBUG_DELAY);
+        };
     };
     return;
 };
@@ -229,19 +256,14 @@ int fat16_resolve(ATADisk *disk)
     if (res != 0)
     {
         kprintf("Error: Failed to read FAT16 Header.\n");
-        return -1;
+        return -EIO;
     };
 
     if (!fat16_validate_header(&fat16_header))
     {
         kprintf("Error: Invalid FAT16 Header.\n");
-        return -1;
+        return -EIO;
     };
-    fat16_dump_base_header(&fat16_header.bpb, "");
-    // kdelay(500000);
-    fat16_dump_ebpb_header(&fat16_header.ebpb, "");
-    // kdelay(500000);
-
     const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.bpb);
     const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.bpb, partition_offset);
     const uint32_t root_dir_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
@@ -251,6 +273,9 @@ int fat16_resolve(ATADisk *disk)
     kprintf("Root Directory Absolute: 0x%x\n", root_dir_absolute);
     kprintf("Root Directory Size: %d\n", root_dir_size);
     kprintf("Root Directory Entries: %d\n", root_dir_entries);
+
+    fat16_dump_base_header(&fat16_header.bpb, "", 0);
+    fat16_dump_ebpb_header(&fat16_header.ebpb, "", 0);
 
     Stream root_dir = {};
     stream_init(&root_dir, disk);

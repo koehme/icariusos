@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dd if=/dev/zero of=ICARIUS.img bs=512 count=131072
+dd if=/dev/zero of=ICARIUS.img bs=512 count=524288
 
 sfdisk ICARIUS.img << EOF
 label: dos
@@ -8,7 +8,7 @@ label-id: 0x513f54a3
 device: ICARIUS.img 
 unit: sectors
 sector-size: 512
-ICARIUS.img1 : start=2048, size=129024, type=06, bootable
+ICARIUS.img1 : start=2048, size=393216, type=06, bootable
 EOF
 
 LOOP0=`sudo losetup -f`
