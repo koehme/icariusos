@@ -5,3 +5,4 @@ elf/
 *.img
 ICARIUS.BIN
 ICARIUS.img
+iso/boot/ICARIUS.BIN
