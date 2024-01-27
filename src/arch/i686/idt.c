@@ -14,7 +14,7 @@
 #include "kernel.h"
 #include "ata.h"
 
-extern ATADisk ata_disk;
+extern ATADev ata_dev_0;
 extern Timer timer;
 extern Keyboard keyboard;
 

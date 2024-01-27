@@ -155,21 +155,21 @@ static FileDescriptor *vfs_get_fd(const int fd_index)
  * Iiterates through a list of Superblocks to find the one that matches
  * the filesystem on the provided ATADisk. It uses the resolve_cb function of each Superblock
  * to determine if there is a match.
- * @param disk Pointer to the ATADisk for which to resolve the Superblock.
+ * @param dev Pointer to the ATADev for which to resolve the Superblock.
  * @return Pointer to the resolved Superblock, or 0x0 if the disk parameter is 0x0 or no matching Superblock is found.
  */
-Superblock *vfs_resolve(ATADisk *disk)
+Superblock *vfs_resolve(ATADev *dev)
 {
     Superblock *superblock = 0x0;
 
-    if (!disk)
+    if (!dev)
     {
         return superblock;
     };
 
     for (int i = 0; i < 8; i++)
     {
-        const bool has_header = vfs_superblocks[i] != 0x0 && vfs_superblocks[i]->resolve_cb(disk) == 0;
+        const bool has_header = vfs_superblocks[i] != 0x0 && vfs_superblocks[i]->resolve_cb(dev) == 0;
 
         if (has_header)
         {
@@ -191,14 +191,14 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
     };
     PathParser path_parser = {};
     PathRootNode *root_path = path_parser_parse(&path_parser, file_name);
-    ATADisk *disk = ata_get_disk(ATA_DISK_A);
+    ATADev *dev = ata_get(ATA_DEV_0);
 
-    if (!disk || !disk->fs)
+    if (!dev || !dev->fs)
     {
         res = -EIO;
         return res;
     };
-    void *internal_descriptor = disk->fs->open_cb(disk, root_path->path, mode);
+    void *internal_descriptor = dev->fs->open_cb(dev, root_path->path, mode);
 
     FileDescriptor *fd = 0x0;
     res = vfs_create_fd(&fd);
@@ -208,8 +208,8 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
         res = -ENOMEM;
         return res;
     };
-    fd->disk = disk;
-    fd->fs = disk->fs;
+    fd->dev = dev;
+    fd->fs = dev->fs;
     fd->internal = internal_descriptor;
     res = fd->index;
     return res;

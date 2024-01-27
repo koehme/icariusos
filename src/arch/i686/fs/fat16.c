@@ -245,11 +245,11 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
     return;
 };
 
-int fat16_resolve(ATADisk *disk)
+int fat16_resolve(ATADev *dev)
 {
     Stream header_stream;
     const uint32_t partition_offset = 0x100000;
-    stream_init(&header_stream, disk);
+    stream_init(&header_stream, dev);
     stream_seek(&header_stream, partition_offset);
     const int res = stream_read(&header_stream, (uint8_t *)&fat16_header, sizeof(FAT16InternalHeader));
 
@@ -278,7 +278,7 @@ int fat16_resolve(ATADisk *disk)
     fat16_dump_ebpb_header(&fat16_header.ebpb, "", 0);
 
     Stream root_dir = {};
-    stream_init(&root_dir, disk);
+    stream_init(&root_dir, dev);
     stream_seek(&root_dir, root_dir_absolute);
     fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
@@ -289,7 +289,7 @@ int fat16_resolve(ATADisk *disk)
     return 0;
 };
 
-void *fat16_open(ATADisk *disk, PathNode *path, VNODE_MODE mode)
+void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
 {
     if (mode != V_READ)
     {

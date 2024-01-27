@@ -13,13 +13,15 @@
 
 typedef struct Superblock Superblock;
 
-typedef enum ATADiskType
+typedef enum ATA_ATTRIBUTES
 {
-    ATA_DISK_A = 0x0,
-    ATA_DISK_B = 0x1,
-    ATA_DISK_C = 0x2,
     ATA_SECTOR_SIZE = 512,
-} ATADiskType;
+} ATA_ATTRIBUTES;
+
+typedef enum ATADeviceType
+{
+    ATA_DEV_0 = 0x0,
+} ATADeviceType;
 
 typedef enum ATADriveType
 {
@@ -61,19 +63,20 @@ typedef enum ATAPorts
 /**
  * @brief Represents an ATA Disk.
  */
-typedef struct ATADisk
+typedef struct ATADev
 {
-    ATADiskType disk_type; // Type of the ATA Disk
-    int sector_size;       // Size of each sector in bytes
-    uint8_t buffer[512];   // Data buffer for temporary storage
-    Superblock *fs;        // Filesystem mapped to the disk´
-    ATADriveType dev;      // MASTER or SLAVE ?
-    bool lba48;            // Has support for 48 bit pio
-} ATADisk;
+    ATADeviceType dev;      // Type of the ATA device
+    uint16_t sector_size;   // Size of an sector in bytes
+    uint64_t total_sectors; // Total available sectors
+    uint64_t capacity;      // Available device capacity in bytes
+    uint8_t buffer[512];    // Data buffer for temporary storage
+    Superblock *fs;         // Filesystem mapped to the disk´
+    uint8_t features;       // Bitmasks for ata device features if bit 0 is set pio28 is available. bit 1 is for pio48
+} ATADev;
 
-void ata_init(ATADisk *self);
-void ata_search_fs(ATADisk *self);
-ATADisk *ata_get_disk(const ATADiskType disk_type);
-int ata_read(ATADisk *self, const size_t start_block, const size_t n_blocks);
+void ata_init(ATADev *self);
+void ata_search_fs(ATADev *self);
+ATADev *ata_get(const ATADeviceType dev);
+int ata_read(ATADev *self, const size_t start_block, const size_t n_blocks);
 
 #endif

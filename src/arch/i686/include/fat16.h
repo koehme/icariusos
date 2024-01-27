@@ -126,7 +126,7 @@ typedef struct FAT16DateInfo
 } FAT16DateInfo;
 
 Superblock *fat16_init(void);
-int fat16_resolve(ATADisk *disk);
-void *fat16_open(ATADisk *disk, PathNode *path, const VNODE_MODE mode);
+int fat16_resolve(ATADev *dev);
+void *fat16_open(ATADev *dev, PathNode *path, const VNODE_MODE mode);
 
 #endif

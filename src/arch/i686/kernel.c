@@ -170,8 +170,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     asm_do_sti();
 
-    ATADisk *ata_disk = ata_get_disk(ATA_DISK_A);
-    ata_init(ata_disk);
+    ATADev *dev0 = ata_get(ATA_DEV_0);
+    ata_init(dev0);
 
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
@@ -179,7 +179,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kmotd(addr);
 
     kprintf("\n");
-    ata_search_fs(ata_disk);
+    ata_search_fs(dev0);
     kprintf(">");
 
     while (true)
