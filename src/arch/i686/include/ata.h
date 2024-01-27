@@ -13,32 +13,35 @@
 
 typedef struct Superblock Superblock;
 
-typedef void (*ATAReadFunction)(int result, uint8_t *buffer);
-
 typedef enum ATADiskType
 {
-    ATA_DISK_A = 0,
-    ATA_DISK_B = 1,
-    ATA_DISK_C = 2,
+    ATA_DISK_A = 0x0,
+    ATA_DISK_B = 0x1,
+    ATA_DISK_C = 0x2,
     ATA_SECTOR_SIZE = 512,
 } ATADiskType;
 
-typedef enum ATADrives
+typedef enum ATADriveType
 {
-    ATA_DRIVE_MASTER = 0xe0
-} ATADrives;
+    ATA_DRIVE_MASTER = 0xE0,
+    ATA_DRIVE_SLAVE = 0xF0,
+} ATADriveType;
 
 typedef enum ATACommands
 {
     ATA_CMD_READ_SECTORS = 0x20,
+    ATA_CMD_IDENTIFY = 0xEC,
 } ATACommands;
 
 typedef enum ATAStatus
 {
-    ATA_STATUS_BSY = 7,
-    ATA_STATUS_DRQ = (1 << 3), // Data Request Bit
-    ATA_STATUS_DF = 5,
-    ATA_STATUS_ERR = 0, // Error Bit
+    ATA_STATUS_ERR = (1 << 0), // Indicates an error occurred. Send a new command to clear it
+    ATA_STATUS_NIEN = (1 << 1),
+    ATA_STATUS_DRQ = (1 << 3), // Set when the drive has PIO data to transfer or is ready to accept PIO data
+    ATA_STATUS_SRV = (1 << 4), // Overlapped Mode Service Request
+    ATA_STATUS_DF = (1 << 5),  // Drive Fault Error (does not set ERR)
+    ATA_STATUS_RDY = (1 << 6), // Bit is clear when drive is spun down, or after an error. Set otherwise
+    ATA_STATUS_BSY = (1 << 7), // Indicates the drive is preparing to send/receive data (wait for it to clear)
 } ATAStatus;
 
 typedef enum ATAPorts
@@ -53,14 +56,7 @@ typedef enum ATAPorts
     ATA_CONTROL_PORT = 0x1F6,
     ATA_COMMAND_PORT = 0x1F7,
     ATA_STATUS_REGISTER = 0x1F7,
-
 } ATAPorts;
-
-typedef enum ATAMode
-{
-    ATA_SYNC,
-    ATA_ASYNC,
-} ATAMode;
 
 /**
  * @brief Represents an ATA Disk.
@@ -71,6 +67,8 @@ typedef struct ATADisk
     int sector_size;       // Size of each sector in bytes
     uint8_t buffer[512];   // Data buffer for temporary storage
     Superblock *fs;        // Filesystem mapped to the disk´
+    ATADriveType dev;      // MASTER or SLAVE ?
+    bool lba48;            // Has support for 48 bit pio
 } ATADisk;
 
 void ata_init(ATADisk *self);
