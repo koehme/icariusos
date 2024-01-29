@@ -120,8 +120,16 @@ void kmotd(unsigned long addr)
                 const uint64_t base_addr = (((uint64_t)mmap->addr_high << 32) | mmap->addr_low);
                 const uint64_t end_addr = base_addr + ((uint64_t)mmap->len_high << 32 | mmap->len_low);
                 const char *type = mmap->type == 1 ? "Reserved" : "Available";
-                kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr == 0x100000000 ? "0x100000000" : end_addr, type);
-                kdelay(300000);
+
+                if (end_addr == 0x100000000)
+                {
+                    kprintf("- Range: 0x%x - 0x100000000, Type: %s\n", base_addr, type);
+                }
+                else
+                {
+                    kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
+                };
+                kdelay(400000);
             };
             break;
         };
