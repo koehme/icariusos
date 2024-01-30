@@ -134,18 +134,22 @@ PathNode *path_parser_parse_entry(PathParser *self, PathLexer *lexer, PathNode *
 PathNode *path_parser_parse_entries(PathParser *self, PathLexer *lexer, PathNode *curr_node)
 {
     PathNode *head = 0x0;
+    PathNode *prev = 0x0;
 
     while (path_parser_match(self, lexer, PT_SLASH))
     {
         PathNode *new_node = kcalloc(sizeof(PathNode));
 
-        if (!curr_node)
+        if (!head)
         {
             head = new_node;
-            curr_node = head;
+        }
+        else
+        {
+            prev->next = new_node;
         };
-        curr_node->next = path_parser_parse_entry(self, lexer, new_node);
-        curr_node = curr_node->next;
+        prev = new_node;
+        curr_node = path_parser_parse_entry(self, lexer, new_node);
     };
     return head;
 };

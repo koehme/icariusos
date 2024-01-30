@@ -5,6 +5,6 @@ set print pretty on
 set disassembly-flavor intel
 
 break kernel.c:kmain
-break fat16.c:print_fat16_lfn_entry
+break vfs.c:vfs_fopen
 
 c
