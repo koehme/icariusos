@@ -432,7 +432,33 @@ int fat16_resolve(ATADev *dev)
 
 FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path)
 {
-    // TODO
+    const uint32_t partition_offset = 0x100000;
+    const uint32_t root_dir_area_absolute = calculate_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
+
+    Stream stream = {};
+    stream_init(&stream, dev);
+    stream_seek(&stream, root_dir_area_absolute);
+
+    const uint32_t root_dir_sectors = (fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry) + fat16_header.bpb.BPB_BytsPerSec - 1) / fat16_header.bpb.BPB_BytsPerSec;
+    const uint32_t first_data_sector = fat16_header.bpb.BPB_RsvdSecCnt + fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + (root_dir_sectors);
+    const uint32_t first_root_dir_sector = first_data_sector - root_dir_sectors;
+    kprintf("First Root Dir Sector: %d\n", first_root_dir_sector);
+    // Calculate the sector where the entry for the given path might be located
+    uint32_t curr_sector = first_root_dir_sector;
+    uint8_t buffer[512] = {};
+
+    while (path != 0x0)
+    {
+        // Read the curr sector into a buffer
+        stream_seek(&stream, curr_sector * dev->sector_size);
+        stream_read(&stream, buffer, dev->sector_size);
+        // Parse the buffer to find the entry with the curr PathNode identifier
+        FAT16DirectoryEntry *entries = (FAT16DirectoryEntry *)buffer;
+        FAT16DirectoryEntry *entry = 0x0;
+        // TODO
+        // Move to next path identifier
+        path = path->next;
+    };
     return 0x0;
 };
 
