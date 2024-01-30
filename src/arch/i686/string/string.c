@@ -39,6 +39,31 @@ size_t slen(const char *str)
     return i;
 };
 
+bool scmp(const char *s1, const char *s2)
+{
+    size_t s1_len = slen(s1);
+    size_t s2_len = slen(s2);
+
+    if (s1_len != s2_len)
+    {
+        return false;
+    };
+    size_t i = 0;
+
+    while (s1[i] != '\0' && s2[i] != '\0')
+    {
+        if (s1[i] == s2[i])
+        {
+            i++;
+        }
+        else
+        {
+            return false;
+        };
+    };
+    return true;
+};
+
 void sreverse(char *str, const size_t length)
 {
     size_t start = 0;

@@ -46,7 +46,8 @@ typedef struct ExtendedBIOSParameterBlock
 
 typedef struct FAT16DirectoryEntry
 {
-    uint8_t file_name[11];      // 8.3 file name
+    uint8_t file_name[8];       // 8.3 file name
+    uint8_t ext[3];             // 8.3 extension
     uint8_t attributes;         // attributes of the file
     uint8_t reserved;           // reserved for use by Windows NT
     uint8_t creation_time_ms;   // creation time in hundredths of a second
@@ -326,6 +327,7 @@ static void print_fat16_dir_entry(int i, FAT16DirectoryEntry *entry, const int d
     kprintf("=   RootDirEntry %d:\n", i);
     kprintf("==========================\n");
     kprintf("=   Filename: %s\n", entry->file_name);
+    kprintf("=   Extension: %s\n", entry->ext);
     kprintf("=   Attributes: 0x%x\n", entry->attributes);
     kprintf("=   Creation Time: %d:%d:%d\n", create_time.hour, create_time.minute, create_time.second);
     kprintf("=   Creation Date: %d.%d.%d\n", create_date.day, create_date.month, create_date.year);
@@ -397,7 +399,7 @@ int fat16_resolve(ATADev *dev)
     Stream root_dir = {};
     stream_init(&root_dir, dev);
     stream_seek(&root_dir, root_dir_area_absolute);
-    // fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+    fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
     const uint32_t fat_area_offset = calculate_fat_area_offset(&fat16_header.bpb);
     const uint32_t fat_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
@@ -443,20 +445,23 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path)
     const uint32_t first_data_sector = fat16_header.bpb.BPB_RsvdSecCnt + fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + (root_dir_sectors);
     const uint32_t first_root_dir_sector = first_data_sector - root_dir_sectors;
     kprintf("First Root Dir Sector: %d\n", first_root_dir_sector);
-    // Calculate the sector where the entry for the given path might be located
     uint32_t curr_sector = first_root_dir_sector;
-    uint8_t buffer[512] = {};
+    uint8_t buffer[32] = {};
 
     while (path != 0x0)
     {
-        // Read the curr sector into a buffer
-        stream_seek(&stream, curr_sector * dev->sector_size);
-        stream_read(&stream, buffer, dev->sector_size);
-        // Parse the buffer to find the entry with the curr PathNode identifier
-        FAT16DirectoryEntry *entries = (FAT16DirectoryEntry *)buffer;
-        FAT16DirectoryEntry *entry = 0x0;
-        // TODO
-        // Move to next path identifier
+        for (int i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++)
+        {
+            stream_read(&stream, buffer, sizeof(FAT16DirectoryEntry));
+            const FAT16DirectoryEntry *curr_entry = (FAT16DirectoryEntry *)buffer;
+
+            if (scmp((char *)curr_entry->file_name, path->identifier))
+            {
+                kprintf("Entry found. %s \n", curr_entry->file_name);
+                break;
+            };
+        };
+        // TODO: Update curr sector based on the found entry's cluster
         path = path->next;
     };
     return 0x0;
