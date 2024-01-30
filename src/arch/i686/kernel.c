@@ -129,7 +129,6 @@ void kmotd(unsigned long addr)
                 {
                     kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
                 };
-                kdelay(400000);
             };
             break;
         };
