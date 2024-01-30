@@ -10,6 +10,118 @@
 
 #define FAT16_DEBUG_DELAY 0
 
+typedef struct BIOSParameterBlock
+{
+    uint8_t BS_jmpBoot[3];   // jump over the disk format information (the BPB and EBPB)
+    uint8_t BS_OEMName[8];   // oem identifier. The first 8 Bytes (3 - 10) is the version of DOS being used
+    uint16_t BPB_BytsPerSec; // number of Bytes per sector (remember, all numbers are in the little-endian format)
+    uint8_t BPB_SecPerClus;  // number of sectors per cluster
+    uint16_t BPB_RsvdSecCnt; // number of reserved sectors. The boot record sectors are included in this value
+    uint8_t BPB_NumFATs;     // number of File Allocation Tables (FAT's) on the storage media
+    uint16_t BPB_RootEntCnt; // number of root directory entries (must be set so that the root directory occupies entire sectors)
+    uint16_t BPB_TotSec16;   // total sectors in the logical volume. If this value is 0, it means there are more than 65535 sectors in the volume, and the actual count is stored in the Large Sector Count entry at 0x20
+    uint8_t BPB_Media;       // indicates the media descriptor type
+    uint16_t BPB_FATSz16;    // number of sectors per FAT
+    uint16_t BPB_SecPerTrk;  // number of sectors per track
+    uint16_t BPB_NumHeads;   // number of heads or sides on the storage media
+    uint32_t BPB_HiddSec;    // number of hidden sectors. (i.e. the LBA of the beginning of the partition
+    uint32_t BPB_TotSec32;   // large sector count. This field is set if there are more than 65535 sectors in the volume, resulting in a value which does not fit in the Number of Sectors entry at 0x13
+} __attribute__((packed)) BIOSParameterBlock;
+
+/*
+The extended boot record information comes right after the BPB.
+The data at the beginning is known as the EBPB.
+It contains different information depending on whether this partition is a FAT 12, FAT 16, or FAT 32 filesystem.
+Immediately following the EBPB is the actual boot code, then the standard 0xAA55 boot signature, to fill out the 512-byte boot sector. Offsets shows are from the start of the standard boot record.
+*/
+typedef struct ExtendedBIOSParameterBlock
+{
+    uint8_t BS_DrvNum;
+    uint8_t BS_Reserved1;
+    uint8_t BS_BootSig;
+    uint32_t BS_VolID;
+    uint8_t BS_VolLab[11];
+    uint8_t BS_FilSysType[8];
+} __attribute__((packed)) ExtendedBIOSParameterBlock;
+
+typedef struct FAT16DirectoryEntry
+{
+    uint8_t file_name[11];      // 8.3 file name
+    uint8_t attributes;         // attributes of the file
+    uint8_t reserved;           // reserved for use by Windows NT
+    uint8_t creation_time_ms;   // creation time in hundredths of a second
+    uint16_t create_time;       // time that the file was created (in the format described)
+    uint16_t create_date;       // date on which the file was created (in the format described)
+    uint16_t last_access_date;  // last accessed date (in the format described)
+    uint16_t high_cluster;      // high 16 bits of the first cluster number
+    uint16_t modification_time; // last modification time (in the format described)
+    uint16_t modification_date; // last modification date (in the format described)
+    uint16_t low_cluster;       // low 16 bits of the first cluster number
+    uint32_t file_size;         // size of the file in bytes
+} __attribute__((packed)) FAT16DirectoryEntry;
+
+typedef struct FAT16LongDirectoryEntry
+{
+    uint8_t ldir_ord;
+    uint16_t ldir_name1[5];
+    uint8_t ldir_attr;
+    uint8_t ldir_type;
+    uint8_t ldir_chksum;
+    uint16_t ldir_name2[6];
+    uint16_t ldir_fstcluslo;
+    uint16_t ldir_name3[2];
+} __attribute__((packed)) FAT16LongDirectoryEntry;
+
+typedef struct FAT16InternalHeader
+{
+    BIOSParameterBlock bpb;
+    ExtendedBIOSParameterBlock ebpb;
+} __attribute__((packed)) FAT16InternalHeader;
+
+typedef struct FAT16TimeInfo
+{
+    int hour;
+    int minute;
+    int second;
+} FAT16TimeInfo;
+
+typedef struct FAT16DateInfo
+{
+    int day;
+    int month;
+    int year;
+} FAT16DateInfo;
+
+typedef enum FAT16EntryType
+{
+    FAT16_ENTRY_TYPE_FILE,
+    FAT16_ETNRY_TYPE_DIRECTORY,
+} FAT16EntryType;
+
+typedef struct FAT16Directory
+{
+    struct FAT16DirectoryEntry *entry;
+    uint32_t total;
+    uint32_t start_sector;
+    uint32_t end_sector;
+} FAT16Directory;
+
+typedef struct FAT16Entry
+{
+    union
+    {
+        FAT16DirectoryEntry *file; // Pointer to the directory entry of the file
+        FAT16Directory *dir;       // Pointer to the directory entry of the directory
+    };
+    FAT16EntryType type;
+} FAT16Entry;
+
+typedef struct FAT16FileDescriptor
+{
+    FAT16Entry *entry;
+    uint32_t pos;
+} FAT16FileDescriptor;
+
 Superblock fat16 = {
     .resolve_cb = 0x0,
     .open_cb = 0x0,
@@ -139,23 +251,29 @@ static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *ms
     return;
 };
 
-static uint32_t calculate_root_dir_offset(const BIOSParameterBlock *bpb)
+static uint32_t calculate_root_dir_area_offset(const BIOSParameterBlock *bpb)
 {
     const uint32_t root_directory_offset = bpb->BPB_BytsPerSec * (bpb->BPB_RsvdSecCnt + (bpb->BPB_NumFATs * bpb->BPB_FATSz16));
     return root_directory_offset;
 };
 
-static uint32_t calculate_root_dir_absolute(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
+static uint32_t calculate_root_dir_area_absolute(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
 
 {
-    const uint32_t root_directory_absolute = partition_offset + calculate_root_dir_offset(bpb);
-    return root_directory_absolute;
+    const uint32_t root_dir_area_absolute = partition_offset + calculate_root_dir_area_offset(bpb);
+    return root_dir_area_absolute;
 };
 
-static uint32_t calculate_fat_table_offset(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
+static uint32_t calculate_fat_area_offset(const BIOSParameterBlock *bpb)
 {
-    const uint32_t fat_table_offset = partition_offset + bpb->BPB_RsvdSecCnt * bpb->BPB_BytsPerSec;
-    return fat_table_offset;
+    const uint32_t fat_area_offset = bpb->BPB_RsvdSecCnt * bpb->BPB_BytsPerSec;
+    return fat_area_offset;
+};
+
+static uint32_t calculate_fat_area_absolute(const BIOSParameterBlock *bpb, const uint32_t partition_offset)
+{
+    const uint32_t fat_area_absolute = partition_offset + calculate_fat_area_offset(bpb);
+    return fat_area_absolute;
 };
 
 static bool is_lfn_entry(uint8_t *entry)
@@ -264,52 +382,90 @@ int fat16_resolve(ATADev *dev)
         kprintf("Error: Invalid FAT16 Header.\n");
         return -EIO;
     };
-    const uint32_t root_dir_offset = calculate_root_dir_offset(&fat16_header.bpb);
-    const uint32_t root_dir_absolute = calculate_root_dir_absolute(&fat16_header.bpb, partition_offset);
-    const uint32_t root_dir_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
-    const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirectoryEntry);
-
-    kprintf("Root Directory Offset: 0x%x\n", root_dir_offset);
-    kprintf("Root Directory Absolute: 0x%x\n", root_dir_absolute);
-    kprintf("Root Directory Size: %d\n", root_dir_size);
-    kprintf("Root Directory Entries: %d\n", root_dir_entries);
-
     fat16_dump_base_header(&fat16_header.bpb, "", 0);
     fat16_dump_ebpb_header(&fat16_header.ebpb, "", 0);
+    const uint32_t root_dir_area_offset = calculate_root_dir_area_offset(&fat16_header.bpb);
+    const uint32_t root_dir_area_absolute = calculate_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
+    const uint32_t root_dir_area_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
+    const uint32_t root_dir_area_entries = root_dir_area_size / sizeof(FAT16DirectoryEntry);
+
+    kprintf("Root Dir Area Offset: 0x%x\n", root_dir_area_offset);
+    kprintf("Root Dir Area Absolute: 0x%x\n", root_dir_area_absolute);
+    kprintf("Root Dir Area Size: %d\n", root_dir_area_size);
+    kprintf("Root Dir Area Entries: %d\n", root_dir_area_entries);
 
     Stream root_dir = {};
     stream_init(&root_dir, dev);
-    stream_seek(&root_dir, root_dir_absolute);
-    fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+    stream_seek(&root_dir, root_dir_area_absolute);
+    // fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
-    const uint32_t fat_table_offset = calculate_fat_table_offset(&fat16_header.bpb, partition_offset);
-    const uint32_t fat_table_size_bytes = fat16_header.bpb.BPB_FATSz16 * fat16_header.bpb.BPB_BytsPerSec;
-    const uint32_t fat_table_entries = fat_table_size_bytes / sizeof(uint16_t);
+    const uint32_t fat_area_offset = calculate_fat_area_offset(&fat16_header.bpb);
+    const uint32_t fat_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
+    const uint32_t fat_area_size = fat16_header.bpb.BPB_FATSz16 * fat16_header.bpb.BPB_BytsPerSec;
+    const uint32_t fat_area_entries = fat_area_size / sizeof(uint16_t);
 
+    kprintf("FAT Area Offset: 0x%x\n", fat_area_offset);
+    kprintf("FAT Area Absolute: 0x%x\n", fat_area_absolute);
+    kprintf("FAT Area Size: %d\n", fat_area_size);
+    kprintf("FAT Area Entries: %d\n", fat_area_entries);
+
+    const uint32_t total_sectors = fat16_header.bpb.BPB_TotSec16 == 0 ? fat16_header.bpb.BPB_TotSec32 : fat16_header.bpb.BPB_TotSec16;
+    kprintf("Total Sectors: %d\n", total_sectors);
+    const uint32_t root_dir_sectors = (fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry) + fat16_header.bpb.BPB_BytsPerSec - 1) / fat16_header.bpb.BPB_BytsPerSec;
+    kprintf("Root Dir Sectors: %d\n", root_dir_sectors);
+    const uint32_t first_data_sector = fat16_header.bpb.BPB_RsvdSecCnt + fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + (root_dir_sectors);
+    kprintf("First Data Sector: %d\n", first_data_sector);
+    const uint32_t first_fat_sector = fat16_header.bpb.BPB_RsvdSecCnt;
+    kprintf("First FAT Sector: %d\n", first_fat_sector);
+    const uint32_t data_sectors = total_sectors - (fat16_header.bpb.BPB_RsvdSecCnt + (fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + root_dir_sectors));
+    kprintf("Data Sectors: %d\n", data_sectors);
+    const uint32_t total_clusters = data_sectors / fat16_header.bpb.BPB_SecPerClus;
+    kprintf("Total Clusters: %d\n", total_clusters);
+
+    if (total_clusters > FAT16_MAX_CLUSTERS || total_clusters < FAT16_MIN_CLUSTERS)
+    {
+        kprintf("Error: Invalid FAT16 Header.\n");
+        return -EIO;
+    };
     return 0;
+};
+
+FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path)
+{
+    // TODO
+    return 0x0;
 };
 
 void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
 {
     if (mode != V_READ)
     {
+        kprintf("Error: Only read mode is supported.\n");
         return 0x0;
     };
-    // Start from the root directory
-    // Step 1: Define a structure to hold information about the root directory entry
-    // Step 2: Read the root directory entry from the disk
-    // Step 2a: Handle error - Unable to read directory entry
-    // Step 3: Check if the entry corresponds to a file or a directory
-    // Step 3a: Handle logic for opening a directory
-    // For directories, you might perform operations like listing its contents
-    // Additional logic specific to directories can be implemented here
-    // Step 3b: Handle logic for opening a file
-    // Step 4: Allocate memory for the structure to represent the file
-    // Step 4a: Handle error - Unable to allocate memory for the file structure
-    // Step 5: Initialize the file structure with information from the directory entry
-    // Step 6: Additional logic for file opening can be added here
-    // For example, completing the cluster chain, loading additional metadata, etc.
-    // Step 7: Return the initialized file structure
-    // End of the file or directory opening logic
-    return 0x0;
+
+    if (dev == NULL || dev->fs == NULL || path == NULL)
+    {
+        kprintf("Error: Filesystem or path not initialized.\n");
+        return 0x0;
+    };
+    FAT16FileDescriptor *fd = kcalloc(sizeof(FAT16FileDescriptor));
+
+    if (fd == 0x0)
+    {
+        kprintf("Error: Memory allocation failed.\n");
+        kfree(fd);
+        return 0x0;
+    };
+    // TODO: Implement fat16_get_entry logic to find the entry for the given path
+    fd->entry = fat16_get_entry(dev, path);
+
+    if (!fd->entry)
+    {
+        kfree(fd);
+        kprintf("Error: File not found.\n");
+        return 0x0;
+    };
+    fd->pos = 0;
+    return (void *)fd;
 };
