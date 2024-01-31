@@ -39,6 +39,19 @@ size_t slen(const char *str)
     return i;
 };
 
+char *sptr(char *str, const char c)
+{
+    while (*str != '\0')
+    {
+        if (*str == c)
+        {
+            return str;
+        };
+        str++;
+    }
+    return 0x0;
+};
+
 bool scmp(const char *s1, const char *s2)
 {
     size_t s1_len = slen(s1);
