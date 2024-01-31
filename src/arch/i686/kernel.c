@@ -190,8 +190,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
     ata_search_fs(dev0);
 
     const int32_t fd = vfs_fopen("A:/ABC.TXT", V_READ);
-    kprintf("A:/ABC.TXT has FileDescriptor %d\n", fd);
 
+    if (fd)
+    {
+        kprintf("A:/ABC.TXT has FileDescriptor %d\n", fd);
+    };
     kprintf(">");
 
     while (true)

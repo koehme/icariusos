@@ -545,6 +545,14 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
         kprintf("Error: File not found.\n");
         return 0x0;
     };
+    // Add logic here to handle directory opening if needed
+    // For now, let's assume we are opening a file
+    if (entry->type != FAT16_ENTRY_TYPE_FILE)
+    {
+        kprintf("Error: Attempting to open a directory. Currently only file opening is supported.\n");
+        kfree(fd);
+        return 0x0;
+    }
     fd->entry = entry;
     fd->pos = 0;
     return (void *)fd;
