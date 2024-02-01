@@ -38,7 +38,7 @@ typedef struct FileDescriptor
 
 void vfs_init();
 void vfs_insert(Superblock *fs);
-int vfs_fopen(const char *file_name, const VNODE_MODE mode);
+int vfs_fopen(const char *filename, const char *mode);
 size_t vfs_fread(void *buffer, size_t n_bytes, size_t n_blocks, int32_t fd_index);
 Superblock *vfs_resolve(ATADev *dev);
 

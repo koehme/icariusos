@@ -126,17 +126,32 @@ Superblock *vfs_resolve(ATADev *dev)
     return superblock;
 };
 
-int vfs_fopen(const char *file_name, const VNODE_MODE mode)
+static VNODE_MODE vfs_get_vmode(const char *mode)
 {
-    int res = 0;
+    switch (*mode)
+    {
+    case 'r':
+    {
+        return V_READ;
+    };
+    default:
+        break;
+    };
+    return V_INVALID;
+};
 
-    if (mode != V_READ)
+int vfs_fopen(const char *filename, const char *mode)
+{
+    int32_t res = 0;
+    const VNODE_MODE vmode = vfs_get_vmode(mode);
+
+    if (vmode != V_READ)
     {
         res = -EINVAL;
         return res;
     };
     PathParser path_parser = {};
-    PathRootNode *root_path = path_parser_parse(&path_parser, file_name);
+    PathRootNode *root_path = path_parser_parse(&path_parser, filename);
     ATADev *dev = ata_get(ATA_DEV_0);
 
     if (!dev || !dev->fs)
@@ -144,7 +159,7 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
         res = -EIO;
         return res;
     };
-    void *internal_descriptor = dev->fs->open_cb(dev, root_path->path, mode);
+    void *internal = dev->fs->open_cb(dev, root_path->path, vmode);
 
     FileDescriptor *fd = 0x0;
     res = vfs_create_fd(&fd);
@@ -156,7 +171,7 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
     };
     fd->dev = dev;
     fd->fs = dev->fs;
-    fd->internal = internal_descriptor;
+    fd->internal = internal;
     res = fd->index;
     return res;
 };
