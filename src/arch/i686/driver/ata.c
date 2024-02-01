@@ -220,14 +220,10 @@ static int ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors)
 };
 
 /**
- * @brief Gets the ATADisk instance associated with the specified disk type.
- * Returns a pointer to the ATADisk instance corresponding to the
- * given disk type. If the specified disk type is not recognized, the function
- * returns a null pointer (NULL).
- * @param disk_type The type of ATA disk for which to retrieve the ATADisk instance.
+ * @brief Gets the ATADev instance associated with the specified disk type.
+ * @param dev The type of ATADeviceType for which to retrieve the ATADev instance.
  * @return
- *    - Returns a pointer to the ATADisk instance if the disk type is recognized.
- *    - Returns NULL if the disk type is not recognized.
+ *    - Returns a pointer to the ATADev instance if the disk type is recognized.
  */
 ATADev *ata_get(const ATADeviceType dev)
 {
@@ -252,7 +248,7 @@ ATADev *ata_get(const ATADeviceType dev)
  * @param n_blocks The number of blocks (sectors) to read from the ATA disk.
  * @return
  *    - Returns 0 if the read operation is successful.
- *    - Returns -1 if the self parameter is NULL, indicating an invalid ATADisk instance.
+ *    - Returns -1 if the self parameter is 0x0, indicating an invalid ATADisk instance.
  */
 int ata_read(ATADev *self, const size_t start_block, const size_t n_blocks)
 {

@@ -10,12 +10,6 @@
 
 extern Superblock fat16;
 
-/**
- * @brief Array of Superblocks representing vfs_superblocks in the Virtual File System (VFS).
- * This static array serves as a container for Superblock pointers, each representing a
- * filesystem within the Virtual File System (VFS). The array allows the system to manage
- * and access different vfs_superblocks.
- */
 static Superblock *vfs_superblocks[8] = {
     0x0,
     0x0,
@@ -27,33 +21,18 @@ static Superblock *vfs_superblocks[8] = {
     0x0,
 };
 
-/**
- * @brief Array of File Descriptors for file management in the system.
- * Represents the file descriptors used for managing files in the
- * system. Each element in the array corresponds to a file descriptor and the array
- * provides a mechanism for tracking and accessing open files within the system.
- */
 static FileDescriptor *file_descriptors[512] = {};
 
-/**
- * @brief Initializes the Virtual File System (VFS) subsystem.
- * Serves as the entry point for setting up the VFS subsystem. It
- * initializes file descriptors and loads essential components for the VFS to operate.
- * The primary purpose is to prepare the system for efficient file system management.
- */
 void vfs_init(void)
 {
     mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * 512);
     mset8(vfs_superblocks, 0x0, sizeof(Superblock) * 8);
-    vfs_insert(fat16_init());
+    Superblock *fat16 = fat16_init();
+    vfs_insert(fat16);
     return;
 };
 
-/**
- * @brief Gets a free slot in the file system array.
- * @return Pointer to a free Superblock pointer slot or 0x0 if no free slot is available.
- */
-static Superblock **vfs_get_free_fs_slot(void)
+static Superblock **vfs_find_empty_superblock(void)
 {
     size_t i = 0;
 
@@ -66,43 +45,27 @@ static Superblock **vfs_get_free_fs_slot(void)
     };
     return 0x0;
 };
-/**
- * @brief Inserts a filesystem into the Virtual File System (VFS) layer.
- * Responsible for adding a filesystem represented by the provided
- * Superblock to the VFS layer. The primary purpose is to manage and organize various
- * vfs_superblocks in a unified manner.
- * @param fs A pointer to the Superblock structure representing the filesystem to be inserted.
- * @note The function ensures that a valid filesystem is provided and that there is an
- * available slot in the VFS for insertion. If any of these conditions are not met,
- * a kernel panic is triggered with an appropriate error message.
- */
+
 void vfs_insert(Superblock *fs)
 {
     Superblock **vfs_free_slot = 0x0;
 
     if (!fs)
     {
-        kpanic("VFS Layer needs a filesystem.\n");
+        kpanic("Error: VFS needs a filesystem to insert.\n");
         return;
     };
-    vfs_free_slot = vfs_get_free_fs_slot();
+    vfs_free_slot = vfs_find_empty_superblock();
 
     if (!vfs_free_slot)
     {
-        kpanic("VFS free filesystem pool is exhausted.\n");
+        kpanic("Error: VFS free superblock pool is exhausted.\n");
         return;
     };
     *vfs_free_slot = fs;
     return;
 };
 
-/**
- * @brief Creates a new FileDescriptor and assigns it to the provided pointer.
- * Creates a new FileDescriptor and assigns it to the provided pointer. It searches
- * for an available slot in the file_descriptors array and initializes the necessary fields.
- * @param ptr Pointer to a FileDescriptor pointer where the created FileDescriptor will be assigned.
- * @return 0 on success, -1 if no available slots are found or memory allocation fails.
- */
 static int vfs_create_fd(FileDescriptor **ptr)
 {
     int res = -1;
@@ -133,13 +96,6 @@ static int vfs_create_fd(FileDescriptor **ptr)
     return res;
 };
 
-/**
- * @brief Retrieves the FileDescriptor at the specified index.
- * Retrieves the FileDescriptor stored at the specified index in the
- * file_descriptors array. The index should be a positive integer within the valid range.
- * @param fd_index The index of the FileDescriptor to retrieve.
- * @return Pointer to the FileDescriptor at the specified index, or NULL if the index is out of bounds.
- */
 static FileDescriptor *vfs_get_fd(const int fd_index)
 {
     if (fd_index <= 0 || fd_index >= 512)
@@ -150,14 +106,6 @@ static FileDescriptor *vfs_get_fd(const int fd_index)
     return fd;
 };
 
-/**
- * @brief Resolves the appropriate Superblock for the given ATADisk.
- * Iiterates through a list of Superblocks to find the one that matches
- * the filesystem on the provided ATADisk. It uses the resolve_cb function of each Superblock
- * to determine if there is a match.
- * @param dev Pointer to the ATADev for which to resolve the Superblock.
- * @return Pointer to the resolved Superblock, or 0x0 if the disk parameter is 0x0 or no matching Superblock is found.
- */
 Superblock *vfs_resolve(ATADev *dev)
 {
     Superblock *superblock = 0x0;
@@ -213,4 +161,26 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
     fd->internal = internal_descriptor;
     res = fd->index;
     return res;
+};
+
+size_t vfs_fread(const void *ptr, size_t n_bytes, size_t n_blocks, int32_t fd_index)
+{
+    if (n_bytes == 0 || n_blocks == 0 || fd_index < 1)
+    {
+        return -EINVAL;
+    };
+    FileDescriptor *fd = vfs_get_fd(fd_index);
+
+    if (!fd)
+    {
+        return -EINVAL;
+    };
+    const size_t readed_bytes = 0x0;
+
+    if (readed_bytes < 0)
+    {
+        kprintf("Error reading from file. Bytes read: %d)\n", readed_bytes);
+        return 0;
+    };
+    return readed_bytes;
 };

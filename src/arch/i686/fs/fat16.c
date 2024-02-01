@@ -28,12 +28,6 @@ typedef struct BIOSParameterBlock
     uint32_t BPB_TotSec32;   // large sector count. This field is set if there are more than 65535 sectors in the volume, resulting in a value which does not fit in the Number of Sectors entry at 0x13
 } __attribute__((packed)) BIOSParameterBlock;
 
-/*
-The extended boot record information comes right after the BPB.
-The data at the beginning is known as the EBPB.
-It contains different information depending on whether this partition is a FAT 12, FAT 16, or FAT 32 filesystem.
-Immediately following the EBPB is the actual boot code, then the standard 0xAA55 boot signature, to fill out the 512-byte boot sector. Offsets shows are from the start of the standard boot record.
-*/
 typedef struct ExtendedBIOSParameterBlock
 {
     uint8_t BS_DrvNum;
@@ -454,7 +448,7 @@ void fat16_userland_filename_to_native(uint8_t *native_file_name, uint8_t *file_
     return;
 };
 
-static uint32_t fat16_combine_cluster(uint16_t high_cluster, uint16_t low_cluster)
+static uint32_t fat16_combine_cluster(const uint16_t high_cluster, const uint16_t low_cluster)
 {
     return ((uint32_t)high_cluster << 16) | low_cluster;
 };
@@ -532,20 +526,20 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
 {
     if (mode != V_READ)
     {
-        kprintf("Error: Only read mode is supported.\n");
+        kprintf("FAT16 Error: Only read mode is supported.\n");
         return 0x0;
     };
 
-    if (dev == NULL || dev->fs == NULL || path == NULL)
+    if (dev == 0x0 || dev->fs == 0x0 || path == 0x0)
     {
-        kprintf("Error: Filesystem or path not initialized.\n");
+        kprintf("FAT16 Error: Filesystem or path not initialized.\n");
         return 0x0;
     };
     FAT16FileDescriptor *fd = kcalloc(sizeof(FAT16FileDescriptor));
 
     if (fd == 0x0)
     {
-        kprintf("Error: Memory allocation failed.\n");
+        kprintf("FAT16 Error: Memory allocation failed.\n");
         kfree(fd);
         return 0x0;
     };
@@ -554,7 +548,7 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     if (!entry)
     {
         kfree(fd);
-        kprintf("Error: FATEntry not found.\n");
+        kprintf("FAT16: FATEntry not found.\n");
         return 0x0;
     };
     fd->entry = entry;

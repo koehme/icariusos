@@ -23,8 +23,6 @@ VGADisplay vga_display = {
 
 /**
  * @brief Create a VGA character with color attributes.
- * Combines a given ASCII character with VGA color information
- * to produce a 16-bit value representing a character with associated color.
  * @param ch The ASCII character to be combined with color information.
  * @param color The VGAColor enum representing the foreground and background colors.
  * @return uint16_t A 16-bit value representing the combined character and color.
@@ -35,9 +33,7 @@ static uint16_t make_ch(const uint8_t ch, const VGAColor color)
 };
 
 /**
- * @brief Places the specified character at the given coordinates (y, x)
- * on the VGA display, using the provided color. It calculates the linear address
- * in the framebuffer and updates the corresponding memory location.
+ * @brief Places the specified character at the given coordinates (y, x).
  * @param self A pointer to the VGADisplay structure representing the VGA display.
  * @param y The vertical position (row) where the character will be placed.
  * @param x The horizontal position (column) where the character will be placed.
@@ -67,9 +63,6 @@ static void vga_clear_last_line(VGADisplay *self)
 
 /**
  * Scrolls the VGA display up by the specified number of lines.
- * Performs a vertical scroll on the VGA display, moving the content
- * up by the specified number of lines. It is particularly useful when updating
- * the display content and needing to make room for new information.
  * @param self A pointer to the VGADisplay structure representing the display.
  * @param lines The number of lines by which to scroll up.
  * @return void
@@ -85,7 +78,6 @@ static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
 
 /**
  * @brief Scrolls the content of a VGA display.
- * Checks if the cursor is beyond the visible area and if so, it scrolls up the content, clears the last row and updates the cursor position.
  * @param self A pointer to the VGADisplay structure.
  * @return void
  */
@@ -102,9 +94,7 @@ static void vga_scroll(VGADisplay *self)
 };
 
 /**
- * @brief Initializes the VGA display by configuring the necessary parameters,
- * such as the framebuffer, cursor position, width and height.
- *
+ * @brief Initializes the VGA display by configuring the necessary parameters, such as the framebuffer, cursor position, width and height.
  * @param self A pointer to the VGADisplay structure representing the VGA display.
  * @param framebuffer A pointer to the  uint16_t array serving as the framebuffer.
  * @param width The width of the VGA display in pixels.
@@ -123,8 +113,6 @@ void vga_display_init(VGADisplay *self, uint16_t *framebuffer, const uint8_t wid
 
 /**
  * @brief Writes a character to the VGA display at the current cursor position.
- * If the character is a newline ('\n'), the cursor is moved to the beginning of the
- * next line. The character is displayed with the specified color.
  * @param self   A pointer to the VGADisplay structure representing the VGA display instance.
  * @param ch     The character to be written to the display.
  * @param color  The color in which the character should be displayed.
@@ -177,9 +165,6 @@ void vga_display_set_cursor(VGADisplay *self, const uint8_t y, const uint8_t x)
 
 /**
  * Clears the content of the VGA display.
- * Iterates through each pixel on the VGA display and sets the character
- * to a space (' ') with a specified color (VGA_COLOR_BLACK). It effectively clears
- * the entire display, providing a blank canvas for subsequent rendering.
  * @param self A pointer to the VGADisplay structure representing the VGA display instance.
  * @return void
  */
@@ -197,10 +182,8 @@ void vga_display_clear(VGADisplay *self)
 
 /**
  * @brief Prints a null-terminated string on the VGA display.
- * Iterates through the characters in the given null-terminated string
- * and writes each character to the VGA display using the specified color.
  * @param self A pointer to the VGADisplay structure representing the VGA display.
- * @param str A pointer to the null-terminated string to be printed on the VGA display.
+ * @param str A pointer to the \0-terminated string to be printed on the VGA display.
  * @return void
  */
 void vga_print(VGADisplay *self, const char *str, const VGAColor color)

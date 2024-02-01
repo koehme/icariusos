@@ -18,17 +18,6 @@ bool is_alpha(const char c)
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 };
 
-/**
- * @brief Calculate the length of a null-terminated C string.
- * This function takes a pointer to a null-terminated C string and iterates through
- * each character until the null terminator '\0' is encountered. It then returns
- * the number of characters in the string, excluding the null terminator.
- * @param str A pointer to the null-terminated C string whose length is to be determined.
- * @return size_t The length of the C string, excluding the null terminator.
- * @note The function assumes that the input string is null-terminated. If the input
- * string is not null-terminated, the behavior is undefined.
- * @note This function has a time complexity of O(n), where n is the length of the input string.
- */
 size_t slen(const char *str)
 {
     size_t i;
@@ -95,9 +84,6 @@ void sreverse(char *str, const size_t length)
 
 /**
  * @brief Converts an integer to a string.
- * This function converts the given integer to a string
- * using the specified base. The resulting string is stored in
- * the buffer.
  * @param num The integer to be converted.
  * @param str The character array buffer to store the result.
  * @param base The base for the conversion (e.g., 10 for decimal conversion).
@@ -203,19 +189,17 @@ int kprintf(const char *fmt, ...)
 
 char *scat(char *dest, const char *src)
 {
-    // Find the null-terminator in the dest string
     while (*dest != '\0')
     {
         dest++;
     };
-    // Copy characters from src to dest
+
     while (*src != '\0')
     {
         *dest = *src;
         dest++;
         src++;
     };
-    // Null-terminate the concatenated string
     *dest = '\0';
     return dest;
 }
