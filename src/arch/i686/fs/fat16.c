@@ -95,7 +95,7 @@ typedef struct FAT16DateInfo
 typedef enum FAT16EntryType
 {
     FAT16_ENTRY_TYPE_FILE,
-    FAT16_ETNRY_TYPE_DIRECTORY,
+    FAT16_ENTRY_TYPE_DIRECTORY,
 } FAT16EntryType;
 
 typedef struct FAT16Directory
@@ -467,23 +467,24 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
     const uint32_t first_data_sector = fat16_header.bpb.BPB_RsvdSecCnt + fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + (root_dir_sectors);
     const uint32_t first_root_dir_sector = first_data_sector - root_dir_sectors;
     kprintf("First Root Dir Sector: %d\n", first_root_dir_sector);
+    const uint32_t root_dir_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry);
+    kprintf("Root Dir Size: %d\n", root_dir_size);
+    uint8_t buffer[root_dir_size];
 
-    uint32_t curr_sector = first_root_dir_sector;
-    uint8_t buffer[32] = {};
+    const int32_t res = stream_read(&stream, buffer, root_dir_size);
+
+    if (res < 0)
+    {
+        kprintf("StreamError: An error occurred while reading FAT16 Root Directory Entries.\n");
+        return 0x0;
+    };
 
     while (path_identifier)
     {
-        for (int i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++)
+        FAT16DirectoryEntry *curr_root_entry = (FAT16DirectoryEntry *)buffer;
+
+        for (int i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++, curr_root_entry++)
         {
-            const int32_t res = stream_read(&stream, buffer, sizeof(FAT16DirectoryEntry));
-
-            if (res < 0)
-            {
-                kprintf("StreamError: An error occurred while reading FAT16 Root Directory Entries.\n");
-                return 0x0;
-            };
-            FAT16DirectoryEntry *curr_root_entry = (FAT16DirectoryEntry *)buffer;
-
             if (curr_root_entry->file_name[0] != 0x0)
             {
                 uint8_t native_file_name[11] = {};
@@ -491,20 +492,25 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
 
                 if (mcmp(curr_root_entry->file_name, native_file_name, 11) == 0)
                 {
-                    // Add TODO logic to distinguish between file and directory
                     FAT16Entry *fat16_entry = kcalloc(sizeof(FAT16Entry));
-                    fat16_entry->type = FAT16_ENTRY_TYPE_FILE;
 
                     if (!fat16_entry)
                     {
                         kprintf("FAT16 Error: Not enough memory. Cannot allocate memory for a FAT16 entry.\n");
                         return 0x0;
                     };
+
+                    fat16_entry->type =
+                        curr_root_entry->attributes & DIRECTORY
+                            ? FAT16_ENTRY_TYPE_DIRECTORY
+                            : FAT16_ENTRY_TYPE_FILE;
+
                     mcpy(fat16_entry->file, curr_root_entry, sizeof(FAT16DirectoryEntry));
                     kprintf("==========================\n");
                     kprintf("=   FAT16Entry:\n");
                     kprintf("==========================\n");
                     kprintf("=   Filename: %s\n", fat16_entry->file->file_name);
+                    kprintf("=   Attribute: 0x%x\n", fat16_entry->file->attributes);
                     kprintf("=   Low Cluster: %d\n", fat16_entry->file->low_cluster);
                     kprintf("==========================\n");
                     return fat16_entry;

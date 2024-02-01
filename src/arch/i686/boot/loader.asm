@@ -48,5 +48,5 @@ section .bss
     align 16        ; Align the beginning of the .bss section on a 16-byte boundary to ensures that stack_bottom starts at an address that is divisible evenly by 16
 
     stack_bottom:
-        resb 4096   ; Reserve 4096 bytes for the stack
+        resb 32768   ; Reserve 32768 bytes for the stack
     stack_top:

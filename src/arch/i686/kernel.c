@@ -193,7 +193,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     if (fd)
     {
-        kprintf("A:/ABC.TXT has FileDescriptor %d\n", fd);
+        kprintf("FileDescriptor %d\n", fd);
     };
     kprintf(">");
 
