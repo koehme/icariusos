@@ -10,6 +10,13 @@
 
 #define FAT16_DEBUG_DELAY 0
 
+Superblock fat16 = {
+    .resolve_cb = 0x0,
+    .open_cb = 0x0,
+    .read_cb = 0x0,
+    .name = "FAT16",
+};
+
 typedef struct BIOSParameterBlock
 {
     uint8_t BS_jmpBoot[3];   // jump over the disk format information (the BPB and EBPB)
@@ -116,12 +123,6 @@ typedef struct FAT16FileDescriptor
     uint32_t pos;
 } FAT16FileDescriptor;
 
-Superblock fat16 = {
-    .resolve_cb = 0x0,
-    .open_cb = 0x0,
-    .name = "FAT16",
-};
-
 FAT16InternalHeader fat16_header = {
     .bpb = {
         .BS_jmpBoot = {0},
@@ -172,6 +173,7 @@ Superblock *fat16_init(void)
 {
     fat16.resolve_cb = fat16_resolve;
     fat16.open_cb = fat16_open;
+    fat16.read_cb = fat16_read;
     return &fat16;
 };
 
@@ -554,4 +556,10 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     fd->entry = entry;
     fd->pos = 0;
     return (void *)fd;
+};
+
+size_t fat16_read(ATADev *dev, void *internal, void *buffer, size_t n_bytes, size_t n_blocks)
+{
+    kprintf("To-do: FAT16 Read...\n");
+    return 0;
 };

@@ -193,7 +193,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     if (fd)
     {
-        kprintf("FileDescriptor %d\n", fd);
+        kprintf("FileDescriptor has opened: %d\n", fd);
+
+        uint8_t buffer[32] = {};
+        size_t bytes = 0;
+        bytes = vfs_fread(buffer, 32, 1, fd);
+        kprintf("Bytes read: %d\n", bytes);
     };
     kprintf(">");
 
