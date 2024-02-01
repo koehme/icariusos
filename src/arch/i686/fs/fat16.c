@@ -454,6 +454,11 @@ void fat16_userland_filename_to_native(uint8_t *native_file_name, uint8_t *file_
     return;
 };
 
+static uint32_t fat16_combine_cluster(uint16_t high_cluster, uint16_t low_cluster)
+{
+    return ((uint32_t)high_cluster << 16) | low_cluster;
+};
+
 FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
 {
     const uint32_t partition_offset = 0x100000;
@@ -511,7 +516,8 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
                     kprintf("==========================\n");
                     kprintf("=   Filename: %s\n", fat16_entry->file->file_name);
                     kprintf("=   Attribute: 0x%x\n", fat16_entry->file->attributes);
-                    kprintf("=   Low Cluster: %d\n", fat16_entry->file->low_cluster);
+                    kprintf("=   Cluster: %d\n", fat16_combine_cluster(fat16_entry->file->high_cluster, fat16_entry->file->low_cluster));
+                    kprintf("=   Type: %s\n", curr_root_entry->attributes & DIRECTORY ? "Directory" : "File");
                     kprintf("==========================\n");
                     return fat16_entry;
                 };
@@ -548,17 +554,9 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     if (!entry)
     {
         kfree(fd);
-        kprintf("Error: File not found.\n");
+        kprintf("Error: FATEntry not found.\n");
         return 0x0;
     };
-    // Add logic here to handle directory opening if needed
-    // For now, let's assume we are opening a file
-    if (entry->type != FAT16_ENTRY_TYPE_FILE)
-    {
-        kprintf("Error: Attempting to open a directory. Currently only file opening is supported.\n");
-        kfree(fd);
-        return 0x0;
-    }
     fd->entry = entry;
     fd->pos = 0;
     return (void *)fd;
