@@ -72,17 +72,15 @@ static int vfs_create_fd(FileDescriptor **ptr)
 
     for (int i = 0; i < 512; i++)
     {
-        FileDescriptor *curr_descriptor_slot = file_descriptors[i];
-
-        if (curr_descriptor_slot == 0x0)
+        if (file_descriptors[i] == 0x0)
         {
-            FileDescriptor *new_descriptor = kcalloc(sizeof(FileDescriptor));
+            FileDescriptor *descriptor = kcalloc(sizeof(FileDescriptor));
 
-            if (new_descriptor != 0x0)
+            if (descriptor != 0x0)
             {
-                new_descriptor->index = i + 1;
-                curr_descriptor_slot = new_descriptor;
-                *ptr = new_descriptor;
+                descriptor->index = i + 1;
+                file_descriptors[i] = descriptor;
+                *ptr = descriptor;
                 res = 0;
                 break;
             }
@@ -163,7 +161,7 @@ int vfs_fopen(const char *file_name, const VNODE_MODE mode)
     return res;
 };
 
-size_t vfs_fread(const void *ptr, size_t n_bytes, size_t n_blocks, int32_t fd_index)
+size_t vfs_fread(void *buffer, size_t n_bytes, size_t n_blocks, int32_t fd_index)
 {
     if (n_bytes == 0 || n_blocks == 0 || fd_index < 1)
     {
@@ -175,12 +173,11 @@ size_t vfs_fread(const void *ptr, size_t n_bytes, size_t n_blocks, int32_t fd_in
     {
         return -EINVAL;
     };
-    const size_t readed_bytes = 0x0;
+    const size_t total_read = fd->fs->read_cb(fd->dev, fd->internal, buffer, n_bytes, n_blocks);
 
-    if (readed_bytes < 0)
+    if (total_read <= 0)
     {
-        kprintf("Error reading from file. Bytes read: %d)\n", readed_bytes);
         return 0;
     };
-    return readed_bytes;
+    return total_read;
 };
