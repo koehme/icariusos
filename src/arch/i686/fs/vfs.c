@@ -160,7 +160,6 @@ int vfs_fopen(const char *filename, const char *mode)
         return res;
     };
     void *internal = dev->fs->open_cb(dev, root_path->path, vmode);
-
     FileDescriptor *fd = 0x0;
     res = vfs_create_fd(&fd);
 
@@ -189,10 +188,5 @@ size_t vfs_fread(void *buffer, size_t n_bytes, size_t n_blocks, int32_t fd_index
         return -EINVAL;
     };
     const size_t total_read = fd->fs->read_cb(fd->dev, fd->internal, buffer, n_bytes, n_blocks);
-
-    if (total_read <= 0)
-    {
-        return 0;
-    };
     return total_read;
 };

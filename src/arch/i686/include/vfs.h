@@ -18,7 +18,7 @@ typedef struct ATADev ATADev;
 
 typedef int (*ResolveFunction)(ATADev *dev);
 typedef void *(*OpenFunction)(ATADev *dev, PathNode *path, const VNODE_MODE mode);
-typedef size_t (*ReadFunction)(ATADev *dev, void *internal, void *buffer, size_t n_bytes, size_t n_blocks);
+typedef size_t (*ReadFunction)(ATADev *dev, void *internal, uint8_t *buffer, size_t n_bytes, size_t n_blocks);
 
 typedef struct Superblock
 {

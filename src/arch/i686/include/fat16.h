@@ -43,6 +43,6 @@ typedef struct FAT16
 Superblock *fat16_init(void);
 int fat16_resolve(ATADev *dev);
 void *fat16_open(ATADev *dev, PathNode *path, const VNODE_MODE mode);
-size_t fat16_read(ATADev *dev, void *internal, void *buffer, size_t n_bytes, size_t n_blocks);
+size_t fat16_read(ATADev *dev, void *internal, uint8_t *buffer, size_t n_bytes, size_t n_blocks);
 
 #endif

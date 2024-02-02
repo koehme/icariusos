@@ -534,7 +534,7 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
 
     if (dev == 0x0 || dev->fs == 0x0 || path == 0x0)
     {
-        kprintf("FAT16 Error: Filesystem or path not initialized.\n");
+        kprintf("FAT16 Error: Device, Filesystem or path not initialized.\n");
         return 0x0;
     };
     FAT16FileDescriptor *fd = kcalloc(sizeof(FAT16FileDescriptor));
@@ -558,8 +558,61 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     return (void *)fd;
 };
 
-size_t fat16_read(ATADev *dev, void *internal, void *buffer, size_t n_bytes, size_t n_blocks)
+uint16_t fat16_read_fat_entry(Stream *stream, uint32_t cluster)
 {
-    kprintf("To-do: FAT16 Read...\n");
-    return 0;
+    uint8_t fat_entry[2];
+    // Calculate the sector containing the FAT entry for the given cluster
+    uint32_t fat_sector = fat16_header.bpb.BPB_RsvdSecCnt + (cluster * 2) / fat16_header.bpb.BPB_BytsPerSec;
+    // Calculate the offset within the sector for the FAT entry
+    uint32_t fat_offset = (cluster * 2) % fat16_header.bpb.BPB_BytsPerSec;
+    // Seek to the appropriate position in the FAT
+    uint32_t fat_entry_position = fat_sector * fat16_header.bpb.BPB_BytsPerSec + fat_offset;
+    stream_seek(stream, fat_entry_position);
+    // Read the 16-bit FAT entry
+    stream_read(stream, fat_entry, sizeof(uint16_t));
+    return *(uint16_t *)fat_entry;
+};
+
+size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes, size_t n_blocks)
+{
+    const uint32_t partition_offset = 0x100000;
+
+    Stream fat_stream = {};
+    stream_init(&fat_stream, dev);
+
+    Stream cluster_stream = {};
+    stream_init(&cluster_stream, dev);
+
+    // In internal is the fully fat16 header from fat16_open routine
+    FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)descriptor;
+    uint32_t offset = fat16_descriptor->pos;
+
+    for (size_t i = 0; i < n_blocks; ++i)
+    {
+        // Combine high and low clusters to get the cluster number
+        const uint32_t cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
+        // calculate_fat_area_absolute calculates partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec
+        const uint32_t data_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
+        // Calculate the starting position in the FAT data area
+        const uint32_t data_cluster_start_offset = data_area_absolute + (cluster - 2) * fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
+        // Seek to the appropriate data cluster start address
+        stream_seek(&cluster_stream, data_cluster_start_offset);
+        // Read data from the cluster_stream into the buffer
+        stream_read(&cluster_stream, buffer, n_bytes);
+        // Follow the cluster chain to the next cluster in the FAT table
+        uint16_t next_cluster = fat16_read_fat_entry(&fat_stream, cluster);
+
+        if (next_cluster >= 0xFFF0 && next_cluster <= 0xFFFF)
+        {
+            // Calculate the starting position in the next data cluster
+            const uint32_t data_cluster_start_offset = data_area_absolute + (next_cluster - 2) * fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
+            // Seek to the appropriate data cluster start address
+            stream_seek(&cluster_stream, data_cluster_start_offset);
+        };
+        // Update buffer pointer and offset
+        buffer += n_bytes;
+        offset += n_bytes;
+    };
+    fat16_descriptor->pos = offset;
+    return (size_t)(offset - fat16_descriptor->pos);
 };
