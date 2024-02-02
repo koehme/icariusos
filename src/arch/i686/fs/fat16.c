@@ -513,7 +513,7 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
                     kprintf("=   Filename: %s\n", fat16_entry->file->file_name);
                     kprintf("=   Attribute: 0x%x\n", fat16_entry->file->attributes);
                     kprintf("=   Cluster: %d\n", fat16_combine_cluster(fat16_entry->file->high_cluster, fat16_entry->file->low_cluster));
-                    kprintf("=   Type: %s\n", curr_root_entry->attributes & DIRECTORY ? "Directory" : "File");
+                    kprintf("=   Type: %s\n", fat16_entry->file->attributes & DIRECTORY ? "Directory" : "File");
                     kprintf("==========================\n");
                     return fat16_entry;
                 };
@@ -573,43 +573,34 @@ uint16_t fat16_read_fat_entry(Stream *stream, uint32_t cluster)
     return *(uint16_t *)fat_entry;
 };
 
+uint32_t fat16_cluster_to_sector(uint32_t cluster)
+{
+    const uint32_t root_dir_sectors = (fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirectoryEntry) + fat16_header.bpb.BPB_BytsPerSec - 1) / fat16_header.bpb.BPB_BytsPerSec;
+    const uint32_t data_start_sector = fat16_header.bpb.BPB_RsvdSecCnt + (fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16) + root_dir_sectors;
+    return data_start_sector + ((cluster - 2) * fat16_header.bpb.BPB_SecPerClus);
+};
+
 size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes, size_t n_blocks)
 {
     const uint32_t partition_offset = 0x100000;
 
-    Stream fat_stream = {};
+    Stream fat_stream = {}, data_stream = {};
     stream_init(&fat_stream, dev);
+    stream_init(&data_stream, dev);
 
-    Stream cluster_stream = {};
-    stream_init(&cluster_stream, dev);
-
-    // In internal is the fully fat16 header from fat16_open routine
     FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)descriptor;
     uint32_t offset = fat16_descriptor->pos;
 
     for (size_t i = 0; i < n_blocks; ++i)
     {
-        // Combine high and low clusters to get the cluster number
         const uint32_t cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
-        // calculate_fat_area_absolute calculates partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec
-        const uint32_t data_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
-        // Calculate the starting position in the FAT data area
-        const uint32_t data_cluster_start_offset = data_area_absolute + (cluster - 2) * fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
-        // Seek to the appropriate data cluster start address
-        stream_seek(&cluster_stream, data_cluster_start_offset);
-        // Read data from the cluster_stream into the buffer
-        stream_read(&cluster_stream, buffer, n_bytes);
-        // Follow the cluster chain to the next cluster in the FAT table
-        uint16_t next_cluster = fat16_read_fat_entry(&fat_stream, cluster);
-
-        if (next_cluster >= 0xFFF0 && next_cluster <= 0xFFFF)
-        {
-            // Calculate the starting position in the next data cluster
-            const uint32_t data_cluster_start_offset = data_area_absolute + (next_cluster - 2) * fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
-            // Seek to the appropriate data cluster start address
-            stream_seek(&cluster_stream, data_cluster_start_offset);
-        };
-        // Update buffer pointer and offset
+        const uint32_t sector = fat16_cluster_to_sector(cluster);
+        const uint32_t offset_within_cluster = offset % (fat16_header.bpb.BPB_SecPerClus * dev->sector_size);
+        const uint32_t data_position = partition_offset + (sector * dev->sector_size) + offset_within_cluster;
+        // Read the data
+        stream_seek(&data_stream, data_position);
+        stream_read(&data_stream, buffer, n_bytes);
+        // Update buffer and offset for the next iteration
         buffer += n_bytes;
         offset += n_bytes;
     };

@@ -189,15 +189,16 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
-    const int32_t fd = vfs_fopen("A:/ABC.TXT", "r");
+    uint8_t buffer[256] = {};
 
-    if (fd)
-    {
-        kprintf("FileDescriptor has opened: %d\n", fd);
-        uint8_t buffer[27] = {};
-        vfs_fread(buffer, 27, 1, fd);
-        kprintf("%s\n", buffer);
-    };
+    const int32_t fd_1 = vfs_fopen("A:/TEST.TXT", "r");
+    vfs_fread(buffer, 10, 1, fd_1);
+    kprintf("%s\n", buffer);
+
+    const int32_t fd_2 = vfs_fopen("A:/ABC.TXT", "r");
+    vfs_fread(buffer, 32, 1, fd_2);
+    kprintf("%s\n", buffer);
+
     kprintf(">");
 
     while (true)

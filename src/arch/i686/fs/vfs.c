@@ -76,19 +76,11 @@ static int vfs_create_fd(FileDescriptor **ptr)
         {
             FileDescriptor *descriptor = kcalloc(sizeof(FileDescriptor));
 
-            if (descriptor != 0x0)
-            {
-                descriptor->index = i + 1;
-                file_descriptors[i] = descriptor;
-                *ptr = descriptor;
-                res = 0;
-                break;
-            }
-            else
-            {
-                res = -1;
-                break;
-            };
+            descriptor->index = i + 1;
+            file_descriptors[i] = descriptor;
+            *ptr = descriptor;
+            res = 0;
+            break;
         };
     };
     return res;
