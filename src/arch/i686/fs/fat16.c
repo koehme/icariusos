@@ -500,13 +500,15 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
                         kprintf("FAT16 Error: Not enough memory. Cannot allocate memory for a FAT16 entry.\n");
                         return 0x0;
                     };
-
                     fat16_entry->type =
                         curr_root_entry->attributes & DIRECTORY
                             ? FAT16_ENTRY_TYPE_DIRECTORY
                             : FAT16_ENTRY_TYPE_FILE;
 
-                    mcpy(fat16_entry->file, curr_root_entry, sizeof(FAT16DirectoryEntry));
+                    FAT16DirectoryEntry *fat16_dir_entry = kcalloc(sizeof(FAT16DirectoryEntry));
+                    mcpy(fat16_dir_entry, curr_root_entry, sizeof(FAT16DirectoryEntry));
+
+                    fat16_entry->file = fat16_dir_entry;
                     kprintf("==========================\n");
                     kprintf("=   FAT16Entry:\n");
                     kprintf("==========================\n");
@@ -555,7 +557,7 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     };
     fd->entry = entry;
     fd->pos = 0;
-    return (void *)fd;
+    return fd;
 };
 
 uint16_t fat16_read_fat_entry(Stream *stream, uint32_t cluster)
@@ -588,7 +590,9 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
     stream_init(&fat_stream, dev);
     stream_init(&data_stream, dev);
 
-    FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)descriptor;
+    FAT16FileDescriptor *fat16_descriptor = descriptor;
+    FAT16Entry *fat16_entry = fat16_descriptor->entry;
+    kprintf("fat16_read - fat16_entry->file: %s\n", fat16_entry->file);
     uint32_t offset = fat16_descriptor->pos;
 
     for (size_t i = 0; i < n_blocks; ++i)

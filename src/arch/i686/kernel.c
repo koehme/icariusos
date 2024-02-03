@@ -192,14 +192,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
     uint8_t buffer[256] = {};
 
     const int32_t fd_1 = vfs_fopen("A:/TEST.TXT", "r");
-    vfs_fread(buffer, 10, 1, fd_1);
-    kprintf("%s\n", buffer);
-
     const int32_t fd_2 = vfs_fopen("A:/ABC.TXT", "r");
-    vfs_fread(buffer, 32, 1, fd_2);
+
+    vfs_fread(buffer, 4, 1, fd_1); // Prints "TEST" from TEST.TXT
     kprintf("%s\n", buffer);
 
-    kprintf(">");
+    vfs_fread(buffer, 27, 1, fd_2);
+    kprintf("%s\n", buffer); // Prints "ABCDEFGHIJKLMNOPQRSTUVWXYZ" from ABC.TXT
 
     while (true)
     {
