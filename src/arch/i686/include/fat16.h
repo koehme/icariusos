@@ -12,6 +12,14 @@
 #include "ata.h"
 #include "vfs.h"
 
+typedef enum FAT16Values
+{
+    FAT16_VALUE_FREE = 0x0000,
+    FAT16_VALUE_RESERVED = 0x0001,
+    FAT16_VALUE_BAD_CLUSTER = 0xFFF7,
+    FAT16_VALUE_END_OF_CHAIN = 0xFFF8,
+} FAT16Values;
+
 typedef enum FAT16Limits
 {
     FAT16_MIN_CLUSTERS = 4085,
@@ -40,7 +48,7 @@ typedef struct FAT16
     char name[10];
 } FAT16;
 
-Superblock *fat16_init(void);
+FileSystem *fat16_init(void);
 int fat16_resolve(ATADev *dev);
 void *fat16_open(ATADev *dev, PathNode *path, const VNODE_MODE mode);
 size_t fat16_read(ATADev *dev, void *internal, uint8_t *buffer, size_t n_bytes, size_t n_blocks);

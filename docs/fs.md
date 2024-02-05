@@ -8,7 +8,7 @@ The Virtual File System (VFS) is a crucial abstraction layer in icariusOS that a
 
 The VFS (Virtual File System) handles key object types, such as:
 
-- **Superblock:** Describes a file system.
+- **FileSystem:** Describes a file system.
 - **FileDescriptor:** Is used to refer to the handle that the kernel returns to a user program when it opens a file.
 - **V-node:** Describes a file.
 - **Directory:** Describes a file system directory.

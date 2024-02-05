@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct Superblock Superblock;
+typedef struct FileSystem FileSystem;
 
 typedef enum ATA_ATTRIBUTES
 {
@@ -70,7 +70,7 @@ typedef struct ATADev
     uint64_t total_sectors; // Total available sectors
     uint64_t capacity;      // Available device capacity in bytes
     uint8_t buffer[512];    // Data buffer for temporary storage
-    Superblock *fs;         // Filesystem mapped to the disk´
+    FileSystem *fs;         // Filesystem mapped to the disk´
     uint8_t features;       // Bitmasks for ata device features if bit 0 is set pio28 is available. bit 1 is for pio48
 } ATADev;
 

@@ -25,6 +25,7 @@ sudo grub-install --target=i386-pc --root-directory=/mnt --no-floppy --modules="
 
 sudo cp ./iso/boot/grub/grub.cfg /mnt/boot/grub/grub.cfg
 sudo cp ./bin/ICARIUS.BIN /mnt/boot/ICARIUS.BIN
+
 sudo cp ./bin/TEST.TXT /mnt/TEST.TXT
 sudo cp ./bin/ABC.TXT /mnt/ABC.TXT
 

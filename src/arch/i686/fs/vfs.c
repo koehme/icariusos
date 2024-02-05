@@ -8,9 +8,9 @@
 #include "fat16.h"
 #include "pathparser.h"
 
-extern Superblock fat16;
+extern FileSystem fat16;
 
-static Superblock *vfs_superblocks[8] = {
+static FileSystem *vfs_superblocks[8] = {
     0x0,
     0x0,
     0x0,
@@ -26,13 +26,13 @@ static FileDescriptor *file_descriptors[512] = {};
 void vfs_init(void)
 {
     mset8(file_descriptors, 0x0, sizeof(FileDescriptor) * 512);
-    mset8(vfs_superblocks, 0x0, sizeof(Superblock) * 8);
-    Superblock *fat16 = fat16_init();
+    mset8(vfs_superblocks, 0x0, sizeof(FileSystem) * 8);
+    FileSystem *fat16 = fat16_init();
     vfs_insert(fat16);
     return;
 };
 
-static Superblock **vfs_find_empty_superblock(void)
+static FileSystem **vfs_find_empty_superblock(void)
 {
     size_t i = 0;
 
@@ -46,9 +46,9 @@ static Superblock **vfs_find_empty_superblock(void)
     return 0x0;
 };
 
-void vfs_insert(Superblock *fs)
+void vfs_insert(FileSystem *fs)
 {
-    Superblock **vfs_free_slot = 0x0;
+    FileSystem **vfs_free_slot = 0x0;
 
     if (!fs)
     {
@@ -75,7 +75,6 @@ static int vfs_create_fd(FileDescriptor **ptr)
         if (file_descriptors[i] == 0x0)
         {
             FileDescriptor *descriptor = kcalloc(sizeof(FileDescriptor));
-
             descriptor->index = i + 1;
             file_descriptors[i] = descriptor;
             *ptr = descriptor;
@@ -96,9 +95,9 @@ static FileDescriptor *vfs_get_fd(const int fd_index)
     return fd;
 };
 
-Superblock *vfs_resolve(ATADev *dev)
+FileSystem *vfs_resolve(ATADev *dev)
 {
-    Superblock *superblock = 0x0;
+    FileSystem *superblock = 0x0;
 
     if (!dev)
     {
