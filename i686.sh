@@ -24,11 +24,11 @@ export PATH="$PREFIX/bin:$PATH"
 mkdir /tmp/src
 cd /tmp/src
 
-curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
-tar xf binutils-2.41.tar.gz
+curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.gz
+tar xf binutils-2.42.tar.gz
 mkdir binutils-build
 cd binutils-build
-../binutils-2.41/configure --target=$TARGET --enable-interwork --enable-multilib --disable-nls --disable-werror --prefix=$PREFIX 2>&1 | tee configure.log
+../binutils-2.42/configure --target=$TARGET --enable-interwork --enable-multilib --disable-nls --disable-werror --prefix=$PREFIX 2>&1 | tee configure.log
 sudo make all install 2>&1 | tee make.log
 
 sudo rm -rf /tmp/src
