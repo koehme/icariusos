@@ -567,8 +567,6 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
     size_t bytes_read = 0;
     size_t remaining_bytes = n_bytes * n_blocks - bytes_read;
 
-    // We should check if remaining_bytes is bigger than cluster_size_bytes!!!
-    // Implement check
     const uint32_t sector = fat16_data_cluster_to_sector(start_cluster);
     const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.BPB_BytsPerSec) + first_cluster_offset;
 
@@ -576,12 +574,13 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
     size_t read_size = remaining_bytes < cluster_size_bytes ? remaining_bytes : cluster_size_bytes;
 
     stream_seek(&data_stream, data_pos);
-    stream_read(&data_stream, buffer, read_size);
+    stream_read(&data_stream, buffer + first_cluster_offset, read_size);
 
     bytes_read += read_size;
     fat16_descriptor->pos += read_size;
 
     uint16_t curr_cluster = start_cluster;
+    size_t initial_bytes_read = bytes_read;
 
     while (fat16_descriptor->pos >= cluster_size_bytes)
     {
@@ -608,10 +607,17 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
         const uint32_t next_data_pos = partition_offset + (next_sector * fat16_header.bpb.BPB_BytsPerSec);
 
         stream_seek(&data_stream, next_data_pos);
-        stream_read(&data_stream, buffer + bytes_read, read_size);
+        stream_read(&data_stream, buffer, read_size);
 
         curr_cluster = next_cluster;
         remaining_bytes -= read_size;
+        buffer += read_size;
+        bytes_read += read_size;
     };
+
+    if (bytes_read == initial_bytes_read)
+    {
+        buffer += bytes_read;
+    }
     return bytes_read;
 };
