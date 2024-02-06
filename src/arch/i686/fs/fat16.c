@@ -561,63 +561,43 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
     const uint32_t root_start_cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
 
     // Determine the starting cluster for reading
-    uint16_t start_cluster = (fat16_descriptor->pos / fat16_header.bpb.BPB_BytsPerSec) + root_start_cluster;
+    uint16_t start_cluster = (fat16_descriptor->pos / cluster_size_bytes) + root_start_cluster;
     uint16_t first_cluster_offset = fat16_descriptor->pos % cluster_size_bytes;
 
     size_t bytes_read = 0;
     size_t remaining_bytes = n_bytes * n_blocks - bytes_read;
-
-    const uint32_t sector = fat16_data_cluster_to_sector(start_cluster);
-    const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.BPB_BytsPerSec) + first_cluster_offset;
-
     // Adjust read_size to the smaller of remaining_bytes and cluster_size_bytes
     size_t read_size = remaining_bytes < cluster_size_bytes ? remaining_bytes : cluster_size_bytes;
 
-    stream_seek(&data_stream, data_pos);
-    stream_read(&data_stream, buffer + first_cluster_offset, read_size);
-
-    bytes_read += read_size;
-    fat16_descriptor->pos += read_size;
-
-    uint16_t curr_cluster = start_cluster;
-    size_t initial_bytes_read = bytes_read;
-
-    while (fat16_descriptor->pos >= cluster_size_bytes)
+    while (remaining_bytes)
     {
-        // Build a buffer for the appropiate fat table entry
+        const uint32_t sector = fat16_data_cluster_to_sector(start_cluster);
+        const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.BPB_BytsPerSec) + first_cluster_offset;
+
+        stream_seek(&data_stream, data_pos);
+        stream_read(&data_stream, buffer + bytes_read, read_size);
+
+        bytes_read += read_size;
+        fat16_descriptor->pos += read_size;
+        remaining_bytes -= read_size;
+        // Build a buffer for the appropriate FAT table entry
         uint8_t fat_entry[2] = {};
-        // Get the absolute offset to the fat table entry. the entry points to the next cluster
-        const uint32_t fat_entry_offset = partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec + curr_cluster * 2;
-        // Jump into this position in the fat_stream
+        // Get the absolute offset to the FAT table entry. The entry points to the next cluster
+        const uint32_t fat_entry_offset = partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec + start_cluster * 2;
+        // Jump to this position in the fat_stream
         stream_seek(&fat_stream, fat_entry_offset);
-        // Read the fata into the buffer fat_entry
+        // Read the data into the buffer fat_entry
         stream_read(&fat_stream, fat_entry, 2 * sizeof(uint8_t));
-        // We reached the max cluster_size_bytes so we must look into the next clusters. determine next cluster from fat
+        // We reached the max cluster_size_bytes so we must look into the next clusters. Determine next cluster from FAT
         const uint16_t next_cluster = ((uint16_t)fat_entry[0]) | ((uint16_t)fat_entry[1] << 8);
 
         if (next_cluster >= FAT16_VALUE_END_OF_CHAIN)
         {
             break;
         };
+        start_cluster = next_cluster;
         // Adjust read_size based on remaining bytes and cluster size
         read_size = remaining_bytes < cluster_size_bytes ? remaining_bytes : cluster_size_bytes;
-
-        // Read the data again starting from the next cluster
-        const uint32_t next_sector = fat16_data_cluster_to_sector(next_cluster);
-        const uint32_t next_data_pos = partition_offset + (next_sector * fat16_header.bpb.BPB_BytsPerSec);
-
-        stream_seek(&data_stream, next_data_pos);
-        stream_read(&data_stream, buffer, read_size);
-
-        curr_cluster = next_cluster;
-        remaining_bytes -= read_size;
-        buffer += read_size;
-        bytes_read += read_size;
     };
-
-    if (bytes_read == initial_bytes_read)
-    {
-        buffer += bytes_read;
-    }
     return bytes_read;
 };
