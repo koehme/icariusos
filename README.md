@@ -58,6 +58,8 @@ You can download it from the [official Ubuntu website](https://ubuntu.com/downlo
 Before running icariusOS, ensure you have generated the FAT16 filesystem using the following command:
 
 ```bash
+mkdir ./bin
+mkdir ./obj
 ./build.sh
 ./fat16.sh
 ```
