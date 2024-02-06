@@ -189,15 +189,19 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
-    uint8_t buffer[32768];
-    mset8(buffer, 0x0, 32768);
-
     const int32_t fd = vfs_fopen("A:/TEST.TXT", "r");
 
-    vfs_fread(buffer, 10, 1, fd);
-    vfs_fread(buffer, 10, 1, fd);
+    uint8_t buffer1[9216];
+    vfs_fread(buffer1, 9000, 1, fd);
+    kprintf("%s\n", buffer1);
 
-    kprintf("%s\n", (uint8_t *)(buffer));
+    uint8_t buffer2[64];
+    vfs_fread(buffer2, 10, 1, fd);
+    kprintf("%s\n", buffer2);
+
+    uint8_t buffer3[64];
+    vfs_fread(buffer3, 10, 2, fd);
+    kprintf("%s\n", buffer3);
 
     while (true)
     {
