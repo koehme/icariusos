@@ -1,4 +1,5 @@
 bin/
+!bin/*.TXT
 obj/
 elf/
 *.BIN
