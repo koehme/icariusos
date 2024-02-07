@@ -1,9 +1,3 @@
-bin/
-!bin/*.TXT
-obj/
-elf/
-*.BIN
-*.img
 ICARIUS.BIN
 ICARIUS.img
 iso/boot/ICARIUS.BIN
