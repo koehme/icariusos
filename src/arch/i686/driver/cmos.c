@@ -29,7 +29,7 @@ void cmos_dump(CMOS *self)
         asm_outb(CMOS_PORT_INDEX, cmos_register);
         const uint8_t value = asm_inb(CMOS_PORT_DATA);
 
-        for (volatile int i = 0; i < 100; i++)
+        for (int i = 0; i < 100; i++)
         {
             asm_do_nop();
         };
