@@ -30,7 +30,8 @@ I've loved technology and all its different parts since I was a kid. It makes me
 | [x]    | Message of the Day: Created a captivating and sexy message of the day! 😎                                         |
 | [x]    | kprintf Refinement: Improved kprintf and fixed bugs in %s and %d functionalities.                                |
 | [x]    | Create fat16 disk: To implement next the fat16 driver to read clusters from the filesystem                        |
-| [ ]    | VFS (In Progress)                                                                                                |
+| [x]    | VFS layer vfs_fopen and vfs_fread implemented                                                                                              |
+| [x]    | Ata driver using 48bit mode improved                                                                                          |
 | [ ]    | FAT16 driver (In Progress)                                                                                      |
 | [ ]    | Keyboard Driver (In Progress)                                                                                    |
 
