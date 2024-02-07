@@ -38,5 +38,5 @@ kernel:
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/string/string.c -o ./obj/string.o
 
 image:
-	i686-elf-ld -n -T ./linker.ld ./obj/multiboot.o ./obj/loader.o ./obj/kernel.o ./obj/ata.o ./obj/cmos.o ./obj/cursor.o ./obj/keyboard.o ./obj/timer.o ./obj/vga.o ./obj/pathlexer.o ./obj/pathparser.o ./obj/stream.o ./obj/idt.o ./obj/idt.asm.o ./obj/io.asm.o ./obj/heap.o ./obj/mem.o ./obj/page.o ./obj/page.asm.o ./obj/string.o ./obj/vfs.o ./obj/fat16.o -o ./bin/ICARIUS.BIN
+	i686-elf-ld --no-warn-rwx-segments -n -T ./linker.ld ./obj/multiboot.o ./obj/loader.o ./obj/kernel.o ./obj/ata.o ./obj/cmos.o ./obj/cursor.o ./obj/keyboard.o ./obj/timer.o ./obj/vga.o ./obj/pathlexer.o ./obj/pathparser.o ./obj/stream.o ./obj/idt.o ./obj/idt.asm.o ./obj/io.asm.o ./obj/heap.o ./obj/mem.o ./obj/page.o ./obj/page.asm.o ./obj/string.o ./obj/vfs.o ./obj/fat16.o -o ./bin/ICARIUS.BIN
 	cp ./bin/ICARIUS.BIN ./iso/boot/ICARIUS.BIN
