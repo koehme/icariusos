@@ -8,7 +8,7 @@
 #include "stream.h"
 #include "mem.h"
 
-#define FAT16_DEBUG_DELAY 0
+#define FAT16_DEBUG_DELAY 5000
 
 FileSystem fat16 = {
     .resolve_cb = 0x0,
@@ -16,6 +16,42 @@ FileSystem fat16 = {
     .read_cb = 0x0,
     .name = "FAT16",
 };
+
+typedef enum FAT16Values
+{
+    FAT16_VALUE_FREE = 0x0000,
+    FAT16_VALUE_RESERVED = 0x0001,
+    FAT16_VALUE_BAD_CLUSTER = 0xFFF7,
+    FAT16_VALUE_END_OF_CHAIN = 0xFFF8,
+} FAT16Values;
+
+typedef enum FAT16Limits
+{
+    FAT16_MIN_CLUSTERS = 4085,
+    FAT16_MAX_CLUSTERS = 65525,
+} FAT16Limits;
+
+typedef enum FAT16FileAttributes
+{
+    READ_WRITE = 0x00,
+    READ_ONLY = 0x01,
+    HIDDEN = 0x02,
+    SYSTEM = 0x04,
+    VOLUME_ID = 0x08,
+    DIRECTORY = 0x10,
+    ARCHIVE = 0x20,
+    LFN = READ_ONLY | HIDDEN | SYSTEM | VOLUME_ID,
+    DEVICE = 0x40,
+    DELETED = 0xE5,
+} FAT16FileAttributes;
+
+typedef struct FAT16
+{
+    ResolveFunction resolve_cb;
+    OpenFunction open_cb;
+    ReadFunction read_cb;
+    char name[10];
+} FAT16;
 
 typedef struct BIOSParameterBlock
 {
@@ -60,18 +96,6 @@ typedef struct FAT16DirEntry
     uint16_t low_cluster;       // low 16 bits of the first cluster number
     uint32_t file_size;         // size of the file in bytes
 } __attribute__((packed)) FAT16DirEntry;
-
-typedef struct FAT16LongDirectoryEntry
-{
-    uint8_t ldir_ord;
-    uint16_t ldir_name1[5];
-    uint8_t ldir_attr;
-    uint8_t ldir_type;
-    uint8_t ldir_chksum;
-    uint16_t ldir_name2[6];
-    uint16_t ldir_fstcluslo;
-    uint16_t ldir_name3[2];
-} __attribute__((packed)) FAT16LongDirectoryEntry;
 
 typedef struct FAT16InternalHeader
 {
@@ -366,7 +390,7 @@ int fat16_resolve(ATADev *dev)
     Stream root_dir = {};
     stream_init(&root_dir, dev);
     stream_seek(&root_dir, root_dir_area_absolute);
-    // fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+    fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
     const uint32_t fat_area_offset = calculate_fat_area_offset(&fat16_header.bpb);
     const uint32_t fat_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
@@ -546,58 +570,72 @@ uint32_t fat16_data_cluster_to_sector(uint32_t cluster)
     return data_start_sector + ((cluster - 2) * fat16_header.bpb.BPB_SecPerClus);
 };
 
+uint16_t fat16_read_next_cluster(Stream *fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster)
+{
+    uint8_t fat_entry[2] = {};
+    const uint32_t fat_entry_offset = partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec + curr_cluster * 2;
+    stream_seek(fat_stream, fat_entry_offset);
+    stream_read(fat_stream, fat_entry, 2 * sizeof(uint8_t));
+    return ((uint16_t)fat_entry[0]) | ((uint16_t)fat_entry[1] << 8);
+};
+
+// Read data from a FAT16 filesystem
 size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes, size_t n_blocks)
 {
+    // Define the offset of the partition
     const uint32_t partition_offset = 0x100000;
-
+    // Essentially to seek through the streams
     Stream fat_stream = {}, data_stream = {};
     stream_init(&fat_stream, dev);
     stream_init(&data_stream, dev);
-
+    // Cast the vfs internal back to the concrete fat16 descriptor
     FAT16FileDescriptor *fat16_descriptor = descriptor;
-    FAT16Entry *fat16_entry = fat16_descriptor->entry;
-
-    const uint16_t cluster_size_bytes = fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
-    const uint32_t root_start_cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
-
+    // Maximum cluster size in bytes of a single FAT16 cluster
+    const uint16_t max_cluster_size_bytes = fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
+    // The given file descriptor holds a pointer to the root dir entry, which holds the fat16 start cluster number to read
+    const uint32_t start_cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
     // Determine the starting cluster for reading
-    uint16_t start_cluster = (fat16_descriptor->pos / cluster_size_bytes) + root_start_cluster;
-    uint16_t first_cluster_offset = fat16_descriptor->pos % cluster_size_bytes;
-
+    uint16_t curr_cluster = (fat16_descriptor->pos / max_cluster_size_bytes) + start_cluster;
+    const uint16_t first_cluster_offset = fat16_descriptor->pos % max_cluster_size_bytes;
+    // Initialize bytes_read for tracking read progress and return to the  caller of the function the amount of readed bytes
     size_t bytes_read = 0;
+    // Initialize remaining_bytes for tracking the termination of the following read loop
     size_t remaining_bytes = n_bytes * n_blocks - bytes_read;
-    // Adjust read_size to the smaller of remaining_bytes and cluster_size_bytes
-    size_t read_size = remaining_bytes < cluster_size_bytes ? remaining_bytes : cluster_size_bytes;
+    // Limit read_size to the smaller of remaining_bytes and the max cluster size in FAT16 filesystem
+    size_t read_size = remaining_bytes < max_cluster_size_bytes ? remaining_bytes : max_cluster_size_bytes;
 
     while (remaining_bytes)
     {
-        const uint32_t sector = fat16_data_cluster_to_sector(start_cluster);
+        // Convert the logical fat16 cluster number to a physical sector
+        const uint32_t sector = fat16_data_cluster_to_sector(curr_cluster);
+        // Use the previously calculated sector and add the partition offset and the first cluster to get the data position on die ata device
         const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.BPB_BytsPerSec) + first_cluster_offset;
-
+        // Seek to the data position and read data into the buffer
         stream_seek(&data_stream, data_pos);
-        stream_read(&data_stream, buffer + bytes_read, read_size);
+        // Ensure that new data is appended to the buffer + bytes_read ensures the correct position so that previously written data is not overwritten
+        const int32_t res = stream_read(&data_stream, buffer + bytes_read, read_size);
 
+        if (res < 0)
+        {
+            kprintf("StreamError: An error occurred while reading FAT16.\n");
+            return bytes_read;
+        };
+        // Update read progress
         bytes_read += read_size;
         fat16_descriptor->pos += read_size;
         remaining_bytes -= read_size;
-        // Build a buffer for the appropriate FAT table entry
-        uint8_t fat_entry[2] = {};
-        // Get the absolute offset to the FAT table entry. The entry points to the next cluster
-        const uint32_t fat_entry_offset = partition_offset + fat16_header.bpb.BPB_RsvdSecCnt * fat16_header.bpb.BPB_BytsPerSec + start_cluster * 2;
-        // Jump to this position in the fat_stream
-        stream_seek(&fat_stream, fat_entry_offset);
-        // Read the data into the buffer fat_entry
-        stream_read(&fat_stream, fat_entry, 2 * sizeof(uint8_t));
-        // We reached the max cluster_size_bytes so we must look into the next clusters. Determine next cluster from FAT
-        const uint16_t next_cluster = ((uint16_t)fat_entry[0]) | ((uint16_t)fat_entry[1] << 8);
-
+        // Determine the next cluster from the FAT table
+        const uint16_t next_cluster = fat16_read_next_cluster(&fat_stream, partition_offset, curr_cluster);
+        // Check if end of file is reached, if yes, exit loop
         if (next_cluster >= FAT16_VALUE_END_OF_CHAIN)
         {
             break;
         };
-        start_cluster = next_cluster;
+        // Update current cluster for the next iteration
+        curr_cluster = next_cluster;
         // Adjust read_size based on remaining bytes and cluster size
-        read_size = remaining_bytes < cluster_size_bytes ? remaining_bytes : cluster_size_bytes;
+        read_size = remaining_bytes < max_cluster_size_bytes ? remaining_bytes : max_cluster_size_bytes;
     };
+    // Return the total bytes read
     return bytes_read;
 };

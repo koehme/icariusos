@@ -20,6 +20,6 @@ typedef struct Stream
 
 void stream_init(Stream *self, ATADev *dev);
 void stream_seek(Stream *self, const size_t pos);
-int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes);
+int32_t stream_read(Stream *self, uint8_t *buffer, size_t n_bytes);
 
 #endif

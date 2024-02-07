@@ -5,7 +5,6 @@ sudo apt-get upgrade -y
 
 sudo apt-get install nasm -y
 sudo apt-get install qemu -y
-sudo apt-get install qemu-kvm -y
 sudo apt-get install build-essential -y
 sudo apt-get install bison -y
 sudo apt-get install flex -y

@@ -15,17 +15,19 @@ void stream_seek(Stream *self, const size_t pos)
     return;
 };
 
-int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes)
+int32_t stream_read(Stream *self, uint8_t *buffer, const size_t n_bytes)
 {
-    int8_t ata_status = -1;
+    int32_t ata_status = -1;
 
     if (buffer == 0x0)
     {
         return -1;
     };
     const size_t block_size = self->dev->sector_size;
+    size_t remaining_bytes = n_bytes;
+    size_t read_size = n_bytes > block_size ? block_size : n_bytes;
 
-    while (total_bytes > 0)
+    while (remaining_bytes)
     {
         const size_t lba_block = self->pos / block_size;
         const size_t offset = self->pos % block_size;
@@ -35,14 +37,14 @@ int stream_read(Stream *self, uint8_t *buffer, size_t total_bytes)
         {
             return ata_status;
         };
-        const size_t remaining_bytes = total_bytes > block_size ? block_size : total_bytes;
+        read_size = remaining_bytes > block_size ? block_size : remaining_bytes;
 
-        for (size_t i = 0; i < remaining_bytes; i++)
+        for (size_t i = 0; i < read_size; i++)
         {
             *buffer++ = self->dev->buffer[offset + i];
         };
-        self->pos += remaining_bytes;
-        total_bytes -= remaining_bytes;
+        self->pos += read_size;
+        remaining_bytes -= read_size;
     };
     return ata_status;
 };
