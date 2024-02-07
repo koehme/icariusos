@@ -134,7 +134,7 @@ void ata_search_fs(ATADev *self)
     return;
 };
 
-static void ata_transfer(volatile uint16_t *buffer, const size_t size)
+static void ata_transfer(uint16_t *buffer, const size_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
@@ -145,7 +145,7 @@ static void ata_transfer(volatile uint16_t *buffer, const size_t size)
 
 static int ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
 {
-    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)self->buffer;
+    uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
 
     asm_outb(ATA_CONTROL_PORT, 0x40);                       // Select master
     asm_outb(ATA_SECTOR_COUNT_PORT, (sectors >> 8) & 0xFF); // sectors high
@@ -187,7 +187,7 @@ static int ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
 
 static int ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors)
 {
-    volatile uint16_t *ptr_ata_buffer = (volatile uint16_t *)self->buffer;
+    uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
     asm_outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
     asm_outb(ATA_PRIMARY_ERROR, 0x00);
     asm_outb(ATA_SECTOR_COUNT_PORT, sectors);
