@@ -116,7 +116,7 @@ static void heap_mark_as_used(Heap *self, const size_t start_block, const size_t
  * @param start_block The index of the block to mark as free.
  * @return 1 on success, -1 on failure.
  */
-static int heap_mark_as_free(Heap *self, const size_t start_block)
+static int32_t heap_mark_as_free(Heap *self, const size_t start_block)
 {
     uint8_t descriptor = self->descriptor->saddress[start_block];
     const bool is_head = descriptor & DESCRIPTOR_IS_HEAD;
@@ -259,7 +259,7 @@ void heap_free(Heap *self, void *ptr)
     where HAS_NEXT should not be set.
     */
     const size_t start_block = (((size_t)ptr) / self->block_size) % self->block_size;
-    const int res = heap_mark_as_free(self, start_block);
+    const int32_t res = heap_mark_as_free(self, start_block);
 
     if (res == -1)
     {

@@ -66,11 +66,11 @@ void vfs_insert(FileSystem *fs)
     return;
 };
 
-static int vfs_create_fd(FileDescriptor **ptr)
+static int32_t vfs_create_fd(FileDescriptor **ptr)
 {
-    int res = -1;
+    int32_t res = -1;
 
-    for (int i = 0; i < 512; i++)
+    for (size_t i = 0; i < 512; i++)
     {
         if (file_descriptors[i] == 0x0)
         {
@@ -85,7 +85,7 @@ static int vfs_create_fd(FileDescriptor **ptr)
     return res;
 };
 
-static FileDescriptor *vfs_get_fd(const int fd_index)
+static FileDescriptor *vfs_get_fd(const int32_t fd_index)
 {
     if (fd_index <= 0 || fd_index >= 512)
     {
@@ -104,7 +104,7 @@ FileSystem *vfs_resolve(ATADev *dev)
         return superblock;
     };
 
-    for (int i = 0; i < 8; i++)
+    for (size_t i = 0; i < 8; i++)
     {
         const bool has_header = vfs_superblocks[i] != 0x0 && vfs_superblocks[i]->resolve_cb(dev) == 0;
 
@@ -131,7 +131,7 @@ static VNODE_MODE vfs_get_vmode(const char *mode)
     return V_INVALID;
 };
 
-int vfs_fopen(const char *filename, const char *mode)
+int32_t vfs_fopen(const char *filename, const char *mode)
 {
     int32_t res = 0;
     const VNODE_MODE vmode = vfs_get_vmode(mode);

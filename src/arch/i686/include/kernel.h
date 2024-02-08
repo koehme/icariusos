@@ -7,7 +7,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define DEBUG_THROTTLE 0
+#define KERNEL_DEBUG_DELAY 0
 
 #include <stddef.h>
 

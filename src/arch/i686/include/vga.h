@@ -7,6 +7,8 @@
 #ifndef VGA_H
 #define VGA_H
 
+#define VGA_DEBUG_DELAY 0
+
 #include <stdint.h>
 
 typedef enum VGAPorts

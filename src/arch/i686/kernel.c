@@ -58,20 +58,20 @@ void ksleep(const uint32_t ms)
 
 void kdelay(const uint64_t delay)
 {
-    for (int i = 0; i < 1000; i++)
+    for (size_t i = 0; i < 1000; i++)
     {
-        for (int j = 0; j < delay; j++)
+        for (size_t j = 0; j < delay; j++)
         {
         };
     };
     return;
 };
 
-void kspinner(const int frames)
+void kspinner(const int32_t frames)
 {
     const char *spinner_frames[4] = {"-", "\\", "|", "/"};
 
-    for (int i = 0; i < frames; i++)
+    for (size_t i = 0; i < frames; i++)
     {
         const char *curr_frame = spinner_frames[i % 4];
         kprintf(curr_frame);
@@ -80,7 +80,7 @@ void kspinner(const int frames)
     return;
 };
 
-void kmotd(unsigned long addr)
+void kmotd(uint32_t addr)
 {
     kspinner(12);
     const Date date = cmos_date(&cmos);

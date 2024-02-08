@@ -67,7 +67,7 @@ static void vga_clear_last_line(VGADisplay *self)
  * @param lines The number of lines by which to scroll up.
  * @return void
  */
-static void vga_scroll_up(VGADisplay *self, const unsigned int lines)
+static void vga_scroll_up(VGADisplay *self, const uint32_t lines)
 {
     uint16_t *start_first_line = (uint16_t *)self->framebuffer;
     uint16_t *start_second_line = (uint16_t *)self->framebuffer + lines * self->width;
@@ -170,9 +170,9 @@ void vga_display_set_cursor(VGADisplay *self, const uint8_t y, const uint8_t x)
  */
 void vga_display_clear(VGADisplay *self)
 {
-    for (int y = 0; y < self->height; y++)
+    for (size_t y = 0; y < self->height; y++)
     {
-        for (int x = 0; x < self->width; x++)
+        for (size_t x = 0; x < self->width; x++)
         {
             vga_display_put_ch_at(self, y, x, ' ', VGA_COLOR_WHITE | (VGA_COLOR_BLACK << 4));
         };
@@ -190,10 +190,10 @@ void vga_print(VGADisplay *self, const char *str, const VGAColor color)
 {
     const size_t len = slen(str);
 
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
         const char ch = str[i];
-        kdelay(DEBUG_THROTTLE);
+        kdelay(VGA_DEBUG_DELAY);
         vga_display_write(self, ch, color);
     };
     cursor_set(self->cursor_y, self->cursor_x);

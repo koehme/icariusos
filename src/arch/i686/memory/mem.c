@@ -68,7 +68,7 @@ void *mcpy(void *dest, const void *src, size_t n_bytes)
     return dest;
 };
 
-int mcmp(const void *s1, const void *s2, size_t n)
+int32_t mcmp(const void *s1, const void *s2, size_t n)
 {
     const uint8_t *p1 = s1;
     const uint8_t *p2 = s2;
@@ -77,7 +77,7 @@ int mcmp(const void *s1, const void *s2, size_t n)
     {
         if (*p1 != *p2)
         {
-            return (int)(*p1) - (int)(*p2);
+            return (int32_t)(*p1) - (int32_t)(*p2);
         };
         p1++;
         p2++;

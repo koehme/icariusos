@@ -105,7 +105,7 @@ PageVirtual virt_address_get_pd_indicies(void *virt_addr)
  *                  (Includes flags such as PAGE_PRESENT, PAGE_READ_WRITE, etc.)
  * @return 0 on success, -1 on failure.
  */
-int virt_address_map(PageEntry *dir, void *virt_addr, const uint32_t phy_addr)
+int32_t virt_address_map(PageEntry *dir, void *virt_addr, const uint32_t phy_addr)
 {
     const bool is_aligned = is_addr_aligned(virt_addr);
 

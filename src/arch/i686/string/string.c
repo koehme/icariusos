@@ -89,9 +89,9 @@ void sreverse(char *str, const size_t length)
  * @param base The base for the conversion (e.g., 10 for decimal conversion).
  * @return A pointer to the resulting string.
  */
-char *itoa(uint32_t num, char *str, int base)
+char *itoa(uint32_t num, char *str, int32_t base)
 {
-    int i = 0;
+    size_t i = 0;
     bool is_negative = false;
 
     if (num == 0)
@@ -111,7 +111,7 @@ char *itoa(uint32_t num, char *str, int base)
     {
         // Extract in base 10 each digit for example 1024 % 10 = 4
         //                                              ^
-        const int rem = num % base;
+        const int32_t rem = num % base;
         // Convert the remainder to the corresponding character and add it to the string buffer
         // If the remainder is greater than 9, use 'a' to 'f'
         str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
@@ -130,7 +130,7 @@ char *itoa(uint32_t num, char *str, int base)
     return str;
 };
 
-int kprintf(const char *fmt, ...)
+int32_t kprintf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -145,7 +145,7 @@ int kprintf(const char *fmt, ...)
             {
             case 'c':
             {
-                const char ch = va_arg(args, int);
+                const char ch = va_arg(args, int32_t);
                 vga_print_ch(&vga_display, ch, VGA_COLOR_LIGHT_GREEN);
                 break;
             };
@@ -158,7 +158,7 @@ int kprintf(const char *fmt, ...)
             case 'd':
             {
                 char buffer[1024] = {};
-                const uint64_t num = va_arg(args, int);
+                const uint64_t num = va_arg(args, int32_t);
                 itoa(num, buffer, 10);
                 vga_print(&vga_display, buffer, VGA_COLOR_LIGHT_GREEN);
                 break;

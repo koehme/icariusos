@@ -51,6 +51,6 @@ typedef struct Keyboard
 
 void keyboard_init();
 void keyboard_read(Keyboard *self);
-int keyboard_wait(void);
+int32_t keyboard_wait(void);
 
 #endif

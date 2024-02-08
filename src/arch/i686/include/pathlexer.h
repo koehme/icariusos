@@ -7,6 +7,8 @@
 #ifndef PATHLEXER_H
 #define PATHLEXER_H
 
+#include <stdint.h>
+
 typedef enum PathType
 {
     PT_IDENTIFIER,
@@ -22,7 +24,7 @@ typedef struct PathToken
 {
     PathType type;
     char *start;
-    int len;
+    int32_t len;
 } PathToken;
 
 typedef struct PathLexer

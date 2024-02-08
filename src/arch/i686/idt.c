@@ -145,7 +145,7 @@ void isr_default_handler(void)
  * @param isr A pointer to the ISR (Interrupt Service Routine) function.
  * @return void
  */
-void idt_set(const int interrupt_n, void *isr)
+void idt_set(const int32_t interrupt_n, void *isr)
 {
     if (interrupt_n < 0 || interrupt_n >= 256)
     {
@@ -168,9 +168,9 @@ void idt_set(const int interrupt_n, void *isr)
 void idt_entries_init(void)
 {
     // Set default interrupt handlers for all entries in the IDT
-    for (int interrupt_n = 0; interrupt_n < 256; interrupt_n++)
+    for (size_t i = 0; i < 256; i++)
     {
-        idt_set(interrupt_n, asm_interrupt_default);
+        idt_set(i, asm_interrupt_default);
     };
     return;
 };

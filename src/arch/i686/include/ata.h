@@ -77,6 +77,6 @@ typedef struct ATADev
 void ata_init(ATADev *self);
 void ata_search_fs(ATADev *self);
 ATADev *ata_get(const ATADeviceType dev);
-int ata_read(ATADev *self, const size_t start_block, const size_t n_blocks);
+int32_t ata_read(ATADev *self, const size_t start_block, const size_t n_blocks);
 
 #endif

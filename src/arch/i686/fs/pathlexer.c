@@ -29,7 +29,7 @@ static PathToken path_lexer_create_token(PathLexer *self, PathType type)
     const PathToken token = {
         .type = type,
         .start = self->start,
-        .len = (int)(self->curr - self->start),
+        .len = (int32_t)(self->curr - self->start),
     };
     return token;
 };

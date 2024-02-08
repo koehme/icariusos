@@ -46,6 +46,6 @@ void page_init_directory(PageDirectory *self, uint8_t flags);
 void page_switch(PageEntry *dir);
 
 PageVirtual virt_address_get_pd_indicies(void *virt_addr);
-int virt_address_map(PageEntry *dir, void *virt_addr, const uint32_t phy_addr);
+int32_t virt_address_map(PageEntry *dir, void *virt_addr, const uint32_t phy_addr);
 
 #endif

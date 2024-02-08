@@ -10,7 +10,7 @@
 #include "kernel.h"
 #include "string.h"
 
-#define ATA_DEBUG_DELAY 50000
+#define ATA_DEBUG_DELAY 0
 
 extern void asm_irq_14h(void);
 
@@ -143,7 +143,7 @@ static void ata_transfer(uint16_t *buffer, const size_t size)
     return;
 };
 
-static int ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
+static int32_t ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
 
@@ -185,7 +185,7 @@ static int ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
     return 0;
 };
 
-static int ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors)
+static int32_t ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors)
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
     asm_outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
@@ -250,7 +250,7 @@ ATADev *ata_get(const ATADeviceType dev)
  *    - Returns 0 if the read operation is successful.
  *    - Returns -1 if the self parameter is 0x0, indicating an invalid ATADisk instance.
  */
-int ata_read(ATADev *self, const size_t start_block, const size_t n_blocks)
+int32_t ata_read(ATADev *self, const size_t start_block, const size_t n_blocks)
 {
     if (!self)
     {

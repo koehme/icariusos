@@ -8,7 +8,7 @@
 #include "stream.h"
 #include "mem.h"
 
-#define FAT16_DEBUG_DELAY 5000
+#define FAT16_DEBUG_DELAY 0
 
 FileSystem fat16 = {
     .resolve_cb = 0x0,
@@ -105,16 +105,16 @@ typedef struct FAT16InternalHeader
 
 typedef struct FAT16TimeInfo
 {
-    int hour;
-    int minute;
-    int second;
+    int32_t hour;
+    int32_t minute;
+    int32_t second;
 } FAT16TimeInfo;
 
 typedef struct FAT16DateInfo
 {
-    int day;
-    int month;
-    int year;
+    int32_t day;
+    int32_t month;
+    int32_t year;
 } FAT16DateInfo;
 
 typedef enum FAT16EntryType
@@ -229,7 +229,7 @@ static bool fat16_validate_header(const FAT16InternalHeader *header)
     return true;
 };
 
-static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const char *msg, const int delay)
+static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const char *msg, const int32_t delay)
 {
     uint8_t BS_VolLab[12] = {};
     uint8_t BS_FilSysType[9] = {};
@@ -248,7 +248,7 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock *ebpb, const
     return;
 };
 
-static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *msg, const int delay)
+static void fat16_dump_base_header(const BIOSParameterBlock *bpb, const char *msg, const int32_t delay)
 {
     kprintf(msg);
     kprintf("----------------------------------\n");
@@ -296,7 +296,7 @@ static uint32_t calculate_fat_area_absolute(const BIOSParameterBlock *bpb, const
     return fat_area_absolute;
 };
 
-static void print_fat16_dir_entry(int i, FAT16DirEntry *entry, const int delay)
+static void print_fat16_dir_entry(size_t i, FAT16DirEntry *entry, const int32_t delay)
 {
     FAT16TimeInfo create_time = fat16_convert_time(entry->create_time);
     FAT16DateInfo create_date = fat16_convert_date(entry->create_date);
@@ -325,7 +325,7 @@ static void print_fat16_dir_entry(int i, FAT16DirEntry *entry, const int delay)
     return;
 };
 
-static void print_fat16_dir_lfn_entry(int i, FAT16DirEntry *entry, const int delay)
+static void print_fat16_dir_lfn_entry(size_t i, FAT16DirEntry *entry, const int32_t delay)
 {
     kprintf("==========================\n");
     kprintf("=   RootDirLFNEntry %d:\n", i);
@@ -341,7 +341,7 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
     const uint32_t root_dir_size = bpb->BPB_RootEntCnt * sizeof(FAT16DirEntry);
     const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirEntry);
 
-    for (int i = 0; i < bpb->BPB_RootEntCnt; i++)
+    for (size_t i = 0; i < bpb->BPB_RootEntCnt; i++)
     {
         FAT16DirEntry entry = {};
         stream_read(stream, (uint8_t *)&entry, sizeof(FAT16DirEntry));
@@ -356,13 +356,13 @@ static void fat16_dump_root_dir_entries(const BIOSParameterBlock *bpb, Stream *s
     return;
 };
 
-int fat16_resolve(ATADev *dev)
+int32_t fat16_resolve(ATADev *dev)
 {
     Stream header_stream;
     const uint32_t partition_offset = 0x100000;
     stream_init(&header_stream, dev);
     stream_seek(&header_stream, partition_offset);
-    const int res = stream_read(&header_stream, (uint8_t *)&fat16_header, sizeof(FAT16InternalHeader));
+    const int32_t res = stream_read(&header_stream, (uint8_t *)&fat16_header, sizeof(FAT16InternalHeader));
 
     if (res != 0)
     {
@@ -390,7 +390,7 @@ int fat16_resolve(ATADev *dev)
     Stream root_dir = {};
     stream_init(&root_dir, dev);
     stream_seek(&root_dir, root_dir_area_absolute);
-    fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+    // fat16_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
     const uint32_t fat_area_offset = calculate_fat_area_offset(&fat16_header.bpb);
     const uint32_t fat_area_absolute = calculate_fat_area_absolute(&fat16_header.bpb, partition_offset);
@@ -480,7 +480,7 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
     {
         FAT16DirEntry *curr_root_entry = (FAT16DirEntry *)buffer;
 
-        for (int i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++, curr_root_entry++)
+        for (size_t i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++, curr_root_entry++)
         {
             if (curr_root_entry->file_name[0] != 0x0)
             {

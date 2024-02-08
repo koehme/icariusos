@@ -50,7 +50,7 @@ const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
  * indicating that the keyboard controller is ready to send data.
  * @return Returns 1 if the keyboard controller is ready, 0 otherwise.
  */
-int keyboard_wait(void)
+int32_t keyboard_wait(void)
 {
     // Wait until the keyboard controller is ready
     for (;;)
