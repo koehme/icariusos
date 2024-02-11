@@ -508,7 +508,7 @@ FAT16DirEntry *fat16_find_file_in_directory(ATADev *dev, uint16_t start_cluster,
             char tmp[11] = {};
             mcpy(tmp, ((FAT16DirEntry *)ptr)->file_name, 11);
 
-            if (scmp(tmp, (char *)native_file_name))
+            if (mcmp(tmp, native_file_name, 11) == 0)
             {
                 // Return the entry if filename matches
                 const uint32_t start_sector = fat16_data_cluster_to_sector(start_cluster);
@@ -549,6 +549,13 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
         return 0x0;
     };
 
+    PathNode *file = path_identifier;
+
+    while (file->next)
+    {
+        file = file->next;
+    };
+
     while (path_identifier)
     {
         FAT16DirEntry *curr_root_entry = (FAT16DirEntry *)buffer;
@@ -557,10 +564,10 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
         {
             if (curr_root_entry->file_name[0] != 0x0)
             {
-                uint8_t native_file_name[11] = {};
-                fat16_userland_filename_to_native(native_file_name, (uint8_t *)path_identifier);
+                uint8_t native_dir_name[11] = {};
+                fat16_userland_filename_to_native(native_dir_name, (uint8_t *)path_identifier);
 
-                if (mcmp(curr_root_entry->file_name, native_file_name, 11) == 0)
+                if (mcmp(curr_root_entry->file_name, native_dir_name, 11) == 0)
                 {
                     FAT16Entry *fat16_entry = kcalloc(sizeof(FAT16Entry));
 
@@ -581,9 +588,9 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
                         fat16_entry->dir->entry = fat16_dir_entry;
 
                         const uint16_t start_cluster = fat16_combine_cluster(curr_root_entry->high_cluster, curr_root_entry->low_cluster);
+                        uint8_t native_file_name[11] = {};
+                        fat16_userland_filename_to_native(native_file_name, (uint8_t *)file->identifier);
                         fat16_find_file_in_directory(dev, start_cluster, native_file_name, fat16_folder);
-
-                        print_fat16_dir_entry(0, fat16_entry->dir->entry, FAT16_DEBUG_DELAY);
                     }
                     else
                     {
@@ -591,15 +598,6 @@ FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
                         FAT16DirEntry *fat16_dir_entry = kcalloc(sizeof(FAT16DirEntry));
                         mcpy(fat16_dir_entry, curr_root_entry, sizeof(FAT16DirEntry));
                         fat16_entry->file = fat16_dir_entry;
-
-                        kprintf("==========================\n");
-                        kprintf("=   FAT16Entry:\n");
-                        kprintf("==========================\n");
-                        kprintf("=   Filename: %s\n", fat16_entry->file->file_name);
-                        kprintf("=   Attribute: 0x%x\n", fat16_entry->file->attributes);
-                        kprintf("=   Cluster: %d\n", fat16_combine_cluster(fat16_entry->file->high_cluster, fat16_entry->file->low_cluster));
-                        kprintf("=   Type: %s\n", fat16_entry->file->attributes & DIRECTORY ? "Directory" : "File");
-                        kprintf("==========================\n");
                     };
                     return fat16_entry;
                 };
@@ -644,6 +642,31 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     return fd;
 };
 
+uint32_t fat16_get_start_cluster_from_descriptor(FAT16FileDescriptor *fat16_descriptor)
+{
+    uint32_t start_cluster = 0;
+
+    switch (fat16_descriptor->entry->type)
+    {
+    case FAT16_ENTRY_TYPE_DIRECTORY:
+    {
+        start_cluster = fat16_combine_cluster(fat16_descriptor->entry->dir->entry->high_cluster, fat16_descriptor->entry->dir->entry->low_cluster);
+
+        break;
+    };
+    case FAT16_ENTRY_TYPE_FILE:
+    {
+        start_cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
+        break;
+    };
+    default:
+    {
+        break;
+    };
+    };
+    return start_cluster;
+};
+
 // Read data from a FAT16 filesystem
 size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes, size_t n_blocks)
 {
@@ -658,7 +681,7 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, size_t n_bytes
     // Maximum cluster size in bytes of a single FAT16 cluster
     const uint16_t max_cluster_size_bytes = fat16_header.bpb.BPB_SecPerClus * fat16_header.bpb.BPB_BytsPerSec;
     // The given file descriptor holds a pointer to the root dir entry, which holds the fat16 start cluster number to read
-    const uint32_t start_cluster = fat16_combine_cluster(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
+    const uint32_t start_cluster = fat16_get_start_cluster_from_descriptor(fat16_descriptor);
     // Determine the starting cluster for reading
     uint16_t curr_cluster = (fat16_descriptor->pos / max_cluster_size_bytes) + start_cluster;
     const uint16_t first_cluster_offset = fat16_descriptor->pos % max_cluster_size_bytes;

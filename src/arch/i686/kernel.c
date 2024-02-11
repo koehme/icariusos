@@ -189,20 +189,31 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
-    const int32_t fd = vfs_fopen("A:/LEET/ABC.TXT", "r");
-
     uint8_t buffer[9216];
-    vfs_fread(buffer, 9000, 1, fd);
-    kprintf("%s\n", buffer);
+
+    const int32_t fd1 = vfs_fopen("A:/LEET/ABC.TXT", "r");
     mset8(buffer, 0x0, 9216);
 
-    vfs_fread(buffer, 10, 1, fd);
+    vfs_fread(buffer, 5, 1, fd1);
     kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
+
+    const int32_t fd2 = vfs_fopen("A:/TEST.TXT", "r");
     mset8(buffer, 0x0, 9216);
 
-    vfs_fread(buffer, 10, 2, fd);
+    vfs_fread(buffer, 9000, 1, fd2);
     kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
+
     mset8(buffer, 0x0, 9216);
+    vfs_fread(buffer, 10, 1, fd2);
+    kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
+
+    mset8(buffer, 0x0, 9216);
+    vfs_fread(buffer, 30, 1, fd2);
+    kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
 
     while (true)
     {
