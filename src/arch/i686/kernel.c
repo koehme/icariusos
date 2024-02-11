@@ -189,7 +189,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
-    const int32_t fd = vfs_fopen("A:/TEST.TXT", "r");
+    const int32_t fd = vfs_fopen("A:/LEET/ABC.TXT", "r");
 
     uint8_t buffer[9216];
     vfs_fread(buffer, 9000, 1, fd);

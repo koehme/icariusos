@@ -7,6 +7,8 @@
 #ifndef FAT16_H
 #define FAT16_H
 
+#define FAT16_DEBUG_DELAY 0
+
 #include <stdint.h>
 
 #include "ata.h"
