@@ -92,5 +92,6 @@ All-in-one for the lazy:
 # debug
 
 ```bash
-./debug.sh
+./swap.sh && qemu-system-i386 -s -S ./ICARIUS.img
+gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ``````

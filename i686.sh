@@ -1,21 +1,24 @@
 #!/bin/bash
 
-sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt update -y
+sudo apt upgrade -y
 
-sudo apt-get install nasm -y
-sudo apt-get install qemu -y
-sudo apt-get install build-essential -y
-sudo apt-get install bison -y
-sudo apt-get install flex -y
-sudo apt-get install libgmp3-dev -y
-sudo apt-get install libmpc-dev -y
-sudo apt-get install libmpfr-dev -y
-sudo apt-get install texinfo -y
-sudo apt-get install curl -y
-sudo apt-get install xorriso -y
-sudo apt-get install mtools -y
-sudo apt-get install fdisk -y
+sudo apt install nasm -y
+sudo apt install grub-pc -y
+sudo apt install gdb -y
+sudo apt install qemu -y
+sudo apt install qemu-system-x86 -y
+sudo apt install build-essential -y
+sudo apt install bison -y
+sudo apt install flex -y
+sudo apt install libgmp3-dev -y
+sudo apt install libmpc-dev -y
+sudo apt install libmpfr-dev -y
+sudo apt install texinfo -y
+sudo apt install curl -y
+sudo apt install xorriso -y
+sudo apt install mtools -y
+sudo apt install fdisk -y
 
 export PREFIX="/usr/local/i686-elf-gcc"
 export TARGET=i686-elf
