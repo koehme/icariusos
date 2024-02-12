@@ -224,7 +224,14 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     const int32_t fd4 = vfs_fopen("A:/TEST.TXT", "r");
 
-    while (true)
+    const int32_t fd5 = vfs_fopen("A:/LEET/DUDE/HEY.TXT", "r");
+    mset8(buffer, 0x0, 9216);
+
+    vfs_fread(buffer, 7, 1, fd5);
+    kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
+
+    for (;;)
     {
     };
     return;

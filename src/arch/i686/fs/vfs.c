@@ -146,8 +146,9 @@ int32_t vfs_fopen(const char *filename, const char *mode)
 
     if (!root_path->path->next)
     {
-        kprintf("VFS Error: Creating files directly in the root directory ('/') is not allowed\n");
-        return -EINVAL;
+        kprintf("VFS Error: Files in '/' are prohibited\n");
+        res = -EINVAL;
+        return res;
     };
     ATADev *dev = ata_get(ATA_DEV_0);
 

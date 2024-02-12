@@ -475,7 +475,7 @@ static uint32_t fat16_combine_cluster(const uint16_t high_cluster, const uint16_
     return ((uint32_t)high_cluster << 16) | low_cluster;
 };
 
-FAT16DirEntry *fat16_find_file_in_directory(ATADev *dev, uint16_t start_cluster, uint8_t *native_file_name, FAT16Folder *fat16_folder, FAT16DirEntry *fat16_dir_entry)
+static FAT16DirEntry *fat16_find_file_in_directory(ATADev *dev, uint16_t start_cluster, uint8_t *native_file_name, FAT16Folder *fat16_folder, FAT16DirEntry *fat16_dir_entry)
 {
     const uint32_t partition_offset = 0x100000;
 
@@ -524,89 +524,7 @@ FAT16DirEntry *fat16_find_file_in_directory(ATADev *dev, uint16_t start_cluster,
     return 0x0;
 };
 
-FAT16Entry *fat16_get_entry(ATADev *dev, PathNode *path_identifier)
-{
-    const uint32_t partition_offset = 0x100000;
-    const uint32_t root_dir_area_absolute = calculate_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
-
-    Stream stream = {};
-    stream_init(&stream, dev);
-    stream_seek(&stream, root_dir_area_absolute);
-
-    const uint32_t root_dir_sectors = (fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirEntry) + fat16_header.bpb.BPB_BytsPerSec - 1) / fat16_header.bpb.BPB_BytsPerSec;
-    const uint32_t first_data_sector = fat16_header.bpb.BPB_RsvdSecCnt + fat16_header.bpb.BPB_NumFATs * fat16_header.bpb.BPB_FATSz16 + (root_dir_sectors);
-    const uint32_t first_root_dir_sector = first_data_sector - root_dir_sectors;
-    const uint32_t root_dir_size = fat16_header.bpb.BPB_RootEntCnt * sizeof(FAT16DirEntry);
-    uint8_t buffer[root_dir_size];
-
-    const int32_t res = stream_read(&stream, buffer, root_dir_size);
-
-    if (res < 0)
-    {
-        kprintf("StreamError: An error occurred while reading FAT16 Root Directory Entries.\n");
-        return 0x0;
-    };
-
-    PathNode *file = path_identifier;
-
-    while (file->next)
-    {
-        file = file->next;
-    };
-
-    while (path_identifier)
-    {
-        FAT16DirEntry *curr_root_entry = (FAT16DirEntry *)buffer;
-
-        for (size_t i = 0; i < fat16_header.bpb.BPB_RootEntCnt; i++, curr_root_entry++)
-        {
-            if (curr_root_entry->file_name[0] != 0x0)
-            {
-                uint8_t native_dir_name[11] = {};
-                fat16_userland_filename_to_native(native_dir_name, (uint8_t *)path_identifier);
-
-                if (mcmp(curr_root_entry->file_name, native_dir_name, 11) == 0)
-                {
-                    FAT16Entry *fat16_entry = kcalloc(sizeof(FAT16Entry));
-
-                    if (!fat16_entry)
-                    {
-                        kprintf("FAT16 Error: Not enough memory. Cannot allocate memory for a FAT16 entry.\n");
-                        return 0x0;
-                    };
-
-                    if (curr_root_entry->attributes & DIRECTORY)
-                    {
-                        fat16_entry->type = FAT16_ENTRY_TYPE_DIRECTORY;
-
-                        FAT16Folder *fat16_folder = kcalloc(sizeof(FAT16Folder));
-                        fat16_entry->dir = fat16_folder;
-
-                        FAT16DirEntry *fat16_dir_entry = kcalloc(sizeof(FAT16DirEntry));
-                        fat16_entry->dir->entry = fat16_dir_entry;
-
-                        const uint16_t start_cluster = fat16_combine_cluster(curr_root_entry->high_cluster, curr_root_entry->low_cluster);
-                        uint8_t native_file_name[11] = {};
-                        fat16_userland_filename_to_native(native_file_name, (uint8_t *)file->identifier);
-                        fat16_find_file_in_directory(dev, start_cluster, native_file_name, fat16_folder, fat16_dir_entry);
-                    }
-                    else
-                    {
-                        fat16_entry->type = FAT16_ENTRY_TYPE_FILE;
-                        FAT16DirEntry *fat16_dir_entry = kcalloc(sizeof(FAT16DirEntry));
-                        mcpy(fat16_dir_entry, curr_root_entry, sizeof(FAT16DirEntry));
-                        fat16_entry->file = fat16_dir_entry;
-                    };
-                    return fat16_entry;
-                };
-            };
-        };
-        path_identifier = path_identifier->next;
-    };
-    return 0x0;
-};
-
-FAT16DirEntry *fat16_get_root_dir_entry(ATADev *dev, FAT16DirEntry *root_dir_entry, PathNode *path_identifier)
+static FAT16DirEntry *fat16_get_root_dir_entry(ATADev *dev, FAT16DirEntry *root_dir_entry, PathNode *path_identifier)
 {
     const uint32_t partition_offset = 0x100000;
     const uint32_t root_dir_area_absolute = calculate_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
@@ -647,14 +565,8 @@ FAT16DirEntry *fat16_get_root_dir_entry(ATADev *dev, FAT16DirEntry *root_dir_ent
     return root_dir_entry;
 };
 
-// This is a reimplementation of fat16_get_entry, which allows deeply search in subfolders for a file
-FAT16Entry *fat16_get(ATADev *dev, PathNode *path)
+static FAT16Entry *fat16_get(ATADev *dev, PathNode *path)
 {
-    if (!path)
-    {
-        kprintf("FAT16 Error: Invalid path\n");
-        return 0x0;
-    };
     FAT16DirEntry root_dir_entry = {};
     fat16_get_root_dir_entry(dev, &root_dir_entry, path);
 
@@ -671,8 +583,8 @@ FAT16Entry *fat16_get(ATADev *dev, PathNode *path)
     FAT16DirEntry *fat16_dir_entry = kcalloc(sizeof(FAT16DirEntry));
     fat16_entry->dir = fat16_folder;
     fat16_entry->dir->entry = fat16_dir_entry;
-    // Next path part /LEET/DUDE/CODE.TXT become /DUDE/CODE.TXT
 
+    // Next path part /LEET/DUDE/CODE.TXT become /DUDE/CODE.TXT
     if (path && path->next)
     {
         path = path->next;
@@ -730,7 +642,7 @@ void *fat16_open(ATADev *dev, PathNode *path, VNODE_MODE mode)
     return fd;
 };
 
-uint32_t fat16_get_start_cluster_from_descriptor(FAT16FileDescriptor *fat16_descriptor)
+static uint32_t fat16_get_start_cluster_from_descriptor(FAT16FileDescriptor *fat16_descriptor)
 {
     uint32_t start_cluster = 0;
 
