@@ -198,7 +198,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("%s\n", buffer);
     kdelay(KERNEL_DEBUG_DELAY);
 
-    const int32_t fd2 = vfs_fopen("A:/TEST.TXT", "r");
+    const int32_t fd2 = vfs_fopen("A:/LEET/TEST.TXT", "r");
     mset8(buffer, 0x0, 9216);
 
     vfs_fread(buffer, 9000, 1, fd2);
@@ -214,6 +214,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
     vfs_fread(buffer, 30, 1, fd2);
     kprintf("%s\n", buffer);
     kdelay(KERNEL_DEBUG_DELAY);
+
+    const int32_t fd3 = vfs_fopen("A:/LEET/DUDE/CODE.TXT", "r");
+    mset8(buffer, 0x0, 9216);
+
+    vfs_fread(buffer, 30, 1, fd3);
+    kprintf("%s\n", buffer);
+    kdelay(KERNEL_DEBUG_DELAY);
+
+    const int32_t fd4 = vfs_fopen("A:/TEST.TXT", "r");
 
     while (true)
     {

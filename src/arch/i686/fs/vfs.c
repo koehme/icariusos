@@ -143,6 +143,12 @@ int32_t vfs_fopen(const char *filename, const char *mode)
     };
     PathParser path_parser = {};
     PathRootNode *root_path = path_parser_parse(&path_parser, filename);
+
+    if (!root_path->path->next)
+    {
+        kprintf("VFS Error: Creating files directly in the root directory ('/') is not allowed\n");
+        return -EINVAL;
+    };
     ATADev *dev = ata_get(ATA_DEV_0);
 
     if (!dev || !dev->fs)
