@@ -8,7 +8,7 @@
 #include "kernel.h"
 #include <stdbool.h>
 
-extern void asm_page_load(uint32_t *self);
+extern void asm_page_load(uint32_t *dir);
 
 PageDirectory kpage_dir = {
     .directory = 0x0,

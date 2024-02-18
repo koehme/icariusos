@@ -1,6 +1,11 @@
 global asm_page_load
 global asm_page_enable
 
+;=============================================================================
+; Load the given page directory into the CR3 register to switch to the new memory mapping
+; @param uint32_t *dir - Pointer to the page directory to be loaded
+; @return None
+;=============================================================================
 asm_page_load:
     push ebp
     mov ebp, esp
@@ -12,17 +17,8 @@ asm_page_load:
     ret
 
 ;=============================================================================
-; asm_page_enable
-;
-; Enable the Paging Mechanism
-; This assembly code segment is dedicated to activating the paging mechanism, a pivotal step in advanced memory management.
-; The Control Register 0 (CR0) is a system register that determines the operating mode of the processor.
-; By loading the current value of CR0 into the EAX register, setting the Paging (PG) bit (0x80000001), and writing it back to CR0,
-; we transition into a mode facilitating efficient memory translation through page tables.
-; This fundamental operation enhances system memory organization, laying the foundation for sophisticated memory management strategies.
-;
+; Enable the paging mechanism
 ; @param None
-;
 ; @return None
 ;=============================================================================
 asm_page_enable:
