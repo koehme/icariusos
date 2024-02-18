@@ -27,7 +27,7 @@ _start:
     test eax, 1        
     jnz .run_kernel
     
-.set_pm
+.set_pm:
     or eax, 1
     mov cr0, eax
 
