@@ -179,32 +179,7 @@ PathRootNode *path_parser_parse_path(PathParser *self, PathLexer *lexer)
     return root;
 };
 
-/**
- * @brief Parses a path and constructs a PathParserRootNode representing the file system path structure.
- * Takes a path as input and constructs a PathParserRootNode, which represents
- * the file system structure based on the provided path. The expected format of the path is
- * * the file system structure based on the provided path. The expected format of the path is
- * similar to the example below:
- * @example
- *      path = "A:/bin/cli.exe"
- *     root_node = {
- *        .drive = 'A', .path = {
- *            PathParserNode = {
- *                .identifier = "bin",
- *                .next = {
- *                    PathParserNode = {
- *                        .identifier = "cli.exe",
- *                        .next = { 0x0 }
- *                    }
- *                }
- *            }
- *        }
- *    };
- *
- * @param self A pointer to the PathParser instance.
- * @param plexer A pointer to the PLexer instance containing the input to be parsed.
- * @return A pointer to the root node of the parsed file system structure.
- */
+// Creates a data structure representing a given file system path for easy traversal of the path
 PathRootNode *path_parser_parse(PathParser *self, const char *path)
 {
     PathLexer lexer = {};

@@ -231,6 +231,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("%s\n", buffer);
     kdelay(KERNEL_DEBUG_DELAY);
 
+    vfs_fclose(fd1);
+
     for (;;)
     {
     };

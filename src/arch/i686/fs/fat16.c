@@ -12,6 +12,7 @@ FileSystem fat16 = {
     .resolve_cb = 0x0,
     .open_cb = 0x0,
     .read_cb = 0x0,
+    .close_cb = 0x0,
     .name = "FAT16",
 };
 
@@ -212,6 +213,7 @@ FileSystem *fat16_init(void)
     fat16.resolve_cb = fat16_resolve;
     fat16.open_cb = fat16_open;
     fat16.read_cb = fat16_read;
+    fat16.close_cb = fat16_close;
     return &fat16;
 };
 
@@ -715,4 +717,11 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, const size_t n
     };
     // Return the total bytes read
     return bytes_read;
+};
+
+int32_t fat16_close(void *internal)
+{
+    // TODO
+    kprintf("fat16_close\n");
+    return 0;
 };
