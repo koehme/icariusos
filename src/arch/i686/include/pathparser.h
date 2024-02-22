@@ -30,5 +30,6 @@ typedef struct PathRootNode
 } PathRootNode;
 
 PathRootNode *path_parser_parse(PathParser *self, const char *path);
+void path_parser_free(PathRootNode *root);
 
 #endif

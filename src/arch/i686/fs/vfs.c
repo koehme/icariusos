@@ -140,9 +140,9 @@ int32_t vfs_fopen(const char *filename, const char *mode)
         return res;
     };
     PathParser path_parser = {};
-    PathRootNode *root_path = path_parser_parse(&path_parser, filename);
+    PathRootNode *root = path_parser_parse(&path_parser, filename);
 
-    if (!root_path->path->next)
+    if (!root->path->next)
     {
         kprintf("VFS Error: Files in '/' are prohibited\n");
         res = -EINVAL;
@@ -155,7 +155,10 @@ int32_t vfs_fopen(const char *filename, const char *mode)
         res = -EIO;
         return res;
     };
-    void *internal = dev->fs->open_cb(dev, root_path->path, vmode);
+    void *internal = dev->fs->open_cb(dev, root->path, vmode);
+    // Path analysis completed by the file system; only essential data extracted, safe to delete
+    path_parser_free(root);
+
     FileDescriptor *fdescriptor = 0x0;
     res = vfs_create_fd(&fdescriptor);
 
@@ -197,6 +200,13 @@ int32_t vfs_fclose(const int32_t fd)
         return res;
     };
     FileDescriptor *fdescriptor = vfs_get_fd(fd);
+
+    if (fdescriptor == 0x0)
+    {
+        res = -EBADF;
+        return res;
+    }
     fdescriptor->fs->close_cb(fdescriptor->internal);
+    kfree(fdescriptor);
     return res;
 };

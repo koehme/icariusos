@@ -721,7 +721,17 @@ size_t fat16_read(ATADev *dev, void *descriptor, uint8_t *buffer, const size_t n
 
 int32_t fat16_close(void *internal)
 {
-    // TODO
-    kprintf("fat16_close\n");
+    int32_t res = 0;
+    FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)internal;
+
+    if (fat16_descriptor == 0x0)
+    {
+        res = -EINVAL;
+        return res;
+    };
+    kfree(fat16_descriptor->entry->dir->entry);
+    kfree(fat16_descriptor->entry->dir);
+    kfree(fat16_descriptor->entry);
+    kfree(fat16_descriptor);
     return 0;
 };

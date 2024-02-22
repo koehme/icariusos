@@ -189,3 +189,24 @@ PathRootNode *path_parser_parse(PathParser *self, const char *path)
     root = path_parser_parse_path(self, &lexer);
     return root;
 };
+
+static void free_node(PathNode *curr_node)
+{
+    if (curr_node == 0x0)
+    {
+        return;
+    };
+    free_node(curr_node->next);
+    kfree(curr_node);
+};
+
+void path_parser_free(PathRootNode *root)
+{
+    if (root == 0x0)
+    {
+        return;
+    };
+    free_node(root->path);
+    kfree(root);
+    return;
+};

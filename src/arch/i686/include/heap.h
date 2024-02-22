@@ -10,48 +10,37 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum HeapDescriptorFlags
+typedef enum HeapTableBlockStatus
 {
-    DESCRIPTOR_IS_FREE = 0b00000000,
-    DESCRIPTOR_IS_USED = 0b00000001,
-    DESCRIPTOR_IS_HEAD = 0b01000000,
-    DESCRIPTOR_HAS_NEXT = 0b10000000
-} HeapDescriptorFlags;
+    HEAP_TABLE_BLOCK_IS_FREE = 0b00000000,
+    HEAP_TABLE_BLOCK_IS_USED = 0b00000001,
+    HEAP_TABLE_BLOCK_IS_HEAD = 0b01000000,
+    HEAP_TABLE_BLOCK_HAS_NEXT = 0b10000000
+} HeapTableBlockStatus;
 
-/**
- * @brief Representing a descriptor for the heap.
- */
-typedef struct HeapDescriptor
+typedef enum HeapTableBlockFlags
 {
-    uint8_t *saddress;        // Start address of the descriptor table
-    size_t total_descriptors; // Total number of descriptors in the table
-} HeapDescriptor;
+    HEAP_TABLE_FLAG_USED = (1u << 0),
+    HEAP_TABLE_FLAG_HEAD = (1u << 6),
+    HEAP_TABLE_FLAG_NEXT = (1u << 7)
+} HeapTableBlockFlags;
 
-/**
- * @brief Structure representing a gigant piece of memory called a heap.
- *
- * A heap is a dynamic memory allocation structure that allows flexible and
- * efficient management of memory during runtime. The Heap structure encapsulates
- * essential components for dynamic memory allocation in a kernel, including a
- * descriptor table for tracking the state of memory blocks and a data pool
- * for storing variable-sized memory allocations.
- *
- * The need for a heap arises due to the dynamic and unpredictable nature of
- * memory requirements in a kernel environment. Unlike static memory allocation,
- * a heap allows the kernel to allocate and deallocate memory on-demand, providing
- * a mechanism for tasks such as storing data structures, managing processes, and
- * facilitating other dynamic operations without the constraints of fixed memory
- * sizes.
- */
+typedef struct HeapTable
+{
+    uint8_t *saddr;      // Pointer to the location for the marked table allocation data structure
+    size_t total_blocks; // 25600 total descriptors if heap_init called with n_bytes 1024 * 1024 * 100 - assume block_size is a power of 2^12 (e.g., 4096)
+} HeapTable;
+
 typedef struct Heap
 {
-    HeapDescriptor *descriptor; // Pointer to the heap descriptor
-    void *saddress;             // Start address of the heap data pool
-    size_t block_size;          // Size of each memory block in the heap
+    HeapTable *table;  // Pointer to the heap table data structure
+    void *saddr;       // Start address of the raw heap data pool
+    size_t block_size; // Size of each memory block in the heap
 } Heap;
 
-void heap_init(Heap *self, HeapDescriptor *descriptor, void *heap_saddress, void *descriptor_saddress, const size_t n_bytes, const size_t block_size);
+void heap_init(Heap *self, HeapTable *table, void *heap_saddress, void *descriptor_saddress, const size_t n_bytes, const size_t block_size);
 void *heap_malloc(Heap *self, const size_t n_bytes);
 void heap_free(Heap *self, void *ptr);
+size_t heap_table_get_used_blocks(const Heap *self);
 
 #endif

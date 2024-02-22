@@ -7,8 +7,8 @@
 #include "kernel.h"
 
 extern VGADisplay vga_display;
-extern HeapDescriptor kheap_descriptor;
-extern Heap kheap;
+extern HeapTable heap_table;
+extern Heap heap;
 extern PageDirectory kpage_dir;
 extern Keyboard keyboard;
 extern Timer timer;
@@ -17,21 +17,21 @@ extern CMOS cmos;
 void *kmalloc(const size_t size)
 {
     void *ptr = 0x0;
-    ptr = heap_malloc(&kheap, size);
+    ptr = heap_malloc(&heap, size);
     return ptr;
 };
 
 void *kcalloc(const size_t size)
 {
     void *ptr = 0x0;
-    ptr = heap_malloc(&kheap, size);
+    ptr = heap_malloc(&heap, size);
     mset8(ptr, 0x0, size);
     return ptr;
 };
 
 void kfree(void *ptr)
 {
-    heap_free(&kheap, ptr);
+    heap_free(&heap, ptr);
     return;
 };
 
@@ -166,7 +166,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
         kprintf("Unaligned MBI: 0x%x\n", addr);
         return;
     };
-    heap_init(&kheap, &kheap_descriptor, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
+    heap_init(&heap, &heap_table, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
 
     vfs_init();
     idt_init();
@@ -189,49 +189,33 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
+    size_t used_blocks = 0;
+    used_blocks = heap_table_get_used_blocks(&heap);
+    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
+    kdelay(500000);
+
     uint8_t buffer[9216];
-
-    const int32_t fd1 = vfs_fopen("A:/LEET/ABC.TXT", "r");
     mset8(buffer, 0x0, 9216);
-
-    vfs_fread(buffer, 5, 1, fd1);
+    int32_t fd1 = vfs_fopen("A:/LEET/TEST.TXT", "r");
+    vfs_fread(buffer, 9216, 1, fd1);
     kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
-
-    const int32_t fd2 = vfs_fopen("A:/LEET/TEST.TXT", "r");
-    mset8(buffer, 0x0, 9216);
-
-    vfs_fread(buffer, 9000, 1, fd2);
-    kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
-
-    mset8(buffer, 0x0, 9216);
-    vfs_fread(buffer, 10, 1, fd2);
-    kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
-
-    mset8(buffer, 0x0, 9216);
-    vfs_fread(buffer, 30, 1, fd2);
-    kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
-
-    const int32_t fd3 = vfs_fopen("A:/LEET/DUDE/CODE.TXT", "r");
-    mset8(buffer, 0x0, 9216);
-
-    vfs_fread(buffer, 30, 1, fd3);
-    kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
-
-    const int32_t fd4 = vfs_fopen("A:/TEST.TXT", "r");
-
-    const int32_t fd5 = vfs_fopen("A:/LEET/DUDE/HEY.TXT", "r");
-    mset8(buffer, 0x0, 9216);
-
-    vfs_fread(buffer, 7, 1, fd5);
-    kprintf("%s\n", buffer);
-    kdelay(KERNEL_DEBUG_DELAY);
 
     vfs_fclose(fd1);
+
+    used_blocks = heap_table_get_used_blocks(&heap);
+    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
+    kdelay(500000);
+
+    int32_t fd2 = vfs_fopen("A:/LEET/ABC.TXT", "r");
+    mset8(buffer, 0x0, 9216);
+    vfs_fread(buffer, 26, 1, fd2);
+    kprintf("%s\n", buffer);
+
+    vfs_fclose(fd2);
+
+    used_blocks = heap_table_get_used_blocks(&heap);
+    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
+    kdelay(500000);
 
     for (;;)
     {
