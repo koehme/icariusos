@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break heap.c:heap_free
+break page.c:page_init_directory
 
 c

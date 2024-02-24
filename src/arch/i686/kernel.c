@@ -171,12 +171,14 @@ void kmain(const uint32_t magic, const uint32_t addr)
     vfs_init();
     idt_init();
 
-/*
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
-*/
+
+    kprintf("%d\n", heap_get_usage(&heap));
+    kdelay(50000);
+
     asm_do_sti();
 
     ATADev *dev0 = ata_get(ATA_DEV_0);
@@ -189,19 +191,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     kprintf("\n");
     ata_search_fs(dev0);
-
-    size_t used = 0;
-    used = heap_get_usage(&heap);
-    kprintf("%d\n", used);
-
-    void *ptr = kcalloc(8194);
-    void *ptr2 = kcalloc(8192);
-    
-    kfree(ptr);
-    kfree(ptr2);
-
-    used = heap_get_usage(&heap);
-    kprintf("%d\n", used);
 
     for (;;)
     {

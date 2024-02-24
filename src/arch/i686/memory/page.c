@@ -89,6 +89,7 @@ static VMemTranslation translate_vaddress(void *vaddr)
     return translation;
 };
 
+// Maps a physical frame to a virtual address
 int8_t map_frame_to_address(uint32_t *dir, void *vaddr, const uint32_t frame)
 {
     const bool is_aligned = is_addr_aligned(vaddr);
@@ -100,10 +101,10 @@ int8_t map_frame_to_address(uint32_t *dir, void *vaddr, const uint32_t frame)
     };
     // Translate the virtual address to page indices
     const VMemTranslation translation = translate_vaddress(vaddr);
-    // Access the page directory entry corresponding to the virtual address
+    // Access the page dir entry corresponding to the virtual address
     const uint32_t pd_entry = dir[translation.pd_index];
-    // Extract the page table entry for the virtual address
-    uint32_t *pt_entry = (uint32_t *)(pd_entry & 0b11111111111111111111000000000000);
+    // Compute base address of virtual memory region containing page table entry by masking out page offset from page dir
+    uint32_t *pt_entry = (uint32_t *)(pd_entry & 0xFFFFF000);
     // Map the provided physical frame to the page table entry
     pt_entry[translation.pt_index] = frame;
     return 0;
