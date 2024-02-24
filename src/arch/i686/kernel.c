@@ -7,7 +7,7 @@
 #include "kernel.h"
 
 extern VGADisplay vga_display;
-extern HeapTable heap_table;
+extern HeapByteMap heap_bytemap;
 extern Heap heap;
 extern PageDirectory kpage_dir;
 extern Keyboard keyboard;
@@ -166,16 +166,17 @@ void kmain(const uint32_t magic, const uint32_t addr)
         kprintf("Unaligned MBI: 0x%x\n", addr);
         return;
     };
-    heap_init(&heap, &heap_table, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
+    heap_init(&heap, &heap_bytemap, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
 
     vfs_init();
     idt_init();
 
+/*
     PageDirectory *ptr_kpage_dir = &kpage_dir;
     page_init_directory(&kpage_dir, PAGE_PRESENT | PAGE_READ_WRITE | PAGE_USER_SUPERVISOR);
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
-
+*/
     asm_do_sti();
 
     ATADev *dev0 = ata_get(ATA_DEV_0);
@@ -189,33 +190,18 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprintf("\n");
     ata_search_fs(dev0);
 
-    size_t used_blocks = 0;
-    used_blocks = heap_table_get_used_blocks(&heap);
-    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
-    kdelay(500000);
+    size_t used = 0;
+    used = heap_get_usage(&heap);
+    kprintf("%d\n", used);
 
-    uint8_t buffer[9216];
-    mset8(buffer, 0x0, 9216);
-    int32_t fd1 = vfs_fopen("A:/LEET/TEST.TXT", "r");
-    vfs_fread(buffer, 9216, 1, fd1);
-    kprintf("%s\n", buffer);
+    void *ptr = kcalloc(8194);
+    void *ptr2 = kcalloc(8192);
+    
+    kfree(ptr);
+    kfree(ptr2);
 
-    vfs_fclose(fd1);
-
-    used_blocks = heap_table_get_used_blocks(&heap);
-    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
-    kdelay(500000);
-
-    int32_t fd2 = vfs_fopen("A:/LEET/ABC.TXT", "r");
-    mset8(buffer, 0x0, 9216);
-    vfs_fread(buffer, 26, 1, fd2);
-    kprintf("%s\n", buffer);
-
-    vfs_fclose(fd2);
-
-    used_blocks = heap_table_get_used_blocks(&heap);
-    kprintf("heap_table_get_used_blocks: %d\n", used_blocks);
-    kdelay(500000);
+    used = heap_get_usage(&heap);
+    kprintf("%d\n", used);
 
     for (;;)
     {
