@@ -10,11 +10,7 @@
 #include "vga.h"
 #include "io.h"
 
-/**
- * @brief Sets the screen cursor to the specified position.
- * @param y The row position, where 0 is the topmost row.
- * @param x The column position, where 0 is the leftmost column.
- */
+// Sets the cursor to the specified screen position
 void cursor_set(const uint8_t y, const uint8_t x)
 {
     const uint16_t linear_position = (y * 80) + x;

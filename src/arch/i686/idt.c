@@ -80,11 +80,7 @@ static const char *interrupt_messages[] = {
  * holding specific information such as the address of the Interrupt Service Routine (ISR) handler.
  */
 static IDTDescriptor idt[256];
-/**
- * Represents the IDTR register value.
- * The IDTR contains information about the size and starting point of the IDT.
- * Defining an IDTR allows efficient initialization and loading of the IDT.
- */
+// Contains information about the size and starting point of the IDT.
 static IDT_R idtr_descriptor;
 
 void pic_send_eoi(void)
@@ -93,9 +89,7 @@ void pic_send_eoi(void)
     return;
 };
 
-/**
- * @brief IRQ 14 (IDE ATA disk) interrupt handler.
- */
+// IDE ATA dev interrupt handler
 void irq_14h_handler(void)
 {
     pic_send_eoi();
@@ -128,30 +122,21 @@ void isr_21h_handler(void)
     return;
 };
 
-/**
- * @brief Default ISR handler.
- * @return void
- */
+// Default ISR handler
 void isr_default_handler(void)
 {
     pic_send_eoi();
     return;
 };
 
-/**
- * @brief Sets up an entry in the Interrupt Descriptor Table (IDT).
- * Configures the specified entry in the IDT with the given vector and ISR (Interrupt Service Routine).
- * @param interrupt_n The interrupt number.
- * @param isr A pointer to the ISR (Interrupt Service Routine) function.
- * @return void
- */
-void idt_set(const int32_t interrupt_n, void *isr)
+// Configures the specified entry in the IDT with the given vector and ISR (Interrupt Service Routine)
+void idt_set(const int32_t isr_num, void *isr)
 {
-    if (interrupt_n < 0 || interrupt_n >= 256)
+    if (isr_num < 0 || isr_num >= 256)
     {
         return;
     };
-    IDTDescriptor *descriptor = &idt[interrupt_n];
+    IDTDescriptor *descriptor = &idt[isr_num];
 
     descriptor->isr_low = (uintptr_t)isr & 0xffff;
     descriptor->kernel_cs = 0x08;

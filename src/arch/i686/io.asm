@@ -89,6 +89,30 @@ asm_outb:
 ; @param [ebp+12]: The value to be sent (16 bits).
 ;
 ; @return None
+;
+; @example
+; ----Bottom of Caller's stack----
+; ...
+; Caller's
+; Variables
+; ...
+; Function Parameters
+; ----Top of Caller's Stack/Bottom of Callee's stack----   (%ebp)
+; ...
+; Callee's
+; Variables
+; ...
+; ---Bottom of Callee's stack----    (%esp)
+; 
+; After mov ebp, esp
+;
+; ----Bottom of Caller's stack----
+; ...
+; Caller's
+; Variables
+; ...
+; Function Parameters
+; ----Top of Caller's Stack/Bottom of Callee's stack----   (%ebp) and (%esp)
 ;=============================================================================
 asm_outw:
     push ebp                 ; Save the base pointer

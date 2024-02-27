@@ -6,13 +6,7 @@
 
 #include "mem.h"
 
-/**
- * @brief Sets a block of memory to the specified value.
- * @param dest  A pointer to the destination memory block.
- * @param value The 8-bit value to be set in each element of the memory block.
- * @param n_bytes The number of bytes to process, indicating the size of the memory block.
- * @return A pointer to the destination memory block ('dest').
- */
+// Set a memory block with a 8-bit value repeated throughout for the specified number of bytes
 void *mset8(void *dest, const uint8_t value, size_t n_bytes)
 {
     uint8_t *buffer = (uint8_t *)dest;
@@ -25,15 +19,7 @@ void *mset8(void *dest, const uint8_t value, size_t n_bytes)
     return dest;
 };
 
-/**
- * Sets each 16-bit element in the memory block pointed to by 'dest'
- * to the specified 'value'. The number of bytes processed is determined by the
- * 'n_bytes' parameter. The function returns a pointer to the destination memory block.
- * @param dest     A pointer to the destination memory block.
- * @param value    The 16-bit value to be set in each element of the memory block.
- * @param n_bytes  The number of bytes to process, indicating the size of the memory block.
- * @return A pointer to the destination memory block ('dest').
- */
+// Set a memory block with a 16-bit value repeated throughout for the specified number of bytes
 void *mset16(void *dest, const uint16_t value, size_t n_bytes)
 {
     uint16_t *buffer = (uint16_t *)dest;
@@ -46,13 +32,7 @@ void *mset16(void *dest, const uint16_t value, size_t n_bytes)
     return dest;
 };
 
-/**
- * @brief Copies a block of memory from the source location to the destination location.
- * @param dest     A pointer to the destination memory block.
- * @param src A Pointer to the source memory location.
- * @param n_bytes  The number of bytes to process, indicating the size of the memory block.
- * @return A pointer to the destination memory block ('dest').
- */
+// Copy a memory block from source to destination with specified number of bytes
 void *mcpy(void *dest, const void *src, size_t n_bytes)
 {
     uint8_t *byte_dest = (uint8_t *)dest;
@@ -68,6 +48,7 @@ void *mcpy(void *dest, const void *src, size_t n_bytes)
     return dest;
 };
 
+// Compare two memory blocks byte by byte and return the difference. If all bytes are equal, returns 0
 int32_t mcmp(const void *s1, const void *s2, size_t n)
 {
     const uint8_t *p1 = s1;
@@ -84,4 +65,4 @@ int32_t mcmp(const void *s1, const void *s2, size_t n)
         n--;
     };
     return 0;
-}
+};

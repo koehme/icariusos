@@ -13,10 +13,10 @@
 
 typedef struct FileSystem FileSystem;
 
-typedef enum ATA_ATTRIBUTES
+typedef enum ATALimit
 {
     ATA_SECTOR_SIZE = 512,
-} ATA_ATTRIBUTES;
+} ATALimit;
 
 typedef enum ATADeviceType
 {
@@ -29,11 +29,11 @@ typedef enum ATADriveType
     ATA_DRIVE_SLAVE = 0xF0,
 } ATADriveType;
 
-typedef enum ATACommands
+typedef enum ATACommand
 {
     ATA_CMD_READ_SECTORS = 0x20,
     ATA_CMD_IDENTIFY = 0xEC,
-} ATACommands;
+} ATACommand;
 
 typedef enum ATAStatus
 {
@@ -46,7 +46,7 @@ typedef enum ATAStatus
     ATA_STATUS_BSY = (1 << 7), // Indicates the drive is preparing to send/receive data (wait for it to clear)
 } ATAStatus;
 
-typedef enum ATAPorts
+typedef enum ATAPort
 {
     ATA_DATA_PORT = 0x1F0,
     ATA_FEATURES_PORT = 0x1F1,
@@ -58,11 +58,8 @@ typedef enum ATAPorts
     ATA_CONTROL_PORT = 0x1F6,
     ATA_COMMAND_PORT = 0x1F7,
     ATA_STATUS_REGISTER = 0x1F7,
-} ATAPorts;
+} ATAPort;
 
-/**
- * @brief Represents an ATA Disk.
- */
 typedef struct ATADev
 {
     ATADeviceType dev;      // Type of the ATA device

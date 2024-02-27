@@ -15,11 +15,6 @@ Timer timer = {
     .hz = 0,
 };
 
-/**
- * @brief Initializes a Timer structure with the specified frequency.
- * @param self Pointer to the Timer structure to be initialized.
- * @param hz The desired frequency for the timer.
- */
 void timer_init(Timer *self, const uint32_t hz)
 {
     self->ticks = 0;

@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break page.c:page_init_directory
+break ata.c:ata_identify
 
 c

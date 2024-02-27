@@ -43,13 +43,7 @@ const static uint8_t qwertz_upper[] = {
 
 const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
 
-/**
- * @brief Checks if the keyboard controller is ready.
- * Waits until the keyboard controller is ready by continuously
- * checking the status register. It returns when the Output Buffer Full bit is set,
- * indicating that the keyboard controller is ready to send data.
- * @return Returns 1 if the keyboard controller is ready, 0 otherwise.
- */
+// Checks if the keyboard controller is ready
 int32_t keyboard_wait(void)
 {
     // Wait until the keyboard controller is ready
@@ -84,6 +78,7 @@ void keyboard_enable(Keyboard *self)
     };
     asm_outb(KEYBOARD_CTRL_CMD_REG, KEYBOARD_CTRL_ENABLE);
     self->enabled = true;
+    return;
 };
 
 void keyboard_init(Keyboard *self)

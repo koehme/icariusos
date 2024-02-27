@@ -177,7 +177,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
     asm_page_enable();
 
     kprintf("%d\n", heap_get_usage(&heap));
-    kdelay(50000);
 
     asm_do_sti();
 
@@ -191,6 +190,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     kprintf("\n");
     ata_search_fs(dev0);
+
+    uint8_t buffer[16384];
+    mset8(buffer, 0x0, 16384);
+    const int32_t fd1 = vfs_fopen("A:/LEET/TEST.TXT", "r");
+    vfs_fread(buffer, 9000, 1, fd1);
+    kprintf("%s\n", buffer);
+    vfs_fclose(fd1);
 
     for (;;)
     {

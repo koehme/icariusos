@@ -14,7 +14,7 @@ CMOS cmos = {
     .values = {},
 };
 
-int32_t bcd_to_decimal(const int32_t bcd)
+static int32_t bcd_to_decimal(const int32_t bcd)
 {
     const int32_t upper_nibble = (bcd & 0xF0) >> 4;
     const int32_t lower_nibble = bcd & 0x0F;
@@ -22,20 +22,18 @@ int32_t bcd_to_decimal(const int32_t bcd)
     return decimal;
 };
 
-void cmos_dump(CMOS *self)
+static void cmos_dump(CMOS *self)
 {
-    uint16_t cmos_register;
-
-    for (cmos_register = 0; cmos_register < 128; cmos_register++)
+    for (uint16_t i = 0; i < 128; i++)
     {
-        asm_outb(CMOS_PORT_INDEX, cmos_register);
+        asm_outb(CMOS_PORT_INDEX, i);
         const uint8_t value = asm_inb(CMOS_PORT_DATA);
 
         for (size_t i = 0; i < 100; i++)
         {
             asm_do_nop();
         };
-        self->values[cmos_register] = value;
+        self->values[i] = value;
     };
     return;
 };

@@ -23,94 +23,150 @@ ATADev ata_dev_0 = {
     .features = 0x0,
 };
 
-static int32_t ata_identify(ATADev *self)
+static void ata_read_into_buffer(uint16_t *buffer, const size_t size)
 {
-    // ATA detect commands
-    asm_outb(ATA_CONTROL_PORT, 0xA0);
+    for (size_t i = 0; i < size; i++)
+    {
+        buffer[i] = asm_inw(ATA_DATA_PORT);
+    };
+    return;
+};
+
+static uint8_t select_drive_ata_identify(const ATADriveType type)
+{
+    uint8_t drive_select = 0x0;
+
+    switch (type)
+    {
+    case ATA_DRIVE_MASTER:
+    {
+        drive_select = 0xA0;
+        break;
+    };
+    case ATA_DRIVE_SLAVE:
+    {
+        drive_select = 0xB0;
+        break;
+    }
+    default:
+    {
+        break;
+    };
+    };
+    return drive_select;
+};
+
+static void send_identify_cmd(const uint8_t target_drive)
+{
+    asm_outb(ATA_CONTROL_PORT, target_drive);
     asm_outb(ATA_SECTOR_COUNT_PORT, 0);
     asm_outb(ATA_LBA_LOW_PORT, 0);
     asm_outb(ATA_LBA_MID_PORT, 0);
     asm_outb(ATA_LBA_HIGH_PORT, 0);
     asm_outb(ATA_COMMAND_PORT, ATA_CMD_IDENTIFY);
-    // Read the status ports
-    uint8_t status = asm_inb(ATA_STATUS_REGISTER);
+    return;
+};
 
-    while (status & ATA_STATUS_BSY)
-    {
-        status = asm_inb(ATA_STATUS_REGISTER);
-    };
-    // If it's zero, the drive does not exist
-    if (status == 0)
-    {
-        return -EIO;
-    };
-    // Status indicates presence of a drive. Polling while STAT_BSY...
-    while (status & ATA_STATUS_BSY)
-    {
-        status = asm_inb(ATA_STATUS_REGISTER);
-    };
-    const uint8_t mid_byte = asm_inb(ATA_LBA_MID_PORT);
-    const uint8_t high_byte = asm_inb(ATA_LBA_HIGH_PORT);
-
-    if (mid_byte || high_byte)
-    {
-        // The drive is not ATA
-        return -EIO;
-    };
-
-    while (!(status & (ATA_STATUS_ERR | ATA_STATUS_DRQ)))
-    {
-        status = asm_inb(ATA_STATUS_REGISTER);
-    };
-
-    if (status & ATA_STATUS_ERR)
-    {
-        // There was an error on the drive. Forget about it.
-        return -EIO;
-    };
-    uint16_t buffer[256] = {};
-
-    for (size_t i = 0; i < self->sector_size / 2; i++)
-    {
-        buffer[i] = asm_inw(ATA_DATA_PORT);
-    };
-    const uint16_t pio48 = buffer[83];
-
-    if (pio48 & (1 << 10))
-    {
-        // PIO48 support
-        const uint64_t total_sectors = ((uint64_t)buffer[103] << 48) |
-                                       ((uint64_t)buffer[102] << 32) |
-                                       ((uint64_t)buffer[101] << 16) |
-                                       buffer[100];
-        const uint64_t capacity = total_sectors * self->sector_size;
-        self->capacity = capacity;
-        self->total_sectors = total_sectors;
-        self->features |= (1 << 1);
-    }
-    else
-    {
-        // Fallback PIO28
-        const uint32_t total_sectors = ((uint32_t)buffer[60] << 16) |
-                                       buffer[61];
-        const uint64_t capacity = total_sectors * self->sector_size;
-        self->capacity = capacity;
-        self->total_sectors = total_sectors;
-        self->features |= (1 << 0);
-    };
+static void ata_dump(ATADev *self, const int32_t delay)
+{
     kprintf("Features: 0x%x\n", self->features);
     kprintf("Sector Size: %d\n", self->sector_size);
     kprintf("Total Sectors: %d\n", self->total_sectors);
     kprintf("Capacity: %d KiB\n", self->capacity / 1024);
     kprintf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
+    kprintf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
+    kdelay(delay);
+    return;
+};
+
+// Set pio mode
+static void ata_set_pio(ATADev *self, uint16_t *buffer)
+{
+    const uint16_t pio_flag = buffer[83];
+
+    if (pio_flag & (1 << 10))
+    {
+        // PIO48 support
+        const uint64_t high = (uint64_t)buffer[103] << 48;
+        const uint64_t mid_high = (uint64_t)buffer[102] << 32;
+        const uint64_t mid_low = (uint64_t)buffer[101] << 16;
+        const uint64_t low = (uint64_t)buffer[100] << 0;
+        const uint64_t total_sectors = high | mid_high | mid_low | low;
+        const uint64_t capacity = total_sectors * self->sector_size;
+        self->capacity = capacity;
+        self->total_sectors = total_sectors;
+        self->features |= (1 << 1);  // Set bit 1 to indicate pio48 support180268
+        self->features &= ~(1 << 0); // Clear bit 0 to indicate no pio28 support
+    }
+    else
+    {
+        // Fallback PIO28
+        const uint32_t high = (uint32_t)buffer[60] << 16;
+        const uint32_t low = (uint32_t)buffer[61] << 0;
+        const uint32_t total_sectors = high | low;
+        const uint64_t capacity = total_sectors * self->sector_size;
+        self->capacity = capacity;
+        self->total_sectors = total_sectors;
+        self->features |= (1 << 0);  // Bit 0 should set to 1 to indicate pio28 support
+        self->features &= ~(1 << 1); // Clear bit 1 to indicate no pio48 support
+    };
+    return;
+};
+
+static void wait_until_not_busy(uint8_t *status)
+{
+    while (*status & ATA_STATUS_BSY)
+    {
+        *status = asm_inb(ATA_STATUS_REGISTER);
+    };
+    return;
+};
+
+static void wait_until_data_ready(uint8_t *status)
+{
+    while (!(*status & (ATA_STATUS_ERR | ATA_STATUS_DRQ)))
+    {
+        *status = asm_inb(ATA_STATUS_REGISTER);
+    };
+    return;
+};
+
+static int32_t ata_identify(ATADev *self, const ATADriveType type)
+{
+    const uint8_t target_drive = select_drive_ata_identify(type);
+    send_identify_cmd(target_drive);
+    // Read the status ports
+    uint8_t status = asm_inb(ATA_STATUS_REGISTER);
+    wait_until_not_busy(&status);
+    // If it's zero, the drive does not exist
+    if (status == 0)
+    {
+        return -EIO;
+    };
+    wait_until_not_busy(&status);
+    const uint8_t lba_mid_byte = asm_inb(ATA_LBA_MID_PORT);
+    const uint8_t lba_high_byte = asm_inb(ATA_LBA_HIGH_PORT);
+
+    if (lba_mid_byte != 0 || lba_high_byte != 0)
+    {
+        return -EIO;
+    };
+    wait_until_data_ready(&status);
+    // There was an error on the drive. Forget about it!
+    if (status & ATA_STATUS_ERR)
+    {
+        return -EIO;
+    };
+    uint16_t buffer[256] = {};
+    ata_read_into_buffer(buffer, self->sector_size / 2);
+
+    ata_set_pio(self, buffer);
+
+    ata_dump(self, ATA_DEBUG_DELAY);
     return 1;
 };
 
-/**
- * @brief Initializes the specified ATADisk instance by setting its
- * disk type to ATA_DISK_A, sector size to 512 bytes, and clearing its buffer.
- * @param self Pointer to the ATADisk instance to be initialized.
- */
+// Initializes the ATA device
 void ata_init(ATADev *self)
 {
     idt_set(0x2E, asm_irq_14h);
@@ -121,7 +177,7 @@ void ata_init(ATADev *self)
     self->features = 0b00000000;
     mset8(self->buffer, 0x0, sizeof(self->buffer));
 
-    if (!ata_identify(self))
+    if (!ata_identify(self, ATA_DRIVE_MASTER))
     {
         kpanic("ATA Error. Failed to identify.\n");
     };
@@ -134,16 +190,7 @@ void ata_search_fs(ATADev *self)
     return;
 };
 
-static void ata_transfer(uint16_t *buffer, const size_t size)
-{
-    for (size_t i = 0; i < size; i++)
-    {
-        buffer[i] = asm_inw(ATA_DATA_PORT);
-    };
-    return;
-};
-
-static int32_t ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sectors)
+static int32_t ata_read_pio_48(ATADev *self, const uint64_t lba, const uint16_t sectors)
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
 
@@ -179,13 +226,12 @@ static int32_t ata_read_pio_48(ATADev *self, uint64_t lba, const uint16_t sector
                 return -EIO;
             };
         };
-        // Copy from ata controller into buffer
-        ata_transfer(ptr_ata_buffer, self->sector_size / 2);
+        ata_read_into_buffer(ptr_ata_buffer, self->sector_size / 2);
     };
     return 0;
 };
 
-static int32_t ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors)
+static int32_t ata_read_pio_28(ATADev *self, const uint32_t lba, const uint8_t sectors)
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
     asm_outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
@@ -213,18 +259,12 @@ static int32_t ata_read_pio_28(ATADev *self, uint32_t lba, const uint8_t sectors
                 return -EIO;
             };
         };
-        // Copy from ata controller into buffer
-        ata_transfer(ptr_ata_buffer, self->sector_size / 2);
+        ata_read_into_buffer(ptr_ata_buffer, self->sector_size / 2);
     };
     return 0;
 };
 
-/**
- * @brief Gets the ATADev instance associated with the specified disk type.
- * @param dev The type of ATADeviceType for which to retrieve the ATADev instance.
- * @return
- *    - Returns a pointer to the ATADev instance if the disk type is recognized.
- */
+// Gets the ATADev instance associated with the specified disk type
 ATADev *ata_get(const ATADeviceType dev)
 {
     switch (dev)
@@ -237,28 +277,16 @@ ATADev *ata_get(const ATADeviceType dev)
     return 0x0;
 };
 
-/**
- * @brief Reads data from an ATA disk into the specified buffer.
- * Initiates a read operation on the ATA disk by configuring
- * the necessary parameters such as the Logical Block Address (LBA), the number
- * of sectors to read, and the drive selection. The data is then read into
- * the provided buffer using ATA commands.
- * @param self Pointer to the ATADisk instance representing the ATA disk.
- * @param start_block The starting block (Logical Block Address) from which to read.
- * @param n_blocks The number of blocks (sectors) to read from the ATA disk.
- * @return
- *    - Returns 0 if the read operation is successful.
- *    - Returns -1 if the self parameter is 0x0, indicating an invalid ATADisk instance.
- */
+// Reads data from an ATA disk into the specified buffer
 int32_t ata_read(ATADev *self, const size_t start_block, const size_t n_blocks)
 {
     if (!self)
     {
         return -EIO;
     };
-    const bool has_pio48 = self->features & (1 << 1);
+    const bool has_pio48_support = self->features & (1 << 1);
 
-    if (has_pio48)
+    if (has_pio48_support)
     {
         return ata_read_pio_48(self, start_block, n_blocks);
     };

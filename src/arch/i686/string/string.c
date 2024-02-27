@@ -82,13 +82,7 @@ void sreverse(char *str, const size_t length)
     return;
 };
 
-/**
- * @brief Converts an integer to a string.
- * @param num The integer to be converted.
- * @param str The character array buffer to store the result.
- * @param base The base for the conversion (e.g., 10 for decimal conversion).
- * @return A pointer to the resulting string.
- */
+// Converts an integer to a string
 char *itoa(uint32_t num, char *str, int32_t base)
 {
     size_t i = 0;
@@ -189,6 +183,8 @@ int32_t kprintf(const char *fmt, ...)
 
 char *scat(char *dest, const char *src)
 {
+    char *concatenated = dest;
+
     while (*dest != '\0')
     {
         dest++;
@@ -201,5 +197,5 @@ char *scat(char *dest, const char *src)
         src++;
     };
     *dest = '\0';
-    return dest;
-}
+    return concatenated;
+};
