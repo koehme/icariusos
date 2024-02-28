@@ -37,7 +37,7 @@ void kfree(void *ptr)
 
 void kpanic(const char *str)
 {
-    kprintf(str);
+    kprtf(str);
 
     for (;;)
     {
@@ -74,23 +74,23 @@ void kspinner(const int32_t frames)
     for (size_t i = 0; i < frames; i++)
     {
         const char *curr_frame = spinner_frames[i % 4];
-        kprintf(curr_frame);
-        kprintf("\b");
+        kprtf(curr_frame);
+        kprtf("\b");
     };
     return;
 };
 
-void kmotd(uint32_t addr)
+static void kmotd(uint32_t addr)
 {
     kspinner(12);
     const Date date = cmos_date(&cmos);
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
 
-    kprintf(" _             _         _____ _____ \n");
-    kprintf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
-    kprintf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
-    kprintf("|_|___|__,|_| |_|___|___|_____|_____|\n");
+    kprtf(" _             _         _____ _____ \n");
+    kprtf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
+    kprtf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
+    kprtf("|_|___|__,|_| |_|___|___|_____|_____|\n");
 
     vga_print(&vga_display, "                                     \n", VGA_COLOR_BLACK | (VGA_COLOR_LIGHT_GREEN << 4));
 
@@ -105,13 +105,13 @@ void kmotd(uint32_t addr)
         {
         case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
         {
-            kprintf("\nBooted with the %s Bootloader.\n\n", ((struct multiboot_tag_string *)tag)->string);
+            kprtf("\nBooted with the %s Bootloader.\n\n", ((struct multiboot_tag_string *)tag)->string);
             break;
         };
         case MULTIBOOT_TAG_TYPE_MMAP:
         {
             multiboot_memory_map_t *mmap;
-            kprintf("Available Memory:\n");
+            kprtf("Available Memory:\n");
 
             for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
                  (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
@@ -123,11 +123,11 @@ void kmotd(uint32_t addr)
 
                 if (end_addr == 0x100000000)
                 {
-                    kprintf("- Range: 0x%x - 0x100000000, Type: %s\n", base_addr, type);
+                    kprtf("- Range: 0x%x - 0x100000000, Type: %s\n", base_addr, type);
                 }
                 else
                 {
-                    kprintf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
+                    kprtf("- Range: 0x%x - 0x%x, Type: %s\n", base_addr, end_addr, type);
                 };
             };
             break;
@@ -135,7 +135,7 @@ void kmotd(uint32_t addr)
         case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
         {
             struct multiboot_tag_framebuffer *tagfb = (struct multiboot_tag_framebuffer *)tag;
-            kprintf("\nFramebuffer at 0x%x (Width: %d, Height: %d)\n", tagfb->common.framebuffer_addr, tagfb->common.framebuffer_width, tagfb->common.framebuffer_height);
+            kprtf("\nFramebuffer at 0x%x (Width: %d, Height: %d)\n", tagfb->common.framebuffer_addr, tagfb->common.framebuffer_width, tagfb->common.framebuffer_height);
             break;
         };
         default:
@@ -144,8 +144,8 @@ void kmotd(uint32_t addr)
         };
         };
     };
-    kprintf("\nicariusOS is running on an i686 CPU.\n");
-    kprintf("%s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
+    kprtf("\nicariusOS is running on an i686 CPU.\n");
+    kprtf("%s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
     return;
 };
 
@@ -164,23 +164,23 @@ static void run_vfs_test(const char **file_paths, const size_t num_files, size_t
 
         if (fd < 0)
         {
-            kprintf("VFSError: Could not open file '%s'\n", file_path);
+            kprtf("VFSError: Could not open file '%s'\n", file_path);
             continue;
         };
         const size_t bytes_read = vfs_fread(buffer, 1, sizeof(buffer), fd);
 
         if (bytes_read == 0)
         {
-            kprintf("VFSError: Could not read from file '%s'\n", file_path);
+            kprtf("VFSError: Could not read from file '%s'\n", file_path);
             vfs_fclose(fd);
             continue;
         };
         buffer[bytes_read] = '\0';
 
-        kprintf("\n--- File: %s ---\n", file_path);
-        kprintf("===========================================\n");
-        kprintf("%s", buffer);
-        kprintf("\n===========================================\n");
+        kprtf("\n--- File: %s ---\n", file_path);
+        kprtf("===========================================\n");
+        kprtf("%s", buffer);
+        kprtf("\n===========================================\n");
         kdelay(KERNEL_DEBUG_DELAY);
 
         vfs_fclose(fd);
@@ -196,13 +196,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
-        kprintf("Invalid Magic Number: 0x%x\n", magic);
+        kprtf("Invalid Magic Number: 0x%x\n", magic);
         return;
     };
 
     if (addr & 7)
     {
-        kprintf("Unaligned MBI: 0x%x\n", addr);
+        kprtf("Unaligned MBI: 0x%x\n", addr);
         return;
     };
     heap_init(&heap, &heap_bytemap, (void *)0x01000000, (void *)0x00007e00, 1024 * 1024 * 100, 4096);
@@ -215,7 +215,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     page_switch(ptr_kpage_dir->directory);
     asm_page_enable();
 
-    kprintf("%d\n", heap_get_usage(&heap));
+    kprtf("%d\n", heap_get_usage(&heap));
 
     asm_do_sti();
 
@@ -225,9 +225,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
 
-    kmotd(addr);
-
-    kprintf("\n");
+    kprtf("\n");
     ata_search_fs(ata_primary_master);
 
     const char *files[] = {
@@ -239,11 +237,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
     size_t buffer_sizes[] = {256, 128, 256, 9000};
     run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
 
-    kprintf(" _   _  ___    _  ____    _  __   _______ _____ \n");
-    kprintf("| \\ | |/ _ \\  ( ) \\ \\ \\  ( ) \\ \\ / / ____|_   _|\n");
-    kprintf("|  \\| | | | | |/   \\ \\ \\ |/   \\ V /|  _|   | |  \n");
-    kprintf("| |\\  | |_| |      / / /       | | | |___  | |  \n");
-    kprintf("|_| \\_|\\___/      /_/ /        |_| |_____| |_|  \n");
+    kmotd(addr);
 
     for (;;)
     {

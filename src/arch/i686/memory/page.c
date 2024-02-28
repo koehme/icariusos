@@ -96,7 +96,7 @@ int8_t map_frame_to_address(uint32_t *dir, void *vaddr, const uint32_t frame)
 
     if (!is_aligned)
     {
-        kprintf("PageError: Virtual memory address must be aligned!\n");
+        kprtf("PageError: Virtual memory address must be aligned!\n");
         return -1;
     };
     // Translate the virtual address to page indices

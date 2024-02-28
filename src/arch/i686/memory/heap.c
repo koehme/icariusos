@@ -82,7 +82,7 @@ static int32_t heap_mark_as_free(Heap *self, const size_t start_block)
 
     if (!is_head)
     {
-        kprintf("HeapError: Wrong start block or miscalculated alignment.");
+        kprtf("HeapError: Wrong start block or miscalculated alignment.");
         return -1;
     };
     bool has_next_block = map_entry & HEAP_BLOCK_HAS_NEXT;
@@ -151,14 +151,14 @@ void *heap_malloc(Heap *self, const size_t n_bytes)
 
     if (blocks_needed > self->bytemap->total_blocks)
     {
-        kprintf("HeapError: No additional blocks available for allocation\n");
+        kprtf("HeapError: No additional blocks available for allocation\n");
     };
     size_t block = -1;
     block = heap_search(self, blocks_needed);
 
     if (block == -1)
     {
-        kprintf("HeapError: No contiguous blocks available for allocation\n");
+        kprtf("HeapError: No contiguous blocks available for allocation\n");
         return 0x0;
     };
     void *absolute_address = 0x0;
@@ -178,7 +178,7 @@ void heap_free(Heap *self, void *ptr)
 
     if (res == -1)
     {
-        kprintf("HeapError: Failed to deallocate memory\n");
+        kprtf("HeapError: Failed to deallocate memory\n");
         return;
     };
     return;

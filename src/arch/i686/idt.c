@@ -105,7 +105,7 @@ void irq_14h_handler(void)
 // It increments the tick count of the system timer and sends an end-of-interrupt (EOI) signal to the PIC
 void isr_20h_handler(void)
 {
-    // kprintf("%d\n", timer.ticks);
+    // kprtf("%d\n", timer.ticks);
     timer.ticks++;
     pic_send_eoi();
     return;

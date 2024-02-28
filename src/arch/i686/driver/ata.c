@@ -68,12 +68,12 @@ static void send_identify_cmd(const uint8_t target_drive)
 
 static void ata_dump(ATADev *self, const int32_t delay)
 {
-    kprintf("Features: 0x%x\n", self->features);
-    kprintf("Sector Size: %d\n", self->sector_size);
-    kprintf("Total Sectors: %d\n", self->total_sectors);
-    kprintf("Capacity: %d KiB\n", self->capacity / 1024);
-    kprintf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
-    kprintf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
+    kprtf("Features: 0x%x\n", self->features);
+    kprtf("Sector Size: %d\n", self->sector_size);
+    kprtf("Total Sectors: %d\n", self->total_sectors);
+    kprtf("Capacity: %d KiB\n", self->capacity / 1024);
+    kprtf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
+    kprtf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
     kdelay(delay);
     return;
 };
@@ -221,7 +221,7 @@ static int32_t ata_read_pio_48(ATADev *self, const uint64_t lba, const uint16_t 
 
             if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
             {
-                kprintf("ATA: Read Error on LBA %u\n", lba);
+                kprtf("ATA: Read Error on LBA %u\n", lba);
                 return -EIO;
             };
         };
@@ -254,7 +254,7 @@ static int32_t ata_read_pio_28(ATADev *self, const uint32_t lba, const uint8_t s
 
             if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
             {
-                kprintf("ATA: Read Error on LBA %u\n", lba);
+                kprtf("ATA: Read Error on LBA %u\n", lba);
                 return -EIO;
             };
         };

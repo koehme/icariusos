@@ -144,7 +144,7 @@ int32_t vfs_fopen(const char *filename, const char *mode)
 
     if (!root->path->next)
     {
-        kprintf("VFS Error: Files in '/' are prohibited\n");
+        kprtf("VFS Error: Files in '/' are prohibited\n");
         res = -EINVAL;
         return res;
     };

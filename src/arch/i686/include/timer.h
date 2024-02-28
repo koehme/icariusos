@@ -23,17 +23,11 @@ typedef enum PitPorts
     PIT_MODE_COMMAND_REGISTER = 0x43 // Mode/Command register (write only, a read is ignored)
 } PITPorts;
 
-/**
- * @struct Timer
- * @brief Represent a timer.
- * @details Holds information about the timer, including the number of ticks and the hz.
- */
+// Holds information about the number of ticks and the hz
 typedef struct Timer
 {
     uint64_t ticks; // Number of ticks since system booted
-    uint8_t subticks;
-    uint8_t max_subticks;
-    uint32_t hz;
+    uint32_t hz;    // Frequency (in Hertz) at which the timer operates
 } Timer;
 
 void timer_init(Timer *self, const uint32_t hz);

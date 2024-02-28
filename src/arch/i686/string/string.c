@@ -124,7 +124,7 @@ char *itoa(uint32_t num, char *str, int32_t base)
     return str;
 };
 
-int32_t kprintf(const char *fmt, ...)
+int32_t kprtf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
