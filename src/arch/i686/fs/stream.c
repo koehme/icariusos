@@ -1,6 +1,5 @@
 #include "stream.h"
 #include "string.h"
-#include "mem.h"
 
 void stream_init(Stream *self, ATADev *dev)
 {

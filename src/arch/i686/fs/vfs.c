@@ -148,7 +148,7 @@ int32_t vfs_fopen(const char *filename, const char *mode)
         res = -EINVAL;
         return res;
     };
-    ATADev *dev = ata_get(ATA_DEV_0);
+    ATADev *dev = ata_get(ATA_DEV_PRIMARY_MASTER);
 
     if (!dev || !dev->fs)
     {

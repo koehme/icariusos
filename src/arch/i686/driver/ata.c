@@ -6,7 +6,6 @@
 
 #include "ata.h"
 #include "io.h"
-#include "mem.h"
 #include "kernel.h"
 #include "string.h"
 
@@ -14,7 +13,7 @@
 
 extern void asm_irq_14h(void);
 
-ATADev ata_dev_0 = {
+ATADev ata_dev_primary_master = {
     .dev = 0x0,
     .sector_size = 0x0,
     .capacity = 0x0,
@@ -170,7 +169,7 @@ static int32_t ata_identify(ATADev *self, const ATADriveType type)
 void ata_init(ATADev *self)
 {
     idt_set(0x2E, asm_irq_14h);
-    self->dev = ATA_DEV_0;
+    self->dev = ATA_DEV_PRIMARY_MASTER;
     self->sector_size = ATA_SECTOR_SIZE;
     self->total_sectors = 0x0;
     self->capacity = 0x0;
@@ -269,9 +268,9 @@ ATADev *ata_get(const ATADeviceType dev)
 {
     switch (dev)
     {
-    case ATA_DEV_0:
+    case ATA_DEV_PRIMARY_MASTER:
     {
-        return &ata_dev_0;
+        return &ata_dev_primary_master;
     };
     };
     return 0x0;

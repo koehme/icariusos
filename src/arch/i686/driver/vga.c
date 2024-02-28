@@ -8,9 +8,8 @@
 #include <stddef.h>
 
 #include "vga.h"
-#include "mem.h"
-#include "cursor.h"
 #include "string.h"
+#include "cursor.h"
 #include "kernel.h"
 
 VGADisplay vga_display = {

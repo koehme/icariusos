@@ -20,7 +20,7 @@ typedef enum ATALimit
 
 typedef enum ATADeviceType
 {
-    ATA_DEV_0 = 0x0,
+    ATA_DEV_PRIMARY_MASTER = 0x0,
 } ATADeviceType;
 
 typedef enum ATADriveType

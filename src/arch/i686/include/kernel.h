@@ -17,7 +17,6 @@
 #include "io.h"
 #include "heap.h"
 #include "cursor.h"
-#include "mem.h"
 #include "page.h"
 #include "kernel.h"
 #include "keyboard.h"

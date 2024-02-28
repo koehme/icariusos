@@ -149,6 +149,45 @@ void kmotd(uint32_t addr)
     return;
 };
 
+static void run_vfs_test(const char **file_paths, const size_t num_files, size_t *buffer_sizes)
+{
+
+    for (size_t i = 0; i < num_files; ++i)
+    {
+        const char *file_path = file_paths[i];
+        size_t buffer_size = buffer_sizes[i];
+
+        uint8_t buffer[buffer_size];
+        mset8(buffer, 0x0, buffer_size);
+
+        const int32_t fd = vfs_fopen(file_path, "r");
+
+        if (fd < 0)
+        {
+            kprintf("VFSError: Could not open file '%s'\n", file_path);
+            continue;
+        };
+        const size_t bytes_read = vfs_fread(buffer, 1, sizeof(buffer), fd);
+
+        if (bytes_read == 0)
+        {
+            kprintf("VFSError: Could not read from file '%s'\n", file_path);
+            vfs_fclose(fd);
+            continue;
+        };
+        buffer[bytes_read] = '\0';
+
+        kprintf("\n--- File: %s ---\n", file_path);
+        kprintf("===========================================\n");
+        kprintf("%s", buffer);
+        kprintf("\n===========================================\n");
+        kdelay(KERNEL_DEBUG_DELAY);
+
+        vfs_fclose(fd);
+    };
+    return;
+};
+
 void kmain(const uint32_t magic, const uint32_t addr)
 {
     vga_display_init(&vga_display, (uint16_t *)0xb8000, 80, 25);
@@ -180,8 +219,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     asm_do_sti();
 
-    ATADev *dev0 = ata_get(ATA_DEV_0);
-    ata_init(dev0);
+    ATADev *ata_primary_master = ata_get(ATA_DEV_PRIMARY_MASTER);
+    ata_init(ata_primary_master);
 
     keyboard_init(&keyboard);
     timer_init(&timer, 100);
@@ -189,14 +228,22 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kmotd(addr);
 
     kprintf("\n");
-    ata_search_fs(dev0);
+    ata_search_fs(ata_primary_master);
 
-    uint8_t buffer[16384];
-    mset8(buffer, 0x0, 16384);
-    const int32_t fd1 = vfs_fopen("A:/LEET/TEST.TXT", "r");
-    vfs_fread(buffer, 9000, 1, fd1);
-    kprintf("%s\n", buffer);
-    vfs_fclose(fd1);
+    const char *files[] = {
+        "A:/LEET/ABC.TXT",
+        "A:/LEET/DUDE/CODE.TXT",
+        "A:/LEET/DUDE/HEY.TXT",
+        "A:/LEET/TEST.TXT",
+    };
+    size_t buffer_sizes[] = {256, 128, 256, 9000};
+    run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
+
+    kprintf(" _   _  ___    _  ____    _  __   _______ _____ \n");
+    kprintf("| \\ | |/ _ \\  ( ) \\ \\ \\  ( ) \\ \\ / / ____|_   _|\n");
+    kprintf("|  \\| | | | | |/   \\ \\ \\ |/   \\ V /|  _|   | |  \n");
+    kprintf("| |\\  | |_| |      / / /       | | | |___  | |  \n");
+    kprintf("|_| \\_|\\___/      /_/ /        |_| |_____| |_|  \n");
 
     for (;;)
     {

@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #include "heap.h"
-#include "mem.h"
 #include "kernel.h"
 #include "string.h"
 

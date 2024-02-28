@@ -21,4 +21,9 @@ char *scat(char *dest, const char *src);
 char *sptr(char *str, const char c);
 bool scmp(const char *s1, const char *s2);
 
+void *mset8(void *dest, const uint8_t value, size_t n_bytes);
+void *mset16(void *dest, const uint16_t value, size_t n_bytes);
+void *mcpy(void *dest, const void *src, size_t n_bytes);
+int32_t mcmp(const void *s1, const void *s2, size_t n);
+
 #endif

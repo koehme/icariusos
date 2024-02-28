@@ -6,7 +6,7 @@
 
 #include "fat16.h"
 #include "stream.h"
-#include "mem.h"
+#include "string.h"
 
 FileSystem fat16 = {
     .resolve_cb = 0x0,

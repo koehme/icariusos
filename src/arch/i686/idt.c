@@ -14,12 +14,21 @@
 #include "kernel.h"
 #include "ata.h"
 
-extern ATADev ata_dev_0;
+extern ATADev ata_dev_primary_master;
 extern Timer timer;
 extern Keyboard keyboard;
 
 extern void asm_idt_loader(IDT_R *ptr);
 extern void asm_interrupt_default();
+
+static void pic_send_eoi(void);
+void isr_20h_handler(void);
+void isr_21h_handler(void);
+void isr_default_handler(void);
+static void idt_entries_init(void);
+
+void idt_init(void);
+void idt_set(const int32_t isr_num, void *isr);
 
 static const char *interrupt_messages[] = {
     // CPU Interrupts
@@ -74,32 +83,26 @@ static const char *interrupt_messages[] = {
     "Primary ATA Hard Disk (IRQ14)\n",
     "Secondary ATA Hard Disk (IRQ15)\n"};
 
-/**
- * Represents the IDT and is used to define various interrupts.
- * Each element in this array corresponds to an interrupt vector,
- * holding specific information such as the address of the Interrupt Service Routine (ISR) handler.
- */
+// Contains interrupt service routines that are required for handling interrupts
 static IDTDescriptor idt[256];
-// Contains information about the size and starting point of the IDT.
+// The location of the IDT is kept in the IDT_R (IDT register). This is loaded using the LIDT assembly instruction, whose argument is a pointer to an IDTDescriptor structure
 static IDT_R idtr_descriptor;
 
-void pic_send_eoi(void)
+// Sends an end-of-interrupt (EOI) signal to the PIC
+static void pic_send_eoi(void)
 {
     asm_outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
-// IDE ATA dev interrupt handler
+// IDE ATA dev
 void irq_14h_handler(void)
 {
     pic_send_eoi();
     return;
 };
 
-/**
- * @brief Timer ISR handler.
- * @return void
- */
+// It increments the tick count of the system timer and sends an end-of-interrupt (EOI) signal to the PIC
 void isr_20h_handler(void)
 {
     // kprintf("%d\n", timer.ticks);
@@ -108,10 +111,7 @@ void isr_20h_handler(void)
     return;
 };
 
-/**
- * @brief Keyboard ISR handler.
- * @return void
- */
+// Checks if a key is ready to be read from the keyboard, reads it if available and sends an end-of-interrupt (EOI) signal to the PIC
 void isr_21h_handler(void)
 {
     if (keyboard_wait())
@@ -129,7 +129,30 @@ void isr_default_handler(void)
     return;
 };
 
-// Configures the specified entry in the IDT with the given vector and ISR (Interrupt Service Routine)
+// Initializes the Interrupt Descriptor Table with default dummy interrupt handlers
+static void idt_entries_init(void)
+{
+    // Set default interrupt handlers for all entries in the IDT
+    for (size_t i = 0; i < 256; i++)
+    {
+        idt_set(i, asm_interrupt_default);
+    };
+    return;
+};
+
+// Initializes the Interrupt Descriptor Table (IDT).
+void idt_init(void)
+{
+    // Set the limit and base address of the IDT descriptor
+    idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
+    idtr_descriptor.base = (uintptr_t)&idt[0];
+    idt_entries_init();
+    // Load the idt in a specific 'lidt' register with the help of an assembly routine
+    asm_idt_loader(&idtr_descriptor);
+    return;
+};
+
+// Sets an entry in the Interrupt Descriptor Table with the provided interrupt service routine (ISR) function pointer
 void idt_set(const int32_t isr_num, void *isr)
 {
     if (isr_num < 0 || isr_num >= 256)
@@ -143,37 +166,5 @@ void idt_set(const int32_t isr_num, void *isr)
     descriptor->reserved = 0x00;
     descriptor->attributes = 0b11101110;
     descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
-    return;
-};
-
-/**
- * @brief Initializes the IDT entries with interrupt handlers.
- * @return void
- */
-void idt_entries_init(void)
-{
-    // Set default interrupt handlers for all entries in the IDT
-    for (size_t i = 0; i < 256; i++)
-    {
-        idt_set(i, asm_interrupt_default);
-    };
-    return;
-};
-
-/**
- * @brief Initializes the Interrupt Descriptor Table (IDT).
- * Sets the limit and base address of the IDT descriptor and
- * initializes the IDT entries using the separate function initialize_idt_entries.
- * Finally, it passes the IDT address to the assembly routine for loading.
- * @return void
- */
-void idt_init(void)
-{
-    // Set the limit and base address of the IDT descriptor
-    idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
-    idtr_descriptor.base = (uintptr_t)&idt[0];
-    idt_entries_init();
-    // Load the idt in a specific 'lidt' register with the help of an assembly routine
-    asm_idt_loader(&idtr_descriptor);
     return;
 };
