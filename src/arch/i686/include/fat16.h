@@ -20,5 +20,6 @@ int32_t fat16_resolve(ATADev *dev);
 void *fat16_open(ATADev *dev, PathNode *path, const VNODE_MODE mode);
 size_t fat16_read(ATADev *dev, void *internal, uint8_t *buffer, const size_t n_bytes, const size_t n_blocks);
 int32_t fat16_close(void *internal);
+int32_t fat16_stat(ATADev *dev, void *internal, VStat *vstat);
 
 #endif

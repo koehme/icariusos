@@ -210,3 +210,23 @@ int32_t vfs_fclose(const int32_t fd)
     kfree(fdescriptor);
     return res;
 };
+
+int32_t vfs_fstat(const int32_t fd, VStat *buffer)
+{
+    int32_t res = 0;
+
+    if (fd < 1)
+    {
+        res = -EINVAL;
+        return res;
+    };
+    FileDescriptor *fdescriptor = vfs_get_fd(fd);
+
+    if (fdescriptor == 0x0)
+    {
+        res = -EBADF;
+        return res;
+    }
+    fdescriptor->fs->stat_cb(fdescriptor->dev, fdescriptor->internal, buffer);
+    return res;
+};

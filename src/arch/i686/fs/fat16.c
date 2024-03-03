@@ -13,6 +13,7 @@ FileSystem fat16 = {
     .open_cb = 0x0,
     .read_cb = 0x0,
     .close_cb = 0x0,
+    .stat_cb = 0x0,
     .name = "FAT16",
 };
 
@@ -49,6 +50,8 @@ typedef struct FAT16
     ResolveFunction resolve_cb;
     OpenFunction open_cb;
     ReadFunction read_cb;
+    CloseFunction close_cb;
+    StatFunction stat_cb;
     char name[10];
 } FAT16;
 
@@ -208,12 +211,22 @@ static FAT16DateInfo convert_date(const uint16_t date)
     return date_info;
 };
 
+uint16_t fat16_date_to_uint16(FAT16DateInfo dateInfo)
+{
+    uint16_t fat16_date = 0;
+    fat16_date |= ((dateInfo.year - 1980) & 0x7F) << 9;
+    fat16_date |= (dateInfo.month & 0x0F) << 5;
+    fat16_date |= (dateInfo.day & 0x1F);
+    return fat16_date;
+};
+
 FileSystem *fat16_init(void)
 {
     fat16.resolve_cb = fat16_resolve;
     fat16.open_cb = fat16_open;
     fat16.read_cb = fat16_read;
     fat16.close_cb = fat16_close;
+    fat16.stat_cb = fat16_stat;
     return &fat16;
 };
 
@@ -734,4 +747,77 @@ int32_t fat16_close(void *internal)
     kfree(fat16_descriptor->entry);
     kfree(fat16_descriptor);
     return 0;
+};
+
+static void fat16_set_stat(FAT16FileDescriptor *fat16_descriptor, ATADev *dev, VStat *vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks)
+{
+    switch (fat16_descriptor->entry->type)
+    {
+    case FAT16_ENTRY_TYPE_DIRECTORY:
+    {
+        vstat->st_dev = dev->dev;
+        vstat->st_mode = V_READ;
+        vstat->st_size = fat16_descriptor->entry->dir->entry->file_size;
+        vstat->st_blksize = max_cluster_size_bytes;
+        vstat->st_blocks = (used_blocks * max_cluster_size_bytes) / dev->sector_size;
+        vstat->st_atime = fat16_descriptor->entry->dir->entry->last_access_date;
+        vstat->st_mtime = fat16_descriptor->entry->dir->entry->modification_date;
+        vstat->st_ctime = fat16_descriptor->entry->dir->entry->creation_time_ms;
+        break;
+    }
+    case FAT16_ENTRY_TYPE_FILE:
+    {
+        vstat->st_dev = dev->dev;
+        vstat->st_mode = V_READ;
+        vstat->st_size = fat16_descriptor->entry->file->file_size;
+        vstat->st_blksize = max_cluster_size_bytes;
+        vstat->st_blocks = (used_blocks * max_cluster_size_bytes) / dev->sector_size;
+        vstat->st_atime = fat16_descriptor->entry->file->last_access_date;
+        vstat->st_mtime = fat16_descriptor->entry->file->modification_date;
+        vstat->st_ctime = fat16_descriptor->entry->file->creation_time_ms;
+        break;
+    };
+    default:
+        break;
+    };
+    return;
+};
+
+static uint16_t fat16_count_allocated_fat_blocks_in_chain(Stream *fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster, const uint32_t partition_offset)
+{
+    uint16_t used_blocks = 1;
+
+    uint16_t curr_cluster = (0 / max_cluster_size_bytes) + start_cluster;
+    uint16_t next_cluster = read_next_cluster(fat_stream, partition_offset, curr_cluster);
+
+    while (next_cluster < FAT16_VALUE_END_OF_CHAIN)
+    {
+        used_blocks++;
+        curr_cluster = next_cluster;
+        next_cluster = read_next_cluster(fat_stream, partition_offset, curr_cluster);
+    };
+    return used_blocks;
+};
+
+int32_t fat16_stat(ATADev *dev, void *internal, VStat *vstat)
+{
+    int32_t res = 0;
+
+    if (dev == 0x0 || internal == 0x0 || vstat == 0x0)
+    {
+        res = -EINVAL;
+        return res;
+    };
+    FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)internal;
+    // Should be there, because we must follow the fat cluster chain, to find the sum of all the allocated blocks
+    Stream fat_stream = {};
+    stream_init(&fat_stream, dev);
+    // Define the offset of the partition
+    const uint32_t partition_offset = 0x100000;
+    const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
+    const uint32_t start_cluster = get_start_cluster_from_descriptor(fat16_descriptor);
+    // Follow the cluster chain from the start 0 from the starting cluster and keep track of allocated blocks
+    const uint16_t used_blocks = fat16_count_allocated_fat_blocks_in_chain(&fat_stream, max_cluster_size_bytes, start_cluster, partition_offset);
+    fat16_set_stat(fat16_descriptor, dev, vstat, max_cluster_size_bytes, used_blocks);
+    return res;
 };

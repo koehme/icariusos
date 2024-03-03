@@ -4,6 +4,7 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break ata.c:ata_identify
+break vfs.c:vfs_fopen
+break vfs.c:vfs_fstat
 
 c

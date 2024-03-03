@@ -236,8 +236,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
     };
     size_t buffer_sizes[] = {256, 128, 256, 9000};
     run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
+    // kmotd(addr);
 
-    kmotd(addr);
+    const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
+
+    VStat vstat = {};
+    int32_t res = vfs_fstat(fd, &vstat);
+
+    vnode_dump(&vstat, "A:/LEET/TEST.TXT");
+    vfs_fclose(fd);
 
     for (;;)
     {
