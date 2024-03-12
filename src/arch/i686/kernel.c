@@ -228,6 +228,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kprtf("\n");
     ata_search_fs(ata_primary_master);
 
+    kmotd(addr);
+
     const char *files[] = {
         "A:/LEET/ABC.TXT",
         "A:/LEET/DUDE/CODE.TXT",
@@ -236,9 +238,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
     };
     size_t buffer_sizes[] = {256, 128, 256, 9000};
     run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
-    // kmotd(addr);
 
+    uint8_t buffer[32768];
+    mset8(buffer, 0x0, 32768);
     const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
+    vfs_fread(buffer, 8192, 1, fd);
+
+    kprtf("%s\n", buffer);
 
     VStat vstat = {};
     int32_t res = vfs_fstat(fd, &vstat);

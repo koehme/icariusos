@@ -506,6 +506,7 @@ static FAT16DirEntry *get_entry_in_subdir(ATADev *dev, const uint16_t start_clus
     uint16_t curr_cluster = start_cluster;
 
     const uint32_t num_entries = max_cluster_size_bytes / sizeof(FAT16DirEntry);
+    uint32_t total_entries = 0;
 
     while (curr_cluster <= FAT16_VALUE_END_OF_CHAIN)
     {
@@ -527,14 +528,17 @@ static FAT16DirEntry *get_entry_in_subdir(ATADev *dev, const uint16_t start_clus
                 const uint32_t end_sector = convert_data_cluster_to_sector(curr_cluster);
                 fat16_folder->start_sector = start_sector;
                 fat16_folder->end_sector = end_sector;
+                fat16_folder->total = total_entries;
                 FAT16DirEntry *entry = (FAT16DirEntry *)curr_dir_entry;
                 mcpy(fat16_dir_entry, curr_dir_entry, sizeof(FAT16DirEntry));
                 return fat16_dir_entry;
             };
             curr_dir_entry += sizeof(FAT16DirEntry);
+            total_entries++;
         };
         curr_cluster = read_next_cluster(&fat_stream, partition_offset, curr_cluster);
     };
+    fat16_folder->total = total_entries;
     return 0x0;
 };
 
