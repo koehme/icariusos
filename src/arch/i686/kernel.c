@@ -75,6 +75,7 @@ void kspinner(const int32_t frames)
     {
         const char *curr_frame = spinner_frames[i % 4];
         kprtf(curr_frame);
+        ksleep(60);
         kprtf("\b");
     };
     return;
@@ -82,7 +83,7 @@ void kspinner(const int32_t frames)
 
 static void kmotd(uint32_t addr)
 {
-    kspinner(12);
+    kspinner(20);
     const Date date = cmos_date(&cmos);
     vga_display_clear(&vga_display);
     vga_display_set_cursor(&vga_display, 0, 0);
@@ -145,13 +146,12 @@ static void kmotd(uint32_t addr)
         };
     };
     kprtf("\nicariusOS is running on an i686 CPU.\n");
-    kprtf("%s, %d %s %d                                                \n", days[date.weekday - 1], date.day, months[date.month + 1], date.year);
+    kprtf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
     return;
 };
 
 static void run_vfs_test(const char **file_paths, const size_t num_files, size_t *buffer_sizes)
 {
-
     for (size_t i = 0; i < num_files; ++i)
     {
         const char *file_path = file_paths[i];
@@ -230,6 +230,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     kmotd(addr);
 
+    /*
     const char *files[] = {
         "A:/LEET/ABC.TXT",
         "A:/LEET/DUDE/CODE.TXT",
@@ -237,6 +238,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
         "A:/LEET/TEST.TXT",
     };
     size_t buffer_sizes[] = {256, 128, 256, 9000};
+
     run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
 
     uint8_t buffer[32768];
@@ -251,6 +253,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     vnode_dump(&vstat, "A:/LEET/TEST.TXT");
     vfs_fclose(fd);
+    */
 
     for (;;)
     {
