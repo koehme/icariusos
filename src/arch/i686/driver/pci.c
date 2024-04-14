@@ -4,18 +4,21 @@
  * @copyright MIT
  */
 
-#include "pci.h"
-#include "io.h"
 #include <stddef.h>
 #include <stdbool.h>
 
-uint16_t pci_read_word(const uint8_t bus, const uint8_t device, const uint8_t function, const uint8_t offset)
+#include "status.h"
+#include "kernel.h"
+#include "pci.h"
+#include "io.h"
+
+static uint16_t pci_read_word(const uint8_t bus, const uint8_t device, const uint8_t function, const uint8_t offset)
 {
     const uint32_t local_bus = (uint32_t)bus;
     const uint32_t local_device = (uint32_t)device;
     const uint32_t local_function = (uint32_t)function;
     // Build the register address to allow precise configuration control for PCI devices
-    const uint32_t config_address = (uint32_t)((uint32_t)0x80000000) | (local_bus << 16) | (local_device << 11) | (local_function << 8) | (offset & PCI_OFFSET_MASK);
+    const uint32_t config_address = (uint32_t)((local_bus << 16) | (local_device << 11) | (local_function << 8) | (offset & PCI_OFFSET_MASK) | (uint32_t)0x80000000);
     // Write the specific config address to the pci controller
     asm_outl(PCI_CONFIG_ADDR, config_address);
     // The PCI config register consists of 256 bytes.
@@ -38,8 +41,35 @@ void pci_devices_enumerate(void)
         {
             for (size_t function = 0; function < 8; function++)
             {
+                const uint16_t vendor_id = pci_read_word(bus, device, function, PCI_VENDOR_ID_REG_OFFSET);
+
+                if (vendor_id == PCI_DEV_NOT_FOUND)
+                {
+                    continue;
+                };
+                const uint16_t device_id = pci_read_word(bus, device, function, PCI_DEVICE_ID_REG_OFFSET);
+
+                const uint16_t command = pci_read_word(bus, device, function, PCI_COMMAND_REG_OFFSET);
+                const uint16_t status = pci_read_word(bus, device, function, PCI_STATUS_REG_OFFSET);
+
+                const uint8_t revision_id = pci_read_word(bus, device, function, PCI_REVISION_ID_REG_OFFSET);
+                const uint8_t prog_if = pci_read_word(bus, device, function, PCI_PROG_IF_REG_OFFSET);
+                const uint8_t subclass = pci_read_word(bus, device, function, PCI_SUBCLASS_REG_OFFSET);
+                const uint8_t class_code = pci_read_word(bus, device, function, PCI_CLASS_CODE_REG_OFFSET);
+
+                const uint8_t cache_line_size = pci_read_word(bus, device, function, PCI_CACHE_LINE_SIZE);
+                const uint8_t latency_timer = pci_read_word(bus, device, function, PCI_LATENCY_TIMER_REG_OFFSET);
+                const uint8_t header_type = pci_read_word(bus, device, function, PCI_HEADER_TYPE_REG_OFFSET);
+                const uint8_t bist = pci_read_word(bus, device, function, PCI_BIST_REG_OFFSET);
+
+                kprtf("Bus: %d, Device: %d, Function: %d \n Vendor ID: 0x%x, Device ID: 0x%x, Class Code: 0x%x\n Command: 0x%x, Status: 0x%x, Revision ID: 0x%x\n Prog IF: 0x%x, Subclass: 0x%x, Cache Line Size: 0x%x\n Latency Timer: 0x%x, Header Type: 0x%x, BIST: 0x%x\n",
+                      bus, device, function,
+                      vendor_id, device_id, class_code,
+                      command, status, revision_id,
+                      prog_if, subclass, cache_line_size,
+                      latency_timer, header_type, bist);
             };
         };
     };
-    return 0;
+    return;
 };

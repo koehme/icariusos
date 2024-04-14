@@ -230,30 +230,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     kmotd(addr);
 
-    /*
-    const char *files[] = {
-        "A:/LEET/ABC.TXT",
-        "A:/LEET/DUDE/CODE.TXT",
-        "A:/LEET/DUDE/HEY.TXT",
-        "A:/LEET/TEST.TXT",
-    };
-    size_t buffer_sizes[] = {256, 128, 256, 9000};
-
-    run_vfs_test(files, sizeof(files) / sizeof(files[0]), buffer_sizes);
-
-    uint8_t buffer[32768];
-    mset8(buffer, 0x0, 32768);
-    const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
-    vfs_fread(buffer, 8192, 1, fd);
-
-    kprtf("%s\n", buffer);
-
-    VStat vstat = {};
-    int32_t res = vfs_fstat(fd, &vstat);
-
-    vnode_dump(&vstat, "A:/LEET/TEST.TXT");
-    vfs_fclose(fd);
-    */
+    pci_devices_enumerate();
 
     for (;;)
     {

@@ -27,6 +27,7 @@
 #include "stream.h"
 #include "cmos.h"
 #include "vfs.h"
+#include "pci.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);

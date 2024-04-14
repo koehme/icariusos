@@ -16,7 +16,7 @@ typedef enum PCI_CONFIG_PORTS
     PCI_OFFSET_MASK = 0xFC,  // Masking the first two bits of the offset (these are the two lowest bits) with 0xFC ensures that the generated addresses in the PCI configuration space are always aligned to 4-byte boundaries, which is important for correct access to the registers
 } PCI_CONFIG_PORTS;
 
-typedef enum PCI_CONFIG_REGISTER_OFFSETS
+typedef enum PCI_CONFIG_REG_OFFSET
 {
     PCI_VENDOR_ID_REG_OFFSET = 0x00,     // Identifies the particular device. Where valid IDs are allocated by the vendor
     PCI_DEVICE_ID_REG_OFFSET = 0x02,     // Identifies the manufacturer of the device
@@ -30,6 +30,13 @@ typedef enum PCI_CONFIG_REGISTER_OFFSETS
     PCI_LATENCY_TIMER_REG_OFFSET = 0x0D, // Specifies the latency timer in units of PCI bus clocks
     PCI_HEADER_TYPE_REG_OFFSET = 0x0E,   // 0x0: a general device, 0x1: a PCI-to-PCI bridge, 0x2: a PCI-to-CardBus bridge
     PCI_BIST_REG_OFFSET = 0x0F,          // Represents that status and allows control of a devices BIST (built-in self test)
-} PCI_CONFIG_REGISTER_OFFSETS;
+} PCI_CONFIG_REG_OFFSET;
+
+typedef enum PCI_STATE
+{
+    PCI_DEV_NOT_FOUND = 0xFFFF,
+} PCI_STATE;
+
+void pci_devices_enumerate(void);
 
 #endif
