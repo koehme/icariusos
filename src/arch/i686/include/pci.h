@@ -37,6 +37,8 @@ typedef enum PCI_STATE
     PCI_DEV_NOT_FOUND = 0xFFFF,
 } PCI_STATE;
 
+uint16_t pci_read16(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset);
+void pci_write16(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset, const uint16_t data);
 void pci_devices_enumerate(void);
 
 #endif
