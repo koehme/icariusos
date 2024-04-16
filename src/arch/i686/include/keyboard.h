@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "kernel.h"
+
 typedef enum Keyboard_Controller_Status_Mask
 {
     KEYBOARD_CTRL_STATS_MASK_OUT_BUF = 0x1,  // 00000001
