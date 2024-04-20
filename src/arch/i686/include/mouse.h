@@ -12,21 +12,19 @@
 
 #include "kernel.h"
 
-typedef enum MouseCycle
+typedef enum MouseByteCycle
 {
-    MOUSE_FIRST_CYCLE = 0,
-    MOUSE_SECOND_CYCLE = 1,
-    MOUSE_THIRD_CYCLE = 2,
-} MouseCycle;
+    MOUSE_BYTE_1 = 0,
+    MOUSE_BYTE_2 = 1,
+    MOUSE_BYTE_3 = 2,
+} MouseByteCycle;
 
 typedef struct Mouse
 {
     bool enabled;
-    int32_t rel_x;
-    int32_t rel_y;
-    int32_t abs_x;
-    int32_t abs_y;
-    MouseCycle mouse_cycle;
+    uint8_t rel_x;
+    uint8_t rel_y;
+    MouseByteCycle cycle;
     union
     {
         struct

@@ -99,14 +99,7 @@ static void pic_send_eoi(void)
     return;
 };
 
-// IDE ATA dev
-void irq_14h_handler(void)
-{
-    pic_send_eoi();
-    return;
-};
-
-// It increments the tick count of the system timer and sends an end-of-interrupt (EOI) signal to the PIC
+// Timer
 void isr_20h_handler(void)
 {
     // kprtf("%d\n", timer.ticks);
@@ -115,13 +108,10 @@ void isr_20h_handler(void)
     return;
 };
 
-// Checks if a key is ready to be read from the keyboard, reads it if available and sends an end-of-interrupt (EOI) signal to the PIC
+// PS2 keyboard handler
 void isr_21h_handler(void)
 {
-    if (keyboard_wait())
-    {
-        keyboard_read(&keyboard);
-    };
+    keyboard_handler(&keyboard);
     pic_send_eoi();
     return;
 };
@@ -130,7 +120,6 @@ void isr_21h_handler(void)
 void isr_32h_handler(void)
 {
     mouse_handler(&mouse);
-    kprtf("Mouse (rel_x: %d, rel_y: %d)\n", mouse.rel_x, mouse.rel_y);
     pic_send_eoi();
     return;
 };
@@ -173,7 +162,7 @@ void idt_set(const int32_t isr_num, void *isr)
         return;
     };
     IDTDescriptor *descriptor = &idt[isr_num];
-
+    // Set isr
     descriptor->isr_low = (uintptr_t)isr & 0xffff;
     descriptor->kernel_cs = 0x08;
     descriptor->reserved = 0x00;

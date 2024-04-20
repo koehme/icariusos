@@ -13,9 +13,7 @@ Mouse mouse = {
     .enabled = false,
     .rel_x = 0,
     .rel_y = 0,
-    .abs_x = 0,
-    .abs_y = 0,
-    .mouse_cycle = 0,
+    .cycle = 0,
     .byte0 = 0,
     .byte1 = 0,
     .byte2 = 0,
@@ -25,28 +23,34 @@ Mouse mouse = {
 
 void mouse_handler(Mouse *self)
 {
-    switch (self->mouse_cycle)
+    switch (self->cycle)
     {
-    case MOUSE_FIRST_CYCLE:
+    case MOUSE_BYTE_1:
     {
         self->byte0 = asm_inb(MOUSE_DATA_PORT);
-        self->mouse_cycle++;
+        self->cycle++;
         break;
     };
-    case MOUSE_SECOND_CYCLE:
+    case MOUSE_BYTE_2:
     {
         self->byte1 = asm_inb(MOUSE_DATA_PORT);
-        self->mouse_cycle++;
+        self->cycle++;
         break;
     };
-    case MOUSE_THIRD_CYCLE:
+    case MOUSE_BYTE_3:
     {
         self->byte2 = asm_inb(MOUSE_DATA_PORT);
-        // Update position
+        // Check axis overflow
+        const bool has_y_overflow = (self->bytes[0] & 0b10000000);
+        const bool has_x_overflow = (self->bytes[0] & 0b01000000);
+
+        if (has_y_overflow || has_x_overflow)
+        {
+            break;
+        };
         self->rel_x = self->byte1;
         self->rel_y = self->byte2;
-        // Reset cycles
-        self->mouse_cycle = MOUSE_FIRST_CYCLE;
+        self->cycle = 0;
         break;
     };
     };

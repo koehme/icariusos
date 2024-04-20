@@ -43,26 +43,6 @@ const static uint8_t qwertz_upper[] = {
 
 const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
 
-// Checks if the keyboard controller is ready
-int32_t keyboard_wait(void)
-{
-    // Wait until the keyboard controller is ready
-    for (;;)
-    {
-        // Read the status register
-        const uint8_t status = asm_inb(KEYBOARD_CTRL_STATS_REG);
-
-        // Check if the Output Buffer Full bit is set
-        if (status & KEYBOARD_CTRL_STATS_MASK_OUT_BUF)
-        {
-            // Keyboard controller is ready
-            return 1;
-        };
-    };
-    // This line should not be reached
-    return 0;
-};
-
 void keyboard_enable(Keyboard *self)
 {
     for (;;)
@@ -153,7 +133,7 @@ static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t brea
     return;
 };
 
-void keyboard_read(Keyboard *self)
+void keyboard_handler(Keyboard *self)
 {
     const uint8_t key_state = asm_inb(KEYBOARD_ENC_INPUT_BUF);
     const uint8_t makecode = key_state & 0x7f;

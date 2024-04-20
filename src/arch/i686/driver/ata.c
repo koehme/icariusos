@@ -11,8 +11,6 @@
 
 #define ATA_DEBUG_DELAY 0
 
-extern void asm_irq_14h(void);
-
 ATADev ata_dev_primary_master = {
     .dev = 0x0,
     .sector_size = 0x0,
@@ -168,7 +166,6 @@ static int32_t ata_identify(ATADev *self, const ATADriveType type)
 // Initializes the ATA device
 void ata_init(ATADev *self)
 {
-    idt_set(0x2E, asm_irq_14h);
     self->dev = ATA_DEV_PRIMARY_MASTER;
     self->sector_size = ATA_SECTOR_SIZE;
     self->total_sectors = 0x0;
