@@ -1,6 +1,7 @@
 extern irq_14h_handler
 extern isr_20h_handler
 extern isr_21h_handler
+extern isr_32h_handler
 extern isr_default_handler
 
 global asm_do_nop
@@ -9,6 +10,7 @@ global asm_do_cli
 global asm_irq_14h
 global asm_interrupt_20h
 global asm_interrupt_21h
+global asm_interrupt_32h
 global asm_idt_loader
 global asm_interrupt_default
 
@@ -83,7 +85,7 @@ asm_irq_14h:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
     
-    call irq_14h_handler          ; Call C interrupt service routine handler for interrupt 46  
+    call irq_14h_handler          ; Call C interrupt service routine handler for interrupt 14h  
 
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
@@ -122,6 +124,25 @@ asm_interrupt_21h:
     pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
     
     call isr_21h_handler          ; Call C interrupt service routine handler for interrupt 21h  
+
+    popad                         ; Restore the saved state
+    sti                           ; Enable interrupts
+    iret                          ; Return from interrupt
+
+;=============================================================================
+; asm_interrupt_32h
+;
+; Custom handler for interrupt 32h 
+;
+; @param None
+;
+; @return None
+;=============================================================================
+asm_interrupt_32h:
+    cli                           ; Disable interrupts to prevent nested interrupts
+    pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
+    
+    call isr_32h_handler          ; Call C interrupt service routine handler for interrupt 32h  
 
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts

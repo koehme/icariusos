@@ -28,6 +28,7 @@
 #include "cmos.h"
 #include "vfs.h"
 #include "pci.h"
+#include "mouse.h"
 
 void *kmalloc(const size_t size);
 void *kcalloc(const size_t size);

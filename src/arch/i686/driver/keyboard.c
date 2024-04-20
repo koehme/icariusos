@@ -1,5 +1,5 @@
 /**
- * @file kbd.c
+ * @file keyboard.c
  * @author Kevin Oehme
  * @copyright MIT
  */
@@ -147,8 +147,8 @@ static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t brea
             };
             break;
         };
+        break;
     };
-        return;
     };
     return;
 };

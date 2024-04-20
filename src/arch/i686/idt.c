@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "keyboard.h"
+#include "mouse.h"
 #include "idt.h"
 #include "string.h"
 #include "io.h"
@@ -17,6 +18,7 @@
 extern ATADev ata_dev_primary_master;
 extern Timer timer;
 extern Keyboard keyboard;
+extern Mouse mouse;
 
 extern void asm_idt_loader(IDT_R *ptr);
 extern void asm_interrupt_default();
@@ -24,6 +26,7 @@ extern void asm_interrupt_default();
 static void pic_send_eoi(void);
 void isr_20h_handler(void);
 void isr_21h_handler(void);
+void isr_32h_handler(void);
 void isr_default_handler(void);
 static void idt_entries_init(void);
 
@@ -81,7 +84,8 @@ static const char *interrupt_messages[] = {
     "PS2 Mouse (IRQ12)\n",
     "FPU / Coprocessor / Inter-Processor (IRQ13)\n",
     "Primary ATA Hard Disk (IRQ14)\n",
-    "Secondary ATA Hard Disk (IRQ15)\n"};
+    "Secondary ATA Hard Disk (IRQ15)\n",
+};
 
 // Contains interrupt service routines that are required for handling interrupts
 static IDTDescriptor idt[256];
@@ -118,6 +122,15 @@ void isr_21h_handler(void)
     {
         keyboard_read(&keyboard);
     };
+    pic_send_eoi();
+    return;
+};
+
+// PS2 Mouse handler
+void isr_32h_handler(void)
+{
+    mouse_handler(&mouse);
+    kprtf("Mouse (rel_x: %d, rel_y: %d)\n", mouse.rel_x, mouse.rel_y);
     pic_send_eoi();
     return;
 };

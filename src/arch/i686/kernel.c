@@ -11,6 +11,7 @@ extern HeapByteMap heap_bytemap;
 extern Heap heap;
 extern PageDirectory kpage_dir;
 extern Keyboard keyboard;
+extern Mouse mouse;
 extern Timer timer;
 extern CMOS cmos;
 
@@ -231,6 +232,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
     kmotd(addr);
 
     pci_devices_enumerate();
+
+    mouse_init(&mouse);
 
     for (;;)
     {

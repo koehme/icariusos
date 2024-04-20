@@ -5,66 +5,133 @@
  */
 
 #include "mouse.h"
-#include "keyboard.h"
+#include "idt.h"
+
+extern void asm_interrupt_32h(void);
 
 Mouse mouse = {
     .enabled = false,
-    .x = 0,
-    .y = 0,
+    .rel_x = 0,
+    .rel_y = 0,
+    .abs_x = 0,
+    .abs_y = 0,
+    .mouse_cycle = 0,
+    .byte0 = 0,
+    .byte1 = 0,
+    .byte2 = 0,
+    .byte3 = 0,
+    .byte4 = 0,
 };
-// Waits until the specified condition in the mouse status register is met
-void mouse_wait(const uint8_t a_type)
-{
-    uint32_t _time_out = 100000;
 
-    if (a_type == 0)
+void mouse_handler(Mouse *self)
+{
+    switch (self->mouse_cycle)
     {
-        // Wait until the output buffer of the mouse status register is ready
-        while (_time_out--)
-        {
-            // Check if the output buffer is ready (bit 0 is set)
-            if ((asm_inb(PS2_CTRL_PORT) & 1) == 1)
-            {
-                // Exit the function once the output buffer is ready
-                return;
-            };
-        };
-        // Return if the timeout limit is reached
-        return;
-    }
-    else
+    case MOUSE_FIRST_CYCLE:
     {
-        // Wait until the input buffer of the mouse status register is ready
-        while (_time_out--)
-        {
-            // Check if the input buffer is ready (bit 1 is clear)
-            if ((asm_inb(PS2_CTRL_PORT) & 2) == 0)
-            {
-                // Exit the function once the input buffer is ready
-                return;
-            };
-        };
-        // Return if the timeout limit is reached
-        return;
+        self->byte0 = asm_inb(MOUSE_DATA_PORT);
+        self->mouse_cycle++;
+        break;
     };
-    // Just to be explicit, though this point should not be reached
+    case MOUSE_SECOND_CYCLE:
+    {
+        self->byte1 = asm_inb(MOUSE_DATA_PORT);
+        self->mouse_cycle++;
+        break;
+    };
+    case MOUSE_THIRD_CYCLE:
+    {
+        self->byte2 = asm_inb(MOUSE_DATA_PORT);
+        // Update position
+        self->rel_x = self->byte1;
+        self->rel_y = self->byte2;
+        // Reset cycles
+        self->mouse_cycle = MOUSE_FIRST_CYCLE;
+        break;
+    };
+    };
     return;
 };
 
-void mouse_init(void)
+// Waits until the specified condition in the mouse status register is met
+void mouse_wait(const MouseBufferType type)
+{
+    uint32_t timer = 100000;
+
+    switch (type)
+    {
+    case MOUSE_OUTPUT_BUFFER:
+    {
+        while (timer--)
+        {
+            const uint8_t status = asm_inb(MOUSE_STATUS_PORT) & 0b00000001;
+
+            if (status == 1)
+            {
+                return;
+            };
+        };
+        return;
+    };
+    case MOUSE_INPUT_BUFFER:
+    {
+        while (timer--)
+        {
+            const uint8_t status = asm_inb(MOUSE_STATUS_PORT) & 0b00000010;
+
+            if (status == 0)
+            {
+                return;
+            };
+        };
+        return;
+    };
+    };
+    return;
+};
+
+uint8_t mouse_read(void)
+{
+    mouse_wait(MOUSE_OUTPUT_BUFFER);
+    const uint8_t data = asm_inb(MOUSE_DATA_PORT);
+    return data;
+};
+
+void mouse_write(const uint8_t cmd)
+{
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_STATUS_PORT, MOUSE_SEND_COMMAND);
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_DATA_PORT, cmd);
+    return;
+};
+
+void mouse_init(Mouse *self)
 {
     uint8_t status;
-    // Wait until the input buffer of the mouse status register is ready
-    mouse_wait(1);
-    // Enable interrupt
-    asm_outb(PS2_DATA_PORT, MOUSE_ENABLE);
-    // Wait until the input buffer of the mouse status register is ready
-    mouse_wait(1);
-    // Read command byte
-    asm_outb(PS2_DATA_PORT, MOUSE_READ);
-    // Wait until the output buffer of the mouse status register is ready
-    mouse_wait(0);
-    status = (asm_inb(PS2_DATA_PORT) | 2);
-    kprtf("%d\n", status);
+    // Enable the auxiliary mouse device
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_STATUS_PORT, MOUSE_ENABLE_AUX);
+    // Enable the interrupts
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_STATUS_PORT, MOUSE_GET_COMPAQ_STATUS);
+    mouse_wait(MOUSE_OUTPUT_BUFFER);
+    status = asm_inb(MOUSE_DATA_PORT) | 0b00000010;
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_STATUS_PORT, MOUSE_SET_COMPAQ_STATUS);
+    mouse_wait(MOUSE_INPUT_BUFFER);
+    asm_outb(MOUSE_DATA_PORT, status);
+    // Tell the mouse to use default settings
+    mouse_write(MOUSE_SET_DEFAULT);
+    mouse_read();
+    // Enable data reporting
+    mouse_write(MOUSE_ENABLE_DATA_REPORT);
+    const uint8_t answer = mouse_read();
+
+    if (answer == MOUSE_DETECT_ACK)
+    {
+        self->enabled = true;
+        idt_set(0x2C, asm_interrupt_32h);
+    };
     return;
 };
