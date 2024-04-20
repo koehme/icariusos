@@ -57,59 +57,6 @@ void mouse_handler(Mouse *self)
     return;
 };
 
-// Waits until the specified condition in the mouse status register is met
-void mouse_wait(const MouseBufferType type)
-{
-    uint32_t timer = 100000;
-
-    switch (type)
-    {
-    case MOUSE_OUTPUT_BUFFER:
-    {
-        while (timer--)
-        {
-            const uint8_t status = asm_inb(MOUSE_STATUS_PORT) & 0b00000001;
-
-            if (status == 1)
-            {
-                return;
-            };
-        };
-        return;
-    };
-    case MOUSE_INPUT_BUFFER:
-    {
-        while (timer--)
-        {
-            const uint8_t status = asm_inb(MOUSE_STATUS_PORT) & 0b00000010;
-
-            if (status == 0)
-            {
-                return;
-            };
-        };
-        return;
-    };
-    };
-    return;
-};
-
-uint8_t mouse_read(void)
-{
-    mouse_wait(MOUSE_OUTPUT_BUFFER);
-    const uint8_t data = asm_inb(MOUSE_DATA_PORT);
-    return data;
-};
-
-void mouse_write(const uint8_t cmd)
-{
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_STATUS_PORT, MOUSE_SEND_COMMAND);
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_DATA_PORT, cmd);
-    return;
-};
-
 void mouse_init(Mouse *self)
 {
     // Enable the auxiliary mouse device
