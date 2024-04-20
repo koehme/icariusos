@@ -10,11 +10,11 @@
 #include "keyboard.h"
 #include "string.h"
 #include "idt.h"
+#include "ps2.h"
 
 extern void asm_interrupt_21h(void);
 
 Keyboard keyboard = {
-    .enabled = false,
     .caps = false,
     .caps_lock = false,
     .alt_gr = false,
@@ -43,27 +43,8 @@ const static uint8_t qwertz_upper[] = {
 
 const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
 
-void keyboard_enable(Keyboard *self)
-{
-    for (;;)
-    {
-        // Read the status register
-        const uint8_t status = asm_inb(KEYBOARD_CTRL_STATS_REG);
-
-        // Check if the Input Buffer Full bit is not set
-        if ((status & KEYBOARD_CTRL_STATS_MASK_IN_BUF) == 0)
-        {
-            break;
-        };
-    };
-    asm_outb(KEYBOARD_CTRL_CMD_REG, KEYBOARD_CTRL_ENABLE);
-    self->enabled = true;
-    return;
-};
-
 void keyboard_init(Keyboard *self)
 {
-    keyboard_enable(self);
     self->caps = false;
     self->caps_lock = false;
     self->alt_gr = false;
@@ -135,7 +116,7 @@ static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t brea
 
 void keyboard_handler(Keyboard *self)
 {
-    const uint8_t key_state = asm_inb(KEYBOARD_ENC_INPUT_BUF);
+    const uint8_t key_state = ps2_receive();
     const uint8_t makecode = key_state & 0x7f;
     const uint8_t breakcode = key_state & 0x80; // released == 128 pressed == 0
     keyboard_update_keystroke(makecode, breakcode);

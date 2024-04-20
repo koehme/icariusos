@@ -120,6 +120,7 @@ void isr_21h_handler(void)
 void isr_32h_handler(void)
 {
     mouse_handler(&mouse);
+    kprtf("(%d,%d)\n", mouse.rel_x, mouse.rel_y);
     pic_send_eoi();
     return;
 };

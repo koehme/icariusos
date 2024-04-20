@@ -21,7 +21,6 @@ typedef enum MouseByteCycle
 
 typedef struct Mouse
 {
-    bool enabled;
     uint8_t rel_x;
     uint8_t rel_y;
     MouseByteCycle cycle;

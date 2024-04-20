@@ -5,12 +5,12 @@
  */
 
 #include "mouse.h"
+#include "ps2.h"
 #include "idt.h"
 
 extern void asm_interrupt_32h(void);
 
 Mouse mouse = {
-    .enabled = false,
     .rel_x = 0,
     .rel_y = 0,
     .cycle = 0,
@@ -112,30 +112,21 @@ void mouse_write(const uint8_t cmd)
 
 void mouse_init(Mouse *self)
 {
-    uint8_t status;
     // Enable the auxiliary mouse device
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_STATUS_PORT, MOUSE_ENABLE_AUX);
+    ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_ENABLE_AUX);
     // Enable the interrupts
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_STATUS_PORT, MOUSE_GET_COMPAQ_STATUS);
-    mouse_wait(MOUSE_OUTPUT_BUFFER);
-    status = asm_inb(MOUSE_DATA_PORT) | 0b00000010;
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_STATUS_PORT, MOUSE_SET_COMPAQ_STATUS);
-    mouse_wait(MOUSE_INPUT_BUFFER);
-    asm_outb(MOUSE_DATA_PORT, status);
+    ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_GET_COMPAQ_STATUS);
+    const uint8_t status = ps2_receive() | 0b00000010;
+    ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_SET_COMPAQ_STATUS);
+    ps2_send(PS2_DATA_PORT, status);
     // Tell the mouse to use default settings
-    mouse_write(MOUSE_SET_DEFAULT);
-    mouse_read();
+    ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_SEND_COMMAND);
+    ps2_send(PS2_DATA_PORT, MOUSE_SET_DEFAULT);
+    ps2_receive();
     // Enable data reporting
-    mouse_write(MOUSE_ENABLE_DATA_REPORT);
-    const uint8_t answer = mouse_read();
-
-    if (answer == MOUSE_DETECT_ACK)
-    {
-        self->enabled = true;
-        idt_set(0x2C, asm_interrupt_32h);
-    };
+    ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_SEND_COMMAND);
+    ps2_send(PS2_DATA_PORT, MOUSE_ENABLE_DATA_REPORT);
+    ps2_receive();
+    idt_set(0x2C, asm_interrupt_32h);
     return;
 };

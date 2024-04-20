@@ -45,7 +45,6 @@ typedef enum Keyboard_Controller_Commands
 
 typedef struct Keyboard
 {
-    bool enabled;
     bool caps;
     bool caps_lock;
     bool alt_gr;
