@@ -26,8 +26,8 @@ static void cmos_dump(CMOS *self)
 {
     for (uint16_t i = 0; i < 128; i++)
     {
-        asm_outb(CMOS_PORT_INDEX, i);
-        const uint8_t value = asm_inb(CMOS_PORT_DATA);
+        outb(CMOS_PORT_INDEX, i);
+        const uint8_t value = inb(CMOS_PORT_DATA);
 
         for (size_t i = 0; i < 100; i++)
         {

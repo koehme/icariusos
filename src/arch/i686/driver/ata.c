@@ -24,7 +24,7 @@ static void ata_read_into_buffer(uint16_t *buffer, const size_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
-        buffer[i] = asm_inw(ATA_DATA_PORT);
+        buffer[i] = inw(ATA_DATA_PORT);
     };
     return;
 };
@@ -55,23 +55,23 @@ static uint8_t select_drive_ata_identify(const ATADriveType type)
 
 static void send_identify_cmd(const uint8_t target_drive)
 {
-    asm_outb(ATA_CONTROL_PORT, target_drive);
-    asm_outb(ATA_SECTOR_COUNT_PORT, 0);
-    asm_outb(ATA_LBA_LOW_PORT, 0);
-    asm_outb(ATA_LBA_MID_PORT, 0);
-    asm_outb(ATA_LBA_HIGH_PORT, 0);
-    asm_outb(ATA_COMMAND_PORT, ATA_CMD_IDENTIFY);
+    outb(ATA_CONTROL_PORT, target_drive);
+    outb(ATA_SECTOR_COUNT_PORT, 0);
+    outb(ATA_LBA_LOW_PORT, 0);
+    outb(ATA_LBA_MID_PORT, 0);
+    outb(ATA_LBA_HIGH_PORT, 0);
+    outb(ATA_COMMAND_PORT, ATA_CMD_IDENTIFY);
     return;
 };
 
 static void ata_dump(ATADev *self, const int32_t delay)
 {
-    kprtf("Features: 0x%x\n", self->features);
-    kprtf("Sector Size: %d\n", self->sector_size);
-    kprtf("Total Sectors: %d\n", self->total_sectors);
-    kprtf("Capacity: %d KiB\n", self->capacity / 1024);
-    kprtf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
-    kprtf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
+    printf("Features: 0x%x\n", self->features);
+    printf("Sector Size: %d\n", self->sector_size);
+    printf("Total Sectors: %d\n", self->total_sectors);
+    printf("Capacity: %d KiB\n", self->capacity / 1024);
+    printf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
+    printf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
     kdelay(delay);
     return;
 };
@@ -114,7 +114,7 @@ static void wait_until_not_busy(uint8_t *status)
 {
     while (*status & ATA_STATUS_BSY)
     {
-        *status = asm_inb(ATA_STATUS_REGISTER);
+        *status = inb(ATA_STATUS_REGISTER);
     };
     return;
 };
@@ -123,7 +123,7 @@ static void wait_until_data_ready(uint8_t *status)
 {
     while (!(*status & (ATA_STATUS_ERR | ATA_STATUS_DRQ)))
     {
-        *status = asm_inb(ATA_STATUS_REGISTER);
+        *status = inb(ATA_STATUS_REGISTER);
     };
     return;
 };
@@ -133,7 +133,7 @@ static int32_t ata_identify(ATADev *self, const ATADriveType type)
     const uint8_t target_drive = select_drive_ata_identify(type);
     send_identify_cmd(target_drive);
     // Read the status ports
-    uint8_t status = asm_inb(ATA_STATUS_REGISTER);
+    uint8_t status = inb(ATA_STATUS_REGISTER);
     wait_until_not_busy(&status);
     // If it's zero, the drive does not exist
     if (status == 0)
@@ -141,8 +141,8 @@ static int32_t ata_identify(ATADev *self, const ATADriveType type)
         return -EIO;
     };
     wait_until_not_busy(&status);
-    const uint8_t lba_mid_byte = asm_inb(ATA_LBA_MID_PORT);
-    const uint8_t lba_high_byte = asm_inb(ATA_LBA_HIGH_PORT);
+    const uint8_t lba_mid_byte = inb(ATA_LBA_MID_PORT);
+    const uint8_t lba_high_byte = inb(ATA_LBA_HIGH_PORT);
 
     if (lba_mid_byte != 0 || lba_high_byte != 0)
     {
@@ -190,26 +190,26 @@ static int32_t ata_read_pio_48(ATADev *self, const uint64_t lba, const uint16_t 
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
 
-    asm_outb(ATA_CONTROL_PORT, 0x40);                       // Select master
-    asm_outb(ATA_SECTOR_COUNT_PORT, (sectors >> 8) & 0xFF); // sectors high
+    outb(ATA_CONTROL_PORT, 0x40);                       // Select master
+    outb(ATA_SECTOR_COUNT_PORT, (sectors >> 8) & 0xFF); // sectors high
 
-    asm_outb(ATA_LBA_LOW_PORT, (lba >> 24) & 0xFF);  // LBA4
-    asm_outb(ATA_LBA_MID_PORT, (lba >> 32) & 0xFF);  // LBA5
-    asm_outb(ATA_LBA_HIGH_PORT, (lba >> 40) & 0xFF); // LBA6
+    outb(ATA_LBA_LOW_PORT, (lba >> 24) & 0xFF);  // LBA4
+    outb(ATA_LBA_MID_PORT, (lba >> 32) & 0xFF);  // LBA5
+    outb(ATA_LBA_HIGH_PORT, (lba >> 40) & 0xFF); // LBA6
 
-    asm_outb(ATA_SECTOR_COUNT_PORT, sectors & 0xFF); // sectors low
+    outb(ATA_SECTOR_COUNT_PORT, sectors & 0xFF); // sectors low
 
-    asm_outb(ATA_LBA_LOW_PORT, lba & 0xFF);          // LBA1
-    asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);   // LBA2
-    asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF); // LBA3
+    outb(ATA_LBA_LOW_PORT, lba & 0xFF);          // LBA1
+    outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);   // LBA2
+    outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF); // LBA3
 
-    asm_outb(ATA_STATUS_REGISTER, 0x24);
+    outb(ATA_STATUS_REGISTER, 0x24);
 
     for (size_t i = 0; i < sectors; ++i)
     {
         for (;;)
         {
-            const uint8_t status = asm_inb(ATA_COMMAND_PORT);
+            const uint8_t status = inb(ATA_COMMAND_PORT);
 
             if (status & ATA_STATUS_DRQ)
             {
@@ -218,7 +218,7 @@ static int32_t ata_read_pio_48(ATADev *self, const uint64_t lba, const uint16_t 
 
             if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
             {
-                kprtf("ATA: Read Error on LBA %u\n", lba);
+                printf("ATA: Read Error on LBA %u\n", lba);
                 return -EIO;
             };
         };
@@ -230,19 +230,19 @@ static int32_t ata_read_pio_48(ATADev *self, const uint64_t lba, const uint16_t 
 static int32_t ata_read_pio_28(ATADev *self, const uint32_t lba, const uint8_t sectors)
 {
     uint16_t *ptr_ata_buffer = (uint16_t *)self->buffer;
-    asm_outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
-    asm_outb(ATA_PRIMARY_ERROR, 0x00);
-    asm_outb(ATA_SECTOR_COUNT_PORT, sectors);
-    asm_outb(ATA_LBA_LOW_PORT, lba & 0xFF);
-    asm_outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
-    asm_outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
-    asm_outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
+    outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
+    outb(ATA_PRIMARY_ERROR, 0x00);
+    outb(ATA_SECTOR_COUNT_PORT, sectors);
+    outb(ATA_LBA_LOW_PORT, lba & 0xFF);
+    outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
+    outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
+    outb(ATA_COMMAND_PORT, ATA_CMD_READ_SECTORS);
 
     for (size_t i = 0; i < sectors; ++i)
     {
         for (;;)
         {
-            const uint8_t status = asm_inb(ATA_COMMAND_PORT);
+            const uint8_t status = inb(ATA_COMMAND_PORT);
 
             if (status & ATA_STATUS_DRQ)
             {
@@ -251,7 +251,7 @@ static int32_t ata_read_pio_28(ATADev *self, const uint32_t lba, const uint8_t s
 
             if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF))
             {
-                kprtf("ATA: Read Error on LBA %u\n", lba);
+                printf("ATA: Read Error on LBA %u\n", lba);
                 return -EIO;
             };
         };

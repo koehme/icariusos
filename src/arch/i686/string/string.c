@@ -83,7 +83,7 @@ void sreverse(char *str, const size_t length)
 };
 
 // Converts an integer to a string
-char *itoa(uint32_t num, char *str, int32_t base)
+char *itoa(int32_t num, char *str, int32_t base)
 {
     size_t i = 0;
     bool is_negative = false;
@@ -124,7 +124,7 @@ char *itoa(uint32_t num, char *str, int32_t base)
     return str;
 };
 
-int32_t kprtf(const char *fmt, ...)
+int32_t printf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -152,7 +152,7 @@ int32_t kprtf(const char *fmt, ...)
             case 'd':
             {
                 char buffer[1024] = {};
-                const uint64_t num = va_arg(args, int32_t);
+                const int32_t num = va_arg(args, int32_t);
                 itoa(num, buffer, 10);
                 vga_print(&vga_display, buffer, VGA_COLOR_LIGHT_GREEN);
                 break;

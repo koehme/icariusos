@@ -95,14 +95,14 @@ static IDT_R idtr_descriptor;
 // Sends an end-of-interrupt (EOI) signal to the PIC
 static void pic_send_eoi(void)
 {
-    asm_outb(PIC_1_CTRL, PIC_ACK);
+    outb(PIC_1_CTRL, PIC_ACK);
     return;
 };
 
 // Timer
 void isr_20h_handler(void)
 {
-    // kprtf("%d\n", timer.ticks);
+    // printf("%d\n", timer.ticks);
     timer.ticks++;
     pic_send_eoi();
     return;
@@ -120,7 +120,6 @@ void isr_21h_handler(void)
 void isr_32h_handler(void)
 {
     mouse_handler(&mouse);
-    kprtf("(%d,%d)\n", mouse.rel_x, mouse.rel_y);
     pic_send_eoi();
     return;
 };

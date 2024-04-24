@@ -30,15 +30,15 @@ letter      -> ( 'A' - 'Z' )
 
 static void path_parser_handle_syntax_error(PathParser *self, const char *message)
 {
-    kprtf("Syntax Error occurred! ");
+    printf("Syntax Error occurred! ");
 
     if (self->prev.type == PT_END)
     {
-        kprtf("at the end.\n");
+        printf("at the end.\n");
     }
     else
     {
-        kprtf(message);
+        printf(message);
     };
     self->has_error = true;
     return;

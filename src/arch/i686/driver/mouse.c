@@ -11,45 +11,36 @@
 extern void asm_interrupt_32h(void);
 
 Mouse mouse = {
-    .rel_x = 0,
-    .rel_y = 0,
+    .x = 0,
+    .y = 0,
     .cycle = 0,
-    .byte0 = 0,
-    .byte1 = 0,
-    .byte2 = 0,
-    .byte3 = 0,
-    .byte4 = 0,
+    .bytes = {0},
 };
 
 void mouse_handler(Mouse *self)
 {
     switch (self->cycle)
     {
-    case MOUSE_BYTE_1:
+    case 0:
     {
-        self->byte0 = asm_inb(MOUSE_DATA_PORT);
+        self->bytes[0] = ps2_receive();
         self->cycle++;
         break;
     };
-    case MOUSE_BYTE_2:
+    case 1:
     {
-        self->byte1 = asm_inb(MOUSE_DATA_PORT);
+        self->bytes[1] = ps2_receive();
         self->cycle++;
         break;
     };
-    case MOUSE_BYTE_3:
+    case 2:
     {
-        self->byte2 = asm_inb(MOUSE_DATA_PORT);
-        // Check axis overflow
-        const bool has_y_overflow = (self->bytes[0] & 0b10000000);
-        const bool has_x_overflow = (self->bytes[0] & 0b01000000);
-
-        if (has_y_overflow || has_x_overflow)
-        {
-            break;
-        };
-        self->rel_x = self->byte1;
-        self->rel_y = self->byte2;
+        self->bytes[2] = ps2_receive();
+        const int16_t rel_x = self->bytes[1] - ((self->bytes[0] << 3) & 0b100000000);
+        const int16_t rel_y = self->bytes[2] - ((self->bytes[0] << 4) & 0b100000000);
+        self->x += rel_x;
+        self->y += rel_y;
+        printf("(%d,%d)\n", self->x, self->y);
         self->cycle = 0;
         break;
     };

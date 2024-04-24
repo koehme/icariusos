@@ -26,7 +26,7 @@ uint16_t pci_read16(const uint32_t bus, const uint32_t device, const uint32_t fu
     // Bit 1-0: Reserved (always set to 0)
     const uint32_t config_address = (uint32_t)((uint32_t)0x80000000 | (bus << 16) | (device << 11) | (function << 8) | (offset & PCI_OFFSET_MASK));
     // Write the specific config address to the pci controller
-    asm_outl(PCI_CONFIG_ADDR, config_address);
+    outl(PCI_CONFIG_ADDR, config_address);
     // The PCI config register consists of 256 bytes.
     // These 256 bytes are divided into 4 bytes each. That makes 64 registers in total.
     // Read the 32-bit data from the PCI config data register, then shift and mask to extract the desired 16-bit word by the offset
@@ -35,7 +35,7 @@ uint16_t pci_read16(const uint32_t bus, const uint32_t device, const uint32_t fu
     // | 31 ... 24       | 23 ... 16       | 15 ... 8        | 7 ... 0        |
     // ------------------------------------------------------------
     // offset = 0x00 no shifting required. offset = 0x02 shifting is required because the missing 2 bytes are in the higher parts of the 32 bit dword.
-    const uint16_t register_data = ((asm_inl(PCI_CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
+    const uint16_t register_data = ((inl(PCI_CONFIG_DATA) >> ((offset & 2) * 8)) & 0xFFFF);
     return register_data;
 };
 
@@ -53,9 +53,9 @@ void pci_write16(const uint32_t bus, const uint32_t device, const uint32_t funct
     // Bit 1-0: Reserved (always set to 0)
     const uint32_t config_address = (uint32_t)((uint32_t)0x80000000 | (bus << 16) | (device << 11) | (function << 8) | (offset & PCI_OFFSET_MASK));
     // Write the specific configuration address to the PCI controller, to allow direct access to the configuration space of PCI device
-    asm_outl(PCI_CONFIG_ADDR, config_address);
+    outl(PCI_CONFIG_ADDR, config_address);
     // Write the 16-bit data to the specified PCI configuration register, to configures the desired parameter of the PCI device
-    asm_outl(PCI_CONFIG_DATA, data);
+    outl(PCI_CONFIG_DATA, data);
     return;
 };
 
@@ -88,12 +88,12 @@ void pci_devices_enumerate(void)
                 const uint8_t header_type = pci_read16(bus, device, function, PCI_HEADER_TYPE_REG_OFFSET);
                 const uint8_t bist = pci_read16(bus, device, function, PCI_BIST_REG_OFFSET);
 
-                kprtf("\nBus: %d, Device: %d, Function: %d \n Vendor ID: 0x%x, Device ID: 0x%x, Class Code: 0x%x\n Command: 0x%x, Status: 0x%x, Revision ID: 0x%x\n Prog IF: 0x%x, Subclass: 0x%x, Cache Line Size: 0x%x\n Latency Timer: 0x%x, Header Type: 0x%x, BIST: 0x%x\n",
-                      bus, device, function,
-                      vendor_id, device_id, class_code,
-                      command, status, revision_id,
-                      prog_if, subclass, cache_line_size,
-                      latency_timer, header_type, bist);
+                printf("\nBus: %d, Device: %d, Function: %d \n Vendor ID: 0x%x, Device ID: 0x%x, Class Code: 0x%x\n Command: 0x%x, Status: 0x%x, Revision ID: 0x%x\n Prog IF: 0x%x, Subclass: 0x%x, Cache Line Size: 0x%x\n Latency Timer: 0x%x, Header Type: 0x%x, BIST: 0x%x\n",
+                       bus, device, function,
+                       vendor_id, device_id, class_code,
+                       command, status, revision_id,
+                       prog_if, subclass, cache_line_size,
+                       latency_timer, header_type, bist);
             };
         };
     };

@@ -27,12 +27,12 @@ void timer_init(Timer *self, const uint32_t hz)
     // Merge all the necessary configuration settings for the PIT
     const uint8_t cmd = PIT_CHANNEL | PIT_ACCESS_MODE | PIT_OPERATING_MODE | PIT_BINARY_MODE;
     // Send the timer's configuration
-    asm_outb(PIT_MODE_COMMAND_REGISTER, cmd);
+    outb(PIT_MODE_COMMAND_REGISTER, cmd);
     // Extracts the low and high byte of the 16-bit divisor value
     const uint8_t divisor_high_byte = (uint8_t)(divisor >> 8) & 0xFF;
     const uint8_t divisor_low_byte = (uint8_t)divisor & 0xFF;
     // Send the timer's frequency
-    asm_outb(PIT_DATA_PORT_CHANNEL_0, divisor_low_byte);
-    asm_outb(PIT_DATA_PORT_CHANNEL_0, divisor_high_byte);
+    outb(PIT_DATA_PORT_CHANNEL_0, divisor_low_byte);
+    outb(PIT_DATA_PORT_CHANNEL_0, divisor_high_byte);
     return;
 };

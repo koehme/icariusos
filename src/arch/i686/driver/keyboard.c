@@ -96,15 +96,15 @@ static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t brea
         {
             if (keyboard.caps || keyboard.caps_lock)
             {
-                kprtf("%c", qwertz_upper[makecode]);
+                printf("%c", qwertz_upper[makecode]);
             }
             else if (keyboard.alt_gr)
             {
-                kprtf("%c", qwertz_altgr[makecode]);
+                printf("%c", qwertz_altgr[makecode]);
             }
             else
             {
-                kprtf("%c", qwertz_lower[makecode]);
+                printf("%c", qwertz_lower[makecode]);
             };
             break;
         };

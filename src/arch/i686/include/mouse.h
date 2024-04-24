@@ -12,39 +12,13 @@
 
 #include "kernel.h"
 
-typedef enum MouseByteCycle
-{
-    MOUSE_BYTE_1 = 0,
-    MOUSE_BYTE_2 = 1,
-    MOUSE_BYTE_3 = 2,
-} MouseByteCycle;
-
 typedef struct Mouse
 {
-    uint8_t rel_x;
-    uint8_t rel_y;
-    MouseByteCycle cycle;
-    union
-    {
-        struct
-        {
-            uint8_t byte0, byte1, byte2, byte3, byte4;
-        };
-        uint8_t bytes[5];
-    };
+    int16_t x;
+    int16_t y;
+    int8_t cycle;
+    uint8_t bytes[3];
 } Mouse;
-
-typedef enum MousePort
-{
-    MOUSE_DATA_PORT = 0x60,
-    MOUSE_STATUS_PORT = 0x64,
-} MousePort;
-
-typedef enum MouseBufferType
-{
-    MOUSE_OUTPUT_BUFFER = 0x0,
-    MOUSE_INPUT_BUFFER = 0x1,
-} MouseBufferType;
 
 typedef enum MouseCommand
 {

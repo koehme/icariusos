@@ -22,13 +22,13 @@ I've loved technology and all its different parts since I was a kid. It makes me
 | [x]    | Heap Deallocation: Enabled the release of memory with "kfree(ptr)."                                               |
 | [x]    | Paging: Dynamically optimized virtual memory by efficiently managing pages between RAM and disk, unlocking the potential to create the illusion of each process having its own address space. |
 | [x]    | ATA Read in Interrupt Mode: Successfully implemented interrupt-driven reading of data from the ATA disk, avoiding constant polling that slows down and blocks the CPU. |
-| [x]    | kprtf Upgrade: Implemented a printing function, enhancing the system's ability to communicate and display information. |
+| [x]    | printf Upgrade: Implemented a printing function, enhancing the system's ability to communicate and display information. |
 | [x]    | CMOS Date Reading: Successfully implemented a date reading function from the CMOS.                               |
 | [x]    | Real Ksleep with Timer: Used PIT to create a real ksleep function.                                                |
 | [x]    | Multiboot2 Integration: Integrated the GRUB bootloader to support the Multiboot2 spec, removing the self-made bootloader. |
 | [x]    | Memory Map: Successfully read the memory map from Multiboot2.                                                     |
 | [x]    | Message of the Day: Created a captivating and sexy message of the day! 😎                                         |
-| [x]    | kprtf Refinement: Improved kprtf and fixed bugs in %s and %d functionalities.                                |
+| [x]    | printf Refinement: Improved printf and fixed bugs in %s and %d functionalities.                                |
 | [x]    | Create fat16 disk: To implement next the fat16 driver to read clusters from the filesystem                        |
 | [x]    | VFS layer vfs_fopen and vfs_fread implemented                                                                                              |
 | [x]    | Ata driver using 48bit mode improved                                                                                          |

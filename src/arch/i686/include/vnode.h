@@ -9,7 +9,7 @@
 
 #include "ata.h"
 
-int32_t kprtf(const char *fmt, ...);
+int32_t printf(const char *fmt, ...);
 
 typedef enum VNODE_SEEK_MODE
 {

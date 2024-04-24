@@ -1,16 +1,16 @@
-global asm_outb
-global asm_outw
-global asm_outl
+global outb
+global outw
+global outl
 
-global asm_inb
-global asm_inw
-global asm_inl
+global inb
+global inw
+global inl
 
 ;=============================================================================
 ; Reads a byte from a specified I/O port
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ;=============================================================================
-asm_inb:
+inb:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -26,7 +26,7 @@ asm_inb:
 ; Reads a word (16 bits) from a specified I/O port
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ;=============================================================================
-asm_inw:
+inw:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -42,7 +42,7 @@ asm_inw:
 ; Reads a dword (32 bits) from a specified I/O port
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ;=============================================================================
-asm_inl:
+inl:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -59,7 +59,7 @@ asm_inl:
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ; @param [ebp+12]: The value to be sent (8 bits)
 ;=============================================================================
-asm_outb:
+outb:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -76,7 +76,7 @@ asm_outb:
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ; @param [ebp+12]: The value to be sent (16 bits)
 ;=============================================================================
-asm_outw:
+outw:
     push ebp                 ; Save the base pointer
     mov ebp, esp             ; Get the actual stack frame for outb
 
@@ -93,7 +93,7 @@ asm_outw:
 ; @param [ebp+8]: The address of the I/O port (16 bits)
 ; @param [ebp+12]: The value to be sent (32 bits)
 ;=============================================================================
-asm_outl:
+outl:
     push ebp
     mov ebp, esp
 
