@@ -14,7 +14,31 @@ Mouse mouse = {
     .x = 0,
     .y = 0,
     .cycle = 0,
+    .flags = 0,
+    .x_movement = 0,
+    .y_movement = 0,
     .bytes = {0},
+};
+
+static bool mouse_has_aligned_packet(const Mouse *self)
+{
+    return (self->flags & 0b00001000) != 0;
+};
+
+static bool mouse_has_x_overflow(const Mouse *self)
+{
+    return (self->flags & 0b10000000) != 0;
+};
+
+static bool mouse_has_y_overflow(const Mouse *self)
+{
+    return (self->flags & 0b01000000) != 0;
+};
+
+static void mouse_dump(const Mouse *self, const int16_t delta_x, const int16_t delta_y)
+{
+    printf("(%d,%d | %d,%d)\n", delta_x, delta_y, self->x, self->y);
+    return;
 };
 
 void mouse_handler(Mouse *self)
@@ -23,24 +47,34 @@ void mouse_handler(Mouse *self)
     {
     case 0:
     {
-        self->bytes[0] = ps2_receive();
+        self->flags = ps2_receive();
+
+        if (!mouse_has_aligned_packet(self))
+        {
+            self->cycle = 0;
+            break;
+        };
         self->cycle++;
         break;
     };
     case 1:
     {
-        self->bytes[1] = ps2_receive();
+        self->x_movement = ps2_receive();
         self->cycle++;
         break;
     };
     case 2:
     {
-        self->bytes[2] = ps2_receive();
-        const int16_t rel_x = self->bytes[1] - ((self->bytes[0] << 3) & 0b100000000);
-        const int16_t rel_y = self->bytes[2] - ((self->bytes[0] << 4) & 0b100000000);
-        self->x += rel_x;
-        self->y += rel_y;
-        printf("(%d,%d)\n", self->x, self->y);
+        self->y_movement = ps2_receive();
+
+        if (!mouse_has_x_overflow(self) || !mouse_has_y_overflow(self))
+        {
+            const int16_t delta_x = self->x_movement - ((self->flags << 3) & 0b100000000);
+            const int16_t delta_y = self->y_movement - ((self->flags << 4) & 0b100000000);
+            self->x += delta_x;
+            self->y += delta_y;
+            mouse_dump(self, delta_x, delta_y);
+        };
         self->cycle = 0;
         break;
     };

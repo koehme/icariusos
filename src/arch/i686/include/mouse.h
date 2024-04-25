@@ -17,7 +17,16 @@ typedef struct Mouse
     int16_t x;
     int16_t y;
     int8_t cycle;
-    uint8_t bytes[3];
+    union
+    {
+        struct
+        {
+            uint8_t flags;
+            uint8_t x_movement;
+            uint8_t y_movement;
+        };
+        uint8_t bytes[3];
+    };
 } Mouse;
 
 typedef enum MouseCommand
