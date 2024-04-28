@@ -1,6 +1,9 @@
 /**
  * @file mouse.c
+ * @brief PS/2 Mouse implementation
  * @author Kevin Oehme
+ * @date 28.04.2024
+ * @version 1.0
  * @copyright MIT
  */
 
@@ -9,6 +12,17 @@
 #include "idt.h"
 
 extern void asm_interrupt_32h(void);
+
+typedef enum MouseMask
+{
+    LEFT_BUTTON_MASK = 0b00000001,
+    RIGHT_BUTTON_MASK = 0b00000010,
+    MIDDLE_BUTTON_MASK = 0b00000100,
+    ALIGNED_PACKET_MASK = 0b00001000,
+    Y_AXIS_OVERFLOW_MASK = 0b01000000,
+    X_AXIS_OVERFLOW_MASK = 0b10000000,
+    SIGN_BIT_MASK = 0b100000000,
+} MouseMask;
 
 Mouse mouse = {
     .x = 0,
@@ -20,27 +34,24 @@ Mouse mouse = {
     .bytes = {0},
 };
 
-static bool mouse_has_aligned_packet(const Mouse *self)
+// Determines whether the specified mouse flag is set in the mouse flags, facilitating conditional checks based on specific mouse events
+static inline bool mouse_has_flag(const Mouse *self, const MouseMask mask)
 {
-    return (self->flags & 0b00001000) != 0;
+    return (self->flags & mask) != 0;
 };
 
-static bool mouse_has_x_overflow(const Mouse *self)
+// Updates the x and y-coordinate movement of the mouse, taking into account the sign bit of the mouse flags for accurate positioning especially for negative values
+static void mouse_update_coordinates(Mouse *self)
 {
-    return (self->flags & 0b10000000) != 0;
-};
-
-static bool mouse_has_y_overflow(const Mouse *self)
-{
-    return (self->flags & 0b01000000) != 0;
-};
-
-static void mouse_dump(const Mouse *self, const int16_t delta_x, const int16_t delta_y)
-{
-    printf("(%d,%d | %d,%d)\n", delta_x, delta_y, self->x, self->y);
+    // Adjusts the x and y-coordinate movement by checking the sign bit of the mouse flags, ensuring correct positioning even for negative values
+    const int16_t delta_x = self->x_movement - ((self->flags << 3) & SIGN_BIT_MASK);
+    const int16_t delta_y = self->y_movement - ((self->flags << 4) & SIGN_BIT_MASK);
+    self->x += delta_x;
+    self->y += delta_y;
     return;
 };
 
+// Handles the PS/2 mouse input, processing mouse packets and updating mouse coordinates
 void mouse_handler(Mouse *self)
 {
     switch (self->cycle)
@@ -49,10 +60,23 @@ void mouse_handler(Mouse *self)
     {
         self->flags = ps2_receive();
 
-        if (!mouse_has_aligned_packet(self))
+        if (!mouse_has_flag(self, ALIGNED_PACKET_MASK))
         {
             self->cycle = 0;
             break;
+        };
+
+        if (mouse_has_flag(self, LEFT_BUTTON_MASK))
+        {
+            printf("Left Btn\n");
+        }
+        else if (mouse_has_flag(self, RIGHT_BUTTON_MASK))
+        {
+            printf("Right Btn\n");
+        }
+        else if (mouse_has_flag(self, MIDDLE_BUTTON_MASK))
+        {
+            printf("Mid Btn\n");
         };
         self->cycle++;
         break;
@@ -67,13 +91,10 @@ void mouse_handler(Mouse *self)
     {
         self->y_movement = ps2_receive();
 
-        if (!mouse_has_x_overflow(self) || !mouse_has_y_overflow(self))
+        if (!mouse_has_flag(self, Y_AXIS_OVERFLOW_MASK) || !mouse_has_flag(self, X_AXIS_OVERFLOW_MASK))
         {
-            const int16_t delta_x = self->x_movement - ((self->flags << 3) & 0b100000000);
-            const int16_t delta_y = self->y_movement - ((self->flags << 4) & 0b100000000);
-            self->x += delta_x;
-            self->y += delta_y;
-            mouse_dump(self, delta_x, delta_y);
+            mouse_update_coordinates(self);
+            printf("(%d,%d)\n", self->x, self->y);
         };
         self->cycle = 0;
         break;
@@ -82,6 +103,7 @@ void mouse_handler(Mouse *self)
     return;
 };
 
+// Initializes the PS/2 mouse device, enabling auxiliary mouse device, setting interrupts and configuring default settings for data reporting
 void mouse_init(Mouse *self)
 {
     // Enable the auxiliary mouse device

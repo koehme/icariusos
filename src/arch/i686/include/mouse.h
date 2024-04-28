@@ -7,6 +7,8 @@
 #ifndef MOUSE_H
 #define MOUSE_H
 
+#define MOUSE_DEBUG 0
+
 #include <stdint.h>
 #include <stdbool.h>
 
