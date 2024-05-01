@@ -10,17 +10,7 @@
 
 extern FileSystem fat16;
 
-static FileSystem *filesystems[8] = {
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-};
-
+static FileSystem *filesystems[8] = {};
 static FileDescriptor *fdescriptors[512] = {};
 
 void vfs_init(void)
@@ -95,11 +85,9 @@ static FileDescriptor *vfs_get_fd(const int32_t fd)
 
 FileSystem *vfs_resolve(ATADev *dev)
 {
-    FileSystem *superblock = 0x0;
-
     if (!dev)
     {
-        return superblock;
+        return 0x0;
     };
 
     for (size_t i = 0; i < 8; i++)
@@ -108,11 +96,10 @@ FileSystem *vfs_resolve(ATADev *dev)
 
         if (has_header)
         {
-            superblock = filesystems[i];
-            break;
+            return filesystems[i];
         };
     };
-    return superblock;
+    return 0x0;
 };
 
 static VNODE_MODE vfs_get_vmode(const char *mode)
@@ -148,7 +135,7 @@ int32_t vfs_fopen(const char *filename, const char *mode)
         res = -EINVAL;
         return res;
     };
-    ATADev *dev = ata_get(ATA_DEV_PRIMARY_MASTER);
+    ATADev *dev = ata_get(root->drive);
 
     if (!dev || !dev->fs)
     {
@@ -168,7 +155,6 @@ int32_t vfs_fopen(const char *filename, const char *mode)
         return res;
     };
     fdescriptor->dev = dev;
-    fdescriptor->fs = dev->fs;
     fdescriptor->internal = internal;
     res = fdescriptor->index;
     return res;
@@ -186,7 +172,7 @@ size_t vfs_fread(void *buffer, size_t n_bytes, size_t n_blocks, const int32_t fd
     {
         return -EINVAL;
     };
-    const size_t total_read = fdescriptor->fs->read_cb(fdescriptor->dev, fdescriptor->internal, buffer, n_bytes, n_blocks);
+    const size_t total_read = fdescriptor->dev->fs->read_cb(fdescriptor->dev, fdescriptor->internal, buffer, n_bytes, n_blocks);
     return total_read;
 };
 
@@ -206,8 +192,28 @@ int32_t vfs_fclose(const int32_t fd)
         res = -EBADF;
         return res;
     }
-    fdescriptor->fs->close_cb(fdescriptor->internal);
+    fdescriptor->dev->fs->close_cb(fdescriptor->internal);
     kfree(fdescriptor);
+    return res;
+};
+
+int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE whence)
+{
+    int32_t res = 0;
+
+    if (fd < 1)
+    {
+        res = -EINVAL;
+        return res;
+    };
+    FileDescriptor *fdescriptor = vfs_get_fd(fd);
+
+    if (fdescriptor == 0x0)
+    {
+        res = -EBADF;
+        return res;
+    }
+    res = fdescriptor->dev->fs->seek_cb(fdescriptor->internal, offset, whence);
     return res;
 };
 
@@ -227,6 +233,6 @@ int32_t vfs_fstat(const int32_t fd, VStat *buffer)
         res = -EBADF;
         return res;
     }
-    fdescriptor->fs->stat_cb(fdescriptor->dev, fdescriptor->internal, buffer);
+    fdescriptor->dev->fs->stat_cb(fdescriptor->dev, fdescriptor->internal, buffer);
     return res;
 };

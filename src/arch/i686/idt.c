@@ -15,7 +15,7 @@
 #include "kernel.h"
 #include "ata.h"
 
-extern ATADev ata_dev_primary_master;
+extern ATADev ata_dev;
 extern Timer timer;
 extern Keyboard keyboard;
 extern Mouse mouse;

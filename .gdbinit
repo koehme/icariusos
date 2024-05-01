@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break mouse.c:mouse_handler
+break kernel.c:237
 
 c

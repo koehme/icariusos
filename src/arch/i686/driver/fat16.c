@@ -14,6 +14,7 @@ FileSystem fat16 = {
     .read_cb = 0x0,
     .close_cb = 0x0,
     .stat_cb = 0x0,
+    .seek_cb = 0x0,
     .name = "FAT16",
 };
 
@@ -227,6 +228,7 @@ FileSystem *fat16_init(void)
     fat16.read_cb = fat16_read;
     fat16.close_cb = fat16_close;
     fat16.stat_cb = fat16_stat;
+    fat16.seek_cb = fat16_seek;
     return &fat16;
 };
 
@@ -759,7 +761,7 @@ static void fat16_set_stat(FAT16FileDescriptor *fat16_descriptor, ATADev *dev, V
     {
     case FAT16_ENTRY_TYPE_DIRECTORY:
     {
-        vstat->st_dev = dev->dev;
+        mcpy(vstat->st_dev, dev->dev, sizeof(char) * 2);
         vstat->st_mode = V_READ;
         vstat->st_size = fat16_descriptor->entry->dir->entry->file_size;
         vstat->st_blksize = max_cluster_size_bytes;
@@ -771,7 +773,7 @@ static void fat16_set_stat(FAT16FileDescriptor *fat16_descriptor, ATADev *dev, V
     }
     case FAT16_ENTRY_TYPE_FILE:
     {
-        vstat->st_dev = dev->dev;
+        mcpy(vstat->st_dev, dev->dev, sizeof(char) * 2);
         vstat->st_mode = V_READ;
         vstat->st_size = fat16_descriptor->entry->file->file_size;
         vstat->st_blksize = max_cluster_size_bytes;
@@ -823,5 +825,42 @@ int32_t fat16_stat(ATADev *dev, void *internal, VStat *vstat)
     // Follow the cluster chain from the start 0 from the starting cluster and keep track of allocated blocks
     const uint16_t used_blocks = fat16_count_allocated_fat_blocks_in_chain(&fat_stream, max_cluster_size_bytes, start_cluster, partition_offset);
     fat16_set_stat(fat16_descriptor, dev, vstat, max_cluster_size_bytes, used_blocks);
+    return res;
+};
+
+int32_t fat16_seek(void *internal, uint32_t offset, const VNODE_SEEK_MODE mode)
+{
+    int32_t res = 0;
+    FAT16FileDescriptor *fat16_descriptor = (FAT16FileDescriptor *)internal;
+
+    if (offset >= fat16_descriptor->entry->dir->entry->file_size)
+    {
+        res = -EIO;
+        return res;
+    };
+
+    switch (mode)
+    {
+    case SEEK_SET:
+    {
+        fat16_descriptor->pos = offset;
+        break;
+    };
+    case SEEK_END:
+    {
+        res = ENOENT;
+        break;
+    };
+    case SEEK_CUR:
+    {
+        fat16_descriptor->pos += offset;
+        break;
+    };
+    default:
+    {
+        res = -EINVAL;
+        break;
+    }
+    };
     return res;
 };

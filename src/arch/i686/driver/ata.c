@@ -11,8 +11,8 @@
 
 #define ATA_DEBUG_DELAY 0
 
-ATADev ata_dev_primary_master = {
-    .dev = 0x0,
+ATADev ata_dev = {
+    .dev = {"A"},
     .sector_size = 0x0,
     .capacity = 0x0,
     .buffer = {},
@@ -31,26 +31,15 @@ static void ata_read_into_buffer(uint16_t *buffer, const size_t size)
 
 static uint8_t select_drive_ata_identify(const ATADriveType type)
 {
-    uint8_t drive_select = 0x0;
-
     switch (type)
     {
     case ATA_DRIVE_MASTER:
-    {
-        drive_select = 0xA0;
-        break;
-    };
+        return 0xA0;
     case ATA_DRIVE_SLAVE:
-    {
-        drive_select = 0xB0;
-        break;
-    }
+        return 0xB0;
     default:
-    {
-        break;
+        return 0;
     };
-    };
-    return drive_select;
 };
 
 static void send_identify_cmd(const uint8_t target_drive)
@@ -163,10 +152,10 @@ static int32_t ata_identify(ATADev *self, const ATADriveType type)
     return 1;
 };
 
-// Initializes the ATA device
+// Initializes the default ATA device
 void ata_init(ATADev *self)
 {
-    self->dev = ATA_DEV_PRIMARY_MASTER;
+    mcpy(self->dev, "A", sizeof(char) * 2);
     self->sector_size = ATA_SECTOR_SIZE;
     self->total_sectors = 0x0;
     self->capacity = 0x0;
@@ -261,14 +250,11 @@ static int32_t ata_read_pio_28(ATADev *self, const uint32_t lba, const uint8_t s
 };
 
 // Gets the ATADev instance associated with the specified disk type
-ATADev *ata_get(const ATADeviceType dev)
+ATADev *ata_get(const char dev[2])
 {
-    switch (dev)
+    if (scmp(dev, "A"))
     {
-    case ATA_DEV_PRIMARY_MASTER:
-    {
-        return &ata_dev_primary_master;
-    };
+        return &ata_dev;
     };
     return 0x0;
 };
@@ -280,9 +266,9 @@ int32_t ata_read(ATADev *self, const size_t start_block, const size_t n_blocks)
     {
         return -EIO;
     };
-    const bool has_pio48_support = self->features & (1 << 1);
+    const bool has_pio48 = self->features & (1 << 1);
 
-    if (has_pio48_support)
+    if (has_pio48)
     {
         return ata_read_pio_48(self, start_block, n_blocks);
     };

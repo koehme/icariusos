@@ -220,20 +220,26 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
     asm_do_sti();
 
-    ATADev *ata_primary_master = ata_get(ATA_DEV_PRIMARY_MASTER);
-    ata_init(ata_primary_master);
+    ATADev *ata_dev = ata_get("A");
+    ata_init(ata_dev);
+    ata_search_fs(ata_dev);
 
     keyboard_init(&keyboard);
+    mouse_init(&mouse);
     timer_init(&timer, 100);
-
-    printf("\n");
-    ata_search_fs(ata_primary_master);
 
     kmotd(addr);
 
     pci_devices_enumerate();
 
-    mouse_init(&mouse);
+    const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
+    char buffer[1024] = {};
+    vfs_fseek(fd, 0x2300, SEEK_SET);
+    vfs_fread(buffer, 10, 1, fd);
+    vfs_fread(buffer, 10, 1, fd);
+    printf("%s\n", buffer);
+
+    kmotd(addr);
 
     for (;;)
     {

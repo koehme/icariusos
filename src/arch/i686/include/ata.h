@@ -18,11 +18,6 @@ typedef enum ATALimit
     ATA_SECTOR_SIZE = 512,
 } ATALimit;
 
-typedef enum ATADeviceType
-{
-    ATA_DEV_PRIMARY_MASTER = 0x0,
-} ATADeviceType;
-
 typedef enum ATADriveType
 {
     ATA_DRIVE_MASTER = 0xE0,
@@ -62,7 +57,7 @@ typedef enum ATAPort
 
 typedef struct ATADev
 {
-    ATADeviceType dev;      // Type of the ATA device
+    char dev[2];            // Type of the ATA device
     uint16_t sector_size;   // Size of an sector in bytes
     uint64_t total_sectors; // Total available sectors
     uint64_t capacity;      // Available device capacity in bytes
@@ -73,7 +68,7 @@ typedef struct ATADev
 
 void ata_init(ATADev *self);
 void ata_search_fs(ATADev *self);
-ATADev *ata_get(const ATADeviceType dev);
+ATADev *ata_get(const char dev[2]);
 int32_t ata_read(ATADev *self, const size_t start_block, const size_t n_blocks);
 
 #endif

@@ -28,7 +28,7 @@ typedef enum VNODE_MODE
 
 typedef struct VStat
 {
-    ATADeviceType st_dev;
+    char st_dev[2];
     VNODE_MODE st_mode;
     uint32_t st_size;
     uint32_t st_blksize;

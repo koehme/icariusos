@@ -22,12 +22,13 @@ kernel:
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/driver/pci.c -o ./obj/pci.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/driver/mouse.c -o ./obj/mouse.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/driver/ps2.c -o ./obj/ps2.o
+	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/driver/fat16.c -o ./obj/fat16.o
 
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/pathlexer.c -o ./obj/pathlexer.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/pathparser.c -o ./obj/pathparser.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/stream.c -o ./obj/stream.o
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/vfs.c -o ./obj/vfs.o
-	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/fat16.c -o ./obj/fat16.o
+
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/fs/vnode.c -o ./obj/vnode.o
 
 	$(GCC) $(INCLUDES) $(FLAGS) -c ./src/arch/i686/idt.c -o ./obj/idt.o
