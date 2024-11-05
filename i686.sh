@@ -3,6 +3,7 @@
 sudo apt update -y
 sudo apt upgrade -y
 
+sudo apt install dosfstools -y
 sudo apt install nasm -y
 sudo apt install grub-pc -y
 sudo apt install gdb -y
