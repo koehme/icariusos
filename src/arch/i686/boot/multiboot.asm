@@ -2,13 +2,13 @@ section .multiboot_header
 bits 32
 
 header_start:
-    dd 0xe85250d6                ; magic number
-    dd 0                         ; protected mode code
-    dd header_end - header_start ; header length
-    ; checksum
-    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
-    ; required end tag
-    dw 0    ; type
-    dw 0    ; flags
-    dd 8    ; size
+    dd 0xe85250d6              
+    dd 0                        
+    dd header_end - header_start
+    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start)) 
+    dd 5                           
+    dd 20                            
+    dd 800                             
+    dd 600                             
+    dd 32                           
 header_end:

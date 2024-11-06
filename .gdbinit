@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break kernel.c:237
+break kernel.c:162
 
 c
