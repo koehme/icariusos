@@ -1,0 +1,14 @@
+BasedOnStyle: LLVM
+IndentWidth: 8
+TabWidth: 8
+UseTab: Always
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: Never
+ColumnLimit: 160
+PointerAlignment: Left
+SpacesBeforeTrailingComments: 1
+MaxEmptyLinesToKeep: 2
+BreakConstructorInitializers: BeforeComma
+NamespaceIndentation: All
+Cpp11BracedListStyle: true
+CommentPragmas: None
