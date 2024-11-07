@@ -177,5 +177,6 @@ extern VBEDisplay vbe_display;
 void vbe_init(VBEDisplay* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
 void vbe_draw_hline(VBEDisplay* self, const uint32_t y, const VBEColor color);
 void vbe_draw_string(VBEDisplay* self, const char* str, const VBEColor color);
+void vbe_draw_ch(VBEDisplay* self, char ch, const VBEColor color);
 
 #endif
