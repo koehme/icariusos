@@ -162,7 +162,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 		};
 	};
 	// vbe_draw_horizontal_line(&vbe_display, 0, VBE_COLOR_YELLOW);
-	vbe_draw_char(&vbe_display, 100, 100, 'A', VBE_COLOR_RED);
+	vbe_draw_string(&vbe_display, "Hello World!\b\b", VBE_COLOR_RED);
+	vbe_draw_string(&vbe_display, "from icariusOS", VBE_COLOR_RED);
 
 	heap_init(&heap, &heap_bytemap, (void*)0x01000000, (void*)0x00007e00, 1024 * 1024 * 100, 4096);
 

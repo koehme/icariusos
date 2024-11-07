@@ -9,6 +9,7 @@
 
 #define VGA_DEBUG_DELAY 0
 
+#include "cursor.h"
 #include <stdint.h>
 
 typedef enum VGAPorts {
