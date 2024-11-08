@@ -161,6 +161,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_init(ata_dev);
 	ata_search_fs(ata_dev);
 
+	keyboard_init(&keyboard);
+	mouse_init(&mouse);
+
 	kmotd();
 
 	while (true)

@@ -5,6 +5,7 @@
  */
 
 #include "vbe.h"
+#include "string.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -71,69 +72,95 @@ static inline void vbe_clear_ch(VBEDisplay* self, const uint32_t x, const uint32
 	return;
 };
 
+static void vbe_scroll(VBEDisplay* self, const VBEColor background_color)
+{
+	const uint32_t bytes_per_pixel = self->bpp / 8;
+	const uint32_t scroll_height = FONT_HEIGHT;
+	const uint32_t scroll_bytes = scroll_height * self->pitch;
+
+	uint8_t* src = (uint8_t*)self->addr + scroll_bytes;
+	uint8_t* dest = (uint8_t*)self->addr;
+
+	uint32_t total_bytes = (self->height - scroll_height) * self->pitch;
+
+	mmove(dest, src, total_bytes);
+
+	for (uint32_t y = self->height - scroll_height; y < self->height; y++) {
+		for (uint32_t x = 0; x < self->width; x++) {
+			vbe_put_pixel_at(self, x, y, background_color);
+		};
+	};
+	self->cursor_y -= scroll_height;
+	return;
+};
+
 void vbe_draw_ch(VBEDisplay* self, char ch, const VBEColor color)
 {
 	switch (ch) {
-	case '\n':
-		// Neue Zeile: Cursor an den Anfang der nächsten Zeile setzen
+	case '\n': {
+		// Newline: Move cursor to the beginning of the next line
 		self->cursor_x = 0;
 		self->cursor_y += FONT_HEIGHT;
 		break;
-	case '\r':
-		// Wagenrücklauf: Cursor an den Anfang der aktuellen Zeile setzen
+	};
+	case '\r': {
+		// Carriage Return: Move cursor to the beginning of the current line
 		self->cursor_x = 0;
 		break;
-	case '\b':
-		// Rückschritt: Cursor zurückbewegen und vorheriges Zeichen löschen
+	};
+	case '\b': {
+		// Backspace: Move cursor back and erase the previous character
 		if (self->cursor_x >= FONT_WIDTH) {
 			self->cursor_x -= FONT_WIDTH;
 		} else if (self->cursor_y >= FONT_HEIGHT) {
 			self->cursor_y -= FONT_HEIGHT;
 			self->cursor_x = self->width - FONT_WIDTH;
-		}
-		// Lösche das vorherige Zeichen
+		};
+		// Erase the previous character by clearing its pixels
 		vbe_clear_ch(self, self->cursor_x, self->cursor_y, VBE_COLOR_BLACK);
 		break;
-	default:
-		// Standardzeichen: Zeichnen und Cursor weiterbewegen
-		// Zeichne das Zeichen an der aktuellen Cursor-Position
+	};
+	default: {
+		// Standard character: Draw the character and move the cursor forward
+		// Clear the area where the character will be drawn
 		vbe_clear_ch(self, self->cursor_x, self->cursor_y, VBE_COLOR_BLACK);
-
+		// Ensure the character is within the ASCII range
 		if (ch < 0 || ch >= 128) {
 			return;
 		};
-
+		// Retrieve the bitmap for the character
 		const uint8_t* bitmap = ascii_bitmap[(uint8_t)ch];
-
+		// Iterate over each row of the character bitmap
 		for (size_t row = 0; row < FONT_HEIGHT; row++) {
 			const uint8_t byte = bitmap[row];
-
+			// Iterate over each column of the character bitmap
 			for (size_t col = 0; col < FONT_WIDTH; col++) {
+				// Check if the pixel should be turned on
 				const bool is_pixel_on = byte & (1 << col);
 
 				if (is_pixel_on) {
+					// Draw the pixel at the calculated position with the specified color
 					vbe_put_pixel_at(self, self->cursor_x + col, self->cursor_y + row, color);
 				};
 			};
 		};
-
-		// Cursor-Position aktualisieren
+		// Update the cursor position to the right after drawing the character
 		self->cursor_x += FONT_WIDTH;
-
-		// Zeilenumbruch, wenn das Ende der Zeile erreicht ist
+		// Handle line wrapping if the cursor exceeds the display width
 		if (self->cursor_x + FONT_WIDTH > self->width) {
 			self->cursor_x = 0;
 			self->cursor_y += FONT_HEIGHT;
 		};
 		break;
-	}
-
-	if (self->cursor_y + FONT_HEIGHT > self->height) {
-		// TODO SCROLL
-		self->cursor_y = 0;
 	};
+	};
+	// Check if the cursor has moved beyond the display height and perform scrolling if necessary
+	if (self->cursor_y + FONT_HEIGHT > self->height) {
+		// Scroll the display content upwards and clear the bottom area
+		vbe_scroll(self, VBE_COLOR_BLACK);
+	}
 	return;
-}
+};
 
 void vbe_draw_string(VBEDisplay* self, const char* str, const VBEColor color)
 {

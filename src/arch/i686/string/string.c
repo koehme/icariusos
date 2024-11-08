@@ -9,9 +9,7 @@
 
 #include "status.h"
 #include "string.h"
-#include "vga.h"
 
-extern VGADisplay vga_display;
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
 
@@ -217,6 +215,27 @@ void* mset16(void* dest, const uint16_t value, size_t n_bytes)
 	return dest;
 };
 
+void* mmove(void* dest, const void* src, size_t n_bytes)
+{
+	unsigned char* d = (unsigned char*)dest;
+	const unsigned char* s = (const unsigned char*)src;
+
+	if (d == s || n_bytes == 0) {
+		return dest;
+	};
+
+	if (d < s) {
+		for (size_t i = 0; i < n_bytes; i++) {
+			d[i] = s[i];
+		};
+	} else {
+		for (size_t i = n_bytes; i != 0; i--) {
+			d[i - 1] = s[i - 1];
+		};
+	};
+	return dest;
+};
+
 // Copy a memory block from source to destination with specified number of bytes
 void* mcpy(void* dest, const void* src, size_t n_bytes)
 {
@@ -233,18 +252,18 @@ void* mcpy(void* dest, const void* src, size_t n_bytes)
 };
 
 // Compare two memory blocks byte by byte and return the difference. If all bytes are equal, returns 0
-int32_t mcmp(const void* s1, const void* s2, size_t n)
+int32_t mcmp(const void* s1, const void* s2, size_t n_bytes)
 {
 	const uint8_t* p1 = s1;
 	const uint8_t* p2 = s2;
 
-	while (n > 0) {
+	while (n_bytes > 0) {
 		if (*p1 != *p2) {
 			return (int32_t)(*p1) - (int32_t)(*p2);
 		};
 		p1++;
 		p2++;
-		n--;
+		n_bytes--;
 	};
 	return 0;
 };
