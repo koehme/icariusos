@@ -5,12 +5,12 @@
  */
 
 #include "kernel.h"
+#include "page.h"
 
 extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
 extern HeapByteMap heap_bytemap;
 extern Heap heap;
-extern PageDirectory kpage_dir;
 extern Keyboard keyboard;
 extern Mouse mouse;
 extern Timer timer;
@@ -141,18 +141,27 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 	return;
 };
 
+
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	kcheck_multiboot2_magic(magic);
 	kcheck_multiboot2_alignment(addr);
 	kread_multiboot2(addr, &vbe_display);
-	printf("vbe_display.addr: 0x%x\n", vbe_display.addr);
-	heap_init(&heap, &heap_bytemap, (void*)0x01000000, (void*)0x00007e00, 1024 * 1024 * 100, 4096);
 
+	page_paging_init();
+	printf("Paging Initialization\n");
+
+	heap_init(&heap, &heap_bytemap, (void*)0x01000000, (void*)0x00007e00, 1024 * 1024 * 100, 4096);
 	vfs_init();
 	idt_init();
 
 	asm_do_sti();
+
+	ATADev* ata_dev = ata_get("A");
+	ata_init(ata_dev);
+	ata_search_fs(ata_dev);
+
+	kmotd();
 
 	while (true)
 		;
