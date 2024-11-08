@@ -5,7 +5,8 @@
  */
 
 #include "pathlexer.h"
-#include "string.h"
+#include "ctype.h"
+
 #include <stdbool.h>
 
 PathLexer path_lexer = {
@@ -13,94 +14,78 @@ PathLexer path_lexer = {
     .start = 0x0,
 };
 
-inline static bool path_lexer_is_eof(const PathLexer *self)
+inline static bool path_lexer_is_eof(const PathLexer* self) { return *self->curr == '\0'; };
+
+static char path_lexer_advance(PathLexer* self)
 {
-    return *self->curr == '\0';
+	self->curr = self->curr + 1;
+	return *(self->curr - 1);
 };
 
-static char path_lexer_advance(PathLexer *self)
+static PathToken path_lexer_create_token(PathLexer* self, PathType type)
 {
-    self->curr = self->curr + 1;
-    return *(self->curr - 1);
+	const PathToken token = {
+	    .type = type,
+	    .start = self->start,
+	    .len = (int32_t)(self->curr - self->start),
+	};
+	return token;
 };
 
-static PathToken path_lexer_create_token(PathLexer *self, PathType type)
+void path_lexer_init(PathLexer* self, const char* path)
 {
-    const PathToken token = {
-        .type = type,
-        .start = self->start,
-        .len = (int32_t)(self->curr - self->start),
-    };
-    return token;
+	self->start = (char*)path;
+	self->curr = (char*)path;
+	return;
 };
 
-void path_lexer_init(PathLexer *self, const char *path)
+inline static char path_lexer_peek(const PathLexer* self) { return *self->curr; };
+
+static char path_lexer_peek_next(const PathLexer* self)
 {
-    self->start = (char *)path;
-    self->curr = (char *)path;
-    return;
+	if (path_lexer_is_eof(self)) {
+		return '\0';
+	};
+	return *(self->curr + 1);
 };
 
-inline static char path_lexer_peek(const PathLexer *self)
+static PathToken path_lexer_lex_identifier(PathLexer* self)
 {
-    return *self->curr;
+	while (isalpha(path_lexer_peek(self))) {
+		path_lexer_advance(self);
+	};
+	return path_lexer_create_token(self, PT_IDENTIFIER);
 };
 
-static char path_lexer_peek_next(const PathLexer *self)
+PathToken path_lexer_lex(PathLexer* self)
 {
-    if (path_lexer_is_eof(self))
-    {
-        return '\0';
-    };
-    return *(self->curr + 1);
-};
+	self->start = self->curr;
 
-static PathToken path_lexer_lex_identifier(PathLexer *self)
-{
-    while (is_alpha(path_lexer_peek(self)))
-    {
-        path_lexer_advance(self);
-    };
-    return path_lexer_create_token(self, PT_IDENTIFIER);
-};
+	if (path_lexer_is_eof(self)) {
+		return path_lexer_create_token(self, PT_END);
+	};
 
-PathToken path_lexer_lex(PathLexer *self)
-{
-    self->start = self->curr;
+	if (isalpha(path_lexer_peek(self)) && path_lexer_peek_next(self) == ':') {
+		path_lexer_advance(self);
+		return path_lexer_create_token(self, PT_LETTER);
+	};
+	const char ch = path_lexer_advance(self);
 
-    if (path_lexer_is_eof(self))
-    {
-        return path_lexer_create_token(self, PT_END);
-    };
-
-    if (is_alpha(path_lexer_peek(self)) && path_lexer_peek_next(self) == ':')
-    {
-        path_lexer_advance(self);
-        return path_lexer_create_token(self, PT_LETTER);
-    };
-    const char ch = path_lexer_advance(self);
-
-    switch (ch)
-    {
-    case '/':
-    {
-        return path_lexer_create_token(self, PT_SLASH);
-    };
-    case ':':
-    {
-        return path_lexer_create_token(self, PT_COLON);
-    };
-    case '.':
-    {
-        return path_lexer_create_token(self, PT_DOT);
-    };
-    default:
-    {
-        if (is_alpha(ch))
-        {
-            return path_lexer_lex_identifier(self);
-        };
-    };
-    };
-    return path_lexer_create_token(self, PT_ERR);
+	switch (ch) {
+	case '/': {
+		return path_lexer_create_token(self, PT_SLASH);
+	};
+	case ':': {
+		return path_lexer_create_token(self, PT_COLON);
+	};
+	case '.': {
+		return path_lexer_create_token(self, PT_DOT);
+	};
+	default: {
+		if (isalpha(ch)) {
+			return path_lexer_lex_identifier(self);
+		};
+	};
+	};
+	return path_lexer_create_token(self, PT_ERR);
 };

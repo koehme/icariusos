@@ -6,9 +6,9 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "stdlib.h"
-
 #include "string.h"
 
 
@@ -79,79 +79,74 @@ char* scat(char* dest, const char* src)
 	return concatenated;
 };
 
-// Set a memory block with a 8-bit value repeated throughout for the specified number of bytes
-void* mset8(void* dest, const uint8_t value, size_t n_bytes)
+void* memset(void* ptr, int value, size_t num)
 {
-	uint8_t* buffer = (uint8_t*)dest;
-
-	for (; n_bytes != 0; n_bytes--) {
-		*buffer = value;
-		buffer++;
+	// Cast ptr to unsigned char pointer for byte-wise operations
+	unsigned char* p = (unsigned char*)ptr;
+	// Set each byte to the specified value
+	for (size_t i = 0; i < num; i++) {
+		p[i] = (unsigned char)value;
 	};
-	return dest;
+	return ptr;
 };
 
-// Set a memory block with a 16-bit value repeated throughout for the specified number of bytes
-void* mset16(void* dest, const uint16_t value, size_t n_bytes)
+void* memset16(void* ptr, uint16_t value, size_t num)
 {
-	uint16_t* buffer = (uint16_t*)dest;
+	uint16_t* p = (uint16_t*)ptr;
 
-	for (; n_bytes != 0; n_bytes--) {
-		*buffer = value;
-		buffer++;
+	for (size_t i = 0; i < num; i++) {
+		p[i] = value;
 	};
-	return dest;
+	return ptr;
 };
 
-void* mmove(void* dest, const void* src, size_t n_bytes)
+void* memmove(void* dest, const void* src, size_t count)
 {
 	unsigned char* d = (unsigned char*)dest;
 	const unsigned char* s = (const unsigned char*)src;
 
-	if (d == s || n_bytes == 0) {
+	if (d == s || count == 0) {
 		return dest;
 	};
 
 	if (d < s) {
-		for (size_t i = 0; i < n_bytes; i++) {
+		for (size_t i = 0; i < count; i++) {
 			d[i] = s[i];
 		};
 	} else {
-		for (size_t i = n_bytes; i != 0; i--) {
+		for (size_t i = count; i != 0; i--) {
 			d[i - 1] = s[i - 1];
 		};
 	};
 	return dest;
 };
 
-// Copy a memory block from source to destination with specified number of bytes
-void* mcpy(void* dest, const void* src, size_t n_bytes)
+void* memcpy(void* dest, const void* src, size_t n)
 {
 	uint8_t* byte_dest = (uint8_t*)dest;
 	const uint8_t* src_ptr = (const uint8_t*)src;
 
-	while (n_bytes) {
+	while (n) {
 		*byte_dest = *src_ptr;
 		byte_dest++;
 		src_ptr++;
-		n_bytes--;
+		n--;
 	};
 	return dest;
 };
 
-// Compare two memory blocks byte by byte and return the difference. If all bytes are equal, returns 0
-int32_t mcmp(const void* s1, const void* s2, size_t n_bytes)
+int memcmp(const void* ptr1, const void* ptr2, size_t num)
 {
-	const uint8_t* p1 = s1;
-	const uint8_t* p2 = s2;
+	const uint8_t* p1 = ptr1;
+	const uint8_t* p2 = ptr2;
 
-	while (n_bytes > 0) {
+	while (num > 0) {
 		if (*p1 != *p2) {
 			return (int32_t)(*p1) - (int32_t)(*p2);
 		};
 		p1++;
 		p2++;
-		n_bytes--;
+		num--;
 	};
 	return 0;
 };

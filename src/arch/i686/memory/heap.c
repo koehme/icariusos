@@ -31,7 +31,7 @@ void heap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap
 	self->bytemap = bytemap;
 	self->saddr = heap_saddr;
 	self->block_size = block_size;
-	mset8(bytemap->saddr, 0x0, bytemap->total_blocks * sizeof(uint8_t));
+	memset(bytemap->saddr, 0x0, bytemap->total_blocks * sizeof(uint8_t));
 	return;
 };
 

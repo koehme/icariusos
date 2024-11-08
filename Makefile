@@ -29,10 +29,11 @@ SOURCES_C = \
     ./src/arch/i686/idt.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
-    ./src/arch/i686/string/string.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
-    ./src/lib/math.c
+    ./src/lib/math.c \
+    ./src/lib/string.c \
+    ./src/lib/ctype.c
 
 SOURCES_ASM = \
     ./src/arch/i686/boot/multiboot.asm \

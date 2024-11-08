@@ -27,7 +27,7 @@ void* kcalloc(const size_t size)
 {
 	void* ptr = 0x0;
 	ptr = heap_malloc(&heap, size);
-	mset8(ptr, 0x0, size);
+	memset(ptr, 0x0, size);
 	return ptr;
 };
 
@@ -163,10 +163,23 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	keyboard_init(&keyboard);
 	mouse_init(&mouse);
+	timer_init(&timer, 100);
 
 	kmotd();
-	kmalloc(1024 * 1024 * 80);
-	printf("HeapUsage: %f\n", heap_get_utilization(&heap));
+
+	pci_devices_enumerate();
+
+	// This code opens the file "A:/LEET/TEST.TXT" in read mode, seeks to byte offset 0x2300,
+	// reads 10 bytes into the buffer twice (with the second read overwriting the first 10 bytes),
+	// and then prints the contents of the buffer as a null-terminated string.
+	// As a result, the `printf` statement will output the second set of 10 bytes read from
+	// the file starting at offset 0x2300, effectively displaying the string formed by bytes
+	// from offset 0x230A to 0x2313 in "TEST.TXT".
+	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
+	char buffer[1024] = {};
+	vfs_fseek(fd, 0x2300, SEEK_SET);
+	vfs_fread(buffer, 10, 1, fd);
+	printf("%s\n", buffer);
 
 	while (true)
 		;

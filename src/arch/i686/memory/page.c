@@ -8,7 +8,7 @@ static page_t page_tables[PAGE_ENTRIES][PAGE_ENTRIES] __attribute__((aligned(409
 
 void page_paging_init()
 {
-	mset8(page_directory, 0, sizeof(page_directory));
+	memset(page_directory, 0, sizeof(page_directory));
 	// Identity Mapping
 	for (uint32_t i = 0; i < PAGE_ENTRIES; i++) {
 		page_directory[i] = (uint32_t)page_tables[i] | PAGE_PRESENT | PAGE_WRITABLE;

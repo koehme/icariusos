@@ -83,7 +83,7 @@ static void vbe_scroll(VBEDisplay* self, const VBEColor background_color)
 
 	uint32_t total_bytes = (self->height - scroll_height) * self->pitch;
 
-	mmove(dest, src, total_bytes);
+	memmove(dest, src, total_bytes);
 
 	for (uint32_t y = self->height - scroll_height; y < self->height; y++) {
 		for (uint32_t x = 0; x < self->width; x++) {
