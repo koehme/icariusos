@@ -1,4 +1,4 @@
-INCLUDES = -I./src/arch/i686/include
+INCLUDES = -I./src/include
 FLAGS = -std=gnu99 -g -ffreestanding -falign-jumps -falign-functions -falign-labels \
         -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions \
         -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label \
@@ -29,7 +29,10 @@ SOURCES_C = \
     ./src/arch/i686/idt.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
-    ./src/arch/i686/string/string.c
+    ./src/arch/i686/string/string.c \
+    ./src/lib/stdlib.c \
+    ./src/lib/stdio.c \
+    ./src/lib/math.c
 
 SOURCES_ASM = \
     ./src/arch/i686/boot/multiboot.asm \
@@ -51,6 +54,9 @@ OBJECTS_ASM = $(foreach src,$(SOURCES_ASM),$(call obj_asm,$(src)))
 OBJECTS = $(OBJECTS_C) $(OBJECTS_ASM)
 
 all: $(OBJECTS) image
+
+$(OBJ_DIR)/%.c.o: ./src/lib/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/arch/i686/driver/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@

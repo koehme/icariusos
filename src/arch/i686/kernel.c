@@ -165,6 +165,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	mouse_init(&mouse);
 
 	kmotd();
+	kmalloc(1024 * 1024 * 80);
+	printf("HeapUsage: %f\n", heap_get_utilization(&heap));
 
 	while (true)
 		;
