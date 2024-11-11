@@ -27,6 +27,7 @@ SOURCES_C = \
     ./src/arch/i686/fs/vfs.c \
     ./src/arch/i686/fs/vnode.c \
     ./src/arch/i686/idt.c \
+    ./src/arch/i686/gdt.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
     ./src/lib/stdlib.c \
@@ -36,6 +37,7 @@ SOURCES_C = \
     ./src/lib/ctype.c
 
 SOURCES_ASM = \
+    ./src/arch/i686/gdt.asm \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
@@ -76,7 +78,13 @@ $(OBJ_DIR)/kernel.c.o: ./src/arch/i686/kernel.c
 $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
+$(OBJ_DIR)/gdt.c.o: ./src/arch/i686/gdt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
 $(OBJ_DIR)/loader.asm.o: ./src/arch/i686/boot/loader.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/gdt.asm.o: ./src/arch/i686/gdt.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/idt.asm.o: ./src/arch/i686/idt.asm

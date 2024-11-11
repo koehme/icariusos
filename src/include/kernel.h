@@ -14,6 +14,7 @@
 #include "ata.h"
 #include "cmos.h"
 #include "cursor.h"
+#include "gdt.h"
 #include "heap.h"
 #include "idt.h"
 #include "io.h"

@@ -1,9 +1,10 @@
 #include "gdt.h"
 
+
 extern void gdt_flush(uint32_t);
 
-GdtEntry gdt_entries[6];
-Gdt gdt;
+struct GdtEntry gdt_entries[6];
+struct Gdt gdt;
 
 #define KERNEL_CODE_SEG 0x9A
 #define KERNEL_DATA_SEG 0x92
@@ -11,17 +12,17 @@ Gdt gdt;
 #define USER_DATA_SEG 0xF2
 #define TSS_SEG 0x89
 
-void init_gdt()
+void gdt_init()
 {
-	gdt_ptr.limit = (sizeof(struct gdt_entry_struct) * 6) - 1;
-	gdt_ptr.base = (uint32_t)&gdt_entries;
+	gdt.limit = (sizeof(struct GdtEntry) * 6) - 1;
+	gdt.base = (uint32_t)&gdt_entries;
 
 	gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Kernel code segment
 	gdt_set_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Kernel data segment
 	gdt_set_entry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User code segment
 	gdt_set_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User data segment
 
-	gdt_flush((uint32_t)&gdt_ptr);
+	gdt_flush((uint32_t)&gdt);
 	return;
 };
 

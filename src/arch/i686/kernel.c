@@ -5,7 +5,7 @@
  */
 
 #include "kernel.h"
-#include "page.h"
+
 
 extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
@@ -141,6 +141,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	unsigned int kernel_end_physical = (unsigned int)_kernel_end;
 	unsigned int kernel_end_virtual = kernel_end_physical + 0xC0000000;
 
+	gdt_init();
 
 	while (true)
 		;
