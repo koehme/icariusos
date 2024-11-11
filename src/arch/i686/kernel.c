@@ -129,13 +129,6 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 			kread_multiboot2_fb((struct multiboot_tag_framebuffer*)tag, vbe_display);
 			break;
 		};
-		// Move the tag pointer to the next multiboot tag, aligning it to the next 8-byte boundary.
-		// This ensures compliance with the Multiboot2 specification, which requires all tags to be 8-byte aligned.
-		// Example:
-		// If tag->size = 22:
-		//    (22 + 7) = 29
-		//    29 & ~0b00000111 = 24 (next multiple of 8)
-		// The pointer will move by 24 bytes to the start of the next tag.
 		tag = (struct multiboot_tag*)((uint8_t*)tag + ((tag->size + 7) & ~0b00000111));
 	};
 	return;
@@ -169,12 +162,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	pci_devices_enumerate();
 
-	// This code opens the file "A:/LEET/TEST.TXT" in read mode, seeks to byte offset 0x2300,
-	// reads 10 bytes into the buffer twice (with the second read overwriting the first 10 bytes),
-	// and then prints the contents of the buffer as a null-terminated string.
-	// As a result, the `printf` statement will output the second set of 10 bytes read from
-	// the file starting at offset 0x2300, effectively displaying the string formed by bytes
-	// from offset 0x230A to 0x2313 in "TEST.TXT".
 	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
 	char buffer[1024] = {};
 	vfs_fseek(fd, 0x2300, SEEK_SET);

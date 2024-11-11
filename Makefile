@@ -36,7 +36,6 @@ SOURCES_C = \
     ./src/lib/ctype.c
 
 SOURCES_ASM = \
-    ./src/arch/i686/boot/multiboot.asm \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
@@ -76,9 +75,6 @@ $(OBJ_DIR)/kernel.c.o: ./src/arch/i686/kernel.c
 
 $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
-
-$(OBJ_DIR)/multiboot.asm.o: ./src/arch/i686/boot/multiboot.asm
-	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/loader.asm.o: ./src/arch/i686/boot/loader.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
