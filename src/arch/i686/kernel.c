@@ -6,6 +6,7 @@
 
 #include "kernel.h"
 
+#define p2v(addr) ((void*)((addr) + 0xC0000000))
 
 extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
@@ -112,17 +113,19 @@ static void kcheck_multiboot2_alignment(const uint32_t addr)
 static void kread_multiboot2_fb(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display)
 {
 	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
+	const void* framebuffer_v_addr = p2v((uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF));
 	const unsigned int framebuffer_width = tagfb->common.framebuffer_width;
 	const unsigned int framebuffer_height = tagfb->common.framebuffer_height;
 	const unsigned int framebuffer_pitch = tagfb->common.framebuffer_pitch;
 	const unsigned int framebuffer_bpp = tagfb->common.framebuffer_bpp;
-	vbe_init(vbe_display, framebuffer_addr, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp);
+	vbe_init(vbe_display, framebuffer_v_addr, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp);
 	return;
 };
 
 static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 {
-	struct multiboot_tag* tag = (struct multiboot_tag*)(addr + 8);
+	const uint32_t v_addr = (uint32_t)p2v(addr);
+	struct multiboot_tag* tag = (struct multiboot_tag*)(v_addr + 8);
 
 	while (tag->type != MULTIBOOT_TAG_TYPE_END) {
 		if (tag->type == MULTIBOOT_TAG_TYPE_FRAMEBUFFER) {
@@ -142,7 +145,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	unsigned int kernel_end_virtual = kernel_end_physical + 0xC0000000;
 
 	gdt_init();
+	pic_init();
+	idt_init();
 
-	while (true)
+	kread_multiboot2(addr, &vbe_display);
+
+	while (true) {
 		;
+	};
 };

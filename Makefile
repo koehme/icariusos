@@ -28,6 +28,7 @@ SOURCES_C = \
     ./src/arch/i686/fs/vnode.c \
     ./src/arch/i686/idt.c \
     ./src/arch/i686/gdt.c \
+    ./src/arch/i686/pic.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
     ./src/lib/stdlib.c \
@@ -79,6 +80,9 @@ $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/gdt.c.o: ./src/arch/i686/gdt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/pic.c.o: ./src/arch/i686/pic.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/loader.asm.o: ./src/arch/i686/boot/loader.asm

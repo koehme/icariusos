@@ -24,6 +24,7 @@
 #include "multiboot2.h"
 #include "page.h"
 #include "pci.h"
+#include "pic.h"
 #include "status.h"
 #include "stream.h"
 #include "string.h"
