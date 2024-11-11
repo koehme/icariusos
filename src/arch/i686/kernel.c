@@ -113,7 +113,7 @@ static void kcheck_multiboot2_alignment(const uint32_t addr)
 static void kread_multiboot2_fb(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display)
 {
 	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
-	const void* framebuffer_v_addr = p2v((uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF));
+	const void* framebuffer_v_addr = (void*)(0xE0000000);
 	const unsigned int framebuffer_width = tagfb->common.framebuffer_width;
 	const unsigned int framebuffer_height = tagfb->common.framebuffer_height;
 	const unsigned int framebuffer_pitch = tagfb->common.framebuffer_pitch;
@@ -149,6 +149,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	idt_init();
 
 	kread_multiboot2(addr, &vbe_display);
+
+	printf("Hello World from Higher Half :-)\n");
 
 	while (true) {
 		;
