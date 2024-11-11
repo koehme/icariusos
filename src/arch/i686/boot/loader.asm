@@ -31,7 +31,7 @@ ALIGN 4096
 kernel_directory:
     DD 0x00000083 ; First Page Table Entry (0x00000000 - 0x003FFFFF)
     TIMES 768-1 DD 0
-    ; Kernel Mapping: Mapping von 0xC0000000 - 0xC2FFFFFF (48 MiB)
+    ; Kernel Mapping: Mapping from 0xC0000000 - 0xC2FFFFFF (48 MiB)
     DD 0x00000083 ; Entry 768 (0xC0000000 - 0xC03FFFFF) mapped to 0x00000000 - 0x003FFFFF
     DD 0x00400083 ; Entry 769 (0xC0400000 - 0xC07FFFFF) mapped to 0x00400000 - 0x007FFFFF
     DD 0x00800083 ; Entry 770 (0xC0800000 - 0xC0BFFFFF) mapped to 0x00800000 - 0x00BFFFFF
@@ -47,21 +47,17 @@ kernel_directory:
 
     TIMES 128-12 DD 0
 
-    ; Framebuffer Mapping bei 0xFD000000
+    ; Framebuffer Mapping at 0xFD000000
     DD 0xFD000083 ; Entry 896 (0xE0000000 - 0xE03FFFFF) mapped to 0xFD000000 - 0xFD3FFFFF
 
     TIMES 1024-897 DD 0 ; Fill up the rest of the Page Directory
 
 section .text
-
-%include "./src/arch/i686/gdt.asm"
-%include "./src/arch/i686/pic.asm"
-
 _start:
     ; Load the address of kernel_directory into ecx
     mov ecx, kernel_directory
     sub ecx, KERNEL_VIRTUAL_START
-    mov cr3, ecx           ; Setze CR3 auf die Adresse von kernel_directory
+    mov cr3, ecx     
 
     ; Enable PSE with 4 MiB pages
     mov ecx, cr4
@@ -85,12 +81,8 @@ start_higher_half_kernel:
     push eax
     cli
     
-    ; Call kernel_main
     call kmain
-    
-    ; Halt if kernel_main returns
+
 halt:
     hlt
     jmp halt
-
-

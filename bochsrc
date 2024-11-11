@@ -1,0 +1,4 @@
+
+ata0-slave: type=cdrom, path=./iso/ICARIUS.BIN, status=inserted
+boot:cdrom
+display_library: x, options = "gui_debug"
