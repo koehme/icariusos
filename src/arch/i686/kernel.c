@@ -134,39 +134,13 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 	return;
 };
 
+extern void* _kernel_end;
 
 void kmain(const uint32_t magic, const uint32_t addr)
 {
-	kcheck_multiboot2_magic(magic);
-	kcheck_multiboot2_alignment(addr);
-	kread_multiboot2(addr, &vbe_display);
+	unsigned int kernel_end_physical = (unsigned int)_kernel_end;
+	unsigned int kernel_end_virtual = kernel_end_physical + 0xC0000000;
 
-	page_paging_init();
-	printf("Paging Initialization\n");
-
-	heap_init(&heap, &heap_bytemap, (void*)0x01000000, (void*)0x00007e00, 1024 * 1024 * 100, 4096);
-	vfs_init();
-	idt_init();
-
-	asm_do_sti();
-
-	ATADev* ata_dev = ata_get("A");
-	ata_init(ata_dev);
-	ata_search_fs(ata_dev);
-
-	keyboard_init(&keyboard);
-	mouse_init(&mouse);
-	timer_init(&timer, 100);
-
-	kmotd();
-
-	pci_devices_enumerate();
-
-	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
-	char buffer[1024] = {};
-	vfs_fseek(fd, 0x2300, SEEK_SET);
-	vfs_fread(buffer, 10, 1, fd);
-	printf("%s\n", buffer);
 
 	while (true)
 		;
