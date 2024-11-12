@@ -137,12 +137,13 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 	return;
 };
 
-extern void* _kernel_end;
+extern uint32_t _kernel_start;
+extern uint32_t _kernel_end;
 
 void kmain(const uint32_t magic, const uint32_t addr)
 {
-	unsigned int kernel_end_physical = (unsigned int)_kernel_end;
-	unsigned int kernel_end_virtual = kernel_end_physical + 0xC0000000;
+	const void* kernel_start = _kernel_start;
+	const void* kernel_end = p2v(_kernel_end);
 
 	gdt_init();
 	pic_init();
