@@ -23,18 +23,18 @@ typedef enum HeapBlockFlags {
 	HEAP_BLOCK_FLAG_NEXT = (1u << 7),
 } HeapBlockFlags;
 
-typedef struct HeapByteMap {
+typedef struct HeapBitMap {
 	uint8_t* saddr;	     // Pointer to the location for the marked map allocation data structure
 	size_t total_blocks; // Assume block_size is a power of 2^12 (e.g., 4096)
-} HeapByteMap;
+} HeapBitMap;
 
 typedef struct Heap {
-	HeapByteMap* bytemap; // Pointer to the heap byte map data structure
-	void* saddr;	      // Start address of the raw heap data pool
-	size_t block_size;    // Size of each memory block in the heap
+	HeapBitMap* bitmap; // Pointer to the heap byte map data structure
+	void* saddr;	    // Start address of the raw heap data pool
+	size_t block_size;  // Size of each memory block in the heap
 } Heap;
 
-void kheap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
+void kheap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size);
 void* kmalloc(const size_t size);
 void* kcalloc(const size_t size);
 void kfree(void* ptr);

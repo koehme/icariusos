@@ -5,6 +5,5 @@ set print pretty on
 set disassembly-flavor intel
 
 break kmain
-break kernel.c:116
 
 c

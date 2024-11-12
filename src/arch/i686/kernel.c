@@ -6,12 +6,14 @@
 
 #include "kernel.h"
 
-extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
+extern Heap kheap;
 extern Keyboard keyboard;
 extern Mouse mouse;
 extern Timer timer;
 extern CMOS cmos;
+
+static uint32_t test[1024 * 512 * 4];
 
 void kpanic(const char* str)
 {
@@ -65,7 +67,7 @@ static void kmotd(void)
 	printf("\nicariusOS is running on an i686 CPU.\n");
 	printf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
 
-	printf("icariusOS - Summary of Memory Regions:\n\n"
+	printf("\nicariusOS - Summary of Memory Regions:\n\n"
 	       "------------------------------------------------------------------------------------\n"
 	       "Region                          Start Address    End Address      Size\n"
 	       "------------------------------------------------------------------------------------\n"
@@ -131,23 +133,18 @@ static void kvalidate_size(void)
 	const uint32_t total_size = text_size + rodata_size + data_size + bss_size;
 	const float used_percentage = ((float)total_size / max_kernel_size) * 100.0;
 
-	printf("Text: %d Bytes\n", text_size);
-	printf("Rodata: %d Bytes\n", rodata_size);
-	printf("Data: %d Bytes\n", data_size);
-	printf("BSS: %d Bytes\n", bss_size);
-
 	if (used_percentage >= 100.0) {
-		kpanic("[CRITICAL] Kernel size exceeds 16 MiB!");
+		kpanic("[CRITICAL] Kernel Memory SIZE EXCEEDS 16 MiB!");
 	} else if (used_percentage >= 90.0) {
-		printf("[WARNING] Kernel is nearing critical size: %f%% used.\n", used_percentage);
+		printf("[WARNING] Kernel Memory NEARING MAX SIZE: %f%% USED.\n", used_percentage);
 	} else if (used_percentage >= 75.0) {
-		printf("[CAUTION] Kernel is heavily: %f%% used. Consider optimizing.\n", used_percentage);
+		printf("[CAUTION] Kernel Memory IS HEAVY: %f%% USED.\n", used_percentage);
 	} else if (used_percentage >= 50.0) {
-		printf("[NOTICE] Kernel is halfway full: %f%% used. Keep an eye on usage.\n", used_percentage);
+		printf("[NOTICE] Kernel Memory HALF FULL: %f%% USED.\n", used_percentage);
 	} else if (used_percentage >= 25.0) {
-		printf("[INFO] Kernel is using %f%% of available space. Plenty of room left.\n", used_percentage);
+		printf("[INFO] Kernel Memory IS FINE: %f%% USED.\n", used_percentage);
 	} else {
-		printf("[OK] Kernel is running efficiently: %f%% used.\n", used_percentage);
+		printf("[OK] Kernel Memory IS EFFICIENT: %f%% USED.\n", used_percentage);
 	};
 	return;
 };
@@ -161,7 +158,16 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kread_multiboot2(addr, &vbe_display);
 	kvalidate_size();
 
-	printf("Hello World from Higher Half :-)\n");
+	kheap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096);
+	printf("[KHEAP] USAGE: %f%%\n", kheap_info(&kheap));
+
+	asm_do_sti();
+
+	keyboard_init(&keyboard);
+	mouse_init(&mouse);
+	timer_init(&timer, 100);
+
+	kspinner(64);
 	kmotd();
 
 	while (true) {

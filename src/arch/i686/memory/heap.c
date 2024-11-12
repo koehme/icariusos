@@ -24,27 +24,28 @@
 #include "string.h"
 
 /* PUBLIC API */
-void kheap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
+void kheap_init(Heap* self, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
 void* kmalloc(const size_t size);
 void* kcalloc(const size_t size);
 void kfree(void* ptr);
 double kheap_info(Heap* self);
 
 /* INTERNAL API */
-static size_t heap_align_bytes_to_block_size(Heap* self, const size_t n_bytes);
-static void heap_mark_as_used(Heap* self, const size_t start_block, const size_t end_block, const size_t blocks_needed);
-static int32_t heap_mark_as_free(Heap* self, const size_t start_block);
-static size_t heap_search(Heap* self, const size_t blocks_needed);
-static void* heap_malloc(Heap* self, const size_t n_bytes);
-static void heap_free(Heap* self, void* ptr);
+static size_t _align(Heap* self, const size_t n_bytes);
+static void _mark(Heap* self, const size_t start_block, const size_t end_block, const size_t blocks_needed);
+static int32_t _demark(Heap* self, const size_t start_block);
+static size_t _search(Heap* self, const size_t blocks_needed);
+static void* _malloc(Heap* self, const size_t n_bytes);
+static void _free(Heap* self, void* ptr);
 
-HeapByteMap heap_bytemap = {
+
+HeapBitMap kheap_bitmap = {
     .saddr = 0x0,
     .total_blocks = 0,
 };
 
-Heap heap = {
-    .bytemap = 0x0,
+Heap kheap = {
+    .bitmap = 0x0,
     .saddr = 0x0,
     .block_size = 0,
 };
@@ -52,41 +53,39 @@ Heap heap = {
 void* kmalloc(const size_t size)
 {
 	void* ptr = 0x0;
-	ptr = heap_malloc(&heap, size);
+	ptr = _malloc(&kheap, size);
 	return ptr;
 };
 
 void* kcalloc(const size_t size)
 {
 	void* ptr = 0x0;
-	ptr = heap_malloc(&heap, size);
+	ptr = _malloc(&kheap, size);
 	memset(ptr, 0x0, size);
 	return ptr;
 };
 
 void kfree(void* ptr)
 {
-	heap_free(&heap, ptr);
+	_free(&kheap, ptr);
 	return;
 };
 
-// Initializes a heap
-void kheap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size)
+void kheap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size)
 {
-	// Initialize the heap bytemap
-	bytemap->saddr = bytemap_saddr;
-	bytemap->total_blocks = n_bytes / block_size; // 25600 total blocks possible - assume block_size is a power of 2^12 (e.g., 4096)
-	// Initialize the heap data structure
-	self->bytemap = bytemap;
-	self->saddr = heap_saddr;
+	self->bitmap->saddr = (uint8_t*)bitmap_saddr;
+	self->bitmap->total_blocks = n_bytes / block_size;
+
+	self->saddr = kheap_saddr;
 	self->block_size = block_size;
-	memset(bytemap->saddr, 0x0, bytemap->total_blocks * sizeof(uint8_t));
+
+	memset(self->bitmap->saddr, 0x0, self->bitmap->total_blocks * sizeof(uint8_t));
 	return;
 };
 
-static size_t heap_align_bytes_to_block_size(Heap* self, const size_t n_bytes) { return (n_bytes + self->block_size - 1) & ~(self->block_size - 1); };
+static size_t _align(Heap* self, const size_t n_bytes) { return (n_bytes + self->block_size - 1) & ~(self->block_size - 1); };
 
-static void heap_mark_as_used(Heap* self, const size_t start_block, const size_t end_block, const size_t blocks_needed)
+static void _mark(Heap* self, const size_t start_block, const size_t end_block, const size_t blocks_needed)
 {
 	// Mark the first block in the heap map_entry as head, next and used
 	uint8_t map_entry = 0b00000000;
@@ -101,7 +100,7 @@ static void heap_mark_as_used(Heap* self, const size_t start_block, const size_t
 
 	for (size_t curr_block = start_block; curr_block <= end_block; curr_block++) {
 		// Set the descriptor for the current block
-		self->bytemap->saddr[curr_block] = map_entry;
+		self->bitmap->saddr[curr_block] = map_entry;
 		// Reset descriptor for a clean state
 		map_entry = 0b00000000;
 		// Mark the block as HEAP_BLOCK_FLAG_USED
@@ -116,9 +115,9 @@ static void heap_mark_as_used(Heap* self, const size_t start_block, const size_t
 	return;
 };
 
-static int32_t heap_mark_as_free(Heap* self, const size_t start_block)
+static int32_t _demark(Heap* self, const size_t start_block)
 {
-	uint8_t map_entry = self->bytemap->saddr[start_block];
+	uint8_t map_entry = self->bitmap->saddr[start_block];
 	const bool is_head = map_entry & HEAP_BLOCK_IS_HEAD;
 
 	if (!is_head) {
@@ -127,25 +126,25 @@ static int32_t heap_mark_as_free(Heap* self, const size_t start_block)
 	};
 	bool has_next_block = map_entry & HEAP_BLOCK_HAS_NEXT;
 	size_t curr_block = start_block;
-	self->bytemap->saddr[curr_block] = HEAP_BLOCK_IS_FREE;
+	self->bitmap->saddr[curr_block] = HEAP_BLOCK_IS_FREE;
 
 	while (has_next_block) {
 		curr_block++;
-		map_entry = self->bytemap->saddr[curr_block];
+		map_entry = self->bitmap->saddr[curr_block];
 		has_next_block = map_entry & HEAP_BLOCK_HAS_NEXT;
-		self->bytemap->saddr[curr_block] = HEAP_BLOCK_IS_FREE;
+		self->bitmap->saddr[curr_block] = HEAP_BLOCK_IS_FREE;
 	};
 	return 1;
 };
 
-static size_t heap_search(Heap* self, const size_t blocks_needed)
+static size_t _search(Heap* self, const size_t blocks_needed)
 {
 	size_t start_block = -1;
 	size_t contiguous_free_blocks = 0;
 
 	// Go through all bytemap entries and search for a matching free block
-	for (size_t i = 0; i < self->bytemap->total_blocks; i++) {
-		const uint8_t curr_map_entry = self->bytemap->saddr[i];
+	for (size_t i = 0; i < self->bitmap->total_blocks; i++) {
+		const uint8_t curr_map_entry = self->bitmap->saddr[i];
 		const bool is_block_free = !(curr_map_entry & HEAP_BLOCK_IS_USED);
 
 		if (is_block_free) {
@@ -170,22 +169,22 @@ static size_t heap_search(Heap* self, const size_t blocks_needed)
 		return -1;
 	};
 	const size_t end_block = start_block + blocks_needed - 1;
-	heap_mark_as_used(self, start_block, end_block, blocks_needed);
+	_mark(self, start_block, end_block, blocks_needed);
 	return start_block;
 };
 
-static void* heap_malloc(Heap* self, const size_t n_bytes)
+static void* _malloc(Heap* self, const size_t n_bytes)
 {
 	// Number of blocks needed for the allocation
-	const size_t n_bytes_aligned = heap_align_bytes_to_block_size(self, n_bytes);
+	const size_t n_bytes_aligned = _align(self, n_bytes);
 	// Blocks in total we need for the allocation
 	const size_t blocks_needed = n_bytes_aligned / self->block_size;
 
-	if (blocks_needed > self->bytemap->total_blocks) {
+	if (blocks_needed > self->bitmap->total_blocks) {
 		printf("HeapError: No additional blocks available for allocation\n");
 	};
 	size_t block = -1;
-	block = heap_search(self, blocks_needed);
+	block = _search(self, blocks_needed);
 
 	if (block == -1) {
 		printf("HeapError: No contiguous blocks available for allocation\n");
@@ -197,13 +196,13 @@ static void* heap_malloc(Heap* self, const size_t n_bytes)
 };
 
 // Deallocate the memory block pointed to by 'ptr' to free up memory
-void heap_free(Heap* self, void* ptr)
+void _free(Heap* self, void* ptr)
 {
 	if (ptr == 0x0) {
 		return;
 	};
 	const size_t start_block = (((size_t)ptr) / self->block_size) % self->block_size;
-	const int32_t res = heap_mark_as_free(self, start_block);
+	const int32_t res = _demark(self, start_block);
 
 	if (res == -1) {
 		printf("HeapError: Failed to deallocate memory\n");
@@ -214,11 +213,11 @@ void heap_free(Heap* self, void* ptr)
 
 double kheap_info(Heap* self)
 {
-	const size_t total_blocks = self->bytemap->total_blocks;
+	const size_t total_blocks = self->bitmap->total_blocks;
 	size_t used_blocks = 0;
 
 	for (size_t i = 0; i < total_blocks; ++i) {
-		uint8_t map_entry = self->bytemap->saddr[i];
+		uint8_t map_entry = self->bitmap->saddr[i];
 
 		if (map_entry & HEAP_BLOCK_FLAG_USED) {
 			used_blocks++;
