@@ -2,6 +2,19 @@
  * @file heap.c
  * @author Kevin Oehme
  * @copyright MIT
+ * @brief Kernel heap bitmap memory allocator.
+ * @date 2024-11-11
+ *
+ * This file implements a basic heap memory allocator for the kernel.
+ * The heap is divided into 4 KiB blocks, aligned with the paging system’s standard page size.
+ * This ensures that each allocation fits perfectly within a page, reducing fragmentation and simplifying memory management.
+ *
+ * Using 4 KiB blocks makes memory allocation efficient by utilizing the entire space of each page.
+ * This alignment minimizes wasted space and allows the Memory Management Unit (MMU) to quickly translate virtual addresses to physical addresses,
+ * improving access speed and reducing page faults.
+ *
+ * The allocator includes initialization, allocation, and deallocation, with a bitmap tracking free and used blocks.
+ * This approach balances simplicity and performance, making it ideal for kernel-level memory management.
  */
 
 #include <stdbool.h>
@@ -9,6 +22,21 @@
 #include "heap.h"
 #include "kernel.h"
 #include "string.h"
+
+/* PUBLIC API */
+void kheap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
+void* kmalloc(const size_t size);
+void* kcalloc(const size_t size);
+void kfree(void* ptr);
+double kheap_info(Heap* self);
+
+/* INTERNAL API */
+static size_t heap_align_bytes_to_block_size(Heap* self, const size_t n_bytes);
+static void heap_mark_as_used(Heap* self, const size_t start_block, const size_t end_block, const size_t blocks_needed);
+static int32_t heap_mark_as_free(Heap* self, const size_t start_block);
+static size_t heap_search(Heap* self, const size_t blocks_needed);
+static void* heap_malloc(Heap* self, const size_t n_bytes);
+static void heap_free(Heap* self, void* ptr);
 
 HeapByteMap heap_bytemap = {
     .saddr = 0x0,
@@ -21,8 +49,29 @@ Heap heap = {
     .block_size = 0,
 };
 
+void* kmalloc(const size_t size)
+{
+	void* ptr = 0x0;
+	ptr = heap_malloc(&heap, size);
+	return ptr;
+};
+
+void* kcalloc(const size_t size)
+{
+	void* ptr = 0x0;
+	ptr = heap_malloc(&heap, size);
+	memset(ptr, 0x0, size);
+	return ptr;
+};
+
+void kfree(void* ptr)
+{
+	heap_free(&heap, ptr);
+	return;
+};
+
 // Initializes a heap
-void heap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size)
+void kheap_init(Heap* self, HeapByteMap* bytemap, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size)
 {
 	// Initialize the heap bytemap
 	bytemap->saddr = bytemap_saddr;
@@ -125,7 +174,7 @@ static size_t heap_search(Heap* self, const size_t blocks_needed)
 	return start_block;
 };
 
-void* heap_malloc(Heap* self, const size_t n_bytes)
+static void* heap_malloc(Heap* self, const size_t n_bytes)
 {
 	// Number of blocks needed for the allocation
 	const size_t n_bytes_aligned = heap_align_bytes_to_block_size(self, n_bytes);
@@ -163,9 +212,9 @@ void heap_free(Heap* self, void* ptr)
 	return;
 };
 
-double heap_get_utilization(Heap* self)
+double kheap_info(Heap* self)
 {
-	size_t total_blocks = self->bytemap->total_blocks;
+	const size_t total_blocks = self->bytemap->total_blocks;
 	size_t used_blocks = 0;
 
 	for (size_t i = 0; i < total_blocks; ++i) {
@@ -175,6 +224,6 @@ double heap_get_utilization(Heap* self)
 			used_blocks++;
 		};
 	};
-	double utilization = ((double)used_blocks / (double)total_blocks) * 100.0;
+	const double utilization = ((double)used_blocks / (double)total_blocks) * 100.0;
 	return utilization;
 };

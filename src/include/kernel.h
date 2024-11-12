@@ -42,9 +42,6 @@ extern char _kernel_start[], _kernel_end[];
 #include "vfs.h"
 #include "vga.h"
 
-void* kmalloc(const size_t size);
-void* kcalloc(const size_t size);
-void kfree(void* ptr);
 void kpanic(const char* str);
 void ksleep(const uint32_t ms);
 void kdelay(const uint64_t delay);

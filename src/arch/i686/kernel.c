@@ -8,39 +8,17 @@
 
 extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
-extern HeapByteMap heap_bytemap;
-extern Heap heap;
 extern Keyboard keyboard;
 extern Mouse mouse;
 extern Timer timer;
 extern CMOS cmos;
 
-void* kmalloc(const size_t size)
-{
-	void* ptr = 0x0;
-	ptr = heap_malloc(&heap, size);
-	return ptr;
-};
-
-void* kcalloc(const size_t size)
-{
-	void* ptr = 0x0;
-	ptr = heap_malloc(&heap, size);
-	memset(ptr, 0x0, size);
-	return ptr;
-};
-
-void kfree(void* ptr)
-{
-	heap_free(&heap, ptr);
-	return;
-};
-
 void kpanic(const char* str)
 {
 	printf(str);
 
-	for (;;) {
+	while (true) {
+		;
 	};
 	return;
 };
@@ -77,9 +55,8 @@ void kspinner(const int32_t frames)
 	return;
 };
 
-static void kmotd()
+static void kmotd(void)
 {
-	kspinner(20);
 	const Date date = cmos_date(&cmos);
 	printf(" _             _         _____ _____ \n");
 	printf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
@@ -87,6 +64,15 @@ static void kmotd()
 	printf("|_|___|__,|_| |_|___|___|_____|_____|\n");
 	printf("\nicariusOS is running on an i686 CPU.\n");
 	printf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
+
+	printf("icariusOS - Summary of Memory Regions:\n\n"
+	       "------------------------------------------------------------------------------------\n"
+	       "Region                          Start Address    End Address      Size\n"
+	       "------------------------------------------------------------------------------------\n"
+	       "Kernel (Code, Data, BSS)        0xC0000000      0xC1000000        16 MiB\n"
+	       "Heap                            0xC1000000      0xC1400000        4 MiB\n"
+	       "Heap Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
+	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n");
 	return;
 };
 
@@ -138,8 +124,6 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 static void kvalidate_size(void)
 {
 	const uint32_t max_kernel_size = 16 * 1024 * 1024; // 16 MiB Bytes
-	// const uint32_t multiboot_size = (uint32_t)_multiboot_end - (uint32_t)_multiboot_start;
-	// const uint32_t boot_size = (uint32_t)_boot_end - (uint32_t)_boot_start;
 	const uint32_t text_size = (uint32_t)_text_end - (uint32_t)_text_start;
 	const uint32_t rodata_size = (uint32_t)_rodata_end - (uint32_t)_rodata_start;
 	const uint32_t data_size = (uint32_t)_data_end - (uint32_t)_data_start;
@@ -147,8 +131,6 @@ static void kvalidate_size(void)
 	const uint32_t total_size = text_size + rodata_size + data_size + bss_size;
 	const float used_percentage = ((float)total_size / max_kernel_size) * 100.0;
 
-	// printf("Multiboot: %d Bytes\n", multiboot_size);
-	// printf("Boot: %d Bytes\n", boot_size);
 	printf("Text: %d Bytes\n", text_size);
 	printf("Rodata: %d Bytes\n", rodata_size);
 	printf("Data: %d Bytes\n", data_size);
@@ -180,6 +162,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kvalidate_size();
 
 	printf("Hello World from Higher Half :-)\n");
+	kmotd();
 
 	while (true) {
 		;
