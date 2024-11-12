@@ -6,8 +6,6 @@
 
 #include "kernel.h"
 
-#define p2v(addr) ((void*)((addr) + 0xC0000000))
-
 extern VGADisplay vga_display;
 extern VBEDisplay vbe_display;
 extern HeapByteMap heap_bytemap;
@@ -137,19 +135,49 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 	return;
 };
 
-extern uint32_t _kernel_start;
-extern uint32_t _kernel_end;
+static void kvalidate_size(void)
+{
+	const uint32_t max_kernel_size = 16 * 1024 * 1024; // 16 MiB Bytes
+	// const uint32_t multiboot_size = (uint32_t)_multiboot_end - (uint32_t)_multiboot_start;
+	// const uint32_t boot_size = (uint32_t)_boot_end - (uint32_t)_boot_start;
+	const uint32_t text_size = (uint32_t)_text_end - (uint32_t)_text_start;
+	const uint32_t rodata_size = (uint32_t)_rodata_end - (uint32_t)_rodata_start;
+	const uint32_t data_size = (uint32_t)_data_end - (uint32_t)_data_start;
+	const uint32_t bss_size = (uint32_t)_bss_end - (uint32_t)_bss_start;
+	const uint32_t total_size = text_size + rodata_size + data_size + bss_size;
+	const float used_percentage = ((float)total_size / max_kernel_size) * 100.0;
+
+	// printf("Multiboot: %d Bytes\n", multiboot_size);
+	// printf("Boot: %d Bytes\n", boot_size);
+	printf("Text: %d Bytes\n", text_size);
+	printf("Rodata: %d Bytes\n", rodata_size);
+	printf("Data: %d Bytes\n", data_size);
+	printf("BSS: %d Bytes\n", bss_size);
+
+	if (used_percentage >= 100.0) {
+		kpanic("[CRITICAL] Kernel size exceeds 16 MiB!");
+	} else if (used_percentage >= 90.0) {
+		printf("[WARNING] Kernel is nearing critical size: %f%% used.\n", used_percentage);
+	} else if (used_percentage >= 75.0) {
+		printf("[CAUTION] Kernel is heavily: %f%% used. Consider optimizing.\n", used_percentage);
+	} else if (used_percentage >= 50.0) {
+		printf("[NOTICE] Kernel is halfway full: %f%% used. Keep an eye on usage.\n", used_percentage);
+	} else if (used_percentage >= 25.0) {
+		printf("[INFO] Kernel is using %f%% of available space. Plenty of room left.\n", used_percentage);
+	} else {
+		printf("[OK] Kernel is running efficiently: %f%% used.\n", used_percentage);
+	};
+	return;
+};
 
 void kmain(const uint32_t magic, const uint32_t addr)
 {
-	const void* kernel_start = _kernel_start;
-	const void* kernel_end = p2v(_kernel_end);
-
 	gdt_init();
 	pic_init();
 	idt_init();
 
 	kread_multiboot2(addr, &vbe_display);
+	kvalidate_size();
 
 	printf("Hello World from Higher Half :-)\n");
 

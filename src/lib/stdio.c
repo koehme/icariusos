@@ -10,41 +10,45 @@ int printf(const char* fmt, ...)
 		if (*fmt == '%') {
 			fmt++;
 
-			switch (*fmt) {
-			case 'c': {
-				const char ch = va_arg(args, int32_t);
-				vbe_draw_ch(&vbe_display, ch, VBE_COLOR_GREEN);
-				break;
-			};
-			case 's': {
-				const char* str = va_arg(args, const char*);
-				vbe_draw_string(&vbe_display, str, VBE_COLOR_GREEN);
-				break;
-			};
-			case 'd': {
-				char buffer[1024] = {};
-				const int32_t num = va_arg(args, int32_t);
-				itoa(num, buffer, 10);
-				vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
-				break;
-			};
-			case 'x': {
-				char buffer[1024] = {};
-				const uint32_t value = va_arg(args, uint32_t);
-				utoa(value, buffer, 16);
-				vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
-				break;
-			};
-			case 'f': {
-				char buffer[1024] = {};
-				double num = va_arg(args, double);
-				dtoa(num, buffer, 6); // Adjust precision as needed
-				vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
-				break;
-			};
-			default: {
-				break;
-			};
+			if (*fmt == '%') {
+				vbe_draw_ch(&vbe_display, '%', VBE_COLOR_GREEN);
+			} else {
+				switch (*fmt) {
+				case 'c': {
+					const char ch = va_arg(args, int32_t);
+					vbe_draw_ch(&vbe_display, ch, VBE_COLOR_GREEN);
+					break;
+				};
+				case 's': {
+					const char* str = va_arg(args, const char*);
+					vbe_draw_string(&vbe_display, str, VBE_COLOR_GREEN);
+					break;
+				};
+				case 'd': {
+					char buffer[1024] = {};
+					const int32_t num = va_arg(args, int32_t);
+					itoa(num, buffer, 10);
+					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
+					break;
+				};
+				case 'x': {
+					char buffer[1024] = {};
+					const uint32_t value = va_arg(args, uint32_t);
+					utoa(value, buffer, 16);
+					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
+					break;
+				};
+				case 'f': {
+					char buffer[1024] = {};
+					double num = va_arg(args, double);
+					dtoa(num, buffer, 6);
+					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
+					break;
+				};
+				default: {
+					break;
+				};
+				};
 			};
 		} else {
 			vbe_draw_ch(&vbe_display, *fmt, VBE_COLOR_GREEN);
