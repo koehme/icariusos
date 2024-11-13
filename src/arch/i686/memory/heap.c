@@ -17,11 +17,20 @@
  * This approach balances simplicity and performance, making it ideal for kernel-level memory management.
  */
 
-#include <stdbool.h>
-
 #include "heap.h"
 #include "kernel.h"
 #include "string.h"
+
+HeapBitMap kheap_bitmap = {
+    .saddr = 0x0,
+    .total_blocks = 0,
+};
+
+Heap kheap = {
+    .bitmap = 0x0,
+    .saddr = 0x0,
+    .block_size = 0,
+};
 
 /* PUBLIC API */
 void kheap_init(Heap* self, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
@@ -37,18 +46,6 @@ static int32_t _demark(Heap* self, const size_t start_block);
 static size_t _search(Heap* self, const size_t blocks_needed);
 static void* _malloc(Heap* self, const size_t n_bytes);
 static void _free(Heap* self, void* ptr);
-
-
-HeapBitMap kheap_bitmap = {
-    .saddr = 0x0,
-    .total_blocks = 0,
-};
-
-Heap kheap = {
-    .bitmap = 0x0,
-    .saddr = 0x0,
-    .block_size = 0,
-};
 
 void* kmalloc(const size_t size)
 {

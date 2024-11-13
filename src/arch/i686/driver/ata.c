@@ -15,7 +15,7 @@ ATADev ata_dev = {
     .dev = {"A"},
     .sector_size = 0x0,
     .capacity = 0x0,
-    .buffer = {},
+    .buffer = {0},
     .fs = 0x0,
     .features = 0x0,
 };

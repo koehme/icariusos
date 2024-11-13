@@ -164,13 +164,22 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	keyboard_init(&keyboard);
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
+	pci_devices_enumerate();
 
-	kspinner(64);
+	// kspinner(64);
 	kmotd();
 
+	vfs_init();
 	ATADev* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_search_fs(ata_dev);
+
+	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
+	char buffer[1024] = {};
+	vfs_fseek(fd, 0x2300, SEEK_SET);
+	vfs_fread(buffer, 10, 1, fd);
+	vfs_fread(buffer, 10, 1, fd);
+	printf("%s\n", buffer);
 
 	while (true) {
 		;

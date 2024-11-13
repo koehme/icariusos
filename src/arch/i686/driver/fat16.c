@@ -2,21 +2,67 @@
  * @file fat16.c
  * @author Kevin Oehme
  * @copyright MIT
+ * @brief FAT16 filesystem implementation.
+ * @date 2024-11-13
+ *
+ * This file implements the FAT16 filesystem, providing basic functionality to
+ * read, write, and manage files and directories within a FAT16 partition.
+ *
+ * FAT16, a widely used filesystem standard, divides the disk into clusters,
+ * maintaining a File Allocation Table (FAT) to track the usage and linkage of clusters.
+ * It is well-suited for small to medium-sized storage devices, making it an ideal
+ * choice for embedded and legacy systems.
+ *
+ * This is my first attempt at implementing a filesystem, and I am still in the process of learning.
+ * Throughout this project, I have gained valuable insights into how filesystems work, from
+ * low-level disk operations to high-level abstractions. While this implementation covers the basics,
+ * I plan to improve it as I continue to learn more about filesystem design and kernel development.
+ *
+ * Complete VFS ↔ FAT16 ↔ ATA Flow:
+ *
+ *    [kmain]                     [VFS]                     [FAT16]                 [ATA]
+ *      |                           |                          |                      |
+ *      | vfs_init()                |                          |                      |
+ *      +-------------------------->| Initialize Filesystems   |                      |
+ *                                  |------------------------->| fat16_init()         |
+ *                                  |                          |                      |
+ *                                  | Insert FAT16 as Default  |                      |
+ *                                  |<-------------------------|                      |
+ *      |                           |                          |                      |
+ *      | ata_get(), ata_init()     |                          |                      |
+ *      | ata_search_fs()           |                          |                      |
+ *      +-------------------------->| vfs_resolve()            |                      |
+ *                                  |------------------------->| fat16_resolve()      |
+ *                                  |<-------------------------|                      |
+ *                                  |                          |                      |
+ *      | vfs_fopen()               |                          |                      |
+ *      +-------------------------->| Parse Path               |                      |
+ *                                  |------------------------->| fat16_open()         |
+ *                                  |<-------------------------|                      |
+ *                                  | Return File Descriptor   |                      |
+ *      |<--------------------------|                          |                      |
+ *      |                           |                          |                      |
+ *      | vfs_fseek()               |                          |                      |
+ *      +-------------------------->| Seek File                |                      |
+ *                                  |------------------------->| fat16_seek()         |
+ *                                  |<-------------------------|                      |
+ *      |                           |                          |                      |
+ *      | vfs_fread()               |                          |                      |
+ *      +-------------------------->| Read Data                |                      |
+ *                                  |------------------------->| fat16_read()         |
+ *                                  |                          |--------------------->|
+ *                                  |                          |     ata_read()       |
+ *                                  |                          |<---------------------|
+ *                                  |<-------------------------|                      |
+ *      |<--------------------------| Return Data              |                      |
+ *      |                           |                          |                      |
+ *      | printf(buffer)            |                          |                      |
+ *      +-------------------------->| Output Data              |                      |
  */
 
 #include "fat16.h"
 #include "stream.h"
 #include "string.h"
-
-FileSystem fat16 = {
-    .resolve_cb = 0x0,
-    .open_cb = 0x0,
-    .read_cb = 0x0,
-    .close_cb = 0x0,
-    .stat_cb = 0x0,
-    .seek_cb = 0x0,
-    .name = "FAT16",
-};
 
 typedef enum FAT16Values {
 	FAT16_VALUE_FREE = 0x0000,
@@ -166,7 +212,54 @@ FAT16InternalHeader fat16_header = {
 	},
 };
 
-static uint32_t convert_data_cluster_to_sector(const uint32_t cluster)
+FileSystem fat16 = {
+    .resolve_cb = 0x0,
+    .open_cb = 0x0,
+    .read_cb = 0x0,
+    .close_cb = 0x0,
+    .stat_cb = 0x0,
+    .seek_cb = 0x0,
+    .name = "FAT16",
+};
+
+/* PUBLIC API */
+FileSystem* fat16_init(void);
+int32_t fat16_resolve(ATADev* dev);
+void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode);
+size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
+int32_t fat16_close(void* internal);
+int32_t fat16_stat(ATADev* dev, void* internal, VStat* vstat);
+int32_t fat16_seek(void* internal, uint32_t offset, VNODE_SEEK_MODE mode);
+
+/* INTERNAL API */
+static uint32_t _convert_data_cluster_to_sector(const uint32_t cluster);
+static uint16_t _read_next_cluster(Stream* fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster);
+static FAT16TimeInfo _convert_time(const uint16_t time);
+static FAT16DateInfo _convert_date(const uint16_t date);
+static uint16_t _fat_date_to_uint16(const FAT16DateInfo dateInfo);
+static bool _validate_fat16_header(const FAT16InternalHeader* header);
+static void _dump_fat16_ebpb_header(const ExtendedBIOSParameterBlock* ebpb, const char* msg, const int32_t delay);
+static void _dump_fat16_base_header(const BIOSParameterBlock* bpb, const char* msg, const int32_t delay);
+static uint32_t _calc_root_dir_area_offset(const BIOSParameterBlock* bpb);
+static uint32_t _calc_root_dir_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset);
+static uint32_t _calc_fat_area_offset(const BIOSParameterBlock* bpb);
+static uint32_t _calc_fat_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset);
+static void _print_dir_entry(size_t i, FAT16DirEntry* entry, const int32_t delay);
+static void _print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay);
+static void _dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream);
+static void _convert_userland_filename_to_native(uint8_t* native, const uint8_t* userland);
+static uint32_t _combine_clusters(const uint16_t high_cluster, const uint16_t low_cluster);
+static FAT16DirEntry* _get_entry_in_subdir(ATADev* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
+					   FAT16DirEntry* fat16_dir_entry);
+static FAT16DirEntry* _get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier);
+static FAT16Entry* _get_entry(ATADev* dev, PathNode* path);
+void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode);
+static uint32_t _get_start_cluster_from_descriptor(FAT16FileDescriptor* fat16_descriptor);
+static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks);
+static uint16_t _count_allocated_fat_blocks_in_chain(Stream* fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster,
+						     const uint32_t partition_offset);
+
+static uint32_t _convert_data_cluster_to_sector(const uint32_t cluster)
 {
 	const uint32_t root_dir_sectors =
 	    (fat16_header.bpb.root_ent_cnt * sizeof(FAT16DirEntry) + fat16_header.bpb.byts_per_sec - 1) / fat16_header.bpb.byts_per_sec;
@@ -174,7 +267,7 @@ static uint32_t convert_data_cluster_to_sector(const uint32_t cluster)
 	return data_start_sector + ((cluster - 2) * fat16_header.bpb.sec_per_clus);
 };
 
-static uint16_t read_next_cluster(Stream* fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster)
+static uint16_t _read_next_cluster(Stream* fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster)
 {
 	uint8_t fat_entry[2] = {};
 	const uint32_t fat_entry_offset = partition_offset + fat16_header.bpb.rsvd_sec * fat16_header.bpb.byts_per_sec + curr_cluster * 2;
@@ -183,7 +276,7 @@ static uint16_t read_next_cluster(Stream* fat_stream, const uint32_t partition_o
 	return ((uint16_t)fat_entry[0]) | ((uint16_t)fat_entry[1] << 8);
 };
 
-static FAT16TimeInfo convert_time(const uint16_t time)
+static FAT16TimeInfo _convert_time(const uint16_t time)
 {
 	FAT16TimeInfo time_info = {};
 	time_info.second = (time & 0x1F) * 2;
@@ -192,7 +285,7 @@ static FAT16TimeInfo convert_time(const uint16_t time)
 	return time_info;
 };
 
-static FAT16DateInfo convert_date(const uint16_t date)
+static FAT16DateInfo _convert_date(const uint16_t date)
 {
 	FAT16DateInfo date_info = {};
 	date_info.day = date & 0x1F;
@@ -202,7 +295,7 @@ static FAT16DateInfo convert_date(const uint16_t date)
 	return date_info;
 };
 
-uint16_t fat16_date_to_uint16(FAT16DateInfo dateInfo)
+static uint16_t _fat_date_to_uint16(const FAT16DateInfo dateInfo)
 {
 	uint16_t fat16_date = 0;
 	fat16_date |= ((dateInfo.year - 1980) & 0x7F) << 9;
@@ -222,7 +315,7 @@ FileSystem* fat16_init(void)
 	return &fat16;
 };
 
-static bool fat16_validate_header(const FAT16InternalHeader* header)
+static bool _validate_fat16_header(const FAT16InternalHeader* header)
 {
 	const bool has_signature = (header->bpb.jmp[0] == 0xEB && header->bpb.jmp[2] == 0x90);
 	const bool has_header =
@@ -244,7 +337,7 @@ static bool fat16_validate_header(const FAT16InternalHeader* header)
 	return true;
 };
 
-static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock* ebpb, const char* msg, const int32_t delay)
+static void _dump_fat16_ebpb_header(const ExtendedBIOSParameterBlock* ebpb, const char* msg, const int32_t delay)
 {
 	uint8_t vol_lab[12] = {};
 	uint8_t fil_sys_type[9] = {};
@@ -263,7 +356,7 @@ static void fat16_dump_ebpb_header(const ExtendedBIOSParameterBlock* ebpb, const
 	return;
 };
 
-static void fat16_dump_base_header(const BIOSParameterBlock* bpb, const char* msg, const int32_t delay)
+static void _dump_fat16_base_header(const BIOSParameterBlock* bpb, const char* msg, const int32_t delay)
 {
 	printf(msg);
 	printf("----------------------------------\n");
@@ -286,41 +379,41 @@ static void fat16_dump_base_header(const BIOSParameterBlock* bpb, const char* ms
 	return;
 };
 
-static uint32_t calc_root_dir_area_offset(const BIOSParameterBlock* bpb)
+static uint32_t _calc_root_dir_area_offset(const BIOSParameterBlock* bpb)
 {
 	const uint32_t root_directory_offset = bpb->byts_per_sec * (bpb->rsvd_sec + (bpb->num_fats * bpb->fatsz16));
 	return root_directory_offset;
 };
 
-static uint32_t calc_root_dir_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset)
+static uint32_t _calc_root_dir_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset)
 
 {
-	const uint32_t root_dir_area_absolute = partition_offset + calc_root_dir_area_offset(bpb);
+	const uint32_t root_dir_area_absolute = partition_offset + _calc_root_dir_area_offset(bpb);
 	return root_dir_area_absolute;
 };
 
-static uint32_t calc_fat_area_offset(const BIOSParameterBlock* bpb)
+static uint32_t _calc_fat_area_offset(const BIOSParameterBlock* bpb)
 {
 	const uint32_t fat_area_offset = bpb->rsvd_sec * bpb->byts_per_sec;
 	return fat_area_offset;
 };
 
-static uint32_t calc_fat_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset)
+static uint32_t _calc_fat_area_absolute(const BIOSParameterBlock* bpb, const uint32_t partition_offset)
 {
-	const uint32_t fat_area_absolute = partition_offset + calc_fat_area_offset(bpb);
+	const uint32_t fat_area_absolute = partition_offset + _calc_fat_area_offset(bpb);
 	return fat_area_absolute;
 };
 
-static void print_dir_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
+static void _print_dir_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
 {
 	if (entry->file_name[0] == 0x00) {
 		return;
 	};
-	const FAT16TimeInfo create_time = convert_time(entry->create_time);
-	const FAT16DateInfo create_date = convert_date(entry->create_date);
-	const FAT16DateInfo last_access_date = convert_date(entry->last_access_date);
-	const FAT16TimeInfo mod_time = convert_time(entry->modification_time);
-	const FAT16DateInfo mod_date = convert_date(entry->modification_date);
+	const FAT16TimeInfo create_time = _convert_time(entry->create_time);
+	const FAT16DateInfo create_date = _convert_date(entry->create_date);
+	const FAT16DateInfo last_access_date = _convert_date(entry->last_access_date);
+	const FAT16TimeInfo mod_time = _convert_time(entry->modification_time);
+	const FAT16DateInfo mod_date = _convert_date(entry->modification_date);
 
 	uint8_t buffer[12] = {};
 	memcpy(buffer, entry->file_name, 11);
@@ -343,7 +436,7 @@ static void print_dir_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
 	return;
 };
 
-static void print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
+static void _print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
 {
 	if (entry->file_name[0] == 0x00) {
 		return;
@@ -357,7 +450,7 @@ static void print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay)
 	return;
 };
 
-static void dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream)
+static void _dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream)
 {
 	const uint32_t root_dir_size = bpb->root_ent_cnt * sizeof(FAT16DirEntry);
 	const uint32_t root_dir_entries = root_dir_size / sizeof(FAT16DirEntry);
@@ -367,10 +460,10 @@ static void dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream)
 		stream_read(stream, (uint8_t*)&entry, sizeof(FAT16DirEntry));
 
 		if (entry.attributes == LFN) {
-			print_lfn_entry(i, &entry, FAT16_DEBUG_DELAY);
+			_print_lfn_entry(i, &entry, FAT16_DEBUG_DELAY);
 			continue;
 		};
-		print_dir_entry(i, &entry, FAT16_DEBUG_DELAY);
+		_print_dir_entry(i, &entry, FAT16_DEBUG_DELAY);
 	};
 	return;
 };
@@ -388,14 +481,14 @@ int32_t fat16_resolve(ATADev* dev)
 		return -EIO;
 	};
 
-	if (!fat16_validate_header(&fat16_header)) {
+	if (!_validate_fat16_header(&fat16_header)) {
 		printf("FAT16 Error: Invalid FAT16 Header\n");
 		return -EIO;
 	};
-	fat16_dump_base_header(&fat16_header.bpb, "", 0);
-	fat16_dump_ebpb_header(&fat16_header.ebpb, "", 0);
-	const uint32_t root_dir_area_offset = calc_root_dir_area_offset(&fat16_header.bpb);
-	const uint32_t root_dir_area_absolute = calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
+	_dump_fat16_base_header(&fat16_header.bpb, "", 0);
+	_dump_fat16_ebpb_header(&fat16_header.ebpb, "", 0);
+	const uint32_t root_dir_area_offset = _calc_root_dir_area_offset(&fat16_header.bpb);
+	const uint32_t root_dir_area_absolute = _calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
 	const uint32_t root_dir_area_size = fat16_header.bpb.root_ent_cnt * sizeof(FAT16DirEntry);
 	const uint32_t root_dir_area_entries = root_dir_area_size / sizeof(FAT16DirEntry);
 
@@ -407,10 +500,10 @@ int32_t fat16_resolve(ATADev* dev)
 	Stream root_dir = {};
 	stream_init(&root_dir, dev);
 	stream_seek(&root_dir, root_dir_area_absolute);
-	dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+	_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
-	const uint32_t fat_area_offset = calc_fat_area_offset(&fat16_header.bpb);
-	const uint32_t fat_area_absolute = calc_fat_area_absolute(&fat16_header.bpb, partition_offset);
+	const uint32_t fat_area_offset = _calc_fat_area_offset(&fat16_header.bpb);
+	const uint32_t fat_area_absolute = _calc_fat_area_absolute(&fat16_header.bpb, partition_offset);
 	const uint32_t fat_area_size = fat16_header.bpb.fatsz16 * fat16_header.bpb.byts_per_sec;
 	const uint32_t fat_area_entries = fat_area_size / sizeof(uint16_t);
 
@@ -441,7 +534,7 @@ int32_t fat16_resolve(ATADev* dev)
 	return 0;
 };
 
-static void convert_userland_filename_to_native(uint8_t* native, const uint8_t* userland)
+static void _convert_userland_filename_to_native(uint8_t* native, const uint8_t* userland)
 {
 	uint8_t i, j = 0;
 
@@ -461,14 +554,14 @@ static void convert_userland_filename_to_native(uint8_t* native, const uint8_t* 
 	return;
 };
 
-static uint32_t combine_clusters(const uint16_t high_cluster, const uint16_t low_cluster)
+static uint32_t _combine_clusters(const uint16_t high_cluster, const uint16_t low_cluster)
 {
 	const uint32_t cluster = (high_cluster << 16) | low_cluster;
 	return cluster;
 };
 
-static FAT16DirEntry* get_entry_in_subdir(ATADev* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
-					  FAT16DirEntry* fat16_dir_entry)
+static FAT16DirEntry* _get_entry_in_subdir(ATADev* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
+					   FAT16DirEntry* fat16_dir_entry)
 {
 	const uint32_t partition_offset = 0x100000;
 
@@ -486,7 +579,7 @@ static FAT16DirEntry* get_entry_in_subdir(ATADev* dev, const uint16_t start_clus
 	uint32_t total_entries = 0;
 
 	while (curr_cluster <= FAT16_VALUE_END_OF_CHAIN) {
-		const uint32_t sector = convert_data_cluster_to_sector(curr_cluster);
+		const uint32_t sector = _convert_data_cluster_to_sector(curr_cluster);
 		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec);
 		stream_seek(&data_stream, data_pos);
 		stream_read(&data_stream, buffer, max_cluster_size_bytes);
@@ -498,8 +591,8 @@ static FAT16DirEntry* get_entry_in_subdir(ATADev* dev, const uint16_t start_clus
 			memcpy(tmp, ((FAT16DirEntry*)curr_dir_entry)->file_name, 11);
 
 			if (memcmp(tmp, native_file_name, 11) == 0) {
-				const uint32_t start_sector = convert_data_cluster_to_sector(start_cluster);
-				const uint32_t end_sector = convert_data_cluster_to_sector(curr_cluster);
+				const uint32_t start_sector = _convert_data_cluster_to_sector(start_cluster);
+				const uint32_t end_sector = _convert_data_cluster_to_sector(curr_cluster);
 				fat16_folder->start_sector = start_sector;
 				fat16_folder->end_sector = end_sector;
 				fat16_folder->total = total_entries;
@@ -510,16 +603,16 @@ static FAT16DirEntry* get_entry_in_subdir(ATADev* dev, const uint16_t start_clus
 			curr_dir_entry += sizeof(FAT16DirEntry);
 			total_entries++;
 		};
-		curr_cluster = read_next_cluster(&fat_stream, partition_offset, curr_cluster);
+		curr_cluster = _read_next_cluster(&fat_stream, partition_offset, curr_cluster);
 	};
 	fat16_folder->total = total_entries;
 	return 0x0;
 };
 
-static FAT16DirEntry* get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier)
+static FAT16DirEntry* _get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier)
 {
 	const uint32_t partition_offset = 0x100000;
-	const uint32_t root_dir_area_absolute = calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
+	const uint32_t root_dir_area_absolute = _calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
 
 	Stream stream = {};
 	stream_init(&stream, dev);
@@ -543,7 +636,7 @@ static FAT16DirEntry* get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_en
 	for (size_t i = 0; i < fat16_header.bpb.root_ent_cnt; i++, curr_root_entry++) {
 		if (curr_root_entry->file_name[0] != 0x0) {
 			uint8_t native_dir_name[11] = {};
-			convert_userland_filename_to_native(native_dir_name, (uint8_t*)path_identifier);
+			_convert_userland_filename_to_native(native_dir_name, (uint8_t*)path_identifier);
 
 			if (memcmp(curr_root_entry->file_name, native_dir_name, 11) == 0) {
 				memcpy(root_dir_entry, curr_root_entry, sizeof(FAT16DirEntry));
@@ -554,10 +647,10 @@ static FAT16DirEntry* get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_en
 	return root_dir_entry;
 };
 
-static FAT16Entry* get_entry(ATADev* dev, PathNode* path)
+static FAT16Entry* _get_entry(ATADev* dev, PathNode* path)
 {
 	FAT16DirEntry root_dir_entry = {};
-	get_root_dir_entry(dev, &root_dir_entry, path);
+	_get_root_dir_entry(dev, &root_dir_entry, path);
 
 	if (root_dir_entry.file_name[0] == 0x0) {
 		printf("FAT16 Error: Root directory entry not found\n");
@@ -572,14 +665,14 @@ static FAT16Entry* get_entry(ATADev* dev, PathNode* path)
 	if (path && path->next) {
 		path = path->next;
 	};
-	uint32_t curr_cluster = combine_clusters(root_dir_entry.high_cluster, root_dir_entry.low_cluster);
+	uint32_t curr_cluster = _combine_clusters(root_dir_entry.high_cluster, root_dir_entry.low_cluster);
 
 	while (path) {
 		uint8_t native[11] = {};
-		convert_userland_filename_to_native(native, (uint8_t*)path);
-		get_entry_in_subdir(dev, curr_cluster, native, fat16_folder, fat16_dir_entry);
+		_convert_userland_filename_to_native(native, (uint8_t*)path);
+		_get_entry_in_subdir(dev, curr_cluster, native, fat16_folder, fat16_dir_entry);
 		path = path->next;
-		curr_cluster = combine_clusters(fat16_folder->entry->high_cluster, fat16_folder->entry->low_cluster);
+		curr_cluster = _combine_clusters(fat16_folder->entry->high_cluster, fat16_folder->entry->low_cluster);
 	};
 	fat16_entry->type = FAT16_ENTRY_TYPE_DIRECTORY;
 	return fat16_entry;
@@ -603,7 +696,7 @@ void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode)
 		kfree(fd);
 		return 0x0;
 	};
-	FAT16Entry* entry = get_entry(dev, path);
+	FAT16Entry* entry = _get_entry(dev, path);
 
 	if (!entry) {
 		kfree(fd);
@@ -615,17 +708,17 @@ void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode)
 	return fd;
 };
 
-static uint32_t get_start_cluster_from_descriptor(FAT16FileDescriptor* fat16_descriptor)
+static uint32_t _get_start_cluster_from_descriptor(FAT16FileDescriptor* fat16_descriptor)
 {
 	uint32_t start_cluster = 0;
 
 	switch (fat16_descriptor->entry->type) {
 	case FAT16_ENTRY_TYPE_DIRECTORY: {
-		start_cluster = combine_clusters(fat16_descriptor->entry->dir->entry->high_cluster, fat16_descriptor->entry->dir->entry->low_cluster);
+		start_cluster = _combine_clusters(fat16_descriptor->entry->dir->entry->high_cluster, fat16_descriptor->entry->dir->entry->low_cluster);
 		break;
 	};
 	case FAT16_ENTRY_TYPE_FILE: {
-		start_cluster = combine_clusters(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
+		start_cluster = _combine_clusters(fat16_descriptor->entry->file->high_cluster, fat16_descriptor->entry->file->low_cluster);
 		break;
 	};
 	default: {
@@ -649,7 +742,7 @@ size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, const size_t n
 	// Maximum cluster size in bytes of a single FAT16 cluster
 	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
 	// The given file descriptor holds a pointer to the root dir entry, which holds the fat16 start cluster number to read
-	const uint32_t start_cluster = get_start_cluster_from_descriptor(fat16_descriptor);
+	const uint32_t start_cluster = _get_start_cluster_from_descriptor(fat16_descriptor);
 	// Determine the starting cluster for reading
 	uint16_t curr_cluster = (fat16_descriptor->pos / max_cluster_size_bytes) + start_cluster;
 	const uint16_t first_cluster_offset = fat16_descriptor->pos % max_cluster_size_bytes;
@@ -662,7 +755,7 @@ size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, const size_t n
 
 	while (remaining_bytes) {
 		// Convert the logical fat16 cluster number to a physical sector
-		const uint32_t sector = convert_data_cluster_to_sector(curr_cluster);
+		const uint32_t sector = _convert_data_cluster_to_sector(curr_cluster);
 		// Use the previously calculated sector and add the partition offset and the first cluster to get the data position on die ata device
 		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec) + first_cluster_offset;
 		// Seek to the data position and read data into the buffer
@@ -679,7 +772,7 @@ size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, const size_t n
 		fat16_descriptor->pos += read_size;
 		remaining_bytes -= read_size;
 		// Determine the next cluster from the FAT table
-		const uint16_t next_cluster = read_next_cluster(&fat_stream, partition_offset, curr_cluster);
+		const uint16_t next_cluster = _read_next_cluster(&fat_stream, partition_offset, curr_cluster);
 		// Check if end of file is reached, if yes, exit loop
 		if (next_cluster >= FAT16_VALUE_END_OF_CHAIN) {
 			break;
@@ -709,7 +802,7 @@ int32_t fat16_close(void* internal)
 	return 0;
 };
 
-static void fat16_set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks)
+static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks)
 {
 	switch (fat16_descriptor->entry->type) {
 	case FAT16_ENTRY_TYPE_DIRECTORY: {
@@ -722,7 +815,7 @@ static void fat16_set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, V
 		vstat->st_mtime = fat16_descriptor->entry->dir->entry->modification_date;
 		vstat->st_ctime = fat16_descriptor->entry->dir->entry->creation_time_ms;
 		break;
-	}
+	};
 	case FAT16_ENTRY_TYPE_FILE: {
 		memcpy(vstat->st_dev, dev->dev, sizeof(char) * 2);
 		vstat->st_mode = V_READ;
@@ -740,18 +833,18 @@ static void fat16_set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, V
 	return;
 };
 
-static uint16_t fat16_count_allocated_fat_blocks_in_chain(Stream* fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster,
-							  const uint32_t partition_offset)
+static uint16_t _count_allocated_fat_blocks_in_chain(Stream* fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster,
+						     const uint32_t partition_offset)
 {
 	uint16_t used_blocks = 1;
 
 	uint16_t curr_cluster = (0 / max_cluster_size_bytes) + start_cluster;
-	uint16_t next_cluster = read_next_cluster(fat_stream, partition_offset, curr_cluster);
+	uint16_t next_cluster = _read_next_cluster(fat_stream, partition_offset, curr_cluster);
 
 	while (next_cluster < FAT16_VALUE_END_OF_CHAIN) {
 		used_blocks++;
 		curr_cluster = next_cluster;
-		next_cluster = read_next_cluster(fat_stream, partition_offset, curr_cluster);
+		next_cluster = _read_next_cluster(fat_stream, partition_offset, curr_cluster);
 	};
 	return used_blocks;
 };
@@ -771,10 +864,10 @@ int32_t fat16_stat(ATADev* dev, void* internal, VStat* vstat)
 	// Define the offset of the partition
 	const uint32_t partition_offset = 0x100000;
 	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
-	const uint32_t start_cluster = get_start_cluster_from_descriptor(fat16_descriptor);
+	const uint32_t start_cluster = _get_start_cluster_from_descriptor(fat16_descriptor);
 	// Follow the cluster chain from the start 0 from the starting cluster and keep track of allocated blocks
-	const uint16_t used_blocks = fat16_count_allocated_fat_blocks_in_chain(&fat_stream, max_cluster_size_bytes, start_cluster, partition_offset);
-	fat16_set_stat(fat16_descriptor, dev, vstat, max_cluster_size_bytes, used_blocks);
+	const uint16_t used_blocks = _count_allocated_fat_blocks_in_chain(&fat_stream, max_cluster_size_bytes, start_cluster, partition_offset);
+	_set_stat(fat16_descriptor, dev, vstat, max_cluster_size_bytes, used_blocks);
 	return res;
 };
 
