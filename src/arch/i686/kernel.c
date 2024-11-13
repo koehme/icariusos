@@ -13,8 +13,6 @@ extern Mouse mouse;
 extern Timer timer;
 extern CMOS cmos;
 
-static uint32_t test[1024 * 512 * 4];
-
 void kpanic(const char* str)
 {
 	printf(str);
@@ -44,7 +42,7 @@ void kdelay(const uint64_t delay)
 	return;
 };
 
-void kspinner(const int32_t frames)
+static void kspinner(const int32_t frames)
 {
 	const char* spinner_frames[4] = {"-", "\\", "|", "/"};
 
@@ -74,14 +72,14 @@ static void kmotd(void)
 	       "Kernel (Code, Data, BSS)        0xC0000000      0xC1000000        16 MiB\n"
 	       "Heap                            0xC1000000      0xC1400000        4 MiB\n"
 	       "Heap Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
-	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n");
+	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n\n");
 	return;
 };
 
 static void kcheck_multiboot2_magic(const uint32_t magic)
 {
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-		printf("Invalid Magic Number: 0x%x\n", magic);
+		printf("[INFO] Invalid Magic Number: 0x%x\n", magic);
 		return;
 	};
 	return;
@@ -90,7 +88,7 @@ static void kcheck_multiboot2_magic(const uint32_t magic)
 static void kcheck_multiboot2_alignment(const uint32_t addr)
 {
 	if (addr & 7) {
-		printf("Unaligned Mbi: 0x%x\n", addr);
+		printf("[INFO] Unaligned Mbi: 0x%x\n", addr);
 		return;
 	};
 	return;
@@ -159,7 +157,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kvalidate_size();
 
 	kheap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096);
-	printf("[KHEAP] USAGE: %f%%\n", kheap_info(&kheap));
+	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&kheap));
 
 	asm_do_sti();
 
@@ -169,6 +167,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	kspinner(64);
 	kmotd();
+
+	ATADev* ata_dev = ata_get("A");
+	ata_init(ata_dev);
+	ata_search_fs(ata_dev);
 
 	while (true) {
 		;

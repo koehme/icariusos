@@ -53,12 +53,13 @@ static void send_identify_cmd(const uint8_t target_drive)
 
 static void ata_dump(ATADev* self, const int32_t delay)
 {
+	printf("[INFO] ATA\n");
 	printf("Features: 0x%x\n", self->features);
 	printf("Sector Size: %d\n", self->sector_size);
 	printf("Total Sectors: %d\n", self->total_sectors);
 	printf("Capacity: %d KiB\n", self->capacity / 1024);
 	printf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
-	printf("Capacity: %d GiB\n", (((self->capacity / 1024) / 1024) / 1024));
+	printf("Capacity: %f GiB\n", ((double)self->capacity) / 1024 / 1024 / 1024);
 	kdelay(delay);
 	return;
 };
@@ -153,7 +154,7 @@ void ata_init(ATADev* self)
 	memset(self->buffer, 0x0, sizeof(self->buffer));
 
 	if (!ata_identify(self, ATA_DRIVE_MASTER)) {
-		kpanic("ATA Error. Failed to identify.\n");
+		kpanic("[CRITICAL] Failed to Identify ATA.\n");
 	};
 	return;
 };
