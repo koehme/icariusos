@@ -159,13 +159,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kheap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096);
 	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&kheap));
 
-	asm_do_sti();
-
 	keyboard_init(&keyboard);
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
+	asm_do_sti();
+	
 	pci_devices_enumerate();
-
 	// kspinner(64);
 	kmotd();
 
