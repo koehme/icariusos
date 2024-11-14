@@ -49,7 +49,7 @@ void keyboard_init(Keyboard *self)
     self->caps_lock = false;
     self->alt_gr = false;
     idt_set(0x21, asm_interrupt_21h);
-    return;
+    return; 
 };
 
 static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t breakcode)

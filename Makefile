@@ -31,6 +31,7 @@ SOURCES_C = \
     ./src/arch/i686/pic.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
+    ./src/arch/i686/ds/fifo.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
@@ -65,6 +66,9 @@ $(OBJ_DIR)/%.c.o: ./src/arch/i686/driver/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/arch/i686/fs/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/arch/i686/ds/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/arch/i686/memory/%.c
