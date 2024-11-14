@@ -20,3 +20,13 @@ uint8_t ps2_receive(void)
 	const uint8_t data = inb(PS2_DATA_PORT);
 	return data;
 };
+
+void ps2_process_dev(fifo_t* fifo, void (*handler)(void*, uint8_t), void* device)
+{
+	uint8_t ps2_package;
+
+	while (fifo_dequeue(fifo, &ps2_package)) {
+		handler(device, ps2_package);
+	};
+	return;
+};

@@ -1,124 +1,276 @@
 /**
- * @file keyboard.c
+ * @file kbd.c
  * @author Kevin Oehme
  * @copyright MIT
  */
 
 #include <stdbool.h>
 
+#include "idt.h"
 #include "io.h"
 #include "keyboard.h"
-#include "string.h"
-#include "idt.h"
 #include "ps2.h"
+#include "string.h"
 
 extern void asm_interrupt_21h(void);
 
-Keyboard keyboard = {
+kbd_t kbd = {
     .caps = false,
     .caps_lock = false,
     .alt_gr = false,
 };
 
-typedef enum KeyCode
-{
-    KESC = 0x1,
-    KLEFT_SHIFT = 0x2A,
-    KRIGHT_SHIFT = 0x36,
-    KCAPS_LOCK = 0x3A,
-    KALTGR = 0x60,
-} KeyCode;
-
 const static uint8_t qwertz_lower[] = {
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 223, 180, '\b',
-    9, 'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p', 252, '+', 13, 0,
-    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 246, 228, '^', 0, '<',
-    'y', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '-', 0, 0, 0, ' ', 0};
+    0,	  // 0
+    0,	  // 1
+    '1',  // 2
+    '2',  // 3
+    '3',  // 4
+    '4',  // 5
+    '5',  // 6
+    '6',  // 7
+    '7',  // 8
+    '8',  // 9
+    '9',  // 10
+    '0',  // 11
+    223,  // 12 - 'ß'
+    180,  // 13 - '´'
+    '\b', // 14 - Backspace
+    9,	  // 15 - Tab
+    'q',  // 16
+    'w',  // 17
+    'e',  // 18
+    'r',  // 19
+    't',  // 20
+    'z',  // 21
+    'u',  // 22
+    'i',  // 23
+    'o',  // 24
+    'p',  // 25
+    252,  // 26 - 'ü'
+    '+',  // 27
+    13,	  // 28 - Enter
+    0,	  // 29 - Left Strg
+    'a',  // 30
+    's',  // 31
+    'd',  // 32
+    'f',  // 33
+    'g',  // 34
+    'h',  // 35
+    'j',  // 36
+    'k',  // 37
+    'l',  // 38
+    246,  // 39 - 'ö'
+    228,  // 40 - 'ä'
+    '^',  // 41
+    0,	  // 42 - Left Shift
+    '<',  // 43
+    'y',  // 44
+    'x',  // 45
+    'c',  // 46
+    'v',  // 47
+    'b',  // 48
+    'n',  // 49
+    'm',  // 50
+    ',',  // 51
+    '.',  // 52
+    '-',  // 53
+    0,	  // 54 - Right Shift
+    0,	  // 55 - '*'-Key (Number)
+    0,	  // 56 - Alt
+    ' ',  // 57 - Space
+    0	  // 58 - Caps Lock
+};
 
 const static uint8_t qwertz_upper[] = {
-    0, 0, '!', '"', '3', '$', '%', '&', '/', '(', ')', '=', '?', '`', 8,
-    9, 'Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P', 220, '*', 13, 0,
-    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 214, 196, '^', 0, '>',
-    'Y', 'X', 'C', 'V', 'B', 'N', 'M', ';', ':', '_', 0, 0, 0, ' ', 0};
-
-const static uint8_t qwertz_altgr[] = {0, 0, 0, 0, 0, 0, 0, 0, '{', '['};
-
-void keyboard_init(Keyboard *self)
-{
-    self->caps = false;
-    self->caps_lock = false;
-    self->alt_gr = false;
-    idt_set(0x21, asm_interrupt_21h);
-    return; 
+    0,	  // 0
+    0,	  // 1
+    '!',  // 2 - Shift + '1'
+    '"',  // 3 - Shift + '2'
+    167,  // 4 - Shift + '3'
+    '$',  // 5 - Shift + '4'
+    '%',  // 6 - Shift + '5'
+    '&',  // 7 - Shift + '6'
+    '/',  // 8 - Shift + '7'
+    '(',  // 9 - Shift + '8'
+    ')',  // 10 - Shift + '9'
+    '=',  // 11 - Shift + '0'
+    '?',  // 12 - Shift + 'ß'
+    '`',  // 13 - Shift + '´'
+    '\b', // 14 - Backspace
+    '\t', // 15 - Tab
+    'Q',  // 16
+    'W',  // 17
+    'E',  // 18
+    'R',  // 19
+    'T',  // 20
+    'Z',  // 21
+    'U',  // 22
+    'I',  // 23
+    'O',  // 24
+    'P',  // 25
+    220,  // 26 - 'Ü' (ASCII 220)
+    '*',  // 27 - Shift + '+'
+    '\n', // 28 - Enter
+    0,	  // 29 - Left Strg
+    'A',  // 30
+    'S',  // 31
+    'D',  // 32
+    'F',  // 33
+    'G',  // 34
+    'H',  // 35
+    'J',  // 36
+    'K',  // 37
+    'L',  // 38
+    214,  // 39 - 'Ö' (ASCII 214)
+    196,  // 40 - 'Ä' (ASCII 196)
+    '^',  // 41 - Shift + '^'
+    0,	  // 42 - Left Shift
+    '>',  // 43 - Shift + '<'
+    'Y',  // 44
+    'X',  // 45
+    'C',  // 46
+    'V',  // 47
+    'B',  // 48
+    'N',  // 49
+    'M',  // 50
+    ';',  // 51 - Shift + ','
+    ':',  // 52 - Shift + '.'
+    '_',  // 53 - Shift + '-'
+    0,	  // 54 - Right Shift
+    0,	  // 55 - '*'-Key (Number)
+    0,	  // 56 - Alt
+    ' ',  // 57 - Space
+    0	  // 58 - Caps Lock
 };
 
-static void keyboard_update_keystroke(const uint8_t makecode, const uint8_t breakcode)
-{
-    switch (makecode)
-    {
-    case 1:
-    case 29:
-    case 56:
-    case 59:
-    case 60:
-    case 61:
-    case 62:
-    case 63:
-    case 64:
-    case 65:
-    case 66:
-    case 67:
-    case 68:
-    case 87:
-    case 88:
-        break;
-    case KALTGR:
-    {
-        keyboard.alt_gr = !keyboard.alt_gr;
-        break;
-    };
-    case KLEFT_SHIFT:
-    {
-        keyboard.caps = !keyboard.caps;
-        break;
-    };
-    case KCAPS_LOCK:
-    {
-        if (breakcode == 0)
-        {
-            keyboard.caps_lock = !keyboard.caps_lock;
-        };
-        break;
-    };
-    default:
-    {
-        if (breakcode == 0)
-        {
-            if (keyboard.caps || keyboard.caps_lock)
-            {
-                printf("%c", qwertz_upper[makecode]);
-            }
-            else if (keyboard.alt_gr)
-            {
-                printf("%c", qwertz_altgr[makecode]);
-            }
-            else
-            {
-                printf("%c", qwertz_lower[makecode]);
-            };
-            break;
-        };
-        break;
-    };
-    };
-    return;
+const static uint8_t qwertz_altgr[] = {
+    0,	  // 0
+    0,	  // 1
+    0,	  // 2 - '1' Taste
+    178,  // 3 - '²' (AltGr + '2')
+    179,  // 4 - '³' (AltGr + '3')
+    0,	  // 5 - '4' Taste
+    0,	  // 6 - '5' Taste
+    0,	  // 7 - '6' Taste
+    '{',  // 8 - '{' (AltGr + '7')
+    '[',  // 9 - '[' (AltGr + '8')
+    ']',  // 10 - ']' (AltGr + '9')
+    '}',  // 11 - '}' (AltGr + '0')
+    '\\', // 12 - '\' (AltGr + 'ß')
+    0,	  // 13 - '´' Taste
+    0,	  // 14 - Backspace
+    0,	  // 15 - Tab
+    '@',  // 16 - '@' (AltGr + 'q')
+    0,	  // 17 - 'w' Taste
+    164,  // 18 - '€' (AltGr + 'e')
+    0,	  // 19 - 'r' Taste
+    0,	  // 20 - 't' Taste
+    0,	  // 21 - 'z' Taste
+    0,	  // 22 - 'u' Taste
+    0,	  // 23 - 'i' Taste
+    0,	  // 24 - 'o' Taste
+    0,	  // 25 - 'p' Taste
+    0,	  // 26 - 'ü' Taste
+    '~',  // 27 - '~' (AltGr + '+')
+    0,	  // 28 - Enter
+    0,	  // 29 - Linke Strg-Taste
+    0,	  // 30 - 'a' Taste
+    0,	  // 31 - 's' Taste
+    0,	  // 32 - 'd' Taste
+    0,	  // 33 - 'f' Taste
+    0,	  // 34 - 'g' Taste
+    0,	  // 35 - 'h' Taste
+    0,	  // 36 - 'j' Taste
+    0,	  // 37 - 'k' Taste
+    0,	  // 38 - 'l' Taste
+    0,	  // 39 - 'ö' Taste
+    0,	  // 40 - 'ä' Taste
+    0,	  // 41 - '^' Taste
+    0,	  // 42 - Linke Shift-Taste
+    '|',  // 43 - '|' (AltGr + '<')
+    0,	  // 44 - 'y' Taste
+    0,	  // 45 - 'x' Taste
+    169,  // 46 - '©' (AltGr + 'c') optional
+    0,	  // 47 - 'v' Taste
+    0,	  // 48 - 'b' Taste
+    0,	  // 49 - 'n' Taste
+    181,  // 50 - 'µ' (AltGr + 'm')
+    0,	  // 51 - ',' Taste
+    0,	  // 52 - '.' Taste
+    0,	  // 53 - '-' Taste
+    0,	  // 54 - Rechte Shift-Taste
+    0,	  // 55 - '*'-Taste (Nummernblock)
+    0,	  // 56 - Alt-Taste
+    0,	  // 57 - Leertaste
+    0,	  // 58 - Caps Lock
 };
 
-void keyboard_handler(Keyboard *self)
+void kbd_init(kbd_t* self)
 {
-    const uint8_t key_state = ps2_receive();
-    const uint8_t makecode = key_state & 0x7f;
-    const uint8_t breakcode = key_state & 0x80; // released == 128 pressed == 0
-    keyboard_update_keystroke(makecode, breakcode);
-    return;
+	self->caps = false;
+	self->caps_lock = false;
+	self->alt_gr = false;
+	idt_set(0x21, asm_interrupt_21h);
+	return;
+};
+
+static void _process_keystroke(kbd_t* self, const uint8_t makecode, const uint8_t breakcode)
+{
+	switch (makecode) {
+	case 1:
+	case 29:
+	case 56:
+	case 59:
+	case 60:
+	case 61:
+	case 62:
+	case 63:
+	case 64:
+	case 65:
+	case 66:
+	case 67:
+	case 68:
+	case 87:
+	case 88:
+		break;
+	case KALTGR: {
+		self->alt_gr = !self->alt_gr;
+		break;
+	};
+	case KLEFT_SHIFT: {
+		self->caps = !self->caps;
+		break;
+	};
+	case KCAPS_LOCK: {
+		if (breakcode == 0) {
+			self->caps_lock = !self->caps_lock;
+		};
+		break;
+	};
+	default: {
+		if (breakcode == 0) {
+			if (self->caps || self->caps_lock) {
+				printf("%c", qwertz_upper[makecode]);
+			} else if (kbd.alt_gr) {
+				printf("%c", qwertz_altgr[makecode]);
+			} else {
+				printf("%c", qwertz_lower[makecode]);
+			};
+			break;
+		};
+		break;
+	};
+	};
+	return;
+};
+
+void kbd_handler(void* dev, const uint8_t data)
+{
+	kbd_t* self = (kbd_t*)dev;
+	const uint8_t ps2_package = data;
+	const uint8_t mc = ps2_package & 0b01111111;
+	const uint8_t bc = ps2_package & 0b10000000; // state can be released == 128 or pressed == 0
+	_process_keystroke(self, mc, bc);
+	return;
 };

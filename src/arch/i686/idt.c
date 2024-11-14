@@ -8,17 +8,21 @@
 #include <stdint.h>
 
 #include "ata.h"
+#include "fifo.h"
 #include "idt.h"
 #include "io.h"
 #include "kernel.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "ps2.h"
 #include "string.h"
 
 extern ATADev ata_dev;
 extern Timer timer;
-extern Keyboard keyboard;
+extern kbd_t kbd;
 extern Mouse mouse;
+extern fifo_t fifo_kbd;
+extern fifo_t fifo_mouse;
 
 extern void asm_idt_loader(IDT_R* ptr);
 extern void asm_interrupt_default();
@@ -70,7 +74,7 @@ static const char* interrupt_messages[] = {
     "Reserved (INT 31)\n",
     // IRQ Interrupts
     "Timer (IRQ0)\n",
-    "Keyboard (IRQ1)\n",
+    "kbd (IRQ1)\n",
     "Cascade (IRQ2)\n",
     "COM2 (IRQ3)\n",
     "COM1 (IRQ4)\n",
@@ -116,10 +120,15 @@ void isr_20h_handler(void)
 	return;
 };
 
-// PS2 keyboard handler
+// PS2 kbd handler
 void isr_21h_handler(void)
 {
-	keyboard_handler(&keyboard);
+	const uint8_t status = inb(PS2_STATUS_COMMAND_PORT);
+
+	if (status & 0x01) {
+		const uint8_t data = inb(PS2_DATA_PORT);
+		fifo_enqueue(&fifo_kbd, data);
+	};
 	pic1_send_eoi();
 	return;
 };
@@ -127,7 +136,12 @@ void isr_21h_handler(void)
 // PS2 Mouse handler
 void isr_32h_handler(void)
 {
-	mouse_handler(&mouse);
+	const uint8_t status = inb(PS2_STATUS_COMMAND_PORT);
+
+	if (status & 0x01) {
+		const uint8_t data = inb(PS2_DATA_PORT);
+		fifo_enqueue(&fifo_mouse, data);
+	};
 	pic2_send_eoi();
 	return;
 };

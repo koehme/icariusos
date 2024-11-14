@@ -50,6 +50,20 @@ bool fifo_dequeue(fifo_t* self, uint8_t* data);
 static inline bool _is_empty(const fifo_t* self);
 static inline bool _is_full(const fifo_t* self);
 
+fifo_t fifo_kbd = {
+    .buffer = {0},
+    .head = 0,
+    .tail = 0,
+    .count = 0,
+};
+
+fifo_t fifo_mouse = {
+    .buffer = {0},
+    .head = 0,
+    .tail = 0,
+    .count = 0,
+};
+
 void fifo_init(fifo_t* self)
 {
 	if (self == NULL) {

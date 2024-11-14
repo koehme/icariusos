@@ -9,35 +9,31 @@
 
 #include "ata.h"
 
-int32_t printf(const char *fmt, ...);
 
-typedef enum VNODE_SEEK_MODE
-{
-    SEEK_SET,
-    SEEK_CUR,
-    SEEK_END,
+typedef enum VNODE_SEEK_MODE {
+	SEEK_SET,
+	SEEK_CUR,
+	SEEK_END,
 } VNODE_SEEK_MODE;
 
-typedef enum VNODE_MODE
-{
-    V_READ,
-    V_WRITE,
-    V_APPEND,
-    V_INVALID,
+typedef enum VNODE_MODE {
+	V_READ,
+	V_WRITE,
+	V_APPEND,
+	V_INVALID,
 } VNODE_MODE;
 
-typedef struct VStat
-{
-    char st_dev[2];
-    VNODE_MODE st_mode;
-    uint32_t st_size;
-    uint32_t st_blksize;
-    uint16_t st_blocks;
-    uint16_t st_atime;
-    uint16_t st_mtime;
-    uint16_t st_ctime;
+typedef struct VStat {
+	char st_dev[2];
+	VNODE_MODE st_mode;
+	uint32_t st_size;
+	uint32_t st_blksize;
+	uint16_t st_blocks;
+	uint16_t st_atime;
+	uint16_t st_mtime;
+	uint16_t st_ctime;
 } VStat;
 
-void vnode_dump(const VStat *vstat, const char name[]);
+void vnode_dump(const VStat* vstat, const char name[]);
 
 #endif

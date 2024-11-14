@@ -8,10 +8,12 @@
 
 extern VBEDisplay vbe_display;
 extern Heap kheap;
-extern Keyboard keyboard;
+extern kbd_t kbd;
 extern Mouse mouse;
 extern Timer timer;
 extern CMOS cmos;
+extern fifo_t fifo_kbd;
+extern fifo_t fifo_mouse;
 
 void kpanic(const char* str)
 {
@@ -159,28 +161,32 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kheap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096);
 	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&kheap));
 
-	keyboard_init(&keyboard);
+	fifo_init(&fifo_kbd);
+	fifo_init(&fifo_mouse);
+
+	kbd_init(&kbd);
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
 	asm_do_sti();
-	
+
 	pci_devices_enumerate();
-	// kspinner(64);
+	kspinner(64);
 	kmotd();
 
 	vfs_init();
 	ATADev* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_search_fs(ata_dev);
-
+	/*
 	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
 	char buffer[1024] = {};
 	vfs_fseek(fd, 0x2300, SEEK_SET);
 	vfs_fread(buffer, 10, 1, fd);
 	vfs_fread(buffer, 10, 1, fd);
 	printf("%s\n", buffer);
-
+	*/
 	while (true) {
-		;
+		ps2_process_dev(&fifo_kbd, kbd_handler, &kbd);
+		ps2_process_dev(&fifo_mouse, mouse_handler, &mouse);
 	};
 };
