@@ -7,23 +7,23 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "keyboard.h"
-#include "mouse.h"
+#include "ata.h"
 #include "idt.h"
-#include "string.h"
 #include "io.h"
 #include "kernel.h"
-#include "ata.h"
+#include "keyboard.h"
+#include "mouse.h"
+#include "string.h"
 
 extern ATADev ata_dev;
 extern Timer timer;
 extern Keyboard keyboard;
 extern Mouse mouse;
 
-extern void asm_idt_loader(IDT_R *ptr);
+extern void asm_idt_loader(IDT_R* ptr);
 extern void asm_interrupt_default();
 
-static void pic_send_eoi(void);
+static void pic1_send_eoi(void);
 void isr_20h_handler(void);
 void isr_21h_handler(void);
 void isr_32h_handler(void);
@@ -31,9 +31,9 @@ void isr_default_handler(void);
 static void idt_entries_init(void);
 
 void idt_init(void);
-void idt_set(const int32_t isr_num, void *isr);
+void idt_set(const int32_t isr_num, void* isr);
 
-static const char *interrupt_messages[] = {
+static const char* interrupt_messages[] = {
     // CPU Interrupts
     "Division by Zero (INT 0)\n",
     "Debug Exception (INT 1)\n",
@@ -89,84 +89,90 @@ static const char *interrupt_messages[] = {
 
 // Contains interrupt service routines that are required for handling interrupts
 static IDTDescriptor idt[256];
-// The location of the IDT is kept in the IDT_R (IDT register). This is loaded using the LIDT assembly instruction, whose argument is a pointer to an IDTDescriptor structure
+// The location of the IDT is kept in the IDT_R (IDT register). This is loaded using the LIDT assembly instruction, whose argument is a pointer to an
+// IDTDescriptor structure
 static IDT_R idtr_descriptor;
 
 // Sends an end-of-interrupt (EOI) signal to the PIC
-static void pic_send_eoi(void)
+static void pic1_send_eoi(void)
 {
-    outb(PIC_1_CTRL, PIC_ACK);
-    return;
+	outb(PIC_1_CTRL, PIC_ACK);
+	return;
+};
+
+static void pic2_send_eoi(void)
+{
+	outb(PIC_1_CTRL, PIC_ACK);
+	outb(PIC_2_CTRL, PIC_ACK);
+	return;
 };
 
 // Timer
 void isr_20h_handler(void)
 {
-    // printf("%d\n", timer.ticks);
-    timer.ticks++;
-    pic_send_eoi();
-    return;
+	// printf("%d\n", timer.ticks);
+	timer.ticks++;
+	pic1_send_eoi();
+	return;
 };
 
 // PS2 keyboard handler
 void isr_21h_handler(void)
 {
-    keyboard_handler(&keyboard);
-    pic_send_eoi();
-    return;
+	keyboard_handler(&keyboard);
+	pic1_send_eoi();
+	return;
 };
 
 // PS2 Mouse handler
 void isr_32h_handler(void)
 {
-    mouse_handler(&mouse);
-    pic_send_eoi();
-    return;
+	mouse_handler(&mouse);
+	pic2_send_eoi();
+	return;
 };
 
 // Default ISR handler
 void isr_default_handler(void)
 {
-    pic_send_eoi();
-    return;
+	pic1_send_eoi();
+	return;
 };
 
 // Initializes the Interrupt Descriptor Table with default dummy interrupt handlers
 static void idt_entries_init(void)
 {
-    // Set default interrupt handlers for all entries in the IDT
-    for (size_t i = 0; i < 256; i++)
-    {
-        idt_set(i, asm_interrupt_default);
-    };
-    return;
+	// Set default interrupt handlers for all entries in the IDT
+	for (size_t i = 0; i < 256; i++) {
+		idt_set(i, asm_interrupt_default);
+	};
+	return;
 };
 
 // Initializes the Interrupt Descriptor Table (IDT).
 void idt_init(void)
 {
-    // Set the limit and base address of the IDT descriptor
-    idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
-    idtr_descriptor.base = (uintptr_t)&idt[0];
-    idt_entries_init();
-    // Load the idt in a specific 'lidt' register with the help of an assembly routine
-    asm_idt_loader(&idtr_descriptor);
-    return;
+	// Set the limit and base address of the IDT descriptor
+	idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
+	idtr_descriptor.base = (uintptr_t)&idt[0];
+	idt_entries_init();
+	// Load the idt in a specific 'lidt' register with the help of an assembly routine
+	asm_idt_loader(&idtr_descriptor);
+	return;
 };
 
 // Sets an entry in the Interrupt Descriptor Table with the provided interrupt service routine (ISR) function pointer
-void idt_set(const int32_t isr_num, void *isr)
+void idt_set(const int32_t isr_num, void* isr)
 {
-    if (isr_num < 0 || isr_num >= 256)
-    {
-        return;
-    };
-    IDTDescriptor *descriptor = &idt[isr_num];
-    // Set isr
-    descriptor->isr_low = (uintptr_t)isr & 0xffff;
-    descriptor->kernel_cs = 0x08;
-    descriptor->reserved = 0x00;
-    descriptor->attributes = 0b11101110;
-    descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
-    return;
+	if (isr_num < 0 || isr_num >= 256) {
+		return;
+	};
+	IDTDescriptor* descriptor = &idt[isr_num];
+	// Set isr
+	descriptor->isr_low = (uintptr_t)isr & 0xffff;
+	descriptor->kernel_cs = 0x08;
+	descriptor->reserved = 0x00;
+	descriptor->attributes = 0b11101110;
+	descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
+	return;
 };
