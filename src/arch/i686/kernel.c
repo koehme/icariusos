@@ -201,7 +201,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	timer_init(&timer, 100);
 	asm_do_sti();
 
-	pci_devices_enumerate();
 	_render_spinner(64);
 	_motd();
 
@@ -216,6 +215,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	vfs_fread(buffer, 10, 1, fd);
 	vfs_fread(buffer, 10, 1, fd);
 	printf("%s\n", buffer);
+
+	pci_enumerate_bus();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
