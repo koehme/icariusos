@@ -140,7 +140,7 @@ void vga_print(VGADisplay* self, const char* str, const VGAColor color)
 
 	for (size_t i = 0; i < len; i++) {
 		const char ch = str[i];
-		kdelay(VGA_DEBUG_DELAY);
+		busy_wait(VGA_DEBUG_DELAY);
 		vga_display_write(self, ch, color);
 	};
 	cursor_set(self->cursor_y, self->cursor_x);

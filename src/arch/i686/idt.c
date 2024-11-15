@@ -17,7 +17,7 @@
 #include "ps2.h"
 #include "string.h"
 
-extern ATADev ata_dev;
+extern ata_t ata_dev;
 extern Timer timer;
 extern kbd_t kbd;
 extern Mouse mouse;

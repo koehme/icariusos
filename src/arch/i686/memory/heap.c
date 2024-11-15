@@ -33,7 +33,7 @@ Heap kheap = {
 };
 
 /* PUBLIC API */
-void kheap_init(Heap* self, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
+void heap_init(Heap* self, void* heap_saddr, void* bytemap_saddr, const size_t n_bytes, const size_t block_size);
 void* kmalloc(const size_t size);
 void* kcalloc(const size_t size);
 void kfree(void* ptr);
@@ -68,7 +68,7 @@ void kfree(void* ptr)
 	return;
 };
 
-void kheap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size)
+void heap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size)
 {
 	self->bitmap->saddr = (uint8_t*)bitmap_saddr;
 	self->bitmap->total_blocks = n_bytes / block_size;

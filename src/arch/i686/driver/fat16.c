@@ -30,7 +30,7 @@
  *                                  |<-------------------------|                      |
  *      |                           |                          |                      |
  *      | ata_get(), ata_init()     |                          |                      |
- *      | ata_search_fs()           |                          |                      |
+ *      | ata_mount_fs()           |                          |                      |
  *      +-------------------------->| vfs_resolve()            |                      |
  *                                  |------------------------->| fat16_resolve()      |
  *                                  |<-------------------------|                      |
@@ -224,11 +224,11 @@ FileSystem fat16 = {
 
 /* PUBLIC API */
 FileSystem* fat16_init(void);
-int32_t fat16_resolve(ATADev* dev);
-void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode);
-size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
+int32_t fat16_resolve(ata_t* dev);
+void* fat16_open(ata_t* dev, PathNode* path, VNODE_MODE mode);
+size_t fat16_read(ata_t* dev, void* descriptor, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
 int32_t fat16_close(void* internal);
-int32_t fat16_stat(ATADev* dev, void* internal, VStat* vstat);
+int32_t fat16_stat(ata_t* dev, void* internal, VStat* vstat);
 int32_t fat16_seek(void* internal, uint32_t offset, VNODE_SEEK_MODE mode);
 
 /* INTERNAL API */
@@ -249,13 +249,13 @@ static void _print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay
 static void _dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream);
 static void _convert_userland_filename_to_native(uint8_t* native, const uint8_t* userland);
 static uint32_t _combine_clusters(const uint16_t high_cluster, const uint16_t low_cluster);
-static FAT16DirEntry* _get_entry_in_subdir(ATADev* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
+static FAT16DirEntry* _get_entry_in_subdir(ata_t* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
 					   FAT16DirEntry* fat16_dir_entry);
-static FAT16DirEntry* _get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier);
-static FAT16Entry* _get_entry(ATADev* dev, PathNode* path);
-void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode);
+static FAT16DirEntry* _get_root_dir_entry(ata_t* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier);
+static FAT16Entry* _get_entry(ata_t* dev, PathNode* path);
+void* fat16_open(ata_t* dev, PathNode* path, VNODE_MODE mode);
 static uint32_t _get_start_cluster_from_descriptor(FAT16FileDescriptor* fat16_descriptor);
-static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks);
+static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ata_t* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks);
 static uint16_t _count_allocated_fat_blocks_in_chain(Stream* fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster,
 						     const uint32_t partition_offset);
 
@@ -352,7 +352,7 @@ static void _dump_fat16_ebpb_header(const ExtendedBIOSParameterBlock* ebpb, cons
 	printf("vol_lab: %s\n", vol_lab);
 	printf("fil_sys_type: %s\n", fil_sys_type);
 	printf("----------------------------------\n");
-	kdelay(delay);
+	busy_wait(delay);
 	return;
 };
 
@@ -375,7 +375,7 @@ static void _dump_fat16_base_header(const BIOSParameterBlock* bpb, const char* m
 	printf("hidd_sec: %d\n", bpb->hidd_sec);
 	printf("tot_sec_32: %d\n", bpb->tot_sec_32);
 	printf("----------------------------------\n");
-	kdelay(delay);
+	busy_wait(delay);
 	return;
 };
 
@@ -432,7 +432,7 @@ static void _print_dir_entry(size_t i, FAT16DirEntry* entry, const int32_t delay
 	printf("=   Low Cluster: %d\n", entry->low_cluster);
 	printf("=   File Size: %d Bytes\n", entry->file_size);
 	printf("==========================\n");
-	kdelay(delay);
+	busy_wait(delay);
 	return;
 };
 
@@ -446,7 +446,7 @@ static void _print_lfn_entry(size_t i, FAT16DirEntry* entry, const int32_t delay
 	printf("==========================\n");
 	printf("=   LFN: %s (Long File Name NOT SUPPORTED)\n", "-");
 	printf("==========================\n");
-	kdelay(delay);
+	busy_wait(delay);
 	return;
 };
 
@@ -468,7 +468,7 @@ static void _dump_root_dir_entries(const BIOSParameterBlock* bpb, Stream* stream
 	return;
 };
 
-int32_t fat16_resolve(ATADev* dev)
+int32_t fat16_resolve(ata_t* dev)
 {
 	Stream header_stream = {};
 	const uint32_t partition_offset = 0x100000;
@@ -511,7 +511,7 @@ int32_t fat16_resolve(ATADev* dev)
 	printf("FAT Area Absolute: 0x%x\n", fat_area_absolute);
 	printf("FAT Area Size: %d\n", fat_area_size);
 	printf("FAT Area Entries: %d\n", fat_area_entries);
-	kdelay(FAT16_DEBUG_DELAY);
+	busy_wait(FAT16_DEBUG_DELAY);
 
 	const uint32_t total_sectors = fat16_header.bpb.tot_sec_16 == 0 ? fat16_header.bpb.tot_sec_32 : fat16_header.bpb.tot_sec_16;
 	printf("Total Sectors: %d\n", total_sectors);
@@ -560,7 +560,7 @@ static uint32_t _combine_clusters(const uint16_t high_cluster, const uint16_t lo
 	return cluster;
 };
 
-static FAT16DirEntry* _get_entry_in_subdir(ATADev* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
+static FAT16DirEntry* _get_entry_in_subdir(ata_t* dev, const uint16_t start_cluster, const uint8_t* native_file_name, FAT16Folder* fat16_folder,
 					   FAT16DirEntry* fat16_dir_entry)
 {
 	const uint32_t partition_offset = 0x100000;
@@ -609,7 +609,7 @@ static FAT16DirEntry* _get_entry_in_subdir(ATADev* dev, const uint16_t start_clu
 	return 0x0;
 };
 
-static FAT16DirEntry* _get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier)
+static FAT16DirEntry* _get_root_dir_entry(ata_t* dev, FAT16DirEntry* root_dir_entry, PathNode* path_identifier)
 {
 	const uint32_t partition_offset = 0x100000;
 	const uint32_t root_dir_area_absolute = _calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
@@ -647,7 +647,7 @@ static FAT16DirEntry* _get_root_dir_entry(ATADev* dev, FAT16DirEntry* root_dir_e
 	return root_dir_entry;
 };
 
-static FAT16Entry* _get_entry(ATADev* dev, PathNode* path)
+static FAT16Entry* _get_entry(ata_t* dev, PathNode* path)
 {
 	FAT16DirEntry root_dir_entry = {};
 	_get_root_dir_entry(dev, &root_dir_entry, path);
@@ -678,7 +678,7 @@ static FAT16Entry* _get_entry(ATADev* dev, PathNode* path)
 	return fat16_entry;
 };
 
-void* fat16_open(ATADev* dev, PathNode* path, VNODE_MODE mode)
+void* fat16_open(ata_t* dev, PathNode* path, VNODE_MODE mode)
 {
 	if (mode != V_READ) {
 		printf("FAT16 Error: Only read mode is supported\n");
@@ -729,7 +729,7 @@ static uint32_t _get_start_cluster_from_descriptor(FAT16FileDescriptor* fat16_de
 };
 
 // Read data from a FAT16 filesystem
-size_t fat16_read(ATADev* dev, void* descriptor, uint8_t* buffer, const size_t n_bytes, const size_t n_blocks)
+size_t fat16_read(ata_t* dev, void* descriptor, uint8_t* buffer, const size_t n_bytes, const size_t n_blocks)
 {
 	// Define the offset of the partition
 	const uint32_t partition_offset = 0x100000;
@@ -802,7 +802,7 @@ int32_t fat16_close(void* internal)
 	return 0;
 };
 
-static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ATADev* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks)
+static void _set_stat(FAT16FileDescriptor* fat16_descriptor, ata_t* dev, VStat* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks)
 {
 	switch (fat16_descriptor->entry->type) {
 	case FAT16_ENTRY_TYPE_DIRECTORY: {
@@ -849,7 +849,7 @@ static uint16_t _count_allocated_fat_blocks_in_chain(Stream* fat_stream, const u
 	return used_blocks;
 };
 
-int32_t fat16_stat(ATADev* dev, void* internal, VStat* vstat)
+int32_t fat16_stat(ata_t* dev, void* internal, VStat* vstat)
 {
 	int32_t res = 0;
 

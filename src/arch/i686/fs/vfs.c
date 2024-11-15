@@ -74,7 +74,7 @@ static FileDescriptor* vfs_get_fd(const int32_t fd)
 	return fdescriptor;
 };
 
-FileSystem* vfs_resolve(ATADev* dev)
+FileSystem* vfs_resolve(ata_t* dev)
 {
 	if (!dev) {
 		return 0x0;
@@ -119,7 +119,7 @@ int32_t vfs_fopen(const char* filename, const char* mode)
 		res = -EINVAL;
 		return res;
 	};
-	ATADev* dev = ata_get(root->drive);
+	ata_t* dev = ata_get(root->drive);
 
 	if (!dev || !dev->fs) {
 		res = -EIO;

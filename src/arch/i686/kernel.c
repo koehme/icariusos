@@ -25,7 +25,7 @@ void kpanic(const char* str)
 	return;
 };
 
-void ksleep(const uint32_t ms)
+void sleep(const uint32_t ms)
 {
 	const uint32_t ticks_to_wait = (ms * timer.hz) / 1000;
 	const uint32_t end_ticks = timer.ticks + ticks_to_wait;
@@ -35,7 +35,7 @@ void ksleep(const uint32_t ms)
 	return;
 };
 
-void kdelay(const uint64_t delay)
+void busy_wait(const uint64_t delay)
 {
 	for (size_t i = 0; i < 1000; i++) {
 		for (size_t j = 0; j < delay; j++) {
@@ -44,20 +44,20 @@ void kdelay(const uint64_t delay)
 	return;
 };
 
-static void kspinner(const int32_t frames)
+static void _render_spinner(const int32_t frames)
 {
 	const char* spinner_frames[4] = {"-", "\\", "|", "/"};
 
 	for (size_t i = 0; i < frames; i++) {
 		const char* curr_frame = spinner_frames[i % 4];
 		printf(curr_frame);
-		ksleep(60);
+		sleep(60);
 		printf("\b");
 	};
 	return;
 };
 
-static void kmotd(void)
+static void _motd(void)
 {
 	const Date date = cmos_date(&cmos);
 	printf(" _             _         _____ _____ \n");
@@ -78,7 +78,7 @@ static void kmotd(void)
 	return;
 };
 
-static void kcheck_multiboot2_magic(const uint32_t magic)
+static void _check_multiboot2_magic(const uint32_t magic)
 {
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
 		printf("[INFO] Invalid Magic Number: 0x%x\n", magic);
@@ -87,7 +87,7 @@ static void kcheck_multiboot2_magic(const uint32_t magic)
 	return;
 };
 
-static void kcheck_multiboot2_alignment(const uint32_t addr)
+static void _check_multiboot2_alignment(const uint32_t addr)
 {
 	if (addr & 7) {
 		printf("[INFO] Unaligned Mbi: 0x%x\n", addr);
@@ -96,7 +96,7 @@ static void kcheck_multiboot2_alignment(const uint32_t addr)
 	return;
 };
 
-static void kread_multiboot2_fb(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display)
+static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display)
 {
 	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
 	const void* framebuffer_v_addr = (void*)(0xE0000000);
@@ -108,14 +108,17 @@ static void kread_multiboot2_fb(struct multiboot_tag_framebuffer* tagfb, VBEDisp
 	return;
 };
 
-static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
+static void _read_multiboot2(const uint32_t magic, const uint32_t addr, VBEDisplay* vbe_display)
 {
-	const uint32_t v_addr = (uint32_t)p2v(addr);
-	struct multiboot_tag* tag = (struct multiboot_tag*)(v_addr + 8);
+	_check_multiboot2_magic(magic);
+	_check_multiboot2_alignment(addr);
+	// Read multiboot2 tags
+	const uint32_t vaddr = (uint32_t)p2v(addr);
+	struct multiboot_tag* tag = (struct multiboot_tag*)(vaddr + 8);
 
 	while (tag->type != MULTIBOOT_TAG_TYPE_END) {
 		if (tag->type == MULTIBOOT_TAG_TYPE_FRAMEBUFFER) {
-			kread_multiboot2_fb((struct multiboot_tag_framebuffer*)tag, vbe_display);
+			_init_framebuffer((struct multiboot_tag_framebuffer*)tag, vbe_display);
 			break;
 		};
 		tag = (struct multiboot_tag*)((uint8_t*)tag + ((tag->size + 7) & ~0b00000111));
@@ -123,9 +126,8 @@ static void kread_multiboot2(uint32_t addr, VBEDisplay* vbe_display)
 	return;
 };
 
-static void kvalidate_size(void)
+static void _check_kernel_size(const uint32_t max_kernel_size)
 {
-	const uint32_t max_kernel_size = 16 * 1024 * 1024; // 16 MiB Bytes
 	const uint32_t text_size = (uint32_t)_text_end - (uint32_t)_text_start;
 	const uint32_t rodata_size = (uint32_t)_rodata_end - (uint32_t)_rodata_start;
 	const uint32_t data_size = (uint32_t)_data_end - (uint32_t)_data_start;
@@ -155,10 +157,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pic_init();
 	idt_init();
 
-	kread_multiboot2(addr, &vbe_display);
-	kvalidate_size();
+	_read_multiboot2(magic, addr, &vbe_display);
+	_check_kernel_size(16 * 1024 * 1024); // 16 MiB max kernel size
 
-	kheap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096);
+	heap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096); // 4 MiB max heap size
 	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&kheap));
 
 	fifo_init(&fifo_kbd);
@@ -170,21 +172,21 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	asm_do_sti();
 
 	pci_devices_enumerate();
-	kspinner(64);
-	kmotd();
+	_render_spinner(64);
+	_motd();
 
 	vfs_init();
-	ATADev* ata_dev = ata_get("A");
+	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
-	ata_search_fs(ata_dev);
-	/*
+	ata_mount_fs(ata_dev);
+
 	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
 	char buffer[1024] = {};
 	vfs_fseek(fd, 0x2300, SEEK_SET);
 	vfs_fread(buffer, 10, 1, fd);
 	vfs_fread(buffer, 10, 1, fd);
 	printf("%s\n", buffer);
-	*/
+
 	while (true) {
 		ps2_process_dev(&fifo_kbd, kbd_handler, &kbd);
 		ps2_process_dev(&fifo_mouse, mouse_handler, &mouse);

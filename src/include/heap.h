@@ -34,7 +34,7 @@ typedef struct Heap {
 	size_t block_size;  // Size of each memory block in the heap
 } Heap;
 
-void kheap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size);
+void heap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size);
 void* kmalloc(const size_t size);
 void* kcalloc(const size_t size);
 void kfree(void* ptr);
