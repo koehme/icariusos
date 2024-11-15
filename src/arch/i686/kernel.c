@@ -218,7 +218,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	printf("%s\n", buffer);
 
 	while (true) {
-		ps2_process_dev(&fifo_kbd, kbd_handler, &kbd);
-		ps2_process_dev(&fifo_mouse, mouse_handler, &mouse);
+		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
+		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
 	};
 };

@@ -13,16 +13,6 @@
 
 extern void asm_interrupt_32h(void);
 
-typedef enum MouseMask {
-	LEFT_BUTTON_MASK = 0b00000001,
-	RIGHT_BUTTON_MASK = 0b00000010,
-	MIDDLE_BUTTON_MASK = 0b00000100,
-	ALIGNED_PACKET_MASK = 0b00001000,
-	Y_AXIS_OVERFLOW_MASK = 0b01000000,
-	X_AXIS_OVERFLOW_MASK = 0b10000000,
-	SIGN_BIT_MASK = 0b100000000,
-} MouseMask;
-
 mouse_t mouse = {
     .x = 0,
     .y = 0,
@@ -35,7 +25,7 @@ mouse_t mouse = {
     .bytes = {0},
 };
 
-static inline bool _match_mask(const mouse_t* self, const MouseMask mask) { return (self->flags & mask) != 0; };
+static inline bool _match_mask(const mouse_t* self, const uint8_t mask) { return (self->flags & mask) != 0; };
 
 static void _update_coordinates(mouse_t* self)
 {
