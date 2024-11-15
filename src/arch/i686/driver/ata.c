@@ -251,7 +251,7 @@ void ata_init(ata_t* self)
 	memset(self->buffer, 0x0, sizeof(self->buffer));
 
 	if (!_init_identify(self, ATA_DRIVE_MASTER)) {
-		kpanic("[CRITICAL] Failed to Identify ATA.\n");
+		panic("[CRITICAL] Failed to Identify ATA.\n");
 	};
 	return;
 };

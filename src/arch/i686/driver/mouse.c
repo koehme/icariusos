@@ -23,9 +23,11 @@ typedef enum MouseMask {
 	SIGN_BIT_MASK = 0b100000000,
 } MouseMask;
 
-Mouse mouse = {
+mouse_t mouse = {
     .x = 0,
     .y = 0,
+    .prev_x = 0,
+    .prev_y = 0,
     .cycle = 0,
     .flags = 0,
     .x_movement = 0,
@@ -33,14 +35,10 @@ Mouse mouse = {
     .bytes = {0},
 };
 
-// Determines whether the specified mouse flag is set in the mouse flags, facilitating conditional checks based on specific mouse events
-static inline bool mouse_has_flag(const Mouse* self, const MouseMask mask) { return (self->flags & mask) != 0; };
+static inline bool _match_mask(const mouse_t* self, const MouseMask mask) { return (self->flags & mask) != 0; };
 
-// Updates the x and y-coordinate movement of the mouse, taking into account the sign bit of the mouse flags for accurate positioning especially for negative
-// values
-static void mouse_update_coordinates(Mouse* self)
+static void _update_coordinates(mouse_t* self)
 {
-	// Adjusts the x and y-coordinate movement by checking the sign bit of the mouse flags, ensuring correct positioning even for negative values
 	const int16_t delta_x = self->x_movement - ((self->flags << 3) & SIGN_BIT_MASK);
 	const int16_t delta_y = self->y_movement - ((self->flags << 4) & SIGN_BIT_MASK);
 	self->x += delta_x;
@@ -48,25 +46,24 @@ static void mouse_update_coordinates(Mouse* self)
 	return;
 };
 
-// Handles the PS/2 mouse input, processing mouse packets and updating mouse coordinates
 void mouse_handler(void* dev, const uint8_t data)
 {
-	Mouse* self = (Mouse*)dev;
+	mouse_t* self = (mouse_t*)dev;
 
 	switch (self->cycle) {
 	case 0: {
 		self->flags = data;
 
-		if (!mouse_has_flag(self, ALIGNED_PACKET_MASK)) {
+		if (!_match_mask(self, ALIGNED_PACKET_MASK)) {
 			self->cycle = 0;
 			break;
 		};
 
-		if (mouse_has_flag(self, LEFT_BUTTON_MASK)) {
+		if (_match_mask(self, LEFT_BUTTON_MASK)) {
 			printf("Left Btn\n");
-		} else if (mouse_has_flag(self, RIGHT_BUTTON_MASK)) {
+		} else if (_match_mask(self, RIGHT_BUTTON_MASK)) {
 			printf("Right Btn\n");
-		} else if (mouse_has_flag(self, MIDDLE_BUTTON_MASK)) {
+		} else if (_match_mask(self, MIDDLE_BUTTON_MASK)) {
 			printf("Mid Btn\n");
 		};
 		self->cycle++;
@@ -80,8 +77,8 @@ void mouse_handler(void* dev, const uint8_t data)
 	case 2: {
 		self->y_movement = data;
 
-		if (!mouse_has_flag(self, Y_AXIS_OVERFLOW_MASK) || !mouse_has_flag(self, X_AXIS_OVERFLOW_MASK)) {
-			mouse_update_coordinates(self);
+		if (!_match_mask(self, Y_AXIS_OVERFLOW_MASK) || !_match_mask(self, X_AXIS_OVERFLOW_MASK)) {
+			_update_coordinates(self);
 			printf("(%d,%d)\n", self->x, self->y);
 		};
 		self->cycle = 0;
@@ -91,8 +88,7 @@ void mouse_handler(void* dev, const uint8_t data)
 	return;
 };
 
-// Initializes the PS/2 mouse device, enabling auxiliary mouse device, setting interrupts and configuring default settings for data reporting
-void mouse_init(Mouse* self)
+void mouse_init(mouse_t* self)
 {
 	// Enable the auxiliary mouse device
 	ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_ENABLE_AUX);

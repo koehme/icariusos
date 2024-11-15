@@ -7,20 +7,16 @@
 #ifndef CMOS_H
 #define CMOS_H
 
-#include <stdint.h>
 #include "date.h"
+#include <stdint.h>
 
-typedef enum CMOSPorts
-{
-    CMOS_PORT_INDEX = 0x70,
-    CMOS_PORT_DATA = 0x71
-} CMOSPorts;
+#define CMOS_PORT_INDEX 0x70
+#define CMOS_PORT_DATA 0x71
 
-typedef struct CMOS
-{
-    uint16_t values[128];
-} CMOS;
+typedef struct cmos_t {
+	uint16_t values[128];
+} cmos_t;
 
-Date cmos_date(CMOS *self);
+Date cmos_date(cmos_t* self);
 
 #endif

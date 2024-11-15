@@ -35,13 +35,13 @@ void vfs_insert(FileSystem* fs)
 	FileSystem** superblock = 0x0;
 
 	if (!fs) {
-		kpanic("Error: VFS needs a filesystem to insert.\n");
+		panic("Error: VFS needs a filesystem to insert.\n");
 		return;
 	};
 	superblock = vfs_find_empty_superblock();
 
 	if (!superblock) {
-		kpanic("Error: VFS free superblock pool is exhausted.\n");
+		panic("Error: VFS free superblock pool is exhausted.\n");
 		return;
 	};
 	*superblock = fs;

@@ -2,20 +2,50 @@
  * @file kernel.c
  * @author Kevin Oehme
  * @copyright MIT
+ *
+ * @brief The heart of the operating system. This is where the magic happens.
+ *
+ * The kernel acts as the brain of the system, coordinating all hardware, managing resources,
+ * and providing a secure environment for programs to run. This file contains essential kernel
+ * structures, initialization routines, and low-level functionality that power the OS.
+ *
+ * Buckle up, because here’s where the code meets the hardware – from interrupt handling to
+ * memory management, it all starts here.
+ *
+ * This kernel is designed to be minimal yet efficient, providing the foundation for the
+ * operating system to run smoothly and handle complex tasks.
+ *
+ * @version 1.0
+ * @date 2024-11-15
  */
 
 #include "kernel.h"
 
+/* PUBLIC API */
+void kmain(const uint32_t magic, const uint32_t addr);
+void panic(const char* str);
+void sleep(const uint32_t ms);
+void busy_wait(const uint64_t delay);
+
+/* INTERNAL API */
+static void _render_spinner(const int32_t frames);
+static void _motd(void);
+static void _check_multiboot2_magic(const uint32_t magic);
+static void _check_multiboot2_alignment(const uint32_t addr);
+static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display);
+static void _read_multiboot2(const uint32_t magic, const uint32_t addr, VBEDisplay* vbe_display);
+static void _check_kernel_size(const uint32_t max_kernel_size);
+
 extern VBEDisplay vbe_display;
 extern Heap kheap;
 extern kbd_t kbd;
-extern Mouse mouse;
+extern mouse_t mouse;
 extern Timer timer;
-extern CMOS cmos;
+extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 
-void kpanic(const char* str)
+void panic(const char* str)
 {
 	printf(str);
 
@@ -136,7 +166,7 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 	const float used_percentage = ((float)total_size / max_kernel_size) * 100.0;
 
 	if (used_percentage >= 100.0) {
-		kpanic("[CRITICAL] Kernel Memory SIZE EXCEEDS 16 MiB!");
+		panic("[CRITICAL] Kernel Memory SIZE EXCEEDS 16 MiB!");
 	} else if (used_percentage >= 90.0) {
 		printf("[WARNING] Kernel Memory NEARING MAX SIZE: %f%% USED.\n", used_percentage);
 	} else if (used_percentage >= 75.0) {

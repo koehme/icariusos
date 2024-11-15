@@ -9,6 +9,6 @@
 
 #include <stdint.h>
 
-void cursor_set(const uint8_t x, const uint8_t y);
+void cursor_set_vga(const uint8_t x, const uint8_t y);
 
 #endif

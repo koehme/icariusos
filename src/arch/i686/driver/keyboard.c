@@ -147,61 +147,61 @@ const static uint8_t qwertz_upper[] = {
 const static uint8_t qwertz_altgr[] = {
     0,	  // 0
     0,	  // 1
-    0,	  // 2 - '1' Taste
+    0,	  // 2 - '1' Key
     178,  // 3 - '²' (AltGr + '2')
     179,  // 4 - '³' (AltGr + '3')
-    0,	  // 5 - '4' Taste
-    0,	  // 6 - '5' Taste
-    0,	  // 7 - '6' Taste
+    0,	  // 5 - '4' Key
+    0,	  // 6 - '5' Key
+    0,	  // 7 - '6' Key
     '{',  // 8 - '{' (AltGr + '7')
     '[',  // 9 - '[' (AltGr + '8')
     ']',  // 10 - ']' (AltGr + '9')
     '}',  // 11 - '}' (AltGr + '0')
     '\\', // 12 - '\' (AltGr + 'ß')
-    0,	  // 13 - '´' Taste
+    0,	  // 13 - '´' Key
     0,	  // 14 - Backspace
     0,	  // 15 - Tab
     '@',  // 16 - '@' (AltGr + 'q')
-    0,	  // 17 - 'w' Taste
+    0,	  // 17 - 'w' Key
     164,  // 18 - '€' (AltGr + 'e')
-    0,	  // 19 - 'r' Taste
-    0,	  // 20 - 't' Taste
-    0,	  // 21 - 'z' Taste
-    0,	  // 22 - 'u' Taste
-    0,	  // 23 - 'i' Taste
-    0,	  // 24 - 'o' Taste
-    0,	  // 25 - 'p' Taste
-    0,	  // 26 - 'ü' Taste
+    0,	  // 19 - 'r' Key
+    0,	  // 20 - 't' Key
+    0,	  // 21 - 'z' Key
+    0,	  // 22 - 'u' Key
+    0,	  // 23 - 'i' Key
+    0,	  // 24 - 'o' Key
+    0,	  // 25 - 'p' Key
+    0,	  // 26 - 'ü' Key
     '~',  // 27 - '~' (AltGr + '+')
     0,	  // 28 - Enter
-    0,	  // 29 - Linke Strg-Taste
-    0,	  // 30 - 'a' Taste
-    0,	  // 31 - 's' Taste
-    0,	  // 32 - 'd' Taste
-    0,	  // 33 - 'f' Taste
-    0,	  // 34 - 'g' Taste
-    0,	  // 35 - 'h' Taste
-    0,	  // 36 - 'j' Taste
-    0,	  // 37 - 'k' Taste
-    0,	  // 38 - 'l' Taste
-    0,	  // 39 - 'ö' Taste
-    0,	  // 40 - 'ä' Taste
-    0,	  // 41 - '^' Taste
-    0,	  // 42 - Linke Shift-Taste
+    0,	  // 29 - Linke Strg-Key
+    0,	  // 30 - 'a' Key
+    0,	  // 31 - 's' Key
+    0,	  // 32 - 'd' Key
+    0,	  // 33 - 'f' Key
+    0,	  // 34 - 'g' Key
+    0,	  // 35 - 'h' Key
+    0,	  // 36 - 'j' Key
+    0,	  // 37 - 'k' Key
+    0,	  // 38 - 'l' Key
+    0,	  // 39 - 'ö' Key
+    0,	  // 40 - 'ä' Key
+    0,	  // 41 - '^' Key
+    0,	  // 42 - Linke Shift-Key
     '|',  // 43 - '|' (AltGr + '<')
-    0,	  // 44 - 'y' Taste
-    0,	  // 45 - 'x' Taste
+    0,	  // 44 - 'y' Key
+    0,	  // 45 - 'x' Key
     169,  // 46 - '©' (AltGr + 'c') optional
-    0,	  // 47 - 'v' Taste
-    0,	  // 48 - 'b' Taste
-    0,	  // 49 - 'n' Taste
+    0,	  // 47 - 'v' Key
+    0,	  // 48 - 'b' Key
+    0,	  // 49 - 'n' Key
     181,  // 50 - 'µ' (AltGr + 'm')
-    0,	  // 51 - ',' Taste
-    0,	  // 52 - '.' Taste
-    0,	  // 53 - '-' Taste
-    0,	  // 54 - Rechte Shift-Taste
-    0,	  // 55 - '*'-Taste (Nummernblock)
-    0,	  // 56 - Alt-Taste
+    0,	  // 51 - ',' Key
+    0,	  // 52 - '.' Key
+    0,	  // 53 - '-' Key
+    0,	  // 54 - Rechte Shift-Key
+    0,	  // 55 - '*'-Key (Nummernblock)
+    0,	  // 56 - Alt-Key
     0,	  // 57 - Leertaste
     0,	  // 58 - Caps Lock
 };

@@ -143,13 +143,13 @@ void vga_print(VGADisplay* self, const char* str, const VGAColor color)
 		busy_wait(VGA_DEBUG_DELAY);
 		vga_display_write(self, ch, color);
 	};
-	cursor_set(self->cursor_y, self->cursor_x);
+	cursor_set_vga(self->cursor_y, self->cursor_x);
 	return;
 };
 // Prints a single char on the display
 void vga_print_ch(VGADisplay* self, const char ch, const VGAColor color)
 {
 	vga_display_write(self, ch, color);
-	cursor_set(self->cursor_y, self->cursor_x);
+	cursor_set_vga(self->cursor_y, self->cursor_x);
 	return;
 };
