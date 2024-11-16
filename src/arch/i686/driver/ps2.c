@@ -7,6 +7,11 @@
 #include "ps2.h"
 #include "io.h"
 
+/* PUBLIC API */
+void ps2_send(const uint8_t port, const uint8_t byte);
+uint8_t ps2_receive(void);
+void ps2_dispatch(fifo_t* fifo, void (*handler)(void*, uint8_t), void* device);
+
 void ps2_send(const uint8_t port, const uint8_t byte)
 {
 	while (inb(PS2_STATUS_COMMAND_PORT) & PS2_BUFFER_INPUT) {

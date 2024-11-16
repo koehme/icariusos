@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct FileSystem FileSystem;
+typedef struct fs_t fs_t;
 
 // ATA Limits
 #define ATA_SECTOR_SIZE 512
@@ -50,7 +50,7 @@ typedef struct ata_t {
 	uint64_t total_sectors; // Total available sectors
 	uint64_t capacity;	// Available device capacity in bytes
 	uint8_t buffer[512];	// Data buffer for temporary storage
-	FileSystem* fs;		// Filesystem mapped to the disk
+	fs_t* fs;		// fs_t mapped to the disk
 	uint8_t features;
 } ata_t;
 

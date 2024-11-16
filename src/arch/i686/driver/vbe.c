@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-VBEDisplay vbe_display = {
+vbe_t vbe_display = {
     .addr = 0x0,
     .width = 0,
     .height = 0,
@@ -20,7 +20,19 @@ VBEDisplay vbe_display = {
     .cursor_y = 0,
 };
 
-void vbe_init(VBEDisplay* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp)
+/* PUBLIC API */
+void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
+void vbe_draw_hline(vbe_t* self, const uint32_t y, const VBEColor color);
+void vbe_draw_ch(vbe_t* self, char ch, const VBEColor color);
+void vbe_draw_string(vbe_t* self, const char* str, const VBEColor color);
+
+/* INTERNAL API */
+static inline uint32_t calculate_pixel_offset(const uint32_t x, const uint32_t y, const uint32_t pitch, const uint32_t bytes_per_pixel);
+static void vbe_put_pixel_at(vbe_t* self, const uint32_t x, const uint32_t y, const VBEColor color);
+static inline void vbe_clear_ch(vbe_t* self, const uint32_t x, const uint32_t y, const VBEColor color);
+static void vbe_scroll(vbe_t* self, const VBEColor background_color);
+
+void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp)
 {
 	self->addr = (void*)addr;
 	self->width = width;
@@ -35,7 +47,7 @@ static inline uint32_t calculate_pixel_offset(const uint32_t x, const uint32_t y
 	return y * pitch + x * bytes_per_pixel;
 };
 
-static void vbe_put_pixel_at(VBEDisplay* self, const uint32_t x, const uint32_t y, const VBEColor color)
+static void vbe_put_pixel_at(vbe_t* self, const uint32_t x, const uint32_t y, const VBEColor color)
 {
 	// Check if the coordinates are within the display's resolution boundaries
 	if (x >= self->width || y >= self->height) {
@@ -50,7 +62,7 @@ static void vbe_put_pixel_at(VBEDisplay* self, const uint32_t x, const uint32_t 
 	return;
 };
 
-void vbe_draw_hline(VBEDisplay* self, const uint32_t y, const VBEColor color)
+void vbe_draw_hline(vbe_t* self, const uint32_t y, const VBEColor color)
 {
 	if (y >= self->height) {
 		return;
@@ -62,7 +74,7 @@ void vbe_draw_hline(VBEDisplay* self, const uint32_t y, const VBEColor color)
 	return;
 };
 
-static inline void vbe_clear_ch(VBEDisplay* self, const uint32_t x, const uint32_t y, const VBEColor color)
+static inline void vbe_clear_ch(vbe_t* self, const uint32_t x, const uint32_t y, const VBEColor color)
 {
 	for (size_t row = 0; row < FONT_HEIGHT; row++) {
 		for (size_t col = 0; col < FONT_WIDTH; col++) {
@@ -72,7 +84,7 @@ static inline void vbe_clear_ch(VBEDisplay* self, const uint32_t x, const uint32
 	return;
 };
 
-static void vbe_scroll(VBEDisplay* self, const VBEColor background_color)
+static void vbe_scroll(vbe_t* self, const VBEColor background_color)
 {
 	const uint32_t bytes_per_pixel = self->bpp / 8;
 	const uint32_t scroll_height = FONT_HEIGHT;
@@ -94,7 +106,7 @@ static void vbe_scroll(VBEDisplay* self, const VBEColor background_color)
 	return;
 };
 
-void vbe_draw_ch(VBEDisplay* self, char ch, const VBEColor color)
+void vbe_draw_ch(vbe_t* self, char ch, const VBEColor color)
 {
 	switch (ch) {
 	case '\n': {
@@ -162,7 +174,7 @@ void vbe_draw_ch(VBEDisplay* self, char ch, const VBEColor color)
 	return;
 };
 
-void vbe_draw_string(VBEDisplay* self, const char* str, const VBEColor color)
+void vbe_draw_string(vbe_t* self, const char* str, const VBEColor color)
 {
 	while (*str) {
 		vbe_draw_ch(self, *str, color);

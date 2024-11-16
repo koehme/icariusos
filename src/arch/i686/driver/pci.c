@@ -8,6 +8,16 @@
 #include "status.h"
 #include "stdio.h"
 
+/* PUBLIC API */
+uint16_t pci_read16(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset);
+void pci_write16(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset, const uint16_t data);
+void pci_enumerate_bus(void);
+
+/* INTERNAL API */
+static inline uint32_t _build_config_addr(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset);
+static void _populate_dev(pci_dev_t* dev, const uint32_t bus, const uint32_t device, const uint32_t function);
+static void _dump_dev(const pci_dev_t* dev);
+
 static inline uint32_t _build_config_addr(const uint32_t bus, const uint32_t device, const uint32_t function, const uint8_t offset)
 {
 	return (0x80000000 | (bus << 16) | (device << 11) | (function << 8) | (offset & PCI_OFFSET_MASK));

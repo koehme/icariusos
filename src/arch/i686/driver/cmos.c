@@ -10,6 +10,13 @@
 #include "idt.h"
 #include "io.h"
 
+/* PUBLIC API */
+Date cmos_date(cmos_t* self);
+
+/* INTERNAL API */
+static int32_t _bcd_to_decimal(const int32_t bcd);
+static void _dump_cmos(cmos_t* self);
+
 cmos_t cmos = {
     .values = {},
 };

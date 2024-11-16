@@ -14,7 +14,7 @@
 #include "ata.h"
 #include "vfs.h"
 
-FileSystem* fat16_init(void);
+fs_t* fat16_init(void);
 
 int32_t fat16_resolve(ata_t* dev);
 void* fat16_open(ata_t* dev, PathNode* path, const VNODE_MODE mode);

@@ -20,6 +20,21 @@ VGADisplay vga_display = {
     .height = 0,
 };
 
+/* PUBLIC API */
+void vga_display_init(VGADisplay* self, uint16_t* framebuffer, const uint8_t width, const uint8_t height);
+void vga_display_set_cursor(VGADisplay* self, const uint8_t y, const uint8_t x);
+void vga_display_clear(VGADisplay* self);
+void vga_print(VGADisplay* self, const char* str, const VGAColor color);
+void vga_print_ch(VGADisplay* self, const char ch, const VGAColor color);
+
+/* INTERNAL API */
+static uint16_t make_ch(const uint8_t ch, const VGAColor color);
+static void vga_display_put_ch_at(VGADisplay* self, const uint8_t y, const uint8_t x, const uint8_t ch, const VGAColor color);
+static void vga_clear_last_line(VGADisplay* self);
+static void vga_scroll_up(VGADisplay* self, const uint32_t lines);
+static void vga_scroll(VGADisplay* self);
+static void vga_display_write(VGADisplay* self, uint8_t ch, const VGAColor color);
+
 // Create a VGA character with color attributes
 static uint16_t make_ch(const uint8_t ch, const VGAColor color) { return ch | (uint16_t)(color << 8); };
 

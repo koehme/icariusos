@@ -14,6 +14,26 @@ PathParser path_parser = {
     .has_error = false,
 };
 
+/* PUBLIC API */
+PathRootNode* path_parser_parse(PathParser* self, const char* path);
+void path_parser_free(PathRootNode* root);
+
+/* INTERNAL API */
+static void path_parser_handle_syntax_error(PathParser* self, const char* message);
+static void path_parser_report_error(PathParser* self, const char* message);
+static bool path_parser_check(const PathParser* self, const PathType expected);
+static PathType path_parser_peek(const PathParser* self);
+static void path_parser_advance(PathParser* self, PathLexer* lexer);
+static bool path_parser_match(PathParser* self, PathLexer* lexer, const PathType expected);
+static void path_parser_eat(PathParser* self, PathLexer* lexer, const PathType expected, const char* message);
+PathNode* path_parser_parse_dir(PathParser* self, PathLexer* lexer, PathNode* curr_node);
+PathNode* path_parser_parse_filename(PathParser* self, PathLexer* lexer, PathNode* curr_node);
+PathNode* path_parser_parse_entry(PathParser* self, PathLexer* lexer, PathNode* curr_node);
+PathNode* path_parser_parse_entries(PathParser* self, PathLexer* lexer, PathNode* curr_node);
+PathRootNode* path_parser_parse_drive(PathParser* self, PathLexer* lexer);
+PathRootNode* path_parser_parse_path(PathParser* self, PathLexer* lexer);
+static void free_node(PathNode* curr_node);
+
 /*
 path        -> drive ':' entries
 drive       -> letter

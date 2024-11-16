@@ -41,7 +41,7 @@ typedef struct pci_dev_t {
 #define PCI_SUBCLASS_REG_OFFSET 0x0A	  // Specific function of the device
 #define PCI_CLASS_CODE_REG_OFFSET 0x0B	  // Device function class
 #define PCI_CACHE_LINE_SIZE 0x0C	  // System cache line size
-#define PCI_LATENCY_TIMER_REG_OFFSET 0x0D // PCI latency timer in bus clock units
+#define PCI_LATENCY_TIMER_REG_OFFSET 0x0D // PCI latency timer_t in bus clock units
 #define PCI_HEADER_TYPE_REG_OFFSET 0x0E	  // Header type (general, bridge, etc.)
 #define PCI_BIST_REG_OFFSET 0x0F	  // Built-in self-test control and status
 #define PCI_DEV_NOT_FOUND 0xFFFF	  // Value indicating device not present

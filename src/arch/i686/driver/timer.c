@@ -10,12 +10,15 @@
 
 extern void asm_interrupt_20h(void);
 
-Timer timer = {
+/* PUBLIC API */
+void timer_init(timer_t* self, const uint32_t hz);
+
+timer_t timer = {
     .ticks = 0,
     .hz = 0,
 };
 
-void timer_init(Timer* self, const uint32_t hz)
+void timer_init(timer_t* self, const uint32_t hz)
 {
 	self->ticks = 0;
 	self->hz = hz;

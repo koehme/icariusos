@@ -1,5 +1,29 @@
+/**
+ * @file stream.c
+ * @author Kevin
+ * @copyright MIT
+ * @brief Stream implementation for block device interaction.
+ * @date 2024-11-16
+ *
+ * This file implements the `stream` interface, providing a basic mechanism to
+ * interact with block devices, such as reading and seeking through data stored
+ * on ATA devices. The stream abstraction simplifies reading data in a sequential
+ * or random-access manner from block-based storage devices.
+ *
+ * The `stream` interface supports operations like seeking to a specific byte
+ * position and reading a specified number of bytes from the device, leveraging
+ * the underlying ATA driver for actual data transfer. This design allows for
+ * efficient and modular data handling, making it an ideal fit for file systems
+ * or other higher-level abstractions interacting with storage devices.
+ */
+
 #include "stream.h"
 #include "string.h"
+
+/* PUBLIC API */
+void stream_init(Stream* self, ata_t* dev);
+void stream_seek(Stream* self, const size_t pos);
+int32_t stream_read(Stream* self, uint8_t* buffer, const size_t n_bytes);
 
 void stream_init(Stream* self, ata_t* dev)
 {

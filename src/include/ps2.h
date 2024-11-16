@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-#define PS2_PACKAGE_DISPATCH 5
+#define PS2_PACKAGE_DISPATCH 3
 // PS/2 Buffer Status Flags
 #define PS2_BUFFER_OUTPUT 0x01
 #define PS2_BUFFER_INPUT 0x02

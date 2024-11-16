@@ -212,7 +212,7 @@ FAT16InternalHeader fat16_header = {
 	},
 };
 
-FileSystem fat16 = {
+fs_t fat16 = {
     .resolve_cb = 0x0,
     .open_cb = 0x0,
     .read_cb = 0x0,
@@ -223,7 +223,7 @@ FileSystem fat16 = {
 };
 
 /* PUBLIC API */
-FileSystem* fat16_init(void);
+fs_t* fat16_init(void);
 int32_t fat16_resolve(ata_t* dev);
 void* fat16_open(ata_t* dev, PathNode* path, VNODE_MODE mode);
 size_t fat16_read(ata_t* dev, void* descriptor, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
@@ -304,7 +304,7 @@ static uint16_t _fat_date_to_uint16(const FAT16DateInfo dateInfo)
 	return fat16_date;
 };
 
-FileSystem* fat16_init(void)
+fs_t* fat16_init(void)
 {
 	fat16.resolve_cb = fat16_resolve;
 	fat16.open_cb = fat16_open;
@@ -686,7 +686,7 @@ void* fat16_open(ata_t* dev, PathNode* path, VNODE_MODE mode)
 	};
 
 	if (dev == 0x0 || dev->fs == 0x0 || path == 0x0) {
-		printf("FAT16 Error: Device, Filesystem or path not initialized\n");
+		printf("FAT16 Error: Device, fs_t or path not initialized\n");
 		return 0x0;
 	};
 	FAT16FileDescriptor* fd = kcalloc(sizeof(FAT16FileDescriptor));

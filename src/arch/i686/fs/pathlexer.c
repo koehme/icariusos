@@ -14,6 +14,18 @@ PathLexer path_lexer = {
     .start = 0x0,
 };
 
+/* PUBLIC API */
+void path_lexer_init(PathLexer* self, const char* path);
+PathToken path_lexer_lex(PathLexer* self);
+
+/* INTERNAL API */
+inline static bool path_lexer_is_eof(const PathLexer* self);
+inline static char path_lexer_peek(const PathLexer* self);
+static char path_lexer_peek_next(const PathLexer* self);
+static char path_lexer_advance(PathLexer* self);
+static PathToken path_lexer_create_token(PathLexer* self, PathType type);
+static PathToken path_lexer_lex_identifier(PathLexer* self);
+
 inline static bool path_lexer_is_eof(const PathLexer* self) { return *self->curr == '\0'; };
 
 static char path_lexer_advance(PathLexer* self)

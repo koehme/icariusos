@@ -14,6 +14,13 @@
 
 extern void asm_interrupt_21h(void);
 
+/* PUBLIC API */
+void kbd_init(kbd_t* self);
+void kbd_handler(void* dev, const uint8_t data);
+
+/* INTERNAL API */
+static void _process_keystroke(kbd_t* self, const uint8_t makecode, const uint8_t breakcode);
+
 kbd_t kbd = {
     .caps = false,
     .caps_lock = false,

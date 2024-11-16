@@ -13,6 +13,14 @@
 
 extern void asm_interrupt_32h(void);
 
+/* PUBLIC API */
+void mouse_handler(void* dev, const uint8_t data);
+void mouse_init(mouse_t* self);
+
+/* INTERNAL API */
+static inline bool _match_mask(const mouse_t* self, const uint8_t mask);
+static void _update_coordinates(mouse_t* self);
+
 mouse_t mouse = {
     .x = 0,
     .y = 0,

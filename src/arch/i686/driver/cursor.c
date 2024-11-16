@@ -10,6 +10,9 @@
 #include "io.h"
 #include "vga.h"
 
+/* PUBLIC API */
+void cursor_set_vga(const uint8_t y, const uint8_t x);
+
 // Sets the cursor to the specified screen position
 void cursor_set_vga(const uint8_t y, const uint8_t x)
 {

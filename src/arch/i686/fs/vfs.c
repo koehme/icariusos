@@ -2,25 +2,79 @@
  * @file vfs.c
  * @author Kevin Oehme
  * @copyright MIT
+ * @brief Virtual File System (VFS) implementation.
+ * @date 2024-11-16
+ *
+ * This file implements the Virtual File System (VFS), a layer that abstracts
+ * file system operations and provides a unified interface for different file
+ * systems. It allows seamless interaction with various file systems like FAT16
+ * and others, supporting standard file operations such as opening, reading,
+ * seeking, and closing files.
+ *
+ * The VFS plays a crucial role in the kernel by managing mounted file systems
+ * and maintaining file descriptors. It enables processes to work with files
+ * without needing to know the underlying file system details, ensuring
+ * modularity and extensibility.
+ *
+ * Key VFS Components:
+ * - Superblock: Manages registered file systems.
+ * - File Descriptor Table: Keeps track of open files.
+ * - Path Parsing: Resolves file paths and interacts with mounted file systems.
+ *
+ * Complete Flow:
+ *
+ *    [Application]          [VFS Layer]             [File System]             [ATA Driver]
+ *          |                     |                         |                          |
+ *          | fopen("file.txt")   |                         |                          |
+ *          +-------------------->| vfs_fopen()             |                          |
+ *                                |------------------------>| fat16_open()             |
+ *                                |                         |                          |
+ *          | fread(buffer)       |                         |                          |
+ *          +-------------------->| vfs_fread()             |                          |
+ *                                |------------------------>| fat16_read()             |
+ *                                |                         |------------------------->|
+ *                                |                         |      ata_read()          |
+ *                                |                         |<-------------------------|
+ *          |                     |<------------------------|                          |
+ *          | fclose(fd)          |                         |                          |
+ *          +-------------------->| vfs_fclose()            |                          |
+ *                                |------------------------>| fat16_close()            |
+ *                                |                         |                          |
  */
 
 #include "vfs.h"
 #include "fat16.h"
 #include "pathparser.h"
 
-extern FileSystem fat16;
+extern fs_t fat16;
 
-static FileSystem* filesystems[8] = {};
+static fs_t* filesystems[8] = {};
 static FileDescriptor* fdescriptors[512] = {};
+
+/* PUBLIC API */
+void vfs_init(void);
+void vfs_insert(fs_t* fs);
+fs_t* vfs_resolve(ata_t* dev);
+int32_t vfs_fopen(const char* filename, const char* mode);
+size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd);
+int32_t vfs_fclose(const int32_t fd);
+int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE whence);
+int32_t vfs_fstat(const int32_t fd, VStat* buffer);
+
+/* INTERNAL API */
+static fs_t** _find_empty_superblock(void);
+static int32_t _create_fd(FileDescriptor** ptr);
+static FileDescriptor* _get_fd(const int32_t fd);
+static VNODE_MODE _get_vmode(const char* mode);
 
 void vfs_init(void)
 {
-	FileSystem* fat16 = fat16_init();
+	fs_t* fat16 = fat16_init();
 	vfs_insert(fat16);
 	return;
 };
 
-static FileSystem** vfs_find_empty_superblock(void)
+static fs_t** _find_empty_superblock(void)
 {
 	for (size_t i = 0; i < 8; i++) {
 		if (filesystems[i] == 0x0) {
@@ -30,15 +84,15 @@ static FileSystem** vfs_find_empty_superblock(void)
 	return 0x0;
 };
 
-void vfs_insert(FileSystem* fs)
+void vfs_insert(fs_t* fs)
 {
-	FileSystem** superblock = 0x0;
+	fs_t** superblock = 0x0;
 
 	if (!fs) {
-		panic("Error: VFS needs a filesystem to insert.\n");
+		panic("Error: VFS needs a fs_t to insert.\n");
 		return;
 	};
-	superblock = vfs_find_empty_superblock();
+	superblock = _find_empty_superblock();
 
 	if (!superblock) {
 		panic("Error: VFS free superblock pool is exhausted.\n");
@@ -48,7 +102,7 @@ void vfs_insert(FileSystem* fs)
 	return;
 };
 
-static int32_t vfs_create_fd(FileDescriptor** ptr)
+static int32_t _create_fd(FileDescriptor** ptr)
 {
 	int32_t res = -1;
 
@@ -65,7 +119,7 @@ static int32_t vfs_create_fd(FileDescriptor** ptr)
 	return res;
 };
 
-static FileDescriptor* vfs_get_fd(const int32_t fd)
+static FileDescriptor* _get_fd(const int32_t fd)
 {
 	if (fd <= 0 || fd >= 512) {
 		return 0x0;
@@ -74,7 +128,7 @@ static FileDescriptor* vfs_get_fd(const int32_t fd)
 	return fdescriptor;
 };
 
-FileSystem* vfs_resolve(ata_t* dev)
+fs_t* vfs_resolve(ata_t* dev)
 {
 	if (!dev) {
 		return 0x0;
@@ -90,7 +144,7 @@ FileSystem* vfs_resolve(ata_t* dev)
 	return 0x0;
 };
 
-static VNODE_MODE vfs_get_vmode(const char* mode)
+static VNODE_MODE _get_vmode(const char* mode)
 {
 	switch (*mode) {
 	case 'r': {
@@ -105,7 +159,7 @@ static VNODE_MODE vfs_get_vmode(const char* mode)
 int32_t vfs_fopen(const char* filename, const char* mode)
 {
 	int32_t res = 0;
-	const VNODE_MODE vmode = vfs_get_vmode(mode);
+	const VNODE_MODE vmode = _get_vmode(mode);
 
 	if (vmode != V_READ) {
 		res = -EINVAL;
@@ -130,7 +184,7 @@ int32_t vfs_fopen(const char* filename, const char* mode)
 	path_parser_free(root);
 
 	FileDescriptor* fdescriptor = 0x0;
-	res = vfs_create_fd(&fdescriptor);
+	res = _create_fd(&fdescriptor);
 
 	if (res < 0) {
 		res = -ENOMEM;
@@ -147,7 +201,7 @@ size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd
 	if (n_bytes == 0 || n_blocks == 0 || fd < 1) {
 		return -EINVAL;
 	};
-	FileDescriptor* fdescriptor = vfs_get_fd(fd);
+	FileDescriptor* fdescriptor = _get_fd(fd);
 
 	if (!fdescriptor) {
 		return -EINVAL;
@@ -164,7 +218,7 @@ int32_t vfs_fclose(const int32_t fd)
 		res = -EINVAL;
 		return res;
 	};
-	FileDescriptor* fdescriptor = vfs_get_fd(fd);
+	FileDescriptor* fdescriptor = _get_fd(fd);
 
 	if (fdescriptor == 0x0) {
 		res = -EBADF;
@@ -183,7 +237,7 @@ int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE
 		res = -EINVAL;
 		return res;
 	};
-	FileDescriptor* fdescriptor = vfs_get_fd(fd);
+	FileDescriptor* fdescriptor = _get_fd(fd);
 
 	if (fdescriptor == 0x0) {
 		res = -EBADF;
@@ -201,7 +255,7 @@ int32_t vfs_fstat(const int32_t fd, VStat* buffer)
 		res = -EINVAL;
 		return res;
 	};
-	FileDescriptor* fdescriptor = vfs_get_fd(fd);
+	FileDescriptor* fdescriptor = _get_fd(fd);
 
 	if (fdescriptor == 0x0) {
 		res = -EBADF;

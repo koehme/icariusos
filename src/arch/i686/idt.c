@@ -18,7 +18,7 @@
 #include "string.h"
 
 extern ata_t ata_dev;
-extern Timer timer;
+extern timer_t timer;
 extern kbd_t kbd;
 extern mouse_t mouse;
 extern fifo_t fifo_kbd;

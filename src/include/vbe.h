@@ -153,7 +153,7 @@ const static uint8_t ascii_bitmap[ASCII][FONT_WIDTH] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+007F
 };
 
-typedef struct VBEDisplay {
+typedef struct vbe_t {
 	void* addr;	 // where the pixel data starts
 	uint32_t width;	 // horizontal resolution
 	uint32_t height; // vertical resolution
@@ -161,7 +161,7 @@ typedef struct VBEDisplay {
 	uint32_t bpp;	 // Bits per pixel (color depth, e.g., 32 for 32-bit color)
 	uint32_t cursor_x;
 	uint32_t cursor_y;
-} VBEDisplay;
+} vbe_t;
 
 typedef enum VBEColor {
 	VBE_COLOR_BLACK = 0x000000,
@@ -172,11 +172,11 @@ typedef enum VBEColor {
 	VBE_COLOR_YELLOW = 0xFFFF00,
 } VBEColor;
 
-extern VBEDisplay vbe_display;
+extern vbe_t vbe_display;
 
-void vbe_init(VBEDisplay* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
-void vbe_draw_hline(VBEDisplay* self, const uint32_t y, const VBEColor color);
-void vbe_draw_string(VBEDisplay* self, const char* str, const VBEColor color);
-void vbe_draw_ch(VBEDisplay* self, char ch, const VBEColor color);
+void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
+void vbe_draw_hline(vbe_t* self, const uint32_t y, const VBEColor color);
+void vbe_draw_string(vbe_t* self, const char* str, const VBEColor color);
+void vbe_draw_ch(vbe_t* self, char ch, const VBEColor color);
 
 #endif

@@ -32,15 +32,15 @@ static void _render_spinner(const int32_t frames);
 static void _motd(void);
 static void _check_multiboot2_magic(const uint32_t magic);
 static void _check_multiboot2_alignment(const uint32_t addr);
-static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display);
-static void _read_multiboot2(const uint32_t magic, const uint32_t addr, VBEDisplay* vbe_display);
+static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vbe_display);
+static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* vbe_display);
 static void _check_kernel_size(const uint32_t max_kernel_size);
 
-extern VBEDisplay vbe_display;
+extern vbe_t vbe_display;
 extern Heap kheap;
 extern kbd_t kbd;
 extern mouse_t mouse;
-extern Timer timer;
+extern timer_t timer;
 extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
@@ -126,7 +126,7 @@ static void _check_multiboot2_alignment(const uint32_t addr)
 	return;
 };
 
-static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, VBEDisplay* vbe_display)
+static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vbe_display)
 {
 	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
 	const void* framebuffer_v_addr = (void*)(0xE0000000);
@@ -138,7 +138,7 @@ static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, VBEDispla
 	return;
 };
 
-static void _read_multiboot2(const uint32_t magic, const uint32_t addr, VBEDisplay* vbe_display)
+static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* vbe_display)
 {
 	_check_multiboot2_magic(magic);
 	_check_multiboot2_alignment(addr);
