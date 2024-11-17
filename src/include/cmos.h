@@ -17,6 +17,6 @@ typedef struct cmos_t {
 	uint16_t values[128];
 } cmos_t;
 
-Date cmos_date(cmos_t* self);
+date_t cmos_date(cmos_t* self);
 
 #endif

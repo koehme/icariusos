@@ -110,7 +110,6 @@ static void _pic2_send_eoi(void)
 	return;
 };
 
-// Timer
 void isr_20h_handler(void)
 {
 	// printf("%d\n", timer.ticks);
@@ -119,7 +118,6 @@ void isr_20h_handler(void)
 	return;
 };
 
-// PS2 Keyboard handler
 void isr_21h_handler(void)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
@@ -130,7 +128,6 @@ void isr_21h_handler(void)
 	return;
 };
 
-// PS2 Mouse handler
 void isr_32h_handler(void)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
@@ -141,7 +138,6 @@ void isr_32h_handler(void)
 	return;
 };
 
-// Default ISR handler
 void isr_default_handler(void)
 {
 	_pic1_send_eoi();
@@ -156,7 +152,6 @@ static void _init_isr(void)
 	return;
 };
 
-// Initializes the Interrupt Descriptor Table (IDT).
 void idt_init(void)
 {
 	// Set the limit and base address of the IDT descriptor
@@ -168,7 +163,6 @@ void idt_init(void)
 	return;
 };
 
-// Sets an entry in the Interrupt Descriptor Table with the provided interrupt service routine (ISR) function pointer
 void idt_set(const int32_t isr_num, void* isr)
 {
 	if (isr_num < 0 || isr_num >= 256) {

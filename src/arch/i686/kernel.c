@@ -21,6 +21,15 @@
 
 #include "kernel.h"
 
+extern vbe_t vbe_display;
+extern heap_t heap;
+extern kbd_t kbd;
+extern mouse_t mouse;
+extern timer_t timer;
+extern cmos_t cmos;
+extern fifo_t fifo_kbd;
+extern fifo_t fifo_mouse;
+
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
 void panic(const char* str);
@@ -36,14 +45,6 @@ static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vb
 static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* vbe_display);
 static void _check_kernel_size(const uint32_t max_kernel_size);
 
-extern vbe_t vbe_display;
-extern heap_t heap;
-extern kbd_t kbd;
-extern mouse_t mouse;
-extern timer_t timer;
-extern cmos_t cmos;
-extern fifo_t fifo_kbd;
-extern fifo_t fifo_mouse;
 
 void panic(const char* str)
 {
@@ -89,7 +90,7 @@ static void _render_spinner(const int32_t frames)
 
 static void _motd(void)
 {
-	const Date date = cmos_date(&cmos);
+	const date_t date = cmos_date(&cmos);
 	printf(" _             _         _____ _____ \n");
 	printf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
 	printf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
@@ -102,8 +103,8 @@ static void _motd(void)
 	       "Region                          Start Address    End Address      Size\n"
 	       "------------------------------------------------------------------------------------\n"
 	       "Kernel (Code, Data, BSS)        0xC0000000      0xC1000000        16 MiB\n"
-	       "heap_t                            0xC1000000      0xC1400000        4 MiB\n"
-	       "heap_t Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
+	       "Heap                            0xC1000000      0xC1400000        4 MiB\n"
+	       "Heap Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
 	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n\n");
 	return;
 };
@@ -129,7 +130,7 @@ static void _check_multiboot2_alignment(const uint32_t addr)
 static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vbe_display)
 {
 	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
-	const void* framebuffer_v_addr = (void*)(0xE0000000);
+	const void* framebuffer_v_addr = (void*)(KERNEL_FRAMEBUFFER_ADDR);
 	const unsigned int framebuffer_width = tagfb->common.framebuffer_width;
 	const unsigned int framebuffer_height = tagfb->common.framebuffer_height;
 	const unsigned int framebuffer_pitch = tagfb->common.framebuffer_pitch;
@@ -166,17 +167,9 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 	const float used_percentage = ((float)total_size / max_kernel_size) * 100.0;
 
 	if (used_percentage >= 100.0) {
-		panic("[CRITICAL] Kernel Memory SIZE EXCEEDS 16 MiB!");
-	} else if (used_percentage >= 90.0) {
-		printf("[WARNING] Kernel Memory NEARING MAX SIZE: %f%% USED.\n", used_percentage);
-	} else if (used_percentage >= 75.0) {
-		printf("[CAUTION] Kernel Memory IS HEAVY: %f%% USED.\n", used_percentage);
-	} else if (used_percentage >= 50.0) {
-		printf("[NOTICE] Kernel Memory HALF FULL: %f%% USED.\n", used_percentage);
-	} else if (used_percentage >= 25.0) {
-		printf("[INFO] Kernel Memory IS FINE: %f%% USED.\n", used_percentage);
+		panic("[CRITICAL] Kernel Memory > 16 MiB");
 	} else {
-		printf("[OK] Kernel Memory IS EFFICIENT: %f%% USED.\n", used_percentage);
+		printf("[STATUS] Kernel Memory Usage: %f%%\n", used_percentage);
 	};
 	return;
 };
@@ -188,9 +181,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	idt_init();
 
 	_read_multiboot2(magic, addr, &vbe_display);
-	_check_kernel_size(16 * 1024 * 1024); // 16 MiB max kernel size
+	_check_kernel_size(MAX_KERNEL_SIZE);
 
-	heap_init(&heap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096); // 4 MiB max heap size
+	heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
 	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
 
 	fifo_init(&fifo_kbd);

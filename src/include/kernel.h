@@ -7,6 +7,17 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#define KERNEL_START_ADDR 0xC0000000
+#define HEAP_START_ADDR 0xC1000000
+#define HEAP_BITMAP_ADDR 0xC1400000
+#define KERNEL_FRAMEBUFFER_ADDR 0xE0000000
+#define MAX_KERNEL_SIZE (16 * 1024 * 1024) // 16 MiB
+#define MAX_HEAP_SIZE (4 * 1024 * 1024)	   // 4 MiB
+#define HEAP_ALIGNMENT 4096
+
+#define p2v(addr) ((void*)((addr) + KERNEL_START_ADDR))
+#define KERNEL_DEBUG_DELAY 0
+
 extern char _multiboot_start[], _multiboot_end[];
 extern char _boot_start[], _boot_end[];
 extern char _text_start[], _text_end[];
@@ -14,9 +25,6 @@ extern char _rodata_start[], _rodata_end[];
 extern char _data_start[], _data_end[];
 extern char _bss_start[], _bss_end[];
 extern char _kernel_start[], _kernel_end[];
-
-#define p2v(addr) ((void*)((addr) + 0xC0000000))
-#define KERNEL_DEBUG_DELAY 0
 
 #include <stddef.h>
 

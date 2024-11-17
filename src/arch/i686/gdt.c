@@ -16,8 +16,8 @@ extern void gdt_flush(uint32_t);
 void gdt_init(void);
 void gdt_set_entry(const uint32_t num, const uint32_t base, const uint32_t limit, const uint8_t access, const uint32_t flags);
 
-struct GdtEntry gdt_entries[6];
-struct Gdt gdt;
+gdt_entry_t gdt_entries[6];
+gdt_t gdt;
 
 #define KERNEL_CODE_SEG 0x9A
 #define KERNEL_DATA_SEG 0x92
@@ -25,10 +25,10 @@ struct Gdt gdt;
 #define USER_DATA_SEG 0xF2
 #define TSS_SEG 0x89
 
-void gdt_init()
+void gdt_init(void)
 {
 	// Set the GDT limit (size of all entries - 1) and base (address of gdt_entries array)
-	gdt.limit = (sizeof(struct GdtEntry) * 6) - 1;
+	gdt.limit = (sizeof(struct gdt_entry_t) * 6) - 1;
 	gdt.base = (uint32_t)&gdt_entries;
 	// Set up the individual GDT entries:
 	gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Kernel code segment

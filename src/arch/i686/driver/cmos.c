@@ -11,7 +11,7 @@
 #include "io.h"
 
 /* PUBLIC API */
-Date cmos_date(cmos_t* self);
+date_t cmos_date(cmos_t* self);
 
 /* INTERNAL API */
 static int32_t _bcd_to_decimal(const int32_t bcd);
@@ -43,7 +43,7 @@ static void _dump_cmos(cmos_t* self)
 	return;
 };
 
-Date cmos_date(cmos_t* self)
+date_t cmos_date(cmos_t* self)
 {
 	_dump_cmos(self);
 	const int32_t bcd_weekday = self->values[6];
@@ -57,7 +57,7 @@ Date cmos_date(cmos_t* self)
 	const int32_t month = _bcd_to_decimal(bcd_month);
 	const int32_t year = bcd_century * 10 + _bcd_to_decimal(bcd_year);
 
-	const Date date = {
+	const date_t date = {
 	    .weekday = weekday,
 	    .day = day,
 	    .month = month,
