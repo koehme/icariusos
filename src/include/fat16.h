@@ -17,10 +17,10 @@
 fs_t* fat16_init(void);
 
 int32_t fat16_resolve(ata_t* dev);
-void* fat16_open(ata_t* dev, PathNode* path, const VNODE_MODE mode);
+void* fat16_open(ata_t* dev, pathnode_t* path, const VNODE_MODE mode);
 size_t fat16_read(ata_t* dev, void* internal, uint8_t* buffer, const size_t n_bytes, const size_t n_blocks);
 int32_t fat16_close(void* internal);
-int32_t fat16_stat(ata_t* dev, void* internal, VStat* vstat);
+int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat_t);
 int32_t fat16_seek(void* internal, uint32_t offset, const VNODE_SEEK_MODE mode);
 
 #endif

@@ -9,7 +9,6 @@
 
 #include "ata.h"
 
-
 typedef enum VNODE_SEEK_MODE {
 	SEEK_SET,
 	SEEK_CUR,
@@ -23,7 +22,7 @@ typedef enum VNODE_MODE {
 	V_INVALID,
 } VNODE_MODE;
 
-typedef struct VStat {
+typedef struct vstat_t {
 	char st_dev[2];
 	VNODE_MODE st_mode;
 	uint32_t st_size;
@@ -32,8 +31,8 @@ typedef struct VStat {
 	uint16_t st_atime;
 	uint16_t st_mtime;
 	uint16_t st_ctime;
-} VStat;
+} vstat_t;
 
-void vnode_dump(const VStat* vstat, const char name[]);
+void vnode_dump(const vstat_t* self, const char name[]);
 
 #endif

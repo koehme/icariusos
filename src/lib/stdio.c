@@ -1,5 +1,14 @@
+/**
+ * @file stdio.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include "stdio.h"
 #include "stdlib.h"
+
+/* PUBLIC API */
+int printf(const char* fmt, ...);
 
 int printf(const char* fmt, ...)
 {

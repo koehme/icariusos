@@ -37,7 +37,7 @@ static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* v
 static void _check_kernel_size(const uint32_t max_kernel_size);
 
 extern vbe_t vbe_display;
-extern Heap kheap;
+extern heap_t heap;
 extern kbd_t kbd;
 extern mouse_t mouse;
 extern timer_t timer;
@@ -102,8 +102,8 @@ static void _motd(void)
 	       "Region                          Start Address    End Address      Size\n"
 	       "------------------------------------------------------------------------------------\n"
 	       "Kernel (Code, Data, BSS)        0xC0000000      0xC1000000        16 MiB\n"
-	       "Heap                            0xC1000000      0xC1400000        4 MiB\n"
-	       "Heap Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
+	       "heap_t                            0xC1000000      0xC1400000        4 MiB\n"
+	       "heap_t Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
 	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n\n");
 	return;
 };
@@ -190,8 +190,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(16 * 1024 * 1024); // 16 MiB max kernel size
 
-	heap_init(&kheap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096); // 4 MiB max heap size
-	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&kheap));
+	heap_init(&heap, (void*)0xC1000000, (void*)0xC1400000, 4 * 1024 * 1024, 4096); // 4 MiB max heap size
+	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
@@ -216,7 +216,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	vfs_fread(buffer, 10, 1, fd);
 	printf("%s\n", buffer);
 
-	pci_enumerate_bus();
+	// pci_enumerate_bus();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

@@ -7,29 +7,26 @@
 #ifndef PATHPARSER_H
 #define PATHPARSER_H
 
-#include <stdbool.h>
 #include "pathlexer.h"
+#include <stdbool.h>
 
-typedef struct PathParser
-{
-    PathToken curr;
-    PathToken prev;
-    bool has_error;
-} PathParser;
+typedef struct pathparser_t {
+	pathtoken_t curr;
+	pathtoken_t prev;
+	bool has_error;
+} pathparser_t;
 
-typedef struct PathNode
-{
-    char identifier[8];
-    struct PathNode *next;
-} PathNode;
+typedef struct pathnode_t {
+	char identifier[8];
+	struct pathnode_t* next;
+} pathnode_t;
 
-typedef struct PathRootNode
-{
-    char drive[2];
-    PathNode *path;
-} PathRootNode;
+typedef struct pathroot_node_t {
+	char drive[2];
+	pathnode_t* path;
+} pathroot_node_t;
 
-PathRootNode *path_parser_parse(PathParser *self, const char *path);
-void path_parser_free(PathRootNode *root);
+pathroot_node_t* path_parser_parse(pathparser_t* self, const char* path);
+void path_parser_free(pathroot_node_t* root);
 
 #endif

@@ -12,14 +12,13 @@
 #include "cursor.h"
 #include <stdint.h>
 
-typedef enum VGAPorts {
-	VGA_CTRL = 0x3d4,
-	VGA_DATA = 0x3d5,
-	VGA_LOW_OFFSET = 0x0f,
-	VGA_HIGH_OFFSET = 0x0e,
-} VGAPorts;
+// VGA Ports
+#define VGA_CTRL 0x3D4	     // VGA Control Register
+#define VGA_DATA 0x3D5	     // VGA Data Register
+#define VGA_LOW_OFFSET 0x0F  // Low byte offset for cursor position
+#define VGA_HIGH_OFFSET 0x0E // High byte offset for cursor position
 
-typedef enum VGAColor {
+typedef enum vga_color_t {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
 	VGA_COLOR_GREEN = 2,
@@ -36,22 +35,22 @@ typedef enum VGAColor {
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_YELLOW = 14,
 	VGA_COLOR_WHITE = 15,
-} VGAColor;
+} vga_color_t;
 
-typedef struct VGADisplay {
+typedef struct vga_t {
 	uint16_t* framebuffer;
 	uint16_t cursor_x; // Horizontal position (column) where the character will be placed
 	uint16_t cursor_y; // Vertical position (row) where the character will be placed
 	uint8_t width;
 	uint8_t height;
-} VGADisplay;
+} vga_t;
 
-extern VGADisplay vga_display;
+extern vga_t vga_display;
 
-void vga_display_init(VGADisplay* self, uint16_t* framebuffer, const uint8_t width, const uint8_t height);
-void vga_display_clear(VGADisplay* self);
-void vga_print(VGADisplay* self, const char* str, const VGAColor color);
-void vga_print_ch(VGADisplay* self, const char ch, const VGAColor color);
-void vga_display_set_cursor(VGADisplay* self, const uint8_t y, const uint8_t x);
+void vga_display_init(vga_t* self, uint16_t* framebuffer, const uint8_t width, const uint8_t height);
+void vga_display_clear(vga_t* self);
+void vga_print(vga_t* self, const char* str, const vga_color_t color);
+void vga_print_ch(vga_t* self, const char ch, const vga_color_t color);
+void vga_display_set_cursor(vga_t* self, const uint8_t y, const uint8_t x);
 
 #endif

@@ -8,31 +8,31 @@
 #include "kernel.h"
 #include "string.h"
 
-PathParser path_parser = {
+pathparser_t path_parser = {
     .curr = {},
     .prev = {},
     .has_error = false,
 };
 
 /* PUBLIC API */
-PathRootNode* path_parser_parse(PathParser* self, const char* path);
-void path_parser_free(PathRootNode* root);
+pathroot_node_t* path_parser_parse(pathparser_t* self, const char* path);
+void path_parser_free(pathroot_node_t* root);
 
 /* INTERNAL API */
-static void path_parser_handle_syntax_error(PathParser* self, const char* message);
-static void path_parser_report_error(PathParser* self, const char* message);
-static bool path_parser_check(const PathParser* self, const PathType expected);
-static PathType path_parser_peek(const PathParser* self);
-static void path_parser_advance(PathParser* self, PathLexer* lexer);
-static bool path_parser_match(PathParser* self, PathLexer* lexer, const PathType expected);
-static void path_parser_eat(PathParser* self, PathLexer* lexer, const PathType expected, const char* message);
-PathNode* path_parser_parse_dir(PathParser* self, PathLexer* lexer, PathNode* curr_node);
-PathNode* path_parser_parse_filename(PathParser* self, PathLexer* lexer, PathNode* curr_node);
-PathNode* path_parser_parse_entry(PathParser* self, PathLexer* lexer, PathNode* curr_node);
-PathNode* path_parser_parse_entries(PathParser* self, PathLexer* lexer, PathNode* curr_node);
-PathRootNode* path_parser_parse_drive(PathParser* self, PathLexer* lexer);
-PathRootNode* path_parser_parse_path(PathParser* self, PathLexer* lexer);
-static void free_node(PathNode* curr_node);
+static void path_parser_handle_syntax_error(pathparser_t* self, const char* message);
+static void path_parser_report_error(pathparser_t* self, const char* message);
+static bool path_parser_check(const pathparser_t* self, const pathtype_t expected);
+static pathtype_t path_parser_peek(const pathparser_t* self);
+static void path_parser_advance(pathparser_t* self, pathlexer_t* lexer);
+static bool path_parser_match(pathparser_t* self, pathlexer_t* lexer, const pathtype_t expected);
+static void path_parser_eat(pathparser_t* self, pathlexer_t* lexer, const pathtype_t expected, const char* message);
+pathnode_t* path_parser_parse_dir(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node);
+pathnode_t* path_parser_parse_filename(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node);
+pathnode_t* path_parser_parse_entry(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node);
+pathnode_t* path_parser_parse_entries(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node);
+pathroot_node_t* path_parser_parse_drive(pathparser_t* self, pathlexer_t* lexer);
+pathroot_node_t* path_parser_parse_path(pathparser_t* self, pathlexer_t* lexer);
+static void free_node(pathnode_t* curr_node);
 
 /*
 path        -> drive ':' entries
@@ -48,7 +48,7 @@ identifier  -> ( 'a' - 'z' )*
 letter      -> ( 'A' - 'Z' )
 */
 
-static void path_parser_handle_syntax_error(PathParser* self, const char* message)
+static void path_parser_handle_syntax_error(pathparser_t* self, const char* message)
 {
 	printf("Syntax Error occurred! ");
 
@@ -61,17 +61,17 @@ static void path_parser_handle_syntax_error(PathParser* self, const char* messag
 	return;
 };
 
-static void path_parser_report_error(PathParser* self, const char* message)
+static void path_parser_report_error(pathparser_t* self, const char* message)
 {
 	path_parser_handle_syntax_error(self, message);
 	return;
 };
 
-static bool path_parser_check(const PathParser* self, const PathType expected) { return self->curr.type == expected; };
+static bool path_parser_check(const pathparser_t* self, const pathtype_t expected) { return self->curr.type == expected; };
 
-static PathType path_parser_peek(const PathParser* self) { return self->curr.type; };
+static pathtype_t path_parser_peek(const pathparser_t* self) { return self->curr.type; };
 
-static void path_parser_advance(PathParser* self, PathLexer* lexer)
+static void path_parser_advance(pathparser_t* self, pathlexer_t* lexer)
 {
 	self->prev = self->curr;
 
@@ -86,7 +86,7 @@ static void path_parser_advance(PathParser* self, PathLexer* lexer)
 	return;
 };
 
-static bool path_parser_match(PathParser* self, PathLexer* lexer, const PathType expected)
+static bool path_parser_match(pathparser_t* self, pathlexer_t* lexer, const pathtype_t expected)
 {
 	if (path_parser_check(self, expected)) {
 		path_parser_advance(self, lexer);
@@ -95,7 +95,7 @@ static bool path_parser_match(PathParser* self, PathLexer* lexer, const PathType
 	return false;
 };
 
-static void path_parser_eat(PathParser* self, PathLexer* lexer, const PathType expected, const char* message)
+static void path_parser_eat(pathparser_t* self, pathlexer_t* lexer, const pathtype_t expected, const char* message)
 {
 	if (path_parser_check(self, expected)) {
 		path_parser_advance(self, lexer);
@@ -105,14 +105,14 @@ static void path_parser_eat(PathParser* self, PathLexer* lexer, const PathType e
 	return;
 };
 
-PathNode* path_parser_parse_dir(PathParser* self, PathLexer* lexer, PathNode* curr_node)
+pathnode_t* path_parser_parse_dir(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node)
 {
 	memcpy(curr_node->identifier, self->prev.start, self->prev.len);
 	curr_node->next = 0x0;
 	return curr_node;
 };
 
-PathNode* path_parser_parse_filename(PathParser* self, PathLexer* lexer, PathNode* curr_node)
+pathnode_t* path_parser_parse_filename(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node)
 {
 	size_t bytes = self->prev.len;
 	path_parser_eat(self, lexer, PT_DOT, "Expect an '.' in an filename.");
@@ -124,7 +124,7 @@ PathNode* path_parser_parse_filename(PathParser* self, PathLexer* lexer, PathNod
 	return curr_node;
 };
 
-PathNode* path_parser_parse_entry(PathParser* self, PathLexer* lexer, PathNode* curr_node)
+pathnode_t* path_parser_parse_entry(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node)
 {
 	if (path_parser_match(self, lexer, PT_IDENTIFIER)) {
 		curr_node = path_parser_parse_dir(self, lexer, curr_node);
@@ -136,13 +136,13 @@ PathNode* path_parser_parse_entry(PathParser* self, PathLexer* lexer, PathNode* 
 	return curr_node;
 };
 
-PathNode* path_parser_parse_entries(PathParser* self, PathLexer* lexer, PathNode* curr_node)
+pathnode_t* path_parser_parse_entries(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node)
 {
-	PathNode* head = 0x0;
-	PathNode* prev = 0x0;
+	pathnode_t* head = 0x0;
+	pathnode_t* prev = 0x0;
 
 	while (path_parser_match(self, lexer, PT_SLASH)) {
-		PathNode* new_node = kcalloc(sizeof(PathNode));
+		pathnode_t* new_node = kcalloc(sizeof(pathnode_t));
 
 		if (!head) {
 			head = new_node;
@@ -155,9 +155,9 @@ PathNode* path_parser_parse_entries(PathParser* self, PathLexer* lexer, PathNode
 	return head;
 };
 
-PathRootNode* path_parser_parse_drive(PathParser* self, PathLexer* lexer)
+pathroot_node_t* path_parser_parse_drive(pathparser_t* self, pathlexer_t* lexer)
 {
-	PathRootNode* root = kcalloc(sizeof(PathRootNode));
+	pathroot_node_t* root = kcalloc(sizeof(pathroot_node_t));
 
 	if (path_parser_match(self, lexer, PT_LETTER)) {
 		memcpy(root->drive, self->prev.start, 1 * sizeof(char));
@@ -170,25 +170,25 @@ PathRootNode* path_parser_parse_drive(PathParser* self, PathLexer* lexer)
 	return root;
 };
 
-PathRootNode* path_parser_parse_path(PathParser* self, PathLexer* lexer)
+pathroot_node_t* path_parser_parse_path(pathparser_t* self, pathlexer_t* lexer)
 {
-	PathRootNode* root = path_parser_parse_drive(self, lexer);
+	pathroot_node_t* root = path_parser_parse_drive(self, lexer);
 	root->path = path_parser_parse_entries(self, lexer, 0x0);
 	return root;
 };
 
 // Creates a data structure representing a given file system path for easy traversal of the path
-PathRootNode* path_parser_parse(PathParser* self, const char* path)
+pathroot_node_t* path_parser_parse(pathparser_t* self, const char* path)
 {
-	PathLexer lexer = {};
+	pathlexer_t lexer = {};
 	path_lexer_init(&lexer, path);
-	PathRootNode* root = 0x0;
+	pathroot_node_t* root = 0x0;
 	path_parser_advance(self, &lexer);
 	root = path_parser_parse_path(self, &lexer);
 	return root;
 };
 
-static void free_node(PathNode* curr_node)
+static void free_node(pathnode_t* curr_node)
 {
 	if (curr_node == 0x0) {
 		return;
@@ -197,7 +197,7 @@ static void free_node(PathNode* curr_node)
 	kfree(curr_node);
 };
 
-void path_parser_free(PathRootNode* root)
+void path_parser_free(pathroot_node_t* root)
 {
 	if (root == 0x0) {
 		return;

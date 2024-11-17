@@ -1,3 +1,9 @@
+/**
+ * @file gdt.h
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #ifndef GDT_H
 #define GDT_H
 

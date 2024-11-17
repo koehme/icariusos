@@ -12,13 +12,13 @@
 
 #include "ata.h"
 
-typedef struct Stream {
+typedef struct stream_t {
 	size_t pos;
 	ata_t* dev;
-} Stream;
+} stream_t;
 
-void stream_init(Stream* self, ata_t* dev);
-void stream_seek(Stream* self, const size_t pos);
-int32_t stream_read(Stream* self, uint8_t* buffer, size_t n_bytes);
+void stream_init(stream_t* self, ata_t* dev);
+void stream_seek(stream_t* self, const size_t pos);
+int32_t stream_read(stream_t* self, uint8_t* buffer, size_t n_bytes);
 
 #endif

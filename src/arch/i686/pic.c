@@ -1,6 +1,18 @@
-#include "pic.h"
+/**
+ * @file pic.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
 
+#include "pic.h"
 #include "io.h"
+
+/* PUBLIC API */
+void pic_init(void);
+
+/* INTERNAL API */
+static void pic_remap1(void);
+static void pic_remap2(void);  
 
 static void pic_remap1()
 {

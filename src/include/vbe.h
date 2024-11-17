@@ -9,14 +9,9 @@
 
 #define VBE_DEBUG_DELAY 0
 
-typedef enum ChEncoding {
-	ASCII = 128,
-} ChEncoding;
-
-typedef enum FontSize {
-	FONT_WIDTH = 8,
-	FONT_HEIGHT = 8,
-} FontSize;
+#define ASCII 128     // ASCII encoding with 128 characters
+#define FONT_WIDTH 8  // Width of a font character in pixels
+#define FONT_HEIGHT 8 // Height of a font character in pixels
 
 #include <stdint.h>
 
@@ -163,20 +158,20 @@ typedef struct vbe_t {
 	uint32_t cursor_y;
 } vbe_t;
 
-typedef enum VBEColor {
+typedef enum vbe_color_t {
 	VBE_COLOR_BLACK = 0x000000,
 	VBE_COLOR_RED = 0xFF0000,
 	VBE_COLOR_GREEN = 0x00FF00,
 	VBE_COLOR_BLUE = 0x0000FF,
 	VBE_COLOR_WHITE = 0xFFFFFF,
 	VBE_COLOR_YELLOW = 0xFFFF00,
-} VBEColor;
+} vbe_color_t;
 
 extern vbe_t vbe_display;
 
 void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
-void vbe_draw_hline(vbe_t* self, const uint32_t y, const VBEColor color);
-void vbe_draw_string(vbe_t* self, const char* str, const VBEColor color);
-void vbe_draw_ch(vbe_t* self, char ch, const VBEColor color);
+void vbe_draw_hline(vbe_t* self, const uint32_t y, const vbe_color_t color);
+void vbe_draw_string(vbe_t* self, const char* str, const vbe_color_t color);
+void vbe_draw_ch(vbe_t* self, char ch, const vbe_color_t color);
 
 #endif

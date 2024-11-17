@@ -7,14 +7,11 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-// Essential error codes in the os
-typedef enum StatusCodes {
-	ENOENT = 0x02, // No such file or directory
-	EIO = 0x05,    // I/O error
-	EBADF = 0x09,  // Bad file number
-	ENOMEM = 0x0C, // Not enough core
-	EINVAL = 0x16, // Invalid argument
-	EINVARG = 2,
-} StatusCodes;
+#define ENOENT 0x02 // No such file or directory
+#define EIO 0x05    // I/O error
+#define EBADF 0x09  // Bad file number
+#define ENOMEM 0x0C // Not enough core
+#define EINVAL 0x16 // Invalid argument
+#define EINVARG 2   // Invalid argument (duplicate of ENOENT)
 
 #endif

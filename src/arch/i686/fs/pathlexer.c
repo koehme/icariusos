@@ -9,34 +9,34 @@
 
 #include <stdbool.h>
 
-PathLexer path_lexer = {
+pathlexer_t path_lexer = {
     .curr = 0x0,
     .start = 0x0,
 };
 
 /* PUBLIC API */
-void path_lexer_init(PathLexer* self, const char* path);
-PathToken path_lexer_lex(PathLexer* self);
+void path_lexer_init(pathlexer_t* self, const char* path);
+pathtoken_t path_lexer_lex(pathlexer_t* self);
 
 /* INTERNAL API */
-inline static bool path_lexer_is_eof(const PathLexer* self);
-inline static char path_lexer_peek(const PathLexer* self);
-static char path_lexer_peek_next(const PathLexer* self);
-static char path_lexer_advance(PathLexer* self);
-static PathToken path_lexer_create_token(PathLexer* self, PathType type);
-static PathToken path_lexer_lex_identifier(PathLexer* self);
+inline static bool path_lexer_is_eof(const pathlexer_t* self);
+inline static char path_lexer_peek(const pathlexer_t* self);
+static char path_lexer_peek_next(const pathlexer_t* self);
+static char path_lexer_advance(pathlexer_t* self);
+static pathtoken_t path_lexer_create_token(pathlexer_t* self, pathtype_t type);
+static pathtoken_t path_lexer_lex_identifier(pathlexer_t* self);
 
-inline static bool path_lexer_is_eof(const PathLexer* self) { return *self->curr == '\0'; };
+inline static bool path_lexer_is_eof(const pathlexer_t* self) { return *self->curr == '\0'; };
 
-static char path_lexer_advance(PathLexer* self)
+static char path_lexer_advance(pathlexer_t* self)
 {
 	self->curr = self->curr + 1;
 	return *(self->curr - 1);
 };
 
-static PathToken path_lexer_create_token(PathLexer* self, PathType type)
+static pathtoken_t path_lexer_create_token(pathlexer_t* self, pathtype_t type)
 {
-	const PathToken token = {
+	const pathtoken_t token = {
 	    .type = type,
 	    .start = self->start,
 	    .len = (int32_t)(self->curr - self->start),
@@ -44,16 +44,16 @@ static PathToken path_lexer_create_token(PathLexer* self, PathType type)
 	return token;
 };
 
-void path_lexer_init(PathLexer* self, const char* path)
+void path_lexer_init(pathlexer_t* self, const char* path)
 {
 	self->start = (char*)path;
 	self->curr = (char*)path;
 	return;
 };
 
-inline static char path_lexer_peek(const PathLexer* self) { return *self->curr; };
+inline static char path_lexer_peek(const pathlexer_t* self) { return *self->curr; };
 
-static char path_lexer_peek_next(const PathLexer* self)
+static char path_lexer_peek_next(const pathlexer_t* self)
 {
 	if (path_lexer_is_eof(self)) {
 		return '\0';
@@ -61,7 +61,7 @@ static char path_lexer_peek_next(const PathLexer* self)
 	return *(self->curr + 1);
 };
 
-static PathToken path_lexer_lex_identifier(PathLexer* self)
+static pathtoken_t path_lexer_lex_identifier(pathlexer_t* self)
 {
 	while (isalpha(path_lexer_peek(self))) {
 		path_lexer_advance(self);
@@ -69,7 +69,7 @@ static PathToken path_lexer_lex_identifier(PathLexer* self)
 	return path_lexer_create_token(self, PT_IDENTIFIER);
 };
 
-PathToken path_lexer_lex(PathLexer* self)
+pathtoken_t path_lexer_lex(pathlexer_t* self)
 {
 	self->start = self->curr;
 

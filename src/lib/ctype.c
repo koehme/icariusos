@@ -1,4 +1,13 @@
+/**
+ * @file ctype.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include "ctype.h"
+
+/* PUBLIC API */
+int isalpha(int c);
 
 int isalpha(int c)
 {

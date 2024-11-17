@@ -21,24 +21,24 @@
 #include "string.h"
 
 /* PUBLIC API */
-void stream_init(Stream* self, ata_t* dev);
-void stream_seek(Stream* self, const size_t pos);
-int32_t stream_read(Stream* self, uint8_t* buffer, const size_t n_bytes);
+void stream_init(stream_t* self, ata_t* dev);
+void stream_seek(stream_t* self, const size_t pos);
+int32_t stream_read(stream_t* self, uint8_t* buffer, const size_t n_bytes);
 
-void stream_init(Stream* self, ata_t* dev)
+void stream_init(stream_t* self, ata_t* dev)
 {
 	self->pos = 0;
 	self->dev = dev;
 	return;
 };
 
-void stream_seek(Stream* self, const size_t pos)
+void stream_seek(stream_t* self, const size_t pos)
 {
 	self->pos = pos;
 	return;
 };
 
-int32_t stream_read(Stream* self, uint8_t* buffer, const size_t n_bytes)
+int32_t stream_read(stream_t* self, uint8_t* buffer, const size_t n_bytes)
 {
 	int32_t ata_status = -1;
 

@@ -28,16 +28,16 @@ typedef struct HeapBitMap {
 	size_t total_blocks; // Assume block_size is a power of 2^12 (e.g., 4096)
 } HeapBitMap;
 
-typedef struct Heap {
+typedef struct heap_t {
 	HeapBitMap* bitmap; // Pointer to the heap byte map data structure
 	void* saddr;	    // Start address of the raw heap data pool
 	size_t block_size;  // Size of each memory block in the heap
-} Heap;
+} heap_t;
 
-void heap_init(Heap* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size);
+void heap_init(heap_t* self, void* kheap_saddr, void* bitmap_saddr, const size_t n_bytes, const size_t block_size);
 void* kmalloc(const size_t size);
 void* kcalloc(const size_t size);
 void kfree(void* ptr);
-double kheap_info(Heap* self);
+double kheap_info(heap_t* self);
 
 #endif

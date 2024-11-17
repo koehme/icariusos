@@ -1,3 +1,9 @@
+/**
+ * @file stdlib.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -5,6 +11,13 @@
 
 #include "math.h"
 #include "stdlib.h"
+
+/* PUBLIC API */
+size_t slen(const char* str);
+char* itoa(int value, char* str, int base);
+void dtoa(double n, char* res, int afterpoint);
+char* utoa(unsigned int num, char* str, int base);
+void dtoa(double n, char* res, int afterpoint);
 
 size_t slen(const char* str)
 {

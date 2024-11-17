@@ -27,15 +27,18 @@ extern fifo_t fifo_mouse;
 extern void asm_idt_loader(IDT_R* ptr);
 extern void asm_interrupt_default();
 
-static void pic1_send_eoi(void);
+/* PUBLIC API */
+void idt_init(void);
+void idt_set(const int32_t isr_num, void* isr);
 void isr_20h_handler(void);
 void isr_21h_handler(void);
 void isr_32h_handler(void);
 void isr_default_handler(void);
-static void idt_entries_init(void);
 
-void idt_init(void);
-void idt_set(const int32_t isr_num, void* isr);
+/* INTERNAL API */
+static void _pic1_send_eoi(void);
+static void _pic2_send_eoi(void);
+static void _init_isr(void);
 
 static const char* interrupt_messages[] = {
     // CPU Interrupts
@@ -91,20 +94,16 @@ static const char* interrupt_messages[] = {
     "Secondary ATA Hard Disk (IRQ15)\n",
 };
 
-// Contains interrupt service routines that are required for handling interrupts
 static IDTDescriptor idt[256];
-// The location of the IDT is kept in the IDT_R (IDT register). This is loaded using the LIDT assembly instruction, whose argument is a pointer to an
-// IDTDescriptor structure
 static IDT_R idtr_descriptor;
 
-// Sends an end-of-interrupt (EOI) signal to the PIC
-static void pic1_send_eoi(void)
+static void _pic1_send_eoi(void)
 {
 	outb(PIC_1_CTRL, PIC_ACK);
 	return;
 };
 
-static void pic2_send_eoi(void)
+static void _pic2_send_eoi(void)
 {
 	outb(PIC_1_CTRL, PIC_ACK);
 	outb(PIC_2_CTRL, PIC_ACK);
@@ -116,47 +115,41 @@ void isr_20h_handler(void)
 {
 	// printf("%d\n", timer.ticks);
 	timer.ticks++;
-	pic1_send_eoi();
+	_pic1_send_eoi();
 	return;
 };
 
-// PS2 kbd handler
+// PS2 Keyboard handler
 void isr_21h_handler(void)
 {
-	const uint8_t status = inb(PS2_STATUS_COMMAND_PORT);
-
-	if (status & 0x01) {
+	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t data = inb(PS2_DATA_PORT);
 		fifo_enqueue(&fifo_kbd, data);
 	};
-	pic1_send_eoi();
+	_pic1_send_eoi();
 	return;
 };
 
 // PS2 Mouse handler
 void isr_32h_handler(void)
 {
-	const uint8_t status = inb(PS2_STATUS_COMMAND_PORT);
-
-	if (status & 0x01) {
+	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t data = inb(PS2_DATA_PORT);
 		fifo_enqueue(&fifo_mouse, data);
 	};
-	pic2_send_eoi();
+	_pic2_send_eoi();
 	return;
 };
 
 // Default ISR handler
 void isr_default_handler(void)
 {
-	pic1_send_eoi();
+	_pic1_send_eoi();
 	return;
 };
 
-// Initializes the Interrupt Descriptor Table with default dummy interrupt handlers
-static void idt_entries_init(void)
+static void _init_isr(void)
 {
-	// Set default interrupt handlers for all entries in the IDT
 	for (size_t i = 0; i < 256; i++) {
 		idt_set(i, asm_interrupt_default);
 	};
@@ -169,7 +162,7 @@ void idt_init(void)
 	// Set the limit and base address of the IDT descriptor
 	idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
-	idt_entries_init();
+	_init_isr();
 	// Load the idt in a specific 'lidt' register with the help of an assembly routine
 	asm_idt_loader(&idtr_descriptor);
 	return;
