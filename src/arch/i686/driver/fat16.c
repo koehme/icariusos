@@ -85,11 +85,11 @@
 #define DELETED 0xE5
 
 typedef struct fat16_t {
-	ResolveFunction resolve_cb;
-	OpenFunction open_cb;
-	ReadFunction read_cb;
-	CloseFunction close_cb;
-	StatFunction stat_cb;
+	resolve_fn resolve_cb;
+	open_fn open_cb;
+	read_fn read_cb;
+	close_fn close_cb;
+	stat_fn stat_cb;
 	char name[10];
 } fat16_t;
 
@@ -220,11 +220,11 @@ fs_t fat16 = {
 /* PUBLIC API */
 fs_t* fat16_init(void);
 int32_t fat16_resolve(ata_t* dev);
-void* fat16_open(ata_t* dev, pathnode_t* path, VNODE_MODE mode);
+void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode);
 size_t fat16_read(ata_t* dev, void* descriptor, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
 int32_t fat16_close(void* internal);
 int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat);
-int32_t fat16_seek(void* internal, uint32_t offset, VNODE_SEEK_MODE mode);
+int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin);
 
 /* INTERNAL API */
 static uint32_t _convert_data_cluster_to_sector(const uint32_t cluster);
@@ -248,7 +248,7 @@ static fat16_dir_entry_t* _get_entry_in_subdir(ata_t* dev, const uint16_t start_
 					       fat16_dir_entry_t* fat16_dir_entry);
 static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, fat16_dir_entry_t* root_dir_entry, pathnode_t* path_identifier);
 static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path);
-void* fat16_open(ata_t* dev, pathnode_t* path, VNODE_MODE mode);
+void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode);
 static uint32_t _get_start_cluster_from_descriptor(fat16_fd_t* fat16_descriptor);
 static void _set_stat(fat16_fd_t* fat16_descriptor, ata_t* dev, vstat_t* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks);
 static uint16_t _count_allocated_fat_blocks_in_chain(stream_t* fat_stream, const uint16_t max_cluster_size_bytes, const uint32_t start_cluster,
@@ -673,9 +673,9 @@ static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path)
 	return fat16_entry;
 };
 
-void* fat16_open(ata_t* dev, pathnode_t* path, VNODE_MODE mode)
+void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode)
 {
-	if (mode != V_READ) {
+	if (mode != READ) {
 		printf("FAT16 Error: Only read mode is supported\n");
 		return 0x0;
 	};
@@ -802,7 +802,7 @@ static void _set_stat(fat16_fd_t* fat16_descriptor, ata_t* dev, vstat_t* vstat, 
 	switch (fat16_descriptor->entry->type) {
 	case FAT16_ENTRY_TYPE_DIRECTORY: {
 		memcpy(vstat->st_dev, dev->dev, sizeof(char) * 2);
-		vstat->st_mode = V_READ;
+		vstat->st_mode = READ;
 		vstat->st_size = fat16_descriptor->entry->dir->entry->file_size;
 		vstat->st_blksize = max_cluster_size_bytes;
 		vstat->st_blocks = (used_blocks * max_cluster_size_bytes) / dev->sector_size;
@@ -813,7 +813,7 @@ static void _set_stat(fat16_fd_t* fat16_descriptor, ata_t* dev, vstat_t* vstat, 
 	};
 	case FAT16_ENTRY_TYPE_FILE: {
 		memcpy(vstat->st_dev, dev->dev, sizeof(char) * 2);
-		vstat->st_mode = V_READ;
+		vstat->st_mode = READ;
 		vstat->st_size = fat16_descriptor->entry->file->file_size;
 		vstat->st_blksize = max_cluster_size_bytes;
 		vstat->st_blocks = (used_blocks * max_cluster_size_bytes) / dev->sector_size;
@@ -866,7 +866,7 @@ int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat)
 	return res;
 };
 
-int32_t fat16_seek(void* internal, uint32_t offset, const VNODE_SEEK_MODE mode)
+int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin)
 {
 	int32_t res = 0;
 	fat16_fd_t* fat16_descriptor = (fat16_fd_t*)internal;
@@ -876,7 +876,7 @@ int32_t fat16_seek(void* internal, uint32_t offset, const VNODE_SEEK_MODE mode)
 		return res;
 	};
 
-	switch (mode) {
+	switch (origin) {
 	case SEEK_SET: {
 		fat16_descriptor->pos = offset;
 		break;
@@ -892,7 +892,7 @@ int32_t fat16_seek(void* internal, uint32_t offset, const VNODE_SEEK_MODE mode)
 	default: {
 		res = -EINVAL;
 		break;
-	}
+	};
 	};
 	return res;
 };

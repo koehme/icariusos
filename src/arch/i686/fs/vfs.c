@@ -58,14 +58,14 @@ fs_t* vfs_resolve(ata_t* dev);
 int32_t vfs_fopen(const char* filename, const char* mode);
 size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd);
 int32_t vfs_fclose(const int32_t fd);
-int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE whence);
+int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence);
 int32_t vfs_fstat(const int32_t fd, vstat_t* buffer);
 
 /* INTERNAL API */
 static fs_t** _find_empty_fs(void);
 static int32_t _create_fd(fd_t** ptr);
 static fd_t* _get_fd(const int32_t fd);
-static VNODE_MODE _get_vmode(const char* mode);
+static uint8_t _get_vmode(const char* mode);
 
 void vfs_init(void)
 {
@@ -144,24 +144,24 @@ fs_t* vfs_resolve(ata_t* dev)
 	return 0x0;
 };
 
-static VNODE_MODE _get_vmode(const char* mode)
+static uint8_t _get_vmode(const char* mode)
 {
 	switch (*mode) {
 	case 'r': {
-		return V_READ;
+		return READ;
 	};
 	default:
 		break;
 	};
-	return V_INVALID;
+	return INVALID;
 };
 
 int32_t vfs_fopen(const char* filename, const char* mode)
 {
 	int32_t res = 0;
-	const VNODE_MODE vmode = _get_vmode(mode);
+	const uint8_t vmode = _get_vmode(mode);
 
-	if (vmode != V_READ) {
+	if (vmode != READ) {
 		res = -EINVAL;
 		return res;
 	};
@@ -229,7 +229,7 @@ int32_t vfs_fclose(const int32_t fd)
 	return res;
 };
 
-int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE whence)
+int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence)
 {
 	int32_t res = 0;
 

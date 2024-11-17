@@ -16,20 +16,20 @@
 
 typedef struct ata_t ata_t;
 
-typedef int32_t (*ResolveFunction)(ata_t* dev);
-typedef void* (*OpenFunction)(ata_t* dev, pathnode_t* path, const VNODE_MODE mode);
-typedef size_t (*ReadFunction)(ata_t* dev, void* internal, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
-typedef int32_t (*CloseFunction)(void* internal);
-typedef int32_t (*StatFunction)(ata_t* dev, void* internal, vstat_t* buffer);
-typedef int32_t (*SeekFunction)(void* internal, const uint32_t offset, const VNODE_SEEK_MODE whence);
+typedef int32_t (*resolve_fn)(ata_t* dev);
+typedef void* (*open_fn)(ata_t* dev, pathnode_t* path, const uint8_t mode);
+typedef size_t (*read_fn)(ata_t* dev, void* internal, uint8_t* buffer, size_t n_bytes, size_t n_blocks);
+typedef int32_t (*close_fn)(void* internal);
+typedef int32_t (*stat_fn)(ata_t* dev, void* internal, vstat_t* buffer);
+typedef int32_t (*seek_fn)(void* internal, const uint32_t offset, const uint8_t whence);
 
 typedef struct fs_t {
-	ResolveFunction resolve_cb;
-	OpenFunction open_cb;
-	ReadFunction read_cb;
-	CloseFunction close_cb;
-	StatFunction stat_cb;
-	SeekFunction seek_cb;
+	resolve_fn resolve_cb;
+	open_fn open_cb;
+	read_fn read_cb;
+	close_fn close_cb;
+	stat_fn stat_cb;
+	seek_fn seek_cb;
 	char name[10];
 } fs_t;
 
@@ -50,6 +50,6 @@ size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd
 fs_t* vfs_resolve(ata_t* dev);
 int32_t vfs_fclose(const int32_t fd);
 int32_t vfs_fstat(const int32_t fd, vstat_t* buffer);
-int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const VNODE_SEEK_MODE whence);
+int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence);
 
 #endif
