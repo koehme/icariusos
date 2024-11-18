@@ -336,41 +336,44 @@ static void _dump_fat16_ebpb_header(const ebpb_t* ebpb, const char* msg, const i
 {
 	uint8_t vol_lab[12] = {};
 	uint8_t fil_sys_type[9] = {};
-	printf(msg);
-	printf("----------------------------------\n");
-	printf("drv_num: 0x%x\n", ebpb->drv_num);
-	printf("reserved1: 0x%x\n", ebpb->reserved1);
-	printf("boot_sig: %d\n", ebpb->boot_sig);
-	printf("vol_id: 0x%x\n", ebpb->vol_id);
 	memcpy(vol_lab, ebpb->vol_lab, 11);
+	vol_lab[11] = '\0';
 	memcpy(fil_sys_type, ebpb->fil_sys_type, 7);
-	printf("vol_lab: %s\n", vol_lab);
-	printf("fil_sys_type: %s\n", fil_sys_type);
-	printf("----------------------------------\n");
-	busy_wait(delay);
+	fil_sys_type[7] = '\0';
+
+	printf("\n=============================================\n");
+	printf("%s\n", msg);
+	printf("---------------------------------------------\n");
+	printf(" Drive Number    : 0x%x\n", ebpb->drv_num);
+	printf(" Reserved1       : 0x%x\n", ebpb->reserved1);
+	printf(" Boot Signature  : %d\n", ebpb->boot_sig);
+	printf(" Volume ID       : 0x%x\n", ebpb->vol_id);
+	printf(" Volume Label    : %s\n", vol_lab);
+	printf(" File System Type: %s\n", fil_sys_type);
+	printf("=============================================\n");
 	return;
 };
 
 static void _dump_fat16_base_header(const bpb_t* bpb, const char* msg, const int32_t delay)
 {
-	printf(msg);
-	printf("----------------------------------\n");
-	printf("jmp: 0x%x 0x%x\n", bpb->jmp[0], bpb->jmp[1], bpb->jmp[2]);
-	printf("oem: %s\n", bpb->oem);
-	printf("byts_per_sec: %d\n", bpb->byts_per_sec);
-	printf("sec_per_clus: %d\n", bpb->sec_per_clus);
-	printf("rsvd_sec: %d\n", bpb->rsvd_sec);
-	printf("num_fats: %d\n", bpb->num_fats);
-	printf("root_ent_cnt: %d\n", bpb->root_ent_cnt);
-	printf("tot_sec_16: %d\n", bpb->tot_sec_16);
-	printf("media: 0x%x\n", bpb->media);
-	printf("fatsz16: %d\n", bpb->fatsz16);
-	printf("sec_per_trk: %d\n", bpb->sec_per_trk);
-	printf("num_heads: %d\n", bpb->num_heads);
-	printf("hidd_sec: %d\n", bpb->hidd_sec);
-	printf("tot_sec_32: %d\n", bpb->tot_sec_32);
-	printf("----------------------------------\n");
-	busy_wait(delay);
+	printf("\n=============================================\n");
+	printf("%s\n", msg);
+	printf("---------------------------------------------\n");
+	printf(" Jump Code       : 0x%x 0x%x 0x%x\n", bpb->jmp[0], bpb->jmp[1], bpb->jmp[2]);
+	printf(" OEM Name        : %s\n", bpb->oem);
+	printf(" Bytes Per Sec   : %d\n", bpb->byts_per_sec);
+	printf(" Sec Per Cluster : %d\n", bpb->sec_per_clus);
+	printf(" Reserved Sectors: %d\n", bpb->rsvd_sec);
+	printf(" Number of FATs  : %d\n", bpb->num_fats);
+	printf(" Root Entry Count: %d\n", bpb->root_ent_cnt);
+	printf(" Total Sectors16 : %d\n", bpb->tot_sec_16);
+	printf(" Media Type      : 0x%x\n", bpb->media);
+	printf(" FAT Size 16     : %d\n", bpb->fatsz16);
+	printf(" Sectors Per Trk : %d\n", bpb->sec_per_trk);
+	printf(" Number of Heads : %d\n", bpb->num_heads);
+	printf(" Hidden Sectors  : %d\n", bpb->hidd_sec);
+	printf(" Total Sectors32 : %d\n", bpb->tot_sec_32);
+	printf("=============================================\n");
 	return;
 };
 

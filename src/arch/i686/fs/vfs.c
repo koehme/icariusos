@@ -180,7 +180,6 @@ int32_t vfs_fopen(const char* filename, const char* mode)
 		return res;
 	};
 	void* internal = dev->fs->open_cb(dev, root->path, vmode);
-	// Path analysis completed by the file system; only essential data extracted, safe to delete
 	path_parser_free(root);
 
 	fd_t* fdescriptor = 0x0;
