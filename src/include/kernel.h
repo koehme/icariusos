@@ -52,6 +52,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "vfs.h"
 #include "vga.h"
 
+/* PUBLIC API */
 void panic(const char* str);
 void sleep(const uint32_t ms);
 void busy_wait(const uint64_t delay);

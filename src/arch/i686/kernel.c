@@ -41,10 +41,10 @@ static void _render_spinner(const int32_t frames);
 static void _motd(void);
 static void _check_multiboot2_magic(const uint32_t magic);
 static void _check_multiboot2_alignment(const uint32_t addr);
-static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vbe_display);
 static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* vbe_display);
 static void _check_kernel_size(const uint32_t max_kernel_size);
-
+static void _init_fb(struct multiboot_tag* tag);
+static void _init_mmap(struct multiboot_tag* tag);
 
 void panic(const char* str)
 {
@@ -119,15 +119,47 @@ static void _check_multiboot2_alignment(const uint32_t addr)
 	return;
 };
 
-static void _init_framebuffer(struct multiboot_tag_framebuffer* tagfb, vbe_t* vbe_display)
+void _init_mmap(struct multiboot_tag* tag)
 {
-	const void* framebuffer_addr = (void*)(uintptr_t)(tagfb->common.framebuffer_addr & 0xFFFFFFFF);
+	multiboot_memory_map_t* mmap;
+	struct multiboot_tag_mmap* tag_mmap = (struct multiboot_tag_mmap*)tag;
+
+	for (mmap = tag_mmap->entries; (multiboot_uint8_t*)mmap < (multiboot_uint8_t*)tag + tag->size;
+	     mmap = (multiboot_memory_map_t*)((unsigned long)mmap + tag_mmap->entry_size)) {
+		const uint64_t addr = ((uint64_t)mmap->addr_high << 32) | mmap->addr_low;
+		const uint64_t len = ((uint64_t)mmap->len_high << 32) | mmap->len_low;
+
+		switch (mmap->type) {
+		case MULTIBOOT_MEMORY_AVAILABLE:
+			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
+				// pfa_mark_free(frame);
+			};
+			break;
+		case MULTIBOOT_MEMORY_RESERVED:
+		case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+		case MULTIBOOT_MEMORY_NVS:
+		case MULTIBOOT_MEMORY_BADRAM:
+			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
+				// pfa_mark_reserved(frame);
+			};
+			break;
+		default:
+			break;
+		};
+	};
+	return;
+};
+
+static void _init_fb(struct multiboot_tag* tag)
+{
+	struct multiboot_tag_framebuffer* tag_fb = (struct multiboot_tag_framebuffer*)tag;
+	const void* framebuffer_addr = (void*)(uintptr_t)(tag_fb->common.framebuffer_addr & 0xFFFFFFFF);
 	const void* framebuffer_v_addr = (void*)(KERNEL_FRAMEBUFFER_ADDR);
-	const unsigned int framebuffer_width = tagfb->common.framebuffer_width;
-	const unsigned int framebuffer_height = tagfb->common.framebuffer_height;
-	const unsigned int framebuffer_pitch = tagfb->common.framebuffer_pitch;
-	const unsigned int framebuffer_bpp = tagfb->common.framebuffer_bpp;
-	vbe_init(vbe_display, framebuffer_v_addr, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp);
+	const unsigned int framebuffer_width = tag_fb->common.framebuffer_width;
+	const unsigned int framebuffer_height = tag_fb->common.framebuffer_height;
+	const unsigned int framebuffer_pitch = tag_fb->common.framebuffer_pitch;
+	const unsigned int framebuffer_bpp = tag_fb->common.framebuffer_bpp;
+	vbe_init(&vbe_display, framebuffer_v_addr, framebuffer_width, framebuffer_height, framebuffer_pitch, framebuffer_bpp);
 	return;
 };
 
@@ -139,9 +171,18 @@ static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* v
 	struct multiboot_tag* tag = (struct multiboot_tag*)(vaddr + 8);
 
 	while (tag->type != MULTIBOOT_TAG_TYPE_END) {
-		if (tag->type == MULTIBOOT_TAG_TYPE_FRAMEBUFFER) {
-			_init_framebuffer((struct multiboot_tag_framebuffer*)tag, vbe_display);
+		switch (tag->type) {
+		case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
+			_init_fb(tag);
 			break;
+		};
+		case MULTIBOOT_TAG_TYPE_MMAP: {
+			_init_mmap(tag);
+			break;
+		};
+		default: {
+			break;
+		};
 		};
 		tag = (struct multiboot_tag*)((uint8_t*)tag + ((tag->size + 7) & ~0b00000111));
 	};
@@ -174,8 +215,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
-	heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
-	printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
+	// heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
+	// printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
@@ -184,7 +225,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
 	asm_do_sti();
-
+	/*
 	_render_spinner(64);
 	_motd();
 
@@ -201,6 +242,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	printf("%s\n", buffer);
 
 	pci_enumerate_bus();
+	*/
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
