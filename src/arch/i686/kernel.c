@@ -22,6 +22,7 @@
 #include "kernel.h"
 
 extern vbe_t vbe_display;
+extern pfa_t pfa;
 extern heap_t heap;
 extern kbd_t kbd;
 extern mouse_t mouse;
@@ -131,17 +132,13 @@ void _init_mmap(struct multiboot_tag* tag)
 
 		switch (mmap->type) {
 		case MULTIBOOT_MEMORY_AVAILABLE:
-			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
-				// pfa_mark_free(frame);
-			};
+			// TODO Mark as <Free>
 			break;
 		case MULTIBOOT_MEMORY_RESERVED:
 		case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
 		case MULTIBOOT_MEMORY_NVS:
 		case MULTIBOOT_MEMORY_BADRAM:
-			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
-				// pfa_mark_reserved(frame);
-			};
+			// TODO Mark as <Used>
 			break;
 		default:
 			break;
@@ -215,6 +212,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
+	pfa_init(&pfa);
+	pfa_dump(&pfa);
 	// heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
 	// printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
 

@@ -7,7 +7,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define KERNEL_START_ADDR 0xC0000000
+#define KERNEL_VIRTUAL_START 0xC0000000
 #define HEAP_START_ADDR 0xC1000000
 #define HEAP_BITMAP_ADDR 0xC1400000
 #define KERNEL_FRAMEBUFFER_ADDR 0xE0000000
@@ -15,7 +15,9 @@
 #define MAX_HEAP_SIZE (4 * 1024 * 1024)	   // 4 MiB
 #define HEAP_ALIGNMENT 4096
 
-#define p2v(addr) ((void*)((addr) + KERNEL_START_ADDR))
+#define p2v(addr) ((void*)((addr) + KERNEL_VIRTUAL_START))
+#define v2p(addr) ((uintptr_t*)(addr) - KERNEL_VIRTUAL_START)
+
 #define KERNEL_DEBUG_DELAY 0
 
 extern char _multiboot_start[], _multiboot_end[];
@@ -42,6 +44,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "multiboot2.h"
 #include "page.h"
 #include "pci.h"
+#include "pfa.h"
 #include "pic.h"
 #include "ps2.h"
 #include "status.h"

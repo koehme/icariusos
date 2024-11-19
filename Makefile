@@ -31,6 +31,7 @@ SOURCES_C = \
     ./src/arch/i686/pic.c \
     ./src/arch/i686/memory/heap.c \
     ./src/arch/i686/memory/page.c \
+    ./src/arch/i686/memory/pfa.c \
     ./src/arch/i686/ds/fifo.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
