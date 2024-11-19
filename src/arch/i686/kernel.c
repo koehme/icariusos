@@ -62,6 +62,7 @@ void sleep(const uint32_t ms)
 	const uint32_t end_ticks = timer.ticks + ticks_to_wait;
 
 	while (timer.ticks < end_ticks) {
+		;
 	};
 	return;
 };
@@ -97,15 +98,6 @@ static void _motd(void)
 	printf("|_|___|__,|_| |_|___|___|_____|_____|\n");
 	printf("\nicariusOS is running on an i686 CPU.\n");
 	printf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
-
-	printf("\nicariusOS - Summary of Memory Regions:\n\n"
-	       "------------------------------------------------------------------------------------\n"
-	       "Region                          Start Address    End Address      Size\n"
-	       "------------------------------------------------------------------------------------\n"
-	       "Kernel (Code, Data, BSS)        0xC0000000      0xC1000000        16 MiB\n"
-	       "Heap                            0xC1000000      0xC1400000        4 MiB\n"
-	       "Heap Bytemap                    0xC1400000      0xC1400400        1 KiB\n"
-	       "Free Memory                     0xC1400400      0xC2FFFFFF        Remaining MiB\n\n");
 	return;
 };
 
@@ -143,7 +135,6 @@ static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* v
 {
 	_check_multiboot2_magic(magic);
 	_check_multiboot2_alignment(addr);
-	// Read multiboot2 tags
 	const uint32_t vaddr = (uint32_t)p2v(addr);
 	struct multiboot_tag* tag = (struct multiboot_tag*)(vaddr + 8);
 
