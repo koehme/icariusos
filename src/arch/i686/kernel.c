@@ -131,15 +131,26 @@ void _init_mmap(struct multiboot_tag* tag)
 		const uint64_t len = ((uint64_t)mmap->len_high << 32) | mmap->len_low;
 
 		switch (mmap->type) {
-		case MULTIBOOT_MEMORY_AVAILABLE:
+		case MULTIBOOT_MEMORY_AVAILABLE: {
+			// 1 Iter => 0x0
+			// 2 Iter => 0x9FC00
+			// 3 Iter => 0xF0000
 			// TODO Mark as <Free>
+			// Read each entry in the memory map
+			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
+				// Split each entry into frame - sized chunks(4096 bytes)
+				// Mark the frame as free
+				pfa_mark_free(&pfa, frame);
+			};
 			break;
+		};
 		case MULTIBOOT_MEMORY_RESERVED:
 		case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
 		case MULTIBOOT_MEMORY_NVS:
-		case MULTIBOOT_MEMORY_BADRAM:
+		case MULTIBOOT_MEMORY_BADRAM: {
 			// TODO Mark as <Used>
 			break;
+		};
 		default:
 			break;
 		};
@@ -208,11 +219,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	gdt_init();
 	pic_init();
 	idt_init();
+	pfa_init(&pfa);
 
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
-	pfa_init(&pfa);
+
 	pfa_dump(&pfa);
 	// heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
 	// printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));

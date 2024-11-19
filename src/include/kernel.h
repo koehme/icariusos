@@ -16,7 +16,7 @@
 #define HEAP_ALIGNMENT 4096
 
 #define p2v(addr) ((void*)((addr) + KERNEL_VIRTUAL_START))
-#define v2p(addr) ((uintptr_t*)(addr) - KERNEL_VIRTUAL_START)
+#define v2p(addr) ((void*)((addr) - KERNEL_VIRTUAL_START))
 
 #define KERNEL_DEBUG_DELAY 0
 

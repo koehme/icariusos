@@ -15,14 +15,7 @@ void pfa_init(pfa_t* self)
 	return;
 };
 
-void pfa_mark_free(pfa_t* self, uint64_t frame)
-{
-	const size_t frame_index = frame / PAGE_SIZE; // (0x10000 / 4096) = 16 frame index
-	const size_t byte_index = frame_index / 8;    // 16 / 8 = 2 byte index
-	const size_t bit_offset = frame_index % 8;    // 16 % 8 = 0
-	self->frames_bitmap[frame_index] &= ~(1 << bit_offset);
-	return;
-};
+void pfa_mark_free(pfa_t* self, uint64_t frame) { return; };
 
 void pfa_dump(const pfa_t* self)
 {
