@@ -23,8 +23,6 @@ since childhood, technology has been my playground. the thrill of solving a toug
 - ✨ **logo**: startup is now a visual masterpiece with a sleek, custom logo. 😄  
 - ✨ **paging**: efficient virtual memory management, unlocking limitless potential.  
 
----
-
 ## advanced warfare 🚀
 
 - 🔥 **interrupt-driven ATA reads**: eliminated CPU blockages for lightning-fast disk reads.  
@@ -38,14 +36,10 @@ since childhood, technology has been my playground. the thrill of solving a toug
 - 🔥 **framebuffer rendering**: graphics upgrade with sleek bitmap font support.  
 - 🔥 **higher-half kernel**: kernel now thrives in upper memory realms.  
 
----
-
 ## current ops & next-gen goals 🔥
 
 - 🚧 **FAT16 driver**: filesystem access up and running.  
 - 🚧 **keyboard & mouse drivers**: taking input control to the next level (in progress).  
-
----
 
 ## page frame allocator 📦
 
@@ -63,13 +57,6 @@ since childhood, technology has been my playground. the thrill of solving a toug
 ### Page Directory Integration  
 - 🚧 **map physical pages into the page directory**.  
 - 🚧 **establish a solid link** between virtual addresses and physical memory for ultimate control.  
-
-
-# about
-
-```bash
-cat ./docs/start.md
-```
 
 # dependencies
 
