@@ -7,20 +7,40 @@
 #ifndef PFA_H
 #define PFA_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_P_MEMORY 0x100000000
+extern uint32_t kernel_directory[1024];
+
 #define PAGE_SIZE 4096
-#define BITMAP_SIZE (MAX_P_MEMORY / PAGE_SIZE / 8)
-#define FRAME_USED 0xFF
-#define FRAME_FREE 0x00
+
+#define MAX_PHYSICAL_MEMORY 0x100000000
+#define MAX_FRAMES (MAX_PHYSICAL_MEMORY / PAGE_SIZE)
+#define BITMAP_SIZE (MAX_FRAMES / 32)
+
+
+#define KERNEL_PHYS_BASE 0x00000000
+#define KERNEL_PHYS_END 0x02FFFFFF
+
+#define KERNEL_VIRT_BASE 0xC0000000
+
+#define KERNEL_HEAP_START 0xC1000000
+#define KERNEL_HEAP_MAX 0xC2FFFFFF
+
+#define FRAMEBUFFER_VIRT_BASE 0xE0000000
+#define FRAMEBUFFER_PHYS_BASE 0xFD000000
+#define FRAMEBUFFER_WIDTH 800
+#define FRAMEBUFFER_HEIGHT 600
+#define FRAMEBUFFER_DEPTH (32 / 8)
+#define FRAMEBUFFER_SIZE ((FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT) * FRAMEBUFFER_DEPTH)
 
 typedef struct pfa_t {
-	uint8_t frames_bitmap[BITMAP_SIZE];
+	uint32_t frames_bitmap[BITMAP_SIZE];
 } pfa_t;
 
 void pfa_init(pfa_t* self);
-void pfa_dump(const pfa_t* self);
-void pfa_mark_free(pfa_t* self, uint64_t frame);
+void pfa_dump(const pfa_t* self, const bool verbose);
+void pfa_set(pfa_t* self, uint64_t frame);
+void pfa_clear(pfa_t* self, uint64_t frame);
 
 #endif

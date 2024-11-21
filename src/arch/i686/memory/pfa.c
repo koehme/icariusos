@@ -7,52 +7,92 @@
 #include "pfa.h"
 #include "string.h"
 
-pfa_t pfa = {};
+pfa_t pfa = {
+    .frames_bitmap =
+	{
+	    0,
+	},
+};
+
+static inline uint32_t _index_from_bit(const uint64_t frame) { return frame / 32; };
+
+static inline uint32_t _offset_from_bit(const uint64_t frame) { return frame % 32; };
 
 void pfa_init(pfa_t* self)
 {
-	memset(self->frames_bitmap, FRAME_USED, BITMAP_SIZE);
+	for (size_t i = 0; i < (MAX_FRAMES / 32); i++) {
+		self->frames_bitmap[i] = 0xFFFFFFFF;
+	};
 	return;
 };
 
-void pfa_mark_free(pfa_t* self, uint64_t frame) { return; };
-
-void pfa_dump(const pfa_t* self)
+void pfa_set(pfa_t* self, const uint64_t frame)
 {
-	const size_t total_frames = BITMAP_SIZE * 8;
-	size_t used = 0;
-	size_t free = 0;
+	const uint64_t index = frame / 32;
+	const uint64_t offset = frame % 32;
+	self->frames_bitmap[index] |= (1 << offset);
+	return;
+};
 
-	for (size_t i = 0; i < total_frames; i++) {
-		const size_t byte_index = i / 8;
-		const size_t bit_offset = i % 8;
-		const uint8_t bit = (self->frames_bitmap[byte_index] >> bit_offset) & 1;
+void pfa_clear(pfa_t* self, const uint64_t frame)
+{
+	const uint64_t index = frame / 32;
+	const uint64_t offset = frame % 32;
+	self->frames_bitmap[index] &= ~(1 << offset);
+	return;
+};
 
-		switch (bit) {
-		case FRAME_USED:
-			used++;
-			break;
-		case FRAME_FREE:
-			free++;
-			break;
-		default:
-			break;
-		};
-		// Print frames in blocks of 32 for better visualization
-		if (i % 32 == 0) {
-			printf("\nFrames %d - %d: ", (int)i, (int)(i + 31));
-		};
-		printf("%c", (bit == FRAME_USED) ? 'U' : 'F'); // 'U' for Used, 'F' for Free
-	};
+bool pfa_test(const pfa_t* self, const uint64_t frame)
+{
+	const uint64_t index = _index_from_bit(frame);
+	const uint64_t offset = _offset_from_bit(frame);
+	return (self->frames_bitmap[index] & (1 << offset)) != 0;
+};
 
+void pfa_dump(const pfa_t* self, const bool verbose)
+{
+	const size_t total_frames = BITMAP_SIZE * 32;
+	size_t used = 0, free = 0;
 	printf("\n\n====================================\n");
 	printf("          PFA STATISTICS            \n");
 	printf("====================================\n");
-	printf("Total Frames: %d\n", (int)total_frames);
-	printf("Used Frames:   %d\n", (int)used);
-	printf("Free Frames:   %d\n", (int)free);
-	printf("Memory In-Use: %d KiB\n", (int)((used * PAGE_SIZE) / 1024));
-	printf("Free Memory:   %d KiB\n", (int)((free * PAGE_SIZE) / 1024));
+	printf("Total Frames: 			%d\n", total_frames);
+
+	for (size_t i = 0; i < BITMAP_SIZE; i++) {
+		const uint64_t value = self->frames_bitmap[i];
+		const size_t first_bit = i * 32;
+		const size_t last_bit = ((i + 1) * 32) - 1;
+
+		if (verbose) {
+			printf("Frames %d - %d: ", first_bit, last_bit);
+		};
+
+		for (int bit = 31; bit >= 0; bit--) {
+			const bool is_used = value & (1 << bit);
+
+			if (is_used) {
+				used++;
+
+				if (verbose) {
+					printf("U");
+				};
+			} else {
+				free++;
+
+				if (verbose) {
+					printf("F");
+				};
+			};
+		};
+
+		if (verbose) {
+			printf("\n");
+		};
+	};
+	printf("Used Frames:   		%f (%f%%)\n", (double)used, (100.0 * used) / total_frames);
+	printf("Free Frames:   		%f (%f%%)\n", (double)free, (100.0 * free) / total_frames);
+	printf("Memory In-Use: 		%f KiB\n", (double)(used * PAGE_SIZE) / 1024);
+	printf("Free Memory:   		%f KiB\n", (double)(free * PAGE_SIZE) / 1024);
 	printf("====================================\n");
 	return;
 };

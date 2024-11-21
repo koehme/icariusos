@@ -120,6 +120,28 @@ static void _check_multiboot2_alignment(const uint32_t addr)
 	return;
 };
 
+void _mark_kernel(void)
+{
+	const uint64_t kernel_start_frame = KERNEL_PHYS_BASE / PAGE_SIZE;
+	const uint64_t kernel_end_frame = KERNEL_PHYS_END / PAGE_SIZE;
+
+	for (uint64_t frame = kernel_start_frame; frame <= kernel_end_frame && frame < MAX_FRAMES; frame++) {
+		pfa_set(&pfa, frame);
+	};
+	return;
+};
+
+void _mark_fb(void)
+{
+	const uint64_t fb_start_frame = FRAMEBUFFER_PHYS_BASE / PAGE_SIZE;
+	const uint64_t fb_end_frame = (FRAMEBUFFER_PHYS_BASE + FRAMEBUFFER_SIZE - 1) / PAGE_SIZE;
+
+	for (uint64_t frame = fb_start_frame; frame <= fb_end_frame && frame < MAX_FRAMES; frame++) {
+		pfa_set(&pfa, frame);
+	};
+	return;
+};
+
 void _init_mmap(struct multiboot_tag* tag)
 {
 	multiboot_memory_map_t* mmap;
@@ -127,20 +149,17 @@ void _init_mmap(struct multiboot_tag* tag)
 
 	for (mmap = tag_mmap->entries; (multiboot_uint8_t*)mmap < (multiboot_uint8_t*)tag + tag->size;
 	     mmap = (multiboot_memory_map_t*)((unsigned long)mmap + tag_mmap->entry_size)) {
-		const uint64_t addr = ((uint64_t)mmap->addr_high << 32) | mmap->addr_low;
-		const uint64_t len = ((uint64_t)mmap->len_high << 32) | mmap->len_low;
+		const uint64_t base_addr = ((uint64_t)mmap->addr_high << 32) | mmap->addr_low;
+		const uint64_t length = ((uint64_t)mmap->len_high << 32) | mmap->len_low;
+		const uint64_t end_addr = base_addr + length;
+
+		const uint64_t first_frame = base_addr / PAGE_SIZE;
+		const uint64_t last_frame = end_addr / PAGE_SIZE;
 
 		switch (mmap->type) {
 		case MULTIBOOT_MEMORY_AVAILABLE: {
-			// 1 Iter => 0x0
-			// 2 Iter => 0x9FC00
-			// 3 Iter => 0xF0000
-			// TODO Mark as <Free>
-			// Read each entry in the memory map
-			for (uint64_t frame = addr; frame < addr + len; frame += PAGE_SIZE) {
-				// Split each entry into frame - sized chunks(4096 bytes)
-				// Mark the frame as free
-				pfa_mark_free(&pfa, frame);
+			for (uint64_t frame = first_frame; frame < last_frame && frame < MAX_FRAMES; frame++) {
+				pfa_clear(&pfa, frame);
 			};
 			break;
 		};
@@ -148,13 +167,17 @@ void _init_mmap(struct multiboot_tag* tag)
 		case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
 		case MULTIBOOT_MEMORY_NVS:
 		case MULTIBOOT_MEMORY_BADRAM: {
-			// TODO Mark as <Used>
+			for (uint64_t frame = first_frame; frame < last_frame && frame < MAX_FRAMES; frame++) {
+				pfa_set(&pfa, frame);
+			};
 			break;
 		};
 		default:
 			break;
 		};
 	};
+	_mark_kernel();
+	_mark_fb();
 	return;
 };
 
@@ -224,8 +247,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
-
-	pfa_dump(&pfa);
+	pfa_dump(&pfa, false);
 	// heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
 	// printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
 
