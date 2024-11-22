@@ -96,3 +96,15 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 	printf("====================================\n");
 	return;
 };
+
+uint64_t pfa_alloc(void)
+{
+	for (uint32_t frame = 0; frame < MAX_FRAMES; frame++) {
+		if (!pfa_test(&pfa, frame)) {
+			pfa_set(&pfa, frame);
+			const uint64_t phys_addr = frame * PAGE_SIZE;
+			return phys_addr;
+		};
+	};
+	return 0x0;
+};
