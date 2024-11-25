@@ -251,8 +251,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_alloc();
 	const uint32_t frame = pfa_alloc();
 	printf("0x%x", frame);
-	// heap_init(&heap, (void*)HEAP_START_ADDR, (void*)HEAP_BITMAP_ADDR, MAX_HEAP_SIZE, HEAP_ALIGNMENT);
-	// printf("[INFO] Kernel Heap: %f%%\n", kheap_info(&heap));
+	// heap_init(&heap);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);

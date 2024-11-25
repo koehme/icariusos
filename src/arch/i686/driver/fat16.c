@@ -654,9 +654,9 @@ static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path)
 		printf("FAT16 Error: Root directory entry not found\n");
 		return 0x0;
 	};
-	fat16_node_t* fat16_entry = kcalloc(sizeof(fat16_node_t));
-	fat16_folder_t* fat16_folder = kcalloc(sizeof(fat16_folder_t));
-	fat16_dir_entry_t* fat16_dir_entry = kcalloc(sizeof(fat16_dir_entry_t));
+	fat16_node_t* fat16_entry = kzalloc(sizeof(fat16_node_t));
+	fat16_folder_t* fat16_folder = kzalloc(sizeof(fat16_folder_t));
+	fat16_dir_entry_t* fat16_dir_entry = kzalloc(sizeof(fat16_dir_entry_t));
 	fat16_entry->dir = fat16_folder;
 	fat16_entry->dir->entry = fat16_dir_entry;
 
@@ -687,7 +687,7 @@ void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode)
 		printf("FAT16 Error: Device, fs_t or path not initialized\n");
 		return 0x0;
 	};
-	fat16_fd_t* fd = kcalloc(sizeof(fat16_fd_t));
+	fat16_fd_t* fd = kzalloc(sizeof(fat16_fd_t));
 
 	if (fd == 0x0) {
 		printf("FAT16 Error: Memory allocation failed\n");

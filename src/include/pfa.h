@@ -18,7 +18,6 @@ extern uint32_t kernel_directory[1024];
 #define MAX_FRAMES (MAX_PHYSICAL_MEMORY / PAGE_SIZE)
 #define BITMAP_SIZE (MAX_FRAMES / 32)
 
-
 #define KERNEL_PHYS_BASE 0x00000000
 #define KERNEL_PHYS_END 0x02FFFFFF
 

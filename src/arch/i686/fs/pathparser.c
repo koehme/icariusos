@@ -142,7 +142,7 @@ pathnode_t* path_parser_parse_entries(pathparser_t* self, pathlexer_t* lexer, pa
 	pathnode_t* prev = 0x0;
 
 	while (path_parser_match(self, lexer, PT_SLASH)) {
-		pathnode_t* new_node = kcalloc(sizeof(pathnode_t));
+		pathnode_t* new_node = kzalloc(sizeof(pathnode_t));
 
 		if (!head) {
 			head = new_node;
@@ -157,7 +157,7 @@ pathnode_t* path_parser_parse_entries(pathparser_t* self, pathlexer_t* lexer, pa
 
 pathroot_node_t* path_parser_parse_drive(pathparser_t* self, pathlexer_t* lexer)
 {
-	pathroot_node_t* root = kcalloc(sizeof(pathroot_node_t));
+	pathroot_node_t* root = kzalloc(sizeof(pathroot_node_t));
 
 	if (path_parser_match(self, lexer, PT_LETTER)) {
 		memcpy(root->drive, self->prev.start, 1 * sizeof(char));

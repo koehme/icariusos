@@ -108,7 +108,7 @@ static int32_t _create_fd(fd_t** ptr)
 
 	for (size_t i = 0; i < 512; i++) {
 		if (fdescriptors[i] == 0x0) {
-			fd_t* fdescriptor = kcalloc(sizeof(fd_t));
+			fd_t* fdescriptor = kzalloc(sizeof(fd_t));
 			fdescriptor->index = i + 1;
 			fdescriptors[i] = fdescriptor;
 			*ptr = fdescriptor;
