@@ -9,6 +9,8 @@
 #include "kernel.h"
 #include "string.h"
 
+extern pfa_t pfa;
+
 heap_t heap = {
     .start_addr = 0x0,
     .next_addr = 0x0,
@@ -24,6 +26,7 @@ void kfree(void* ptr);
 /* INTERNAL API */
 static size_t _align_bytes(const size_t bytes);
 static void* _malloc(heap_t* self, const size_t bytes);
+static void _free(heap_t* self, void* ptr);
 
 void* kmalloc(const size_t size)
 {
@@ -42,7 +45,7 @@ void* kzalloc(const size_t size)
 
 void kfree(void* ptr)
 {
-	// _free(&heap, ptr);
+	_free(&heap, ptr);
 	return;
 };
 
@@ -69,6 +72,24 @@ static size_t _align_bytes(const size_t bytes)
 	return bytes;
 };
 
+static void _free(heap_t* self, void* ptr)
+{
+	uint32_t virt_addr = (uint32_t)ptr;
+
+	while (virt_addr < self->next_addr) {
+		const uint32_t phys_addr = page_get_phys_addr(virt_addr);
+
+		if (!phys_addr) {
+			break;
+		};
+		page_unmap(virt_addr);
+		const uint64_t frame = phys_addr / PAGE_SIZE;
+		pfa_clear(&pfa, frame);
+		virt_addr += PAGE_SIZE;
+	};
+	return;
+};
+
 static void* _malloc(heap_t* self, const size_t bytes)
 {
 	const size_t size = _align_bytes(bytes);
@@ -85,7 +106,7 @@ static void* _malloc(heap_t* self, const size_t bytes)
 			return 0x0;
 		};
 		// Mapping from phy to virtual
-		map_page(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
+		page_map(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
 	};
 	self->next_addr = end_addr;
 	return (void*)start_addr;
@@ -93,7 +114,7 @@ static void* _malloc(heap_t* self, const size_t bytes)
 
 void heap_init(heap_t* self)
 {
-	self->start_addr = self->next_addr = HEAP_START_ADDR;
+	self->start_addr = self->next_addr = KERNEL_HEAP_START;
 	self->end_addr = KERNEL_HEAP_MAX;
 	return;
 };

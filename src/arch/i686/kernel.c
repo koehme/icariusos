@@ -257,6 +257,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	pfa_dump(&pfa, false);
 
+	kfree(ptr1);
+	kfree(ptr2);
+	pfa_dump(&pfa, false);
+
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
 
