@@ -79,12 +79,13 @@ static void* _malloc(heap_t* self, const size_t bytes)
 		return 0x0;
 	};
 	for (uint32_t virt_addr = start_addr; virt_addr < end_addr; virt_addr += PAGE_SIZE) {
-		const uint32_t frame = pfa_alloc();
+		const uint32_t phys_addr = pfa_alloc();
 
-		if (!frame) {
+		if (!phys_addr) {
 			return 0x0;
 		};
-		// Todo => Mapping from phy to virtual
+		// Mapping from phy to virtual
+		map_page(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
 	};
 	self->next_addr = end_addr;
 	return (void*)start_addr;

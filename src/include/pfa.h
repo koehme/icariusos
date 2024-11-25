@@ -10,8 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern uint32_t kernel_directory[1024];
-
 #define PAGE_SIZE 4096
 
 #define MAX_PHYSICAL_MEMORY 0x100000000

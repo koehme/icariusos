@@ -248,10 +248,14 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
 	pfa_dump(&pfa, false);
-	pfa_alloc();
-	const uint32_t frame = pfa_alloc();
-	printf("0x%x", frame);
-	// heap_init(&heap);
+	heap_init(&heap);
+
+	void* ptr1 = kzalloc(8192);
+	void* ptr2 = kzalloc(8192);
+	printf("0x%x\n", ptr1);
+	printf("0x%x\n", ptr2);
+
+	pfa_dump(&pfa, false);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);

@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "pfa.h"
+
 #define PAGE_SIZE 4096
 #define PAGE_ENTRIES 1024
 
