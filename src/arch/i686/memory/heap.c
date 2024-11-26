@@ -15,27 +15,31 @@ heap_t heap = {
     .start_addr = 0x0,
     .next_addr = 0x0,
     .end_addr = 0x0,
+    .head = 0x0,
+    .tail = 0x0,
 };
 
 /* PUBLIC API */
 void heap_init(heap_t* self);
-void* kmalloc(const size_t size);
-void* kzalloc(const size_t size);
+void* kmalloc(size_t size);
+void* kzalloc(size_t size);
 void kfree(void* ptr);
 
 /* INTERNAL API */
-static size_t _align_bytes(const size_t bytes);
-static void* _malloc(heap_t* self, const size_t bytes);
+static inline size_t align_to_page_size(size_t size);
+static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
 
-void* kmalloc(const size_t size)
+static inline size_t align_to_page_size(size_t size) { return (size + sizeof(heap_block_t) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); };
+
+void* kmalloc(size_t size)
 {
 	void* ptr = 0x0;
 	ptr = _malloc(&heap, size);
 	return ptr;
 };
 
-void* kzalloc(const size_t size)
+void* kzalloc(size_t size)
 {
 	void* ptr = 0x0;
 	ptr = _malloc(&heap, size);
@@ -49,72 +53,20 @@ void kfree(void* ptr)
 	return;
 };
 
-static size_t _align_bytes(const size_t bytes)
+static void _free(heap_t* self, void* ptr) { return; };
+
+
+static void* _malloc(heap_t* self, size_t size)
 {
-	/*
-	Check if the size is not already aligned to PAGE_SIZE
-	Case already aligned
-		4096	1000000000000	0x1000
-	&	4095	0111111111111	0xfff
-	=	0		0000000000000	0x0
-
-	Case not aligned
-		4097	1000000000001	0x1001
-	&	4095	0111111111111	0xfff
-	=	1		0000000000001	0x1
-	*/
-	if (bytes & (PAGE_SIZE - 1)) {
-		// Round up to the next PAGE_SIZE boundary
-		// eq == bytes - (bytes % PAGE_SIZE) + PAGE_SIZE
-		return (bytes & ~(PAGE_SIZE - 1)) + PAGE_SIZE;
-	};
-	// If already aligned, return the original size
-	return bytes;
-};
-
-static void _free(heap_t* self, void* ptr)
-{
-	uint32_t virt_addr = (uint32_t)ptr;
-
-	while (virt_addr < self->next_addr) {
-		const uint32_t phys_addr = page_get_phys_addr(virt_addr);
-
-		if (!phys_addr) {
-			break;
-		};
-		page_unmap(virt_addr);
-		const uint64_t frame = phys_addr / PAGE_SIZE;
-		pfa_clear(&pfa, frame);
-		virt_addr += PAGE_SIZE;
-	};
-	return;
-};
-
-static void* _malloc(heap_t* self, const size_t bytes)
-{
-	const size_t size = _align_bytes(bytes);
-	const uint32_t start_addr = self->next_addr;
-	const uint32_t end_addr = start_addr + size;
-
-	if (end_addr > KERNEL_HEAP_MAX) {
-		return 0x0;
-	};
-	for (uint32_t virt_addr = start_addr; virt_addr < end_addr; virt_addr += PAGE_SIZE) {
-		const uint32_t phys_addr = pfa_alloc();
-
-		if (!phys_addr) {
-			return 0x0;
-		};
-		// Mapping from phy to virtual
-		page_map(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
-	};
-	self->next_addr = end_addr;
-	return (void*)start_addr;
+	size = align_to_page_size(size);
+	return 0x0;
 };
 
 void heap_init(heap_t* self)
 {
 	self->start_addr = self->next_addr = KERNEL_HEAP_START;
 	self->end_addr = KERNEL_HEAP_MAX;
+	self->head = 0x0;
+	self->tail = 0x0;
 	return;
 };

@@ -252,14 +252,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	void* ptr1 = kzalloc(8192);
 	void* ptr2 = kzalloc(8192);
-	printf("0x%x\n", ptr1);
-	printf("0x%x\n", ptr2);
-
-	pfa_dump(&pfa, false);
-
-	kfree(ptr1);
-	kfree(ptr2);
-	pfa_dump(&pfa, false);
+	// printf("0x%x\n", ptr1);
+	// printf("0x%x\n", ptr2);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
