@@ -26,11 +26,11 @@ void* kzalloc(size_t size);
 void kfree(void* ptr);
 
 /* INTERNAL API */
-static inline size_t align_to_page_size(size_t size);
+static inline size_t _align_to_next_page_boundary(size_t size);
 static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
 
-static inline size_t align_to_page_size(size_t size) { return (size + sizeof(heap_block_t) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); };
+static inline size_t _align_to_next_page_boundary(size_t size) { return (size + sizeof(heap_block_t) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); };
 
 void* kmalloc(size_t size)
 {
@@ -55,11 +55,55 @@ void kfree(void* ptr)
 
 static void _free(heap_t* self, void* ptr) { return; };
 
+static void* _recycle_block(heap_t* self, size_t size)
+{
+	heap_block_t* curr = self->head;
+
+	while (curr) {
+		// Is the current block available and big enough?
+		if (curr->is_free && curr->size >= size) {
+			// TODO: Splitting if oversized, create a new block which is free for future allocations
+
+
+			// If so, return the ptr to the requestor, but after the header, to save the header
+			return (void*)(uint8_t*)curr + sizeof(heap_block_t);
+		};
+		curr = curr->next;
+	};
+	// No suitable block found ;-)
+	return 0x0;
+};
 
 static void* _malloc(heap_t* self, size_t size)
 {
-	size = align_to_page_size(size);
-	return 0x0;
+	// Align the size to the next page boundary, including the header
+	size = _align_to_next_page_boundary(size);
+	// recycling previous allocations, to reuse blocks
+	void* recycled = _recycle_block(self, size);
+
+	if (!recycled) {
+		// Create new blocks:
+		// - Create a new block at the address `self->next_addr`.
+		// - Calculate the number of required pages (frames) based on `size`.
+		// - Call `pfa_alloc()` to obtain physical frames.
+		// - Use `page_map` to map these frames to virtual addresses starting from `self->next_addr`.
+
+		// Integrate the new block into the doubly linked list:
+		// - If `self->tail` is not null:
+		//   - Set `self->tail->next` to the new block.
+		//   - Set `new_block->prev` to `self->tail`.
+		//   - Update `self->tail` to point to the new block.
+		// - If the list is empty (`self->head == NULL`):
+		//   - Set both `self->head` and `self->tail` to the new block.
+
+		// Update `self->next_addr`:
+		// - Increment `self->next_addr` by the total allocated size (including the header).
+
+		// Error handling:
+		// - Check if `pfa_alloc()` fails (e.g., if physical memory is unavailable).
+		// - Return `NULL` if allocation is not possible.
+	};
+	return recycled;
 };
 
 void heap_init(heap_t* self)
