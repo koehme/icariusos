@@ -60,17 +60,39 @@ static void* _recycle_block(heap_t* self, size_t size)
 	heap_block_t* curr = self->head;
 
 	while (curr) {
-		// Is the current block available and big enough?
+		// Check if the current block is free and large enough to satisfy the request
 		if (curr->is_free && curr->size >= size) {
-			// TODO: Splitting if oversized, create a new block which is free for future allocations
+			// Mark the block as used
+			curr->is_free = false;
+			// If the block is larger than needed, split it into two:
+			// The first part satisfies the current request
+			// The second part remains free for future allocations
+			if (curr->size >= size + sizeof(heap_block_t)) {
+				heap_block_t* unused = (heap_block_t*)((uint8_t*)curr + sizeof(heap_block_t) + size);
+				// Initialize the new unused block
+				unused->is_free = true;
+				unused->size = curr->size - size - sizeof(heap_block_t);
+				// Insert the new unused block into the doubly linked list
+				unused->next = curr->next;
+				unused->prev = curr;
 
-
-			// If so, return the ptr to the requestor, but after the header, to save the header
-			return (void*)(uint8_t*)curr + sizeof(heap_block_t);
+				if (curr->next) {
+					// Update the previous pointer of the next block (curr <--> unused <--> curr->next)
+					curr->next->prev = unused;
+				} else {
+					// If there is no next block, this unused block becomes the new tail
+					self->tail = unused;
+				};
+				// Link the new unused block to the current block
+				curr->next = unused;
+				curr->size = size; // Resize the current block to the requested size
+			};
+			// Return a pointer to the usable memory area, after the header
+			return (void*)((uint8_t*)curr + sizeof(heap_block_t));
 		};
-		curr = curr->next;
+		curr = curr->next; // Move to the next block
 	};
-	// No suitable block found ;-)
+	// If no suitable block is found, return NULL
 	return 0x0;
 };
 
@@ -82,26 +104,43 @@ static void* _malloc(heap_t* self, size_t size)
 	void* recycled = _recycle_block(self, size);
 
 	if (!recycled) {
-		// Create new blocks:
-		// - Create a new block at the address `self->next_addr`.
-		// - Calculate the number of required pages (frames) based on `size`.
-		// - Call `pfa_alloc()` to obtain physical frames.
-		// - Use `page_map` to map these frames to virtual addresses starting from `self->next_addr`.
+		// Request can't be perform, because no free virtual addresses are free
+		if (self->next_addr + size >= self->end_addr) {
+			return 0x0;
+		};
+		// - Calculate the number of required pages (frames) based on `size`
+		const size_t pages = size / PAGE_SIZE;
+		// - Call `pfa_alloc()` to obtain physical frames
+		uintptr_t virt_addr = self->next_addr;
 
+		// Map the required number of pages
+		for (size_t page = 0; page < pages; ++page) {
+			const uint64_t phys_addr = pfa_alloc();
+
+			if (!phys_addr) {
+				// Physical memory allocation failed
+				return 0x0;
+			};
+			// - Use `page_map` to map these frames to virtual addresses starting from `self->next_addr`
+			page_map(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
+			virt_addr += PAGE_SIZE;
+		};
+		// Create new blocks:
+		// - Create a new block at the address `self->next_addr`
 		// Integrate the new block into the doubly linked list:
 		// - If `self->tail` is not null:
-		//   - Set `self->tail->next` to the new block.
-		//   - Set `new_block->prev` to `self->tail`.
-		//   - Update `self->tail` to point to the new block.
+		//   - Set `self->tail->next` to the new block
+		//   - Set `new_block->prev` to `self->tail`
+		//   - Update `self->tail` to point to the new block
 		// - If the list is empty (`self->head == NULL`):
-		//   - Set both `self->head` and `self->tail` to the new block.
+		//   - Set both `self->head` and `self->tail` to the new block
 
 		// Update `self->next_addr`:
-		// - Increment `self->next_addr` by the total allocated size (including the header).
+		// - Increment `self->next_addr` by the total allocated size (including the header)
 
 		// Error handling:
-		// - Check if `pfa_alloc()` fails (e.g., if physical memory is unavailable).
-		// - Return `NULL` if allocation is not possible.
+		// - Check if `pfa_alloc()` fails (e.g., if physical memory is unavailable)
+		// - Return `NULL` if allocation is not possible
 	};
 	return recycled;
 };
