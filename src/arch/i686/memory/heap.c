@@ -7,6 +7,7 @@
 
 #include "heap.h"
 #include "kernel.h"
+#include "pfa.h"
 #include "string.h"
 
 extern pfa_t pfa;
@@ -26,11 +27,8 @@ void* kzalloc(size_t size);
 void kfree(void* ptr);
 
 /* INTERNAL API */
-static inline size_t _align_to_next_page_boundary(size_t size);
 static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
-
-static inline size_t _align_to_next_page_boundary(size_t size) { return (size + sizeof(heap_block_t) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1); };
 
 void* kmalloc(size_t size)
 {
@@ -55,6 +53,52 @@ void kfree(void* ptr)
 
 static void _free(heap_t* self, void* ptr) { return; };
 
+static void _init_heap_block(heap_block_t* block, size_t address, size_t size, heap_block_t* prev)
+{
+	block->chunk_span = 0;	  // Single chunk by default
+	block->is_free = true;	  // Mark as free
+	block->size = size;	  // Set block size
+	block->address = address; // Virtual address
+	block->prev = prev;	  // Previous block
+	block->next = 0x0;	  // Next will be set in the loop
+	return;
+};
+
+static void _heap_split_page_to_chunks(heap_t* self, uint64_t phys_addr)
+{
+	// Map the phys addr to virt_addr in self->next_addr
+	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
+	// Define page and chunk sizes
+	const size_t page_size = 4 * 1024 * 1024; // 4 MiB
+	const size_t chunk_size = 4096;		  // 4 KiB
+	const size_t chunks = page_size / chunk_size;
+	// Start from the next available virtual address
+	size_t virt_addr = self->next_addr;
+	heap_block_t* prev_block = NULL;
+
+	// Loop through all chunks in the 4 MiB block
+	for (size_t chunk = 0; chunk < chunks; ++chunk, virt_addr += chunk_size) {
+		// Interpret the current virtual address as a heap_block_t pointer
+		heap_block_t* block = (heap_block_t*)virt_addr;
+		// Initialize the heap block metadata
+		_init_heap_block(block, virt_addr, chunk_size, prev_block);
+
+		if (prev_block) {
+			prev_block->next = block;
+		};
+		// Set self->head if this is the first block
+		if (chunk == 0) {
+			self->head = block;
+		};
+		prev_block = block;
+	};
+	// Set self->tail to the last block
+	self->tail = prev_block;
+	// Update the heap's next available virtual address. Points to the next available 4 MiB region
+	self->next_addr = virt_addr;
+	return;
+};
+
 static void* _malloc(heap_t* self, size_t size)
 {
 	// Step 1: Check if the allocation list in self->head is initialized
@@ -65,6 +109,10 @@ static void* _malloc(heap_t* self, size_t size)
 	//    - Create heap_block_t structures for each 4 KiB chunk and set their metadata, such as address and is_free flag.
 	//    - Append all 1024 newly created heap_block_t chunks to the doubly linked list that begins with self->head.
 
+	if (!self->head || (self->head == self->tail)) {
+		uint64_t phys_addr = pfa_alloc();
+		_heap_split_page_to_chunks(self, phys_addr);
+	};
 	// Case 2: If the list is not empty
 	//    - Traverse the doubly linked list starting from self->head.
 	//    - Search for a contiguous sequence of free blocks (as indicated by the is_free flag) that satisfies the requested size.
