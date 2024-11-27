@@ -123,7 +123,7 @@ static void* _malloc(heap_t* self, size_t size)
 			return 0x0;
 		};
 		// Map these frames to virtual addresses starting from `self->next_addr`
-		page_map(virt_addr, phys_addr, PAGE_PRESENT | PAGE_WRITABLE);
+		page_map(virt_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
 		virt_addr += PAGE_SIZE;
 	};
 	// Create the new block at the current `next_addr`

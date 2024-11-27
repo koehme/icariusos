@@ -14,11 +14,12 @@
 
 #include "pfa.h"
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE (1 << 22)
 
 #define PAGE_PRESENT 0x1
 #define PAGE_WRITABLE 0x2
 #define PAGE_USER 0x4
+#define PAGE_PS 0x80 // Page Size (PS-Bit) = 4 MiB Pages
 
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(uint32_t virt_addr);

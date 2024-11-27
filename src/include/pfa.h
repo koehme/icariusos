@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE (1 << 22)
 
 #define MAX_PHYSICAL_MEMORY 0x100000000
 #define MAX_FRAMES (MAX_PHYSICAL_MEMORY / PAGE_SIZE)
