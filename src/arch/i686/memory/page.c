@@ -20,13 +20,8 @@ void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 	- Offset (lower bits, e.g., bits 0-21).
 	*/
 	const uint32_t pd_index = virt_addr >> 22;
-
 	uint32_t* page_directory = kernel_directory;
-
-	// Setze den Page Directory Entry mit physischer Adresse und Flags
 	page_directory[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
-
-	// Synchronisiere TLB
 	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
 	return;
 };

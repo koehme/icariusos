@@ -55,98 +55,24 @@ void kfree(void* ptr)
 
 static void _free(heap_t* self, void* ptr) { return; };
 
-static void* _recycle_block(heap_t* self, size_t size)
-{
-	heap_block_t* curr = self->head;
-
-	while (curr) {
-		// Check if the current block is free and large enough to satisfy the request
-		if (curr->is_free && curr->size >= size) {
-			// Mark the block as used
-			curr->is_free = false;
-			// If the block is larger than needed, split it into two:
-			// The first part satisfies the current request
-			// The second part remains free for future allocations
-			if (curr->size >= size + sizeof(heap_block_t)) {
-				heap_block_t* unused = (heap_block_t*)((uint8_t*)curr + sizeof(heap_block_t) + size);
-				// Initialize the new unused block
-				unused->is_free = true;
-				unused->size = curr->size - size - sizeof(heap_block_t);
-				// Insert the new unused block into the doubly linked list
-				unused->next = curr->next;
-				unused->prev = curr;
-
-				if (curr->next) {
-					// Update the previous pointer of the next block (curr <--> unused <--> curr->next)
-					curr->next->prev = unused;
-				} else {
-					// If there is no next block, this unused block becomes the new tail
-					self->tail = unused;
-				};
-				// Link the new unused block to the current block
-				curr->next = unused;
-				curr->size = size; // Resize the current block to the requested size
-			};
-			// Return a pointer to the usable memory area, after the header
-			return (void*)((uint8_t*)curr + sizeof(heap_block_t));
-		};
-		curr = curr->next; // Move to the next block
-	};
-	// If no suitable block is found, return NULL
-	return 0x0;
-};
-
 static void* _malloc(heap_t* self, size_t size)
 {
-	// Align the size to the next page boundary, including the header
-	size = _align_to_next_page_boundary(size);
-	// Try to recycle a previously freed block that is large enough
-	void* recycled = _recycle_block(self, size);
+	// Step 1: Check if the allocation list in self->head is initialized
+	// Case 1: If the list is empty
+	//    - Request a new memory block of 4 MiB from the physical frame allocator (pfa_alloc).
+	//    - Use the address stored in self->next_addr to map this memory into the heap's virtual address space.
+	//    - Divide the entire 4 MiB block, represented by the virtual address in self->next_addr, into 4096-byte chunks.
+	//    - Create heap_block_t structures for each 4 KiB chunk and set their metadata, such as address and is_free flag.
+	//    - Append all 1024 newly created heap_block_t chunks to the doubly linked list that begins with self->head.
 
-	if (recycled) {
-		// If a suitable recycled block was found, return it
-		return recycled;
-	};
-	// Request can't be perform, because no free virtual addresses are free
-	if (self->next_addr + size >= self->end_addr) {
-		return 0x0;
-	};
-	// Calculate the number of required pages (frames) based on `size`
-	const size_t pages = size / PAGE_SIZE;
-	uintptr_t virt_addr = self->next_addr;
-	// Allocate and map the required number of pages
-	for (size_t page = 0; page < pages; ++page) {
-		const uint64_t phys_addr = pfa_alloc();
+	// Case 2: If the list is not empty
+	//    - Traverse the doubly linked list starting from self->head.
+	//    - Search for a contiguous sequence of free blocks (as indicated by the is_free flag) that satisfies the requested size.
+	//    - Consider that larger size requests may span multiple 4 KiB chunks, so count adjacent free blocks to determine eligibility.
 
-		if (!phys_addr) {
-			// Physical memory allocation failed
-			return 0x0;
-		};
-		// Map these frames to virtual addresses starting from `self->next_addr`
-		page_map(virt_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
-		virt_addr += PAGE_SIZE;
-	};
-	// Create the new block at the current `next_addr`
-	heap_block_t* new_block = (heap_block_t*)self->next_addr;
-	new_block->size = size - sizeof(heap_block_t);
-	new_block->is_free = false;
-	new_block->next = 0x0;
-
-	// Link the new block into the allocation list
-	if (self->tail) {
-		// Append to the end of the list
-		self->tail->next = new_block;
-		new_block->prev = self->tail;
-	} else {
-		// List is empty
-		self->head = new_block;
-		new_block->prev = 0x0;
-	};
-	self->tail = new_block;
-	// Update `next_addr` to point to the next available address
-	self->next_addr += size;
-	// Return a pointer to the usable memory area, after the header
-	return (void*)((uint8_t*)new_block + sizeof(heap_block_t));
+	// Step 2: If a suitable memory region is found, mark the selected blocks as allocated and return the address of the first block.
+	// Step 3: If no suitable region is found in the existing list, repeat Case 1 to request and initialize a new 4 MiB block.
+	return 0x0;
 };
 
 void heap_init(heap_t* self)
@@ -171,7 +97,7 @@ void heap_dump(const heap_t* self)
 	printf("Heap Next Free Address:   0x%x\n", self->next_addr);
 
 	if (!curr) {
-		printf("[ ].\n");
+		printf("Heap is EMPTY.\n");
 		printf("====================================\n");
 		return;
 	};
