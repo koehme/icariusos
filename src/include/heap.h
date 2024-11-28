@@ -17,17 +17,18 @@ typedef struct heap_block {
 	uint32_t address;	 // Start address of this memory block
 	size_t size;		 // Size of the memory block in bytes (usually 4096 bytes for chunks)
 	bool is_free;		 // Indicates whether this block is free (true) or allocated (false)
-	size_t chunk_span;	 // Number of contiguous chunks allocated for this block (1 for single chunk)
+	size_t chunk_span;	 // Number of contiguous chunks allocated for this block (0 for single chunk and n for > 0)
 	struct heap_block* prev; // Pointer to the previous block
 	struct heap_block* next; // Pointer to the next block
 } heap_block_t;
 
 typedef struct heap {
-	uintptr_t start_addr; // Start address of the heap memory region
-	uintptr_t next_addr;  // Next address to be allocated by pfa_alloc (physical frame allocator)
-	uintptr_t end_addr;   // End address of the heap memory region
-	heap_block_t* head;   // Pointer to the first block
-	heap_block_t* tail;   // Pointer to the last block
+	uintptr_t start_addr;	 // Start address of the heap memory region
+	uintptr_t next_addr;	 // Next address to be allocated by pfa_alloc (physical frame allocator)
+	uintptr_t end_addr;	 // End address of the heap memory region
+	heap_block_t* prev_head; // Pointer to the prev first block
+	heap_block_t* head;	 // Pointer to the first block
+	heap_block_t* tail;	 // Pointer to the last block
 } heap_t;
 
 void heap_init(heap_t* self);
