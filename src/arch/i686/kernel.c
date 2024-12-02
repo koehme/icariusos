@@ -276,6 +276,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	heap_dump(&heap);
 
+	kfree(ptr3);
+	kfree(ptr2);
+	kfree(ptr1);
+	kfree(ptr4);
+
+	kzalloc(12000);
+
+	heap_dump(&heap);
+
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
 

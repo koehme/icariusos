@@ -14,7 +14,6 @@
 #include "pfa.h"
 
 typedef struct heap_block {
-	uint32_t address;	 // Start address of this memory block
 	size_t size;		 // Size of the memory block in bytes (usually 4096 bytes for chunks)
 	bool is_free;		 // Indicates whether this block is free (true) or allocated (false)
 	size_t chunk_span;	 // Number of contiguous chunks allocated for this block (0 for single chunk and n for > 0)

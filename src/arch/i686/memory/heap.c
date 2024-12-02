@@ -50,17 +50,47 @@ void kfree(void* ptr)
 	_free(&heap, ptr);
 	return;
 };
-
-static void _free(heap_t* self, void* ptr) { return; };
-
-static void _init_heap_block(heap_block_t* block, size_t address, size_t size, heap_block_t* prev)
+static void _free(heap_t* self, void* ptr)
 {
-	block->chunk_span = 0;	  // Single chunk by default
-	block->is_free = true;	  // Mark as free
-	block->size = size;	  // Set block size
-	block->address = address; // Virtual address
-	block->prev = prev;	  // Previous block
-	block->next = 0x0;	  // Next will be set in the loop
+	if (!ptr) {
+		return;
+	};
+	heap_block_t* curr_block = (heap_block_t*)((uint8_t*)ptr - sizeof(heap_block_t));
+	curr_block->is_free = true;
+
+	const size_t chunks_to_split = curr_block->chunk_span;
+
+	heap_block_t* next_block = curr_block->next;
+	heap_block_t* iter_block = curr_block;
+
+	curr_block->chunk_span = 1;
+
+	for (size_t i = 1; i < chunks_to_split; i++) {
+		heap_block_t* new_block = (heap_block_t*)((uint8_t*)iter_block + 4096);
+
+		new_block->chunk_span = 1;
+		new_block->is_free = true;
+		new_block->next = 0x0;
+		new_block->prev = iter_block;
+
+		iter_block->next = new_block;
+		iter_block = new_block;
+	};
+	iter_block->next = next_block;
+
+	if (next_block) {
+		next_block->prev = iter_block;
+	};
+	return;
+};
+
+static void _init_heap_block(heap_block_t* self, size_t address, size_t size, heap_block_t* prev)
+{
+	self->chunk_span = 0; // Single chunk by default
+	self->is_free = true; // Mark as free
+	self->size = size;    // Set block size
+	self->prev = prev;    // Previous block
+	self->next = 0x0;     // Next will be set in the loop
 	return;
 };
 
@@ -105,7 +135,7 @@ static void* _malloc(heap_t* self, size_t size)
 	const size_t chunk_size = 4096;
 	const size_t total_size_with_header = size + sizeof(heap_block_t);
 	size_t chunks_needed = (total_size_with_header + chunk_size - 1) / chunk_size;
-	heap_block_t* curr_block = self->head;
+	heap_block_t* curr_block = (heap_block_t*)KERNEL_HEAP_START;
 
 	while (curr_block) {
 		if (curr_block->is_free) {
@@ -172,25 +202,18 @@ void heap_dump(const heap_t* self)
 	printf("Heap End Address:         0x%x\n", self->end_addr);
 	printf("Heap Next Free Address:   0x%x\n", self->next_addr);
 
-	if (!curr) {
-		printf("Heap is EMPTY.\n");
-		printf("====================================\n");
-		return;
-	}
-
-	printf("\nUSED BLOCKS CHAIN:\n");
 	while (curr) {
 		if (!curr->is_free && curr->chunk_span > 0) {
-			size_t allocation_size = curr->chunk_span * 4096; // Each chunk is 4 KiB
+			const size_t allocation_size = curr->chunk_span * 4096;
 			total_used_memory += allocation_size;
 			allocation_count++;
 			printf("\n------------------------------------\n");
 			printf("Allocation #%d\n", allocation_count);
-			printf("Block Address:            0x%x\n", curr->address);
 			printf("Allocation Size:          %d Bytes\n", allocation_size);
 			printf("Chunks Spanned:           %d\n", curr->chunk_span);
-			printf("Next Block Address:       0x%x\n", curr->next ? curr->next->address : 0);
-			printf("Previous Block Address:   0x%x\n", curr->prev ? curr->prev->address : 0);
+			printf("Previous Block Address:   0x%x\n", curr->prev);
+			printf("Block Address:       	    0x%x\n", curr);
+			printf("Next Block Address:       0x%x\n", curr->next);
 			printf("------------------------------------\n");
 		};
 		curr = curr->next;
