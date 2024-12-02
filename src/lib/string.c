@@ -12,6 +12,7 @@
 #include "string.h"
 
 /* PUBLIC API */
+size_t strlen(const char* str);
 bool is_alpha(const char c);
 char* sptr(char* str, const char c);
 bool scmp(const char* s1, const char* s2);
@@ -24,6 +25,15 @@ void* memcpy(void* dest, const void* src, size_t n);
 int memcmp(const void* ptr1, const void* ptr2, size_t num);
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
+
+size_t strlen(const char* str)
+{
+	size_t length = 0;
+	while (str[length] != '\0') {
+		length++;
+	}
+	return length;
+};
 
 char* sptr(char* str, const char c)
 {

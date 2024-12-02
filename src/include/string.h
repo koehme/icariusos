@@ -13,6 +13,7 @@
 #include "kernel.h"
 #include "status.h"
 
+size_t strlen(const char* str);
 bool is_alpha(const char c);
 size_t slen(const char* str);
 

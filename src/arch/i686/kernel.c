@@ -250,40 +250,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 	heap_init(&heap);
 
-	printf("[TEST] Allocating 4096 Bytes...\n");
-	void* ptr1 = kzalloc(4096);
-	printf("    -> Address: 0x%x\n", (unsigned int)ptr1);
-	memcpy(ptr1, "[INFO] Allocated 4096 Bytes\n", 30);
-	printf("    -> Data: %s\n", (char*)ptr1);
-
-	printf("[TEST] Allocating 12000 Bytes...\n");
-	void* ptr2 = kzalloc(12000);
-	printf("    -> Address: 0x%x\n", (unsigned int)ptr2);
-	memcpy(ptr2, "[INFO] Allocated 12000 Bytes\n", 31);
-	printf("    -> Data: %s\n", (char*)ptr2);
-
-	printf("[TEST] Allocating 24000 Bytes...\n");
-	void* ptr3 = kzalloc(24000);
-	printf("    -> Address: 0x%x\n", (unsigned int)ptr3);
-	memcpy(ptr3, "[INFO] Allocated 24000 Bytes\n", 31);
-	printf("    -> Data: %s\n", (char*)ptr3);
-
-	printf("[TEST] Allocating 4096 Bytes...\n");
-	void* ptr4 = kzalloc(4096);
-	printf("    -> Address: 0x%x\n", (unsigned int)ptr4);
-	memcpy(ptr4, "[INFO] Allocated 4096 Bytes\n", 30);
-	printf("    -> Data: %s\n", (char*)ptr4);
-
-	heap_dump(&heap);
-
-	kfree(ptr3);
-	kfree(ptr2);
-	kfree(ptr1);
-	kfree(ptr4);
-
-	kzalloc(12000);
-
-	heap_dump(&heap);
+	for (int i = 0; i < 1024; i++) {
+		// printf("[TEST] Allocating 4000 Bytes...\n");
+		void* ptr = kzalloc(4000);
+		// printf("    -> Address: 0x%x\n", (unsigned int)ptr);
+		memcpy(ptr, "[INFO] Allocated 4000 Bytes\n", 30);
+		// printf("    -> Data: %s\n", (char*)ptr);
+	};
+	// heap_dump(&heap);
+	heap_trace(&heap);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);

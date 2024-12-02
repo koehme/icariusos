@@ -35,5 +35,6 @@ void* kmalloc(size_t size);
 void* kzalloc(size_t size);
 void kfree(void* ptr);
 void heap_dump(const heap_t* self);
+void heap_trace(const heap_t* self);
 
 #endif
