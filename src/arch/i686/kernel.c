@@ -250,15 +250,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 	heap_init(&heap);
 
-	for (int i = 0; i < 1024; i++) {
-		// printf("[TEST] Allocating 4000 Bytes...\n");
-		void* ptr = kzalloc(4000);
+	for (int i = 0; i < 64; i++) {
+		// printf("[TEST] Allocating 256000 Bytes...\n");
+		void* ptr = kzalloc(256000);
 		// printf("    -> Address: 0x%x\n", (unsigned int)ptr);
-		memcpy(ptr, "[INFO] Allocated 4000 Bytes\n", 30);
+		// memcpy(ptr, "[INFO] Allocated 256000 Bytes\n", 30);
 		// printf("    -> Data: %s\n", (char*)ptr);
 	};
-	// heap_dump(&heap);
-	heap_trace(&heap);
+	heap_dump(&heap);
+	// heap_trace(&heap);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);

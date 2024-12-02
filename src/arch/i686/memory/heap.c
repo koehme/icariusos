@@ -158,6 +158,16 @@ static void* _malloc(heap_t* self, size_t size)
 						next_free->prev = start_block;
 					};
 					start_block->next = next_free;
+
+					if (!next_free) {
+						const uint64_t phys_addr = pfa_alloc();
+
+						if (!phys_addr) {
+							printf("[CRITICAL] Out of physical memory. Unable to allocate new page.\n");
+							return 0x0;
+						};
+						_heap_grow(self, phys_addr);
+					};
 					return (void*)((uint8_t*)start_block + sizeof(heap_block_t));
 				};
 				curr_block = start_block->next;
