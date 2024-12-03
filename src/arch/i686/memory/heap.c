@@ -130,6 +130,30 @@ static void* _malloc(heap_t* self, size_t size)
 	const size_t total_size_with_header = size + sizeof(heap_block_t);
 	size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
+	size_t curr_free_chunks = 0;
+	heap_block_t* curr_block = self->head;
+
+	while (curr_block) {
+		if (curr_block->is_free) {
+			curr_free_chunks++;
+		};
+		curr_block = curr_block->next;
+	};
+
+	if (curr_free_chunks < 824) {
+		if (self->next_addr + PAGE_SIZE > KERNEL_HEAP_MAX) {
+			printf("[CRITICAL] Heap limit reached. Cannot grow heap.\n");
+			return 0x0;
+		};
+		uint64_t phys_addr = pfa_alloc();
+
+		if (!phys_addr) {
+			printf("[CRITICAL] Out of physical memory. Unable to allocate new page.\n");
+			return 0x0;
+		};
+		_heap_grow(self, phys_addr);
+	};
+
 	while (true) {
 		heap_block_t* curr_block = (heap_block_t*)self->head;
 
@@ -160,6 +184,9 @@ static void* _malloc(heap_t* self, size_t size)
 					start_block->next = next_free;
 
 					if (!next_free) {
+						if (self->next_addr + size > KERNEL_HEAP_MAX) {
+							return 0x0;
+						};
 						const uint64_t phys_addr = pfa_alloc();
 
 						if (!phys_addr) {
@@ -175,10 +202,13 @@ static void* _malloc(heap_t* self, size_t size)
 				curr_block = curr_block->next;
 			};
 		};
+		if (self->next_addr + size > KERNEL_HEAP_MAX) {
+			return 0x0;
+		};
 		const uint64_t phys_addr = pfa_alloc();
 
 		if (!phys_addr) {
-			printf("[CRITICAL] Out of physical memory. Unable to allocate new page.\n");
+			printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
 			return 0x0;
 		};
 		_heap_grow(self, phys_addr);
@@ -241,25 +271,13 @@ void heap_dump(const heap_t* self)
 void heap_trace(const heap_t* self)
 {
 	heap_block_t* curr = (heap_block_t*)self->head;
-
-	printf("\n====================================\n");
-	printf("         HEAP TRACE           \n");
-	printf("====================================\n");
+	printf("\n======= HEAP TRACE =======\n");
 
 	while (curr) {
-		if (!curr->prev) {
-			printf("Block Address: 0x%x | Prev: 0x00000000 | Next: 0x%x | Size: %d Bytes\n", (unsigned int)curr, (unsigned int)curr->next,
-			       curr->chunk_span * 4096);
-		} else if (!curr->next) {
-			printf("Block Address: 0x%x | Prev: 0x%x | Next: 0x00000000 | Size: %d Bytes\n", (unsigned int)curr, (unsigned int)curr->prev,
-			       curr->chunk_span * 4096);
-		} else {
-			printf("Block Address: 0x%x | Prev: 0x%x | Next: 0x%x | Size: %d Bytes\n", (unsigned int)curr, (unsigned int)curr->prev,
-			       (unsigned int)curr->next, curr->chunk_span * 4096);
-		};
+		printf("%d | <- 0x%x | 0x%x | -> 0x%x | %d] \n", allocation_count, curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
+		       curr->next ? (unsigned int)curr->next : 0, curr->chunk_span * 4096);
 		curr = curr->next;
-		// busy_wait(50000);
 	};
-	printf("====================================\n");
+	printf("==========================\n");
 	return;
 };
