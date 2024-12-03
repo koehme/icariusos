@@ -13,6 +13,11 @@
 
 #include "pfa.h"
 
+#define CHUNK_SIZE 4096
+
+#define KERNEL_HEAP_START 0xC1000000
+#define KERNEL_HEAP_MAX 0xC2FFFFFF
+
 typedef struct heap_block {
 	size_t size;		 // Size of the memory block in bytes (usually 4096 bytes for chunks)
 	bool is_free;		 // Indicates whether this block is free (true) or allocated (false)

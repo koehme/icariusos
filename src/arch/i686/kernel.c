@@ -172,8 +172,9 @@ void _init_mmap(struct multiboot_tag* tag)
 			};
 			break;
 		};
-		default:
+		default: {
 			break;
+		};
 		};
 	};
 	_mark_kernel();
@@ -185,7 +186,7 @@ static void _init_fb(struct multiboot_tag* tag)
 {
 	struct multiboot_tag_framebuffer* tag_fb = (struct multiboot_tag_framebuffer*)tag;
 	const void* framebuffer_addr = (void*)(uintptr_t)(tag_fb->common.framebuffer_addr & 0xFFFFFFFF);
-	const void* framebuffer_v_addr = (void*)(KERNEL_FRAMEBUFFER_ADDR);
+	const void* framebuffer_v_addr = (void*)(FRAMEBUFFER_VIRT_BASE);
 	const unsigned int framebuffer_width = tag_fb->common.framebuffer_width;
 	const unsigned int framebuffer_height = tag_fb->common.framebuffer_height;
 	const unsigned int framebuffer_pitch = tag_fb->common.framebuffer_pitch;
@@ -250,12 +251,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 	heap_init(&heap);
 
-	for (int i = 0; i < 64; i++) {
-		// printf("[TEST] Allocating 256000 Bytes...\n");
-		void* ptr = kzalloc(256000);
-		// printf("    -> Address: 0x%x\n", (unsigned int)ptr);
-		// memcpy(ptr, "[INFO] Allocated 256000 Bytes\n", 30);
-		// printf("    -> Data: %s\n", (char*)ptr);
+	for (int i = 0; i < 513; i++) {
+		kzalloc(4096);
 	};
 	heap_dump(&heap);
 	// heap_trace(&heap);

@@ -10,9 +10,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define PAGE_SIZE (1 << 22)
+#include "page.h"
 
 #define MAX_PHYSICAL_MEMORY 0x100000000
+#define PAGE_SIZE (1024 * 4 * 1024)
 #define MAX_FRAMES (MAX_PHYSICAL_MEMORY / PAGE_SIZE)
 #define BITMAP_SIZE (MAX_FRAMES / 32)
 
@@ -20,9 +21,6 @@
 #define KERNEL_PHYS_END 0x02FFFFFF
 
 #define KERNEL_VIRT_BASE 0xC0000000
-
-#define KERNEL_HEAP_START 0xC1000000
-#define KERNEL_HEAP_MAX 0xC2FFFFFF
 
 #define FRAMEBUFFER_VIRT_BASE 0xE0000000
 #define FRAMEBUFFER_PHYS_BASE 0xFD000000

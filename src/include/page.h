@@ -14,8 +14,7 @@
 
 #include "pfa.h"
 
-#define PAGE_SIZE (1 << 22)
-
+#define PAGE_SIZE (1024 * 4 * 1024)
 #define PAGE_PRESENT 0x1
 #define PAGE_WRITABLE 0x2
 #define PAGE_USER 0x4

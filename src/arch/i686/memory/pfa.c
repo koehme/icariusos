@@ -53,7 +53,7 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 {
 	const size_t total_frames = BITMAP_SIZE * 32;
 	size_t used = 0, free = 0;
-	printf("\n\n====================================\n");
+	printf("\n====================================\n");
 	printf("          PFA STATISTICS            \n");
 	printf("====================================\n");
 	printf("Total Frames: 			%d\n", total_frames);
@@ -62,7 +62,7 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 		const uint64_t value = self->frames_bitmap[i];
 		const size_t first_bit = i * 32;
 		const size_t last_bit = ((i + 1) * 32) - 1;
- 
+
 		if (verbose) {
 			printf("Frames %d - %d: ", first_bit, last_bit);
 		};
