@@ -32,7 +32,7 @@ void kfree(void* ptr);
 static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
 static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev);
-static void _heap_grow(heap_t* self, uint64_t phys_addr);
+static void _heap_grow(heap_t* self);
 
 void* kmalloc(size_t size)
 {
@@ -94,8 +94,14 @@ static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev
 	return;
 };
 
-static void _heap_grow(heap_t* self, uint64_t phys_addr)
+static void _heap_grow(heap_t* self)
 {
+	const uint64_t phys_addr = pfa_alloc();
+
+	if (!phys_addr) {
+		panic("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
+		return;
+	};
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
 	const size_t chunks = PAGE_SIZE / CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
@@ -150,16 +156,9 @@ static void* _malloc(heap_t* self, size_t size)
 	};
 
 	if (curr_free_chunks < 824) {
-		if (_has_overflow(self, size)) {
-			return 0x0;
+		if (!_has_overflow(self, size)) {
+			_heap_grow(self);
 		};
-		const uint64_t phys_addr = pfa_alloc();
-
-		if (!phys_addr) {
-			printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
-			return 0x0;
-		};
-		_heap_grow(self, phys_addr);
 	};
 
 	while (true) {
@@ -192,16 +191,9 @@ static void* _malloc(heap_t* self, size_t size)
 					start_block->next = next_free;
 
 					if (!next_free) {
-						if (_has_overflow(self, size)) {
-							return 0x0;
+						if (!_has_overflow(self, size)) {
+							_heap_grow(self);
 						};
-						const uint64_t phys_addr = pfa_alloc();
-
-						if (!phys_addr) {
-							printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
-							return 0x0;
-						};
-						_heap_grow(self, phys_addr);
 					};
 					return (void*)((uint8_t*)start_block + sizeof(heap_block_t));
 				};
@@ -210,16 +202,9 @@ static void* _malloc(heap_t* self, size_t size)
 				curr_block = curr_block->next;
 			};
 		};
-		if (_has_overflow(self, size)) {
-			return 0x0;
+		if (!_has_overflow(self, size)) {
+			_heap_grow(self);
 		};
-		const uint64_t phys_addr = pfa_alloc();
-
-		if (!phys_addr) {
-			printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
-			return 0x0;
-		};
-		_heap_grow(self, phys_addr);
 	};
 	return 0x0;
 };
