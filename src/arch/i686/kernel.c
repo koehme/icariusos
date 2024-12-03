@@ -251,8 +251,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 	heap_init(&heap);
 
-	for (size_t i = 0; i < 550; i++) {
-		kzalloc(4096);
+	for (size_t i = 0; i < 64; i++) {
+		kzalloc(80000);
 	};
 	heap_trace(&heap);
 

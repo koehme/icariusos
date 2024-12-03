@@ -125,10 +125,19 @@ static void _heap_grow(heap_t* self, uint64_t phys_addr)
 	return;
 };
 
+static bool _has_overflow(heap_t* self, size_t size)
+{
+	if (self->next_addr + size > KERNEL_HEAP_MAX) {
+		printf("[CRITICAL] Heap Overflow.\n");
+		return true;
+	};
+	return false;
+};
+
 static void* _malloc(heap_t* self, size_t size)
 {
 	const size_t total_size_with_header = size + sizeof(heap_block_t);
-	size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
+	const size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
 	size_t curr_free_chunks = 0;
 	heap_block_t* curr_block = self->head;
@@ -141,14 +150,13 @@ static void* _malloc(heap_t* self, size_t size)
 	};
 
 	if (curr_free_chunks < 824) {
-		if (self->next_addr + PAGE_SIZE > KERNEL_HEAP_MAX) {
-			printf("[CRITICAL] Heap limit reached. Cannot grow heap.\n");
+		if (_has_overflow(self, size)) {
 			return 0x0;
 		};
-		uint64_t phys_addr = pfa_alloc();
+		const uint64_t phys_addr = pfa_alloc();
 
 		if (!phys_addr) {
-			printf("[CRITICAL] Out of physical memory. Unable to allocate new page.\n");
+			printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
 			return 0x0;
 		};
 		_heap_grow(self, phys_addr);
@@ -184,13 +192,13 @@ static void* _malloc(heap_t* self, size_t size)
 					start_block->next = next_free;
 
 					if (!next_free) {
-						if (self->next_addr + size > KERNEL_HEAP_MAX) {
+						if (_has_overflow(self, size)) {
 							return 0x0;
 						};
 						const uint64_t phys_addr = pfa_alloc();
 
 						if (!phys_addr) {
-							printf("[CRITICAL] Out of physical memory. Unable to allocate new page.\n");
+							printf("[CRITICAL] Out of Physical Memory. Unable to Allocate.\n");
 							return 0x0;
 						};
 						_heap_grow(self, phys_addr);
@@ -202,7 +210,7 @@ static void* _malloc(heap_t* self, size_t size)
 				curr_block = curr_block->next;
 			};
 		};
-		if (self->next_addr + size > KERNEL_HEAP_MAX) {
+		if (_has_overflow(self, size)) {
 			return 0x0;
 		};
 		const uint64_t phys_addr = pfa_alloc();
@@ -274,7 +282,7 @@ void heap_trace(const heap_t* self)
 	printf("\n======= HEAP TRACE =======\n");
 
 	while (curr) {
-		printf("%d | <- 0x%x | 0x%x | -> 0x%x | %d] \n", allocation_count, curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
+		printf("<- 0x%x | 0x%x | -> 0x%x | %d] \n", curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
 		       curr->next ? (unsigned int)curr->next : 0, curr->chunk_span * 4096);
 		curr = curr->next;
 	};
