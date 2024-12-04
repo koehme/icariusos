@@ -27,17 +27,25 @@ void heap_init(heap_t* self);
 void* kmalloc(size_t size);
 void* kzalloc(size_t size);
 void kfree(void* ptr);
+void heap_dump(const heap_t* self);
+void heap_trace(const heap_t* self);
 
 /* INTERNAL API */
 static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
 static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev);
 static void _heap_grow(heap_t* self);
+static bool _has_overflow(heap_t* self, size_t size);
 
 void* kmalloc(size_t size)
 {
 	void* ptr = 0x0;
 	ptr = _malloc(&heap, size);
+
+	if (!ptr) {
+		printf("[ERROR] Memory Allocation failed for Size: %d\n", size);
+		return 0x0;
+	};
 	return ptr;
 };
 
@@ -45,12 +53,20 @@ void* kzalloc(size_t size)
 {
 	void* ptr = 0x0;
 	ptr = _malloc(&heap, size);
+
+	if (!ptr) {
+		printf("[ERROR] Memory Allocation failed for Size: %d\n", size);
+		return 0x0;
+	};
 	memset(ptr, 0x0, size);
 	return ptr;
 };
 
 void kfree(void* ptr)
 {
+	if (!ptr) {
+		return;
+	};
 	_free(&heap, ptr);
 	return;
 };
@@ -96,6 +112,10 @@ static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev
 
 static void _heap_grow(heap_t* self)
 {
+	if (self->next_addr + PAGE_SIZE > KERNEL_HEAP_MAX) {
+		printf("[ERROR] Cannot grow Heap.\n");
+		return;
+	};
 	const uint64_t phys_addr = pfa_alloc();
 
 	if (!phys_addr) {
@@ -105,6 +125,10 @@ static void _heap_grow(heap_t* self)
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
 	const size_t chunks = PAGE_SIZE / CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
+
+	if (!self->head) {
+		self->head = (heap_block_t*)virt_addr;
+	};
 
 	if (self->tail) {
 		heap_block_t* first_new_block = (heap_block_t*)virt_addr;
@@ -229,6 +253,8 @@ void heap_dump(const heap_t* self)
 	printf("\n====================================\n");
 	printf("             HEAP DUMP              \n");
 	printf("====================================\n");
+	printf("Heap Head Address:        0x%x\n", self->head);
+	printf("Heap Tail Address:        0x%x\n", self->tail);
 	printf("Heap Start Address:       0x%x\n", self->start_addr);
 	printf("Heap End Address:         0x%x\n", self->end_addr);
 	printf("Heap Next Free Address:   0x%x\n", self->next_addr);
@@ -270,6 +296,7 @@ void heap_trace(const heap_t* self)
 		printf("<- 0x%x | 0x%x | -> 0x%x | %d] \n", curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
 		       curr->next ? (unsigned int)curr->next : 0, curr->chunk_span * 4096);
 		curr = curr->next;
+		busy_wait(50000);
 	};
 	printf("==========================\n");
 	return;

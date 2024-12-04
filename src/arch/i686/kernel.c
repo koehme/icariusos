@@ -251,11 +251,18 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 	heap_init(&heap);
 
+	void* ptr1 = kzalloc(4096);
+	void* ptr2 = kzalloc(8192);
+	void* ptr3 = kzalloc(12288);
+	void* ptr4 = kzalloc(16384);
+
+	heap_dump(&heap);
+	/**
 	for (size_t i = 0; i < 64; i++) {
 		kzalloc(80000);
 	};
 	heap_trace(&heap);
-
+	*/
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
 
