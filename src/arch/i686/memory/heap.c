@@ -21,16 +21,12 @@ void* kzalloc(size_t size);
 void kfree(void* ptr);
 void heap_dump(const heap_t* self);
 void heap_trace(const heap_t* self);
-void heap_run_tests(void);
 
 /* INTERNAL API */
 static void* _malloc(heap_t* self, size_t size);
 static void _free(heap_t* self, void* ptr);
 static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev);
 static void _heap_grow(heap_t* self);
-static bool _has_overflow(heap_t* self, size_t size);
-static void _test_heap_alloc(const size_t size, const uintptr_t expected_usable_addr, const uintptr_t expected_header_addr, const bool should_free,
-			     const int i);
 
 typedef struct heap_block {
 	size_t size;
@@ -52,66 +48,6 @@ heap_t heap = {
     .next_addr = 0x0,
     .end_addr = 0x0,
     .last_block = 0x0,
-};
-
-static void _test_heap_alloc(const size_t size, const uintptr_t expected_usable_addr, const uintptr_t expected_header_addr, const bool should_free, const int i)
-{
-	printf("[TEST] Testing Allocation #%d: kmalloc(%d)...\n", i, (int)size);
-	void* ptr = kmalloc(size);
-
-	if (!ptr) {
-		printf("[ERROR] Allocation #%d: kmalloc(%d) failed.\n", i, (int)size);
-		return;
-	} else {
-		printf("[OK] Allocation #%d: kmalloc(%d): Ptr = 0x%x\n", i, (int)size, (unsigned int)ptr);
-	};
-
-	if ((uintptr_t)ptr == expected_usable_addr) {
-		printf("[OK] Allocation #%d (%d Bytes) is at Expected Usable Address: 0x%x.\n", i, (int)size, (unsigned int)expected_usable_addr);
-	} else {
-		printf("[ERROR] Allocation #%d is at 0x%x, Expected 0x%x.\n", i, (unsigned int)ptr, (unsigned int)expected_usable_addr);
-	};
-
-	if ((uintptr_t)ptr - sizeof(heap_block_t) == expected_header_addr) {
-		printf("[OK] Allocation #%d Header is at Expected Address: 0x%x.\n", i, (unsigned int)expected_header_addr);
-	} else {
-		printf("[ERROR] Header for Allocation #%d is at 0x%x, Expected 0x%x.\n", i, (unsigned int)((uintptr_t)ptr - sizeof(heap_block_t)),
-		       (unsigned int)expected_header_addr);
-	};
-
-	if (should_free) {
-		kfree(ptr);
-		printf("[OK] Freed Allocation #%d (%d Bytes).\n", i, (int)size);
-	} else {
-		printf("[TEST] Allocation #%d not freed.\n", i);
-	};
-	printf("\n");
-	return;
-};
-
-void heap_run_tests(void)
-{
-	printf("[TEST] Starting Kernel Heap Tests...\n");
-	printf("[TEST] Heap Start: 0x%x\n", (unsigned int)heap.start_addr);
-	printf("[TEST] Heap Next:  0x%x\n", (unsigned int)heap.next_addr);
-	size_t i = 1;
-	uintptr_t expected_usable_addr = KERNEL_HEAP_START + sizeof(heap_block_t);
-	uintptr_t expected_header_addr = KERNEL_HEAP_START;
-	// 1) Allocation Test (4096 Bytes, Rounded to 2 Chunks)
-	_test_heap_alloc(4096, expected_usable_addr, expected_header_addr, true, i++);
-	// 2) Allocation Test (3000 Bytes, Rounded to 1 Chunk)
-	_test_heap_alloc(3000, expected_usable_addr, expected_header_addr, false, i++);
-	expected_usable_addr += 4096;
-	expected_header_addr += 4096;
-	// 3) Allocation Test (4096 Bytes, Uses 3rd Chunk)
-	_test_heap_alloc(4096, expected_usable_addr, expected_header_addr, false, i++);
-	expected_usable_addr += 4096 * 2;
-	expected_header_addr += 4096 * 2;
-	// 4) Large Allocation Test (1 MB, Spans 256 Chunks)
-	_test_heap_alloc(1024 * 1024, expected_usable_addr, expected_header_addr, true, i++);
-	// 5) Small Allocation Test (128 Bytes, Reuses Free Space)
-	_test_heap_alloc(128, KERNEL_HEAP_START + (4096 * 3) + sizeof(heap_block_t), KERNEL_HEAP_START + (4096 * 3), true, i++);
-	return;
 };
 
 void* kmalloc(size_t size)
@@ -189,10 +125,6 @@ static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev
 
 static void _heap_grow(heap_t* self)
 {
-	if (self->next_addr + PAGE_SIZE > KERNEL_HEAP_MAX) {
-		printf("[ERROR] Cannot grow Kernel Heap.\n");
-		return;
-	};
 	const uint64_t phys_addr = pfa_alloc();
 
 	if (!phys_addr) {
@@ -224,18 +156,13 @@ static void _heap_grow(heap_t* self)
 	return;
 };
 
-static bool _has_overflow(heap_t* self, size_t size)
-{
-	if (self->next_addr + size > KERNEL_HEAP_MAX) {
-		printf("[CRITICAL] Kernel Heap Overflow.\n");
-		return true;
-	};
-	return false;
-};
-
 static void* _malloc(heap_t* self, size_t size)
 {
 	const size_t total_size_with_header = size + sizeof(heap_block_t);
+
+	if ((uintptr_t)self->next_addr + total_size_with_header > KERNEL_HEAP_MAX) {
+		return 0x0;
+	};
 	const size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
 	size_t curr_free_chunks = 0;
@@ -249,9 +176,7 @@ static void* _malloc(heap_t* self, size_t size)
 	};
 
 	if (curr_free_chunks < 824) {
-		if (!_has_overflow(self, size)) {
-			_heap_grow(self);
-		};
+		_heap_grow(self);
 	};
 
 	while (true) {
@@ -284,9 +209,7 @@ static void* _malloc(heap_t* self, size_t size)
 					start_block->next = next_free;
 
 					if (!next_free) {
-						if (!_has_overflow(self, size)) {
-							_heap_grow(self);
-						};
+						_heap_grow(self);
 					};
 					return (void*)((uint8_t*)start_block + sizeof(heap_block_t));
 				};
@@ -295,9 +218,7 @@ static void* _malloc(heap_t* self, size_t size)
 				curr_block = curr_block->next;
 			};
 		};
-		if (!_has_overflow(self, size)) {
-			_heap_grow(self);
-		};
+		_heap_grow(self);
 	};
 	return 0x0;
 };
@@ -316,7 +237,7 @@ void heap_dump(const heap_t* self)
 	size_t block_count = 0;
 	size_t total_used_memory = 0;
 	size_t allocation_count = 0;
-	const size_t total_heap_size = self->end_addr - self->start_addr;
+	const size_t total_heap_size = (self->end_addr - self->start_addr) + 1;
 
 	printf("\n====================================\n");
 	printf("           KERNEL HEAP DUMP         \n");

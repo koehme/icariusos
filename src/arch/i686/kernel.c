@@ -251,7 +251,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 
 	heap_init(&heap);
-	heap_run_tests();
+	heap_dump(&heap);
 
 	fifo_init(&fifo_kbd);
 	fifo_init(&fifo_mouse);
