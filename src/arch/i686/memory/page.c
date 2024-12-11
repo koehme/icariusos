@@ -10,7 +10,13 @@
 #include "page.h"
 #include "string.h"
 
+/* EXTERNAL API */
 extern uint32_t kernel_directory[1024];
+
+/* PUBLIC API */
+void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
+void page_unmap(const uint32_t virt_addr);
+uint32_t page_get_phys_addr(const uint32_t virt_addr);
 
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 {

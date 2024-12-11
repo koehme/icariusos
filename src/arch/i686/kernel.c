@@ -21,6 +21,7 @@
 
 #include "kernel.h"
 
+/* EXTERNAL API */
 extern vbe_t vbe_display;
 extern pfa_t pfa;
 extern heap_t heap;
@@ -251,6 +252,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 
 	heap_init(&heap);
+
+	kzalloc(8192);
 	heap_dump(&heap);
 
 	fifo_init(&fifo_kbd);

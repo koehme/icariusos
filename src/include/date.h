@@ -17,7 +17,7 @@ const static char* days[7] = {
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 };
 
-typedef struct date_t {
+typedef struct date {
 	uint16_t weekday;
 	uint16_t day;
 	uint16_t month;

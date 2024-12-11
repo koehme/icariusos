@@ -11,6 +11,7 @@
 #include "idt.h"
 #include "ps2.h"
 
+/* EXTERNAL API */
 extern void asm_interrupt_32h(void);
 
 /* PUBLIC API */

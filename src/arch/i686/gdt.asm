@@ -1,6 +1,6 @@
-global gdt_flush
+global asm_gdt_flush
 
-gdt_flush:
+asm_gdt_flush:
     mov eax, [esp+4]
     lgdt[eax]
 

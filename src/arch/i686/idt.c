@@ -17,6 +17,7 @@
 #include "ps2.h"
 #include "string.h"
 
+/* EXTERNAL API */
 extern ata_t ata_dev;
 extern timer_t timer;
 extern kbd_t kbd;

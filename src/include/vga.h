@@ -12,11 +12,10 @@
 #include "cursor.h"
 #include <stdint.h>
 
-// VGA Ports
-#define VGA_CTRL 0x3D4	     // VGA Control Register
-#define VGA_DATA 0x3D5	     // VGA Data Register
-#define VGA_LOW_OFFSET 0x0F  // Low byte offset for cursor position
-#define VGA_HIGH_OFFSET 0x0E // High byte offset for cursor position
+#define VGA_CTRL 0x3D4
+#define VGA_DATA 0x3D5
+#define VGA_LOW_OFFSET 0x0F
+#define VGA_HIGH_OFFSET 0x0E
 
 typedef enum vga_color_t {
 	VGA_COLOR_BLACK = 0,
@@ -39,8 +38,8 @@ typedef enum vga_color_t {
 
 typedef struct vga_t {
 	uint16_t* framebuffer;
-	uint16_t cursor_x; // Horizontal position (column) where the character will be placed
-	uint16_t cursor_y; // Vertical position (row) where the character will be placed
+	uint16_t cursor_x;
+	uint16_t cursor_y;
 	uint8_t width;
 	uint8_t height;
 } vga_t;

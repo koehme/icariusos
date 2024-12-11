@@ -14,7 +14,7 @@
 #define FIFO_BUFFER_SIZE 128 // Must be a power of 2
 #define FIFO_BUFFER_MASK (FIFO_BUFFER_SIZE - 1)
 
-typedef struct fifo_t {
+typedef struct fifo {
 	uint8_t buffer[FIFO_BUFFER_SIZE]; // 'ptr' to the elements in memory
 	uint8_t head;			  // Where to write (enqueue)
 	uint8_t tail;			  // Where to read (dequeue)

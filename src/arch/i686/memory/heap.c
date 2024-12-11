@@ -12,6 +12,7 @@
 
 #define CHUNK_SIZE 4096
 
+/* EXTERNAL API */
 extern pfa_t pfa;
 
 /* PUBLIC API */

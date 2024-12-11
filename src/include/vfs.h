@@ -14,7 +14,7 @@
 #include "pathparser.h"
 #include "vnode.h"
 
-typedef struct ata_t ata_t;
+typedef struct ata ata_t;
 
 typedef int32_t (*resolve_fn)(ata_t* dev);
 typedef void* (*open_fn)(ata_t* dev, pathnode_t* path, const uint8_t mode);

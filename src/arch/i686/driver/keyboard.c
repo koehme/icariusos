@@ -12,6 +12,7 @@
 #include "ps2.h"
 #include "string.h"
 
+/* EXTERNAL API */
 extern void asm_interrupt_21h(void);
 
 /* PUBLIC API */

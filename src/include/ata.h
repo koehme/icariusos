@@ -44,7 +44,7 @@ typedef struct fs_t fs_t;
 #define ATA_COMMAND_PORT 0x1F7
 #define ATA_STATUS_REGISTER 0x1F7
 
-typedef struct ata_t {
+typedef struct ata {
 	char dev[2];		// Type of the ATA device
 	uint16_t sector_size;	// Size of a sector in bytes
 	uint64_t total_sectors; // Total available sectors

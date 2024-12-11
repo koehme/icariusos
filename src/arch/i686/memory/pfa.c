@@ -7,6 +7,18 @@
 #include "pfa.h"
 #include "string.h"
 
+/* PUBLIC API */
+void pfa_init(pfa_t* self);
+void pfa_set(pfa_t* self, const uint64_t frame);
+void pfa_clear(pfa_t* self, const uint64_t frame);
+bool pfa_test(const pfa_t* self, const uint64_t frame);
+void pfa_dump(const pfa_t* self, const bool verbose);
+uint64_t pfa_alloc(void);
+
+/* INTERNAL API */
+static inline uint32_t _index_from_bit(const uint64_t frame);
+static inline uint32_t _offset_from_bit(const uint64_t frame);
+
 pfa_t pfa = {
     .frames_bitmap =
 	{
