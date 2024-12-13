@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct fs_t fs_t;
+typedef struct fs fs_t;
 
 // ATA Limits
 #define ATA_SECTOR_SIZE 512

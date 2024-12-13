@@ -17,7 +17,7 @@
 #define VGA_LOW_OFFSET 0x0F
 #define VGA_HIGH_OFFSET 0x0E
 
-typedef enum vga_color_t {
+typedef enum vga_color {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
 	VGA_COLOR_GREEN = 2,
@@ -36,7 +36,7 @@ typedef enum vga_color_t {
 	VGA_COLOR_WHITE = 15,
 } vga_color_t;
 
-typedef struct vga_t {
+typedef struct vga {
 	uint16_t* framebuffer;
 	uint16_t cursor_x;
 	uint16_t cursor_y;

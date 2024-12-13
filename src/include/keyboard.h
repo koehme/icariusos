@@ -37,7 +37,7 @@
 #define KCAPS_LOCK 0x3A
 #define KALTGR 0x60
 
-typedef struct kbd_t {
+typedef struct kbd {
 	bool caps;
 	bool caps_lock;
 	bool alt_gr;

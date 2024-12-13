@@ -10,18 +10,18 @@
 #include "pathlexer.h"
 #include <stdbool.h>
 
-typedef struct pathparser_t {
+typedef struct pathparser {
 	pathtoken_t curr;
 	pathtoken_t prev;
 	bool has_error;
 } pathparser_t;
 
-typedef struct pathnode_t {
+typedef struct pathnode {
 	char identifier[8];
-	struct pathnode_t* next;
+	struct pathnode* next;
 } pathnode_t;
 
-typedef struct pathroot_node_t {
+typedef struct pathroot_node {
 	char drive[2];
 	pathnode_t* path;
 } pathroot_node_t;

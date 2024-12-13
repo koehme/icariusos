@@ -19,7 +19,7 @@
 #define APPEND 2
 #define INVALID 3
 
-typedef struct vstat_t {
+typedef struct vstat {
 	char st_dev[2];	     // Device ID (e.g., filesystem identifier)
 	uint8_t st_mode;     // File mode (e.g., permissions)
 	uint32_t st_size;    // File size in bytes

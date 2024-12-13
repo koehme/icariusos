@@ -84,7 +84,7 @@
 #define DEVICE 0x40
 #define DELETED 0xE5
 
-typedef struct fat16_t {
+typedef struct fat16 {
 	resolve_fn resolve_cb;
 	open_fn open_cb;
 	read_fn read_cb;
@@ -93,7 +93,7 @@ typedef struct fat16_t {
 	char name[10];
 } fat16_t;
 
-typedef struct bpb_t {
+typedef struct bpb {
 	uint8_t jmp[3];	       // jump over the disk format information (the BPB and EBPB)
 	uint8_t oem[8];	       // oem identifier. The first 8 Bytes (3 - 10) is the version of DOS being used
 	uint16_t byts_per_sec; // number of Bytes per sector (remember, all numbers are in the little-endian format)
@@ -112,7 +112,7 @@ typedef struct bpb_t {
 			       // fit in the Number of Sectors entry at 0x13
 } __attribute__((packed)) bpb_t;
 
-typedef struct ebpb_t {
+typedef struct ebpb {
 	uint8_t drv_num;
 	uint8_t reserved1;
 	uint8_t boot_sig;
@@ -121,7 +121,7 @@ typedef struct ebpb_t {
 	uint8_t fil_sys_type[8];
 } __attribute__((packed)) ebpb_t;
 
-typedef struct fat16_dir_entry_t {
+typedef struct fat16_dir_entry {
 	uint8_t file_name[11];	    // 8.3 file name
 	uint8_t attributes;	    // attributes of the file
 	uint8_t reserved;	    // reserved for use by Windows NT
@@ -136,36 +136,36 @@ typedef struct fat16_dir_entry_t {
 	uint32_t file_size;	    // size of the file in bytes
 } __attribute__((packed)) fat16_dir_entry_t;
 
-typedef struct fat16_internal_header_t {
+typedef struct fat16_internal_header {
 	bpb_t bpb;
 	ebpb_t ebpb;
 } __attribute__((packed)) fat16_internal_header_t;
 
-typedef struct fat16_time_t {
+typedef struct fat16_time {
 	int32_t hour;
 	int32_t minute;
 	int32_t second;
 } fat16_time_t;
 
-typedef struct fat16_date_t {
+typedef struct fat16_date {
 	int32_t day;
 	int32_t month;
 	int32_t year;
 } fat16_date_t;
 
-typedef enum fat16_entry_t {
+typedef enum fat16_entry {
 	FAT16_ENTRY_TYPE_FILE,
 	FAT16_ENTRY_TYPE_DIRECTORY,
 } fat16_entry_t;
 
-typedef struct fat16_folder_t {
-	struct fat16_dir_entry_t* entry;
+typedef struct fat16_folder {
+	struct fat16_dir_entry* entry;
 	uint32_t total;
 	uint32_t start_sector;
 	uint32_t end_sector;
 } fat16_folder_t;
 
-typedef struct fat16_node_t {
+typedef struct fat16_node {
 	union {
 		fat16_dir_entry_t* file; // Pointer to the file
 		fat16_folder_t* dir;	 // Pointer to the folder
@@ -173,7 +173,7 @@ typedef struct fat16_node_t {
 	fat16_entry_t type;
 } fat16_node_t;
 
-typedef struct fat16_fd_t {
+typedef struct fat16_fd {
 	fat16_node_t* entry;
 	uint32_t pos;
 } fat16_fd_t;

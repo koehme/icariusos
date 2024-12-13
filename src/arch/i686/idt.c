@@ -25,7 +25,7 @@ extern mouse_t mouse;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 
-extern void asm_idt_loader(IDT_R* ptr);
+extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default();
 
 /* PUBLIC API */
@@ -95,8 +95,8 @@ static const char* interrupt_messages[] = {
     "Secondary ATA Hard Disk (IRQ15)\n",
 };
 
-static IDTDescriptor idt[256];
-static IDT_R idtr_descriptor;
+static idt_desc_t idt[256];
+static idtr_t idtr_descriptor;
 
 static void _pic1_send_eoi(void)
 {
@@ -155,11 +155,9 @@ static void _init_isr(void)
 
 void idt_init(void)
 {
-	// Set the limit and base address of the IDT descriptor
-	idtr_descriptor.limit = (uint16_t)sizeof(IDTDescriptor) * 256 - 1;
+	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
-	// Load the idt in a specific 'lidt' register with the help of an assembly routine
 	asm_idt_loader(&idtr_descriptor);
 	return;
 };
@@ -169,8 +167,8 @@ void idt_set(const int32_t isr_num, void* isr)
 	if (isr_num < 0 || isr_num >= 256) {
 		return;
 	};
-	IDTDescriptor* descriptor = &idt[isr_num];
-	// Set isr
+	idt_desc_t* descriptor = &idt[isr_num];
+
 	descriptor->isr_low = (uintptr_t)isr & 0xffff;
 	descriptor->kernel_cs = 0x08;
 	descriptor->reserved = 0x00;

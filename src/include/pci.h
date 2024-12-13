@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-typedef struct pci_dev_t {
+typedef struct pci_dev {
 	uint16_t vendor_id;
 	uint16_t device_id;
 	uint16_t command;

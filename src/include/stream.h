@@ -12,7 +12,7 @@
 
 #include "ata.h"
 
-typedef struct stream_t {
+typedef struct stream {
 	size_t pos;
 	ata_t* dev;
 } stream_t;

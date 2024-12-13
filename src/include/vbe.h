@@ -148,7 +148,7 @@ const static uint8_t ascii_bitmap[ASCII][FONT_WIDTH] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+007F
 };
 
-typedef struct vbe_t {
+typedef struct vbe {
 	void* addr;	 // where the pixel data starts
 	uint32_t width;	 // horizontal resolution
 	uint32_t height; // vertical resolution
@@ -158,7 +158,7 @@ typedef struct vbe_t {
 	uint32_t cursor_y;
 } vbe_t;
 
-typedef enum vbe_color_t {
+typedef enum vbe_color {
 	VBE_COLOR_BLACK = 0x000000,
 	VBE_COLOR_RED = 0xFF0000,
 	VBE_COLOR_GREEN = 0x00FF00,

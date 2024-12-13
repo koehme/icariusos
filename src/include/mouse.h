@@ -14,7 +14,7 @@
 
 #include "kernel.h"
 
-typedef struct mouse_t {
+typedef struct mouse {
 	int16_t x;	// Current x-coordinate
 	int16_t y;	// Current y-coordinate
 	int16_t prev_x; // Previous x-coordinate

@@ -29,7 +29,7 @@
 #define FRAMEBUFFER_DEPTH (32 / 8)
 #define FRAMEBUFFER_SIZE ((FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT) * FRAMEBUFFER_DEPTH)
 
-typedef struct pfa_t {
+typedef struct pfa {
 	uint32_t frames_bitmap[BITMAP_SIZE];
 } pfa_t;
 

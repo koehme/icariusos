@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-typedef enum pathtype_t {
+typedef enum pathtype {
 	PT_IDENTIFIER,
 	PT_LETTER,
 	PT_COLON,
@@ -19,7 +19,7 @@ typedef enum pathtype_t {
 	PT_ERR,
 } pathtype_t;
 
-typedef struct pathtoken_t {
+typedef struct pathtoken {
 	pathtype_t type;
 	char* start;
 	int32_t len;

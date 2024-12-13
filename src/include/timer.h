@@ -19,7 +19,7 @@
 #define PIT_MODE_COMMAND_REGISTER 0x43 // Mode/Command register (write only)
 
 // Holds information about the number of ticks and the hz
-typedef struct timer_t {
+typedef struct timer {
 	uint64_t ticks; // Number of ticks since system booted
 	uint32_t hz;	// Frequency (in Hertz) at which the timer_t operates
 } timer_t;

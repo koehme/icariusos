@@ -23,7 +23,7 @@ typedef int32_t (*close_fn)(void* internal);
 typedef int32_t (*stat_fn)(ata_t* dev, void* internal, vstat_t* buffer);
 typedef int32_t (*seek_fn)(void* internal, const uint32_t offset, const uint8_t whence);
 
-typedef struct fs_t {
+typedef struct fs {
 	resolve_fn resolve_cb;
 	open_fn open_cb;
 	read_fn read_cb;

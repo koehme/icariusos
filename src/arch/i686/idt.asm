@@ -50,7 +50,7 @@ asm_do_cli:
 ; and loads it into the IDT register. The IDT contains entries for interrupt
 ; service routines (ISRs) that handle various hardware and software interrupts.
 ;
-; @param ebx: A pointer to the IDT_R.
+; @param ebx: A pointer to the idtr_t.
 ;
 ; @return None
 ;=============================================================================
@@ -63,7 +63,7 @@ asm_idt_loader:
     ; Argument 2
     ; Argument 1
     ; Return address <--- (%esp)
-    mov ebx, [ebp+8]      ; Access the argument 1 - IDT_R *ptr
+    mov ebx, [ebp+8]      ; Access the argument 1 - idtr_t *ptr
     lidt [ebx]            ; Load interrupt descriptor table register 
 
     pop ebp               ; Restore old base pointer

@@ -15,7 +15,7 @@
 #define PS2_PACKAGE_DISPATCH 32
 
 // PS/2 Buffer Status Flags
-typedef enum ps2_buffer_t {
+typedef enum ps2_buffer {
 	PS2_BUFFER_OUTPUT = 0x01, // Output buffer
 	PS2_BUFFER_INPUT = 0x02	  // Input buffer
 } ps2_buffer_t;
