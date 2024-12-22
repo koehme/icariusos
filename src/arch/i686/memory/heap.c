@@ -200,6 +200,10 @@ static void* _malloc(heap_t* self, size_t size)
 
 					for (size_t i = 1; i < chunks_needed; ++i) {
 						block->is_free = false;
+
+						if (!block->next) {
+							_heap_grow(self);
+						};
 						block = block->next;
 					};
 					heap_block_t* next_free = block;

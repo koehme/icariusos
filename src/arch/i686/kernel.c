@@ -253,7 +253,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	heap_init(&heap);
 
-	kzalloc(8192);
+	kzalloc(1024 * 4096);
+	kzalloc(1024);
 	heap_dump(&heap);
 
 	fifo_init(&fifo_kbd);
