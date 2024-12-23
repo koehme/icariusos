@@ -253,7 +253,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	heap_init(&heap);
 
-	kzalloc(1024 * 4096);
+	void* ptr1 = kzalloc(4096 * 1023);
+	void* ptr2 = kzalloc(4096 * 1023);
+	kfree(ptr2);
+	kfree(ptr1);
 	kzalloc(1024);
 	heap_dump(&heap);
 

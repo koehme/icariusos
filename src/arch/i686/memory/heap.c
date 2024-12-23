@@ -42,6 +42,8 @@ typedef struct heap {
 	uintptr_t next_addr;
 	uintptr_t end_addr;
 	heap_block_t* last_block;
+	size_t used_chunks;
+	size_t free_chunks;
 } heap_t;
 
 heap_t heap = {
@@ -49,6 +51,8 @@ heap_t heap = {
     .next_addr = 0x0,
     .end_addr = 0x0,
     .last_block = 0x0,
+    .used_chunks = 0,
+    .free_chunks = 0,
 };
 
 void* kmalloc(size_t size)
@@ -93,14 +97,14 @@ static void _free(heap_t* self, void* ptr)
 	heap_block_t* curr_block = (heap_block_t*)((uint8_t*)ptr - sizeof(heap_block_t));
 	curr_block->is_free = true;
 
-	const size_t chunks_to_split = curr_block->chunk_span;
+	const size_t chunks = curr_block->chunk_span;
 
 	heap_block_t* next_block = curr_block->next;
 	heap_block_t* iter_block = curr_block;
 
 	curr_block->chunk_span = 1;
 
-	for (size_t i = 1; i < chunks_to_split; i++) {
+	for (size_t i = 1; i < chunks; i++) {
 		heap_block_t* new_block = (heap_block_t*)((uint8_t*)iter_block + 4096);
 		_init_heap_block(new_block, 4096, iter_block);
 		iter_block->next = new_block;
@@ -111,6 +115,8 @@ static void _free(heap_t* self, void* ptr)
 	if (next_block) {
 		next_block->prev = iter_block;
 	};
+	self->free_chunks += chunks;
+	self->used_chunks -= chunks;
 	return;
 };
 
@@ -154,6 +160,7 @@ static void _heap_grow(heap_t* self)
 	};
 	self->last_block = prev_block;
 	self->next_addr = virt_addr;
+	self->free_chunks += chunks;
 	return;
 };
 
@@ -166,17 +173,11 @@ static void* _malloc(heap_t* self, size_t size)
 	};
 	const size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-	size_t curr_free_chunks = 0;
-	heap_block_t* curr_block = (heap_block_t*)self->start_addr;
+	const size_t total_chunks = self->free_chunks + self->used_chunks;
 
-	while (curr_block) {
-		if (curr_block->is_free) {
-			curr_free_chunks++;
-		};
-		curr_block = curr_block->next;
-	};
-
-	if (curr_free_chunks < 824) {
+	if (total_chunks == 0) {
+		_heap_grow(self);
+	} else if (((self->free_chunks * 100) / total_chunks) < 20) {
 		_heap_grow(self);
 	};
 
@@ -216,6 +217,8 @@ static void* _malloc(heap_t* self, size_t size)
 					if (!next_free) {
 						_heap_grow(self);
 					};
+					self->free_chunks -= chunks_needed;
+					self->used_chunks += chunks_needed;
 					return (void*)((uint8_t*)start_block + sizeof(heap_block_t));
 				};
 				curr_block = start_block->next;
@@ -277,6 +280,8 @@ void heap_dump(const heap_t* self)
 	printf("Total Used Memory:        %d Bytes\n", total_used_memory);
 	printf("Kernel Heap Usage:        %f%%\n", usage_percentage);
 	printf("Total Kernel Heap Size:   %d Bytes\n", total_heap_size);
+	printf("Heap Free Chunks:         %d\n", self->free_chunks);
+	printf("Heap Used Chunks:         %d\n", self->used_chunks);
 	printf("====================================\n");
 	return;
 };
