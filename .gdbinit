@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break kernel.c:255
+break start_higher_half_kernel
 
 c

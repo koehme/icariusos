@@ -46,6 +46,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "stream.h"
 #include "string.h"
 #include "timer.h"
+#include "tss.h"
 #include "vbe.h"
 #include "vfs.h"
 #include "vga.h"

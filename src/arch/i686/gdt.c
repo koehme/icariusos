@@ -8,6 +8,7 @@
  */
 
 #include "gdt.h"
+#include "tss.h"
 
 typedef struct gdt_entry {
 	uint16_t limit;
@@ -25,6 +26,7 @@ typedef struct gdt {
 
 /* EXTERNAL API */
 extern void asm_gdt_flush(uint32_t);
+extern tss_t tss;
 
 /* PUBLIC API */
 void gdt_init(void);
@@ -33,20 +35,16 @@ void gdt_set_entry(const uint32_t num, const uint32_t base, const uint32_t limit
 gdt_entry_t gdt_entries[6];
 gdt_t gdt;
 
-#define KERNEL_CODE_SEG 0x9A
-#define KERNEL_DATA_SEG 0x92
-#define USER_CODE_SEG 0xFA
-#define USER_DATA_SEG 0xF2
-#define TSS_SEG 0x89
-
 void gdt_init(void)
 {
 	gdt.limit = (sizeof(gdt_entry_t) * 6) - 1;
 	gdt.base = (uint32_t)&gdt_entries;
-	gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
-	gdt_set_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-	gdt_set_entry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-	gdt_set_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+	gdt_set_entry(0, 0, 0, 0, 0);
+	gdt_set_entry(1, 0, 0xFFFFFFFF, KERNEL_CODE_SEG, 0xCF);
+	gdt_set_entry(2, 0, 0xFFFFFFFF, KERNEL_DATA_SEG, 0xCF);
+	gdt_set_entry(3, 0, 0xFFFFFFFF, USER_CODE_SEG, 0xCF);
+	gdt_set_entry(4, 0, 0xFFFFFFFF, USER_DATA_SEG, 0xCF);
+	gdt_set_entry(5, (uint32_t)&tss, sizeof(tss_t) - 1, TSS_SEG, 0x00);
 	asm_gdt_flush((uint32_t)&gdt);
 	return;
 };

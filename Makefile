@@ -33,6 +33,7 @@ SOURCES_C = \
     ./src/arch/i686/memory/page.c \
     ./src/arch/i686/memory/pfa.c \
     ./src/arch/i686/ds/fifo.c \
+    ./src/arch/i686/process/tss.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
@@ -61,6 +62,9 @@ OBJECTS = $(OBJECTS_C) $(OBJECTS_ASM)
 all: $(OBJECTS) image
 
 $(OBJ_DIR)/%.c.o: ./src/lib/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/arch/i686/process/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/arch/i686/driver/%.c

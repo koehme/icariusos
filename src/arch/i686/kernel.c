@@ -2,19 +2,7 @@
  * @file kernel.c
  * @author Kevin Oehme
  * @copyright MIT
- *
  * @brief The heart of the operating system. This is where the magic happens.
- *
- * The kernel acts as the brain of the system, coordinating all hardware, managing resources,
- * and providing a secure environment for programs to run. This file contains essential kernel
- * structures, initialization routines, and low-level functionality that power the OS.
- *
- * Buckle up, because here’s where the code meets the hardware – from interrupt handling to
- * memory management, it all starts here.
- *
- * This kernel is designed to be minimal yet efficient, providing the foundation for the
- * operating system to run smoothly and handle complex tasks.
- *
  * @version 1.0
  * @date 2024-11-15
  */
@@ -31,6 +19,7 @@ extern timer_t timer;
 extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
+extern tss_t tss;
 
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
@@ -242,6 +231,7 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
+	tss_init(&tss, KERNEL_STACK_TOP, 0x10);
 	pic_init();
 	idt_init();
 	pfa_init(&pfa);

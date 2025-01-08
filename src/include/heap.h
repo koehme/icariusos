@@ -16,7 +16,7 @@
 #define CHUNK_SIZE 4096
 
 #define KERNEL_HEAP_START 0xC1000000
-#define KERNEL_HEAP_MAX 0xC2FFFFFF
+#define KERNEL_HEAP_MAX 0xC2BFFFFF
 
 typedef struct heap heap_t;
 typedef struct heap_block heap_block_t;
