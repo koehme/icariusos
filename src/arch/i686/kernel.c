@@ -231,7 +231,9 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
-	tss_init(&tss, KERNEL_STACK_TOP, 0x10);
+	tss_init(&tss, KERNEL_STACK_TOP, GDT_KERNEL_DATA_SEGMENT);
+	tss_load(GDT_TSS_SEGMENT);
+
 	pic_init();
 	idt_init();
 	pfa_init(&pfa);

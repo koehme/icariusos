@@ -10,20 +10,22 @@
 #include <stdint.h>
 
 /*
-# Memory Layout for Higher-Half Kernel
+################################################
+## Stack Memory Layout for Higher-Half Kernel ##
+################################################
 
-| **Region**          | **Start Address** | **End Address**   | **Size**        | **Description**                          |
-|----------------------|-------------------|-------------------|-----------------|------------------------------------------|
-| Kernel Code          | `0xC0000000`     | `0xC0FFFFFF`      | 16 MiB          | Kernel text, data, and BSS sections      |
-| Kernel Heap          | `0xC1000000`     | `0xC2BFFFFF`      | ~47.9375 MiB    | Heap for dynamic memory allocation       |
-| Kernel Stack         | `0xC2C00000`     | `0xC2FFFFFF`      | 16 KiB          | Stack used by TSS for Ring 3 -> Ring 0   |
-| Reserved             | `0xC3000000`     | `0xEFFFFFFF`      | N/A             | Available for future use or I/O mappings|
-| Framebuffer          | `0xE0000000`     | `0xE03FFFFF`      | 4 MiB           | Mapped framebuffer for graphics display |
+| **Region**          | **Start Stack Address** | **End Stack Address**   | **Size**        | **Description**
+--------------------------------------------------------------------------------------------------------------------------------------
+| Kernel Stack        | `0xC2C00000`            | `0xC2C07FFF`            | 32 KiB          | Stack used by TSS for Ring 3 -> Ring 0
+| Reserved Stack Space| `0xC2C08000`            | `0xC2FFFFFF`            | 4064 KiB        | Reserved
+--------------------------------------------------------------------------------------------------------------------------------------
 */
 
-#define KERNEL_STACK_SIZE 0x2000 // 8 KiB
-#define KERNEL_STACK_TOP 0xC2FFFFFF
-#define KERNEL_STACK_BASE (KERNEL_STACK_TOP - KERNEL_STACK_SIZE + 1)
+#define KERNEL_STACK_SIZE 0x8000				       // 32 KiB
+#define KERNEL_STACK_BOTTOM (KERNEL_HEAP_MAX + 1)		       // 0xC2C00000
+#define KERNEL_STACK_TOP (KERNEL_STACK_BOTTOM + KERNEL_STACK_SIZE - 1) // 0xC2C07FFF
+#define RESERVED_STACK_START (KERNEL_STACK_TOP + 1)		       // 0xC2C08000
+#define RESERVED_STACK_END 0xC2FFFFFF				       // Full 4 MiB Page Ends
 
 typedef struct tss {
 	uint32_t link;	 // Previous TSS link (not used, set to 0)
