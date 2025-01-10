@@ -39,6 +39,7 @@ void tss_init(tss_t* self, uint32_t esp0, uint16_t ss0)
 	memset(self, 0, sizeof(tss_t));
 	self->esp0 = esp0;
 	self->ss0 = ss0;
+	self->iopb = sizeof(tss_t);
 	return;
 };
 
