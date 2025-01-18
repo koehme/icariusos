@@ -47,7 +47,7 @@ kernel_directory:
 
     TIMES 128-12 DD 0
 
-    ; Framebuffer Mapping at 0xFD000000
+    ; Framebuffer Mapping at 0xFD000000 -> 800*600*(32/8) / 1048576 | 1 MiB = 1048576
     DD 0xFD000083 ; Entry 896 (0xE0000000 - 0xE03FFFFF) mapped to 0xFD000000 - 0xFD3FFFFF
 
     TIMES 1024-897 DD 0 ; Fill up the rest of the Page Directory

@@ -78,7 +78,7 @@ static const char* interrupt_messages[] = {
     "Reserved (INT 31)\n",
     // IRQ Interrupts
     "Timer (IRQ0)\n",
-    "kbd (IRQ1)\n",
+    "Keyboard (IRQ1)\n",
     "Cascade (IRQ2)\n",
     "COM2 (IRQ3)\n",
     "COM1 (IRQ4)\n",
@@ -168,7 +168,6 @@ void idt_set(const int32_t isr_num, void* isr)
 		return;
 	};
 	idt_desc_t* descriptor = &idt[isr_num];
-
 	descriptor->isr_low = (uintptr_t)isr & 0xffff;
 	descriptor->kernel_cs = 0x08;
 	descriptor->reserved = 0x00;

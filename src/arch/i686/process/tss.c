@@ -1,3 +1,12 @@
+/**
+ * @file tss.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ * @brief
+ * @date 2025-01-18
+ * @see
+ */
+
 #include "tss.h"
 #include "string.h"
 
