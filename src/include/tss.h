@@ -9,18 +9,6 @@
 
 #include <stdint.h>
 
-/*
-################################################
-## Stack Memory Layout for Higher-Half Kernel ##
-################################################
-
-| **Region**          | **Start Stack Address** | **End Stack Address**   | **Size**        | **Description**
---------------------------------------------------------------------------------------------------------------------------------------
-| Kernel Stack        | `0xC2C00000`            | `0xC2C07FFF`            | 32 KiB          | Stack used by TSS for Ring 3 -> Ring 0
-| Reserved Stack Space| `0xC2C08000`            | `0xC2FFFFFF`            | 4064 KiB        | Reserved
---------------------------------------------------------------------------------------------------------------------------------------
-*/
-
 #define KERNEL_STACK_SIZE 0x8000				       // 32 KiB
 #define KERNEL_STACK_BOTTOM (KERNEL_HEAP_MAX + 1)		       // 0xC2C00000
 #define KERNEL_STACK_TOP (KERNEL_STACK_BOTTOM + KERNEL_STACK_SIZE - 1) // 0xC2C07FFF

@@ -4,7 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break start_higher_half_kernel
-break kmain
+break kmain:302
 
 c

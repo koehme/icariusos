@@ -41,7 +41,6 @@ uint32_t page_get_phys_addr(const uint32_t virt_addr)
 	const uint32_t pd_index = virt_addr >> 22;
 	uint32_t* page_directory = kernel_directory;
 
-
 	if (!(page_directory[pd_index] & PAGE_PRESENT)) {
 		return 0x0;
 	};

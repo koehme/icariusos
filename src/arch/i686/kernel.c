@@ -234,26 +234,39 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 ############################
 
 Formula: Entry Index * (1024*1024*4)
+							^
+							4 MiB
+
 Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 
 | Virtual Address Range     | Physical Address Range    | Description                                | Page Directory Entry |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
-| `0x00000000 - 0x003FFFFF` | `0x00000000 - 0x003FFFFF` | Identity mapping for Kernel Initialization.| Entry 0              |
-| `0xC0000000 - 0xC03FFFFF` | `0x00000000 - 0x003FFFFF` | Kernel Memory (First 4 MiB).               | Entry 768            |
-| `0xC0400000 - 0xC07FFFFF` | `0x00400000 - 0x007FFFFF` | Kernel Memory (->   4 MiB).                | Entry 769            |
-| `0xC0800000 - 0xC0BFFFFF` | `0x00800000 - 0x00BFFFFF` | Kernel Memory (->   4 MiB).                | Entry 770            |
-| `0xC0C00000 - 0xC0FFFFFF` | `0x00C00000 - 0x00FFFFFF` | Kernel Memory (->   4 MiB).                | Entry 771            |
-| `0xC1000000 - 0xC13FFFFF` | `0x01000000 - 0x013FFFFF` | Kernel Memory (->   4 MiB).                | Entry 772            |
-| `0xC1400000 - 0xC17FFFFF` | `0x01400000 - 0x017FFFFF` | Kernel Memory (->   4 MiB).                | Entry 773            |
-| `0xC1800000 - 0xC1BFFFFF` | `0x01800000 - 0x01BFFFFF` | Kernel Memory (->   4 MiB).                | Entry 774            |
-| `0xC1C00000 - 0xC1FFFFFF` | `0x01C00000 - 0x01FFFFFF` | Kernel Memory (->   4 MiB).                | Entry 775            |
-| `0xC2000000 - 0xC23FFFFF` | `0x02000000 - 0x023FFFFF` | Kernel Memory (->   4 MiB).                | Entry 776            |
-| `0xC2400000 - 0xC27FFFFF` | `0x02400000 - 0x027FFFFF` | Kernel Memory (->   4 MiB).                | Entry 777            |
-| `0xC2800000 - 0xC2BFFFFF` | `0x02800000 - 0x02BFFFFF` | Kernel Memory (->   4 MiB).                | Entry 778            |
-| `0xC2C00000 - 0xC2FFFFFF` | `0x02C00000 - 0x02FFFFFF` | Kernel Memory (->   4 MiB).                | Entry 779            |
-| `0xE0000000 - 0xE03FFFFF` | `0xFD000000 - 0xFD3FFFFF` | Framebuffer.                               | Entry 896            |
-| **Unmapped Addresses**    | -                         | Dynamic Allocation by Page Fault Handler.  | N/A                  |
+| `0x00000000 - 0x003FFFFF` | `0x00000000 - 0x003FFFFF` | Identity apping for Kernel Initialization.| Entry 0              |
+| `0xC0000000 - 0xC03FFFFF` | `0x00000000 - 0x003FFFFF` | Kernel Memory (| 	  4 MiB)                 | Entry 768            |
+| `0xC0400000 - 0xC07FFFFF` | `0x00400000 - 0x007FFFFF` | Kernel Memory (->   4 MiB)                 | Entry 769            |
+| `0xC0800000 - 0xC0BFFFFF` | `0x00800000 - 0x00BFFFFF` | Kernel Memory (->   4 MiB)                 | Entry 770            |
+| `0xC0C00000 - 0xC0FFFFFF` | `0x00C00000 - 0x00FFFFFF` | Kernel Memory (->   4 MiB)                 | Entry 771            |
+| `0xC1000000 - 0xC13FFFFF` | `0x01000000 - 0x013FFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 772            |
+| `0xC1400000 - 0xC17FFFFF` | `0x01400000 - 0x017FFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 773            |
+| `0xC1800000 - 0xC1BFFFFF` | `0x01800000 - 0x01BFFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 774            |
+| `0xC1C00000 - 0xC1FFFFFF` | `0x01C00000 - 0x01FFFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 775            |
+| `0xC2000000 - 0xC23FFFFF` | `0x02000000 - 0x023FFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 776            |
+| `0xC2400000 - 0xC27FFFFF` | `0x02400000 - 0x027FFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 777            |
+| `0xC2800000 - 0xC2BFFFFF` | `0x02800000 - 0x02BFFFFF` | Kernel Heap	(->   4 MiB) 			     | Entry 778            |
+| `0xC2C00000 - 0xC2FFFFFF` | `0x02C00000 - 0x02FFFFFF` | Kernel Stack				                 | Entry 779            |
+| `0xE0000000 - 0xE03FFFFF` | `0xFD000000 - 0xFD3FFFFF` | Framebuffer                                | Entry 896            |
+| **Unmapped Addresses**    | -                         | Dynamic Allocation by PageFault Handler    | N/A                  |
+
+################################################
+## Stack Memory Layout for Higher-Half Kernel ##
+################################################
+
+| **Region**          | **Start Stack Address** | **End Stack Address**   | **Size**        | **Description**                               	|
+|----------------------|------------------------|-------------------------|-----------------|-----------------------------------------------	|
+| Kernel Stack         | `0xC2C00000`           | `0xC2C07FFF`            | 32 KiB          | Stack used by TSS for Ring 3 -> Ring 0       		|
+| Reserved Stack Space | `0xC2C08000`           | `0xC2FFFFFF`            | 4064 KiB        | Reserved for Stack Expansion          			|
 */
+
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
@@ -286,12 +299,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	timer_init(&timer, 100);
 	asm_do_sti();
 
-	/*
-	// TODO => Test page fault handler
-	uint32_t* invalid_addr = (uint32_t*)0xC3000000;
-	printf("Attempting to access unmapped address: 0x%x\n", (uint32_t)invalid_addr);
-	*invalid_addr = 42;
-	*/
+	uint32_t* pf = (uint32_t*)0xE0400000;
+	*pf = 42;
 
 	/*
 	_render_spinner(64);

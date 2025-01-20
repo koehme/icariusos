@@ -27,10 +27,12 @@ extern fifo_t fifo_mouse;
 
 extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default();
+extern void asm_interrupt_14h(void);
 
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr);
+void isr_14h_handler(void);
 void isr_20h_handler(void);
 void isr_21h_handler(void);
 void isr_32h_handler(void);
@@ -111,6 +113,17 @@ static void _pic2_send_eoi(void)
 	return;
 };
 
+void isr_14h_handler(void)
+{
+	uint32_t faulting_address;
+	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
+	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)faulting_address);
+
+	for (;;)
+		;
+	return;
+};
+
 void isr_20h_handler(void)
 {
 	// printf("%d\n", timer.ticks);
@@ -158,6 +171,7 @@ void idt_init(void)
 	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
+	idt_set(14, asm_interrupt_14h);
 	asm_idt_loader(&idtr_descriptor);
 	return;
 };
