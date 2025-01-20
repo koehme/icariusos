@@ -299,7 +299,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	timer_init(&timer, 100);
 	asm_do_sti();
 
-	uint32_t* pf = (uint32_t*)0xE0400000;
+	uint32_t* pf = (uint32_t*)0xE0401000;
 	*pf = 42;
 
 	/*

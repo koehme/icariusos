@@ -84,9 +84,11 @@ asm_idt_loader:
 asm_interrupt_14h:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
+    mov eax, [esp+32]
     
     call isr_14h_handler          ; Call C interrupt service routine handler for interrupt 14  
 
+    add esp, 4
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
@@ -103,7 +105,7 @@ asm_interrupt_14h:
 asm_interrupt_20h:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
-    
+
     call isr_20h_handler          ; Call C interrupt service routine handler for interrupt 20
 
     popad                         ; Restore the saved state

@@ -113,14 +113,52 @@ static void _pic2_send_eoi(void)
 	return;
 };
 
-void isr_14h_handler(void)
+void isr_14h_handler()
 {
-	uint32_t faulting_address;
-	asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)faulting_address);
+	uint32_t error_code;
+	asm volatile("mov %%eax, %0" : "=r"(error_code) : : "eax");
+	uint32_t fault_addr;
+	asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
+	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
+	// Align the faulting address to the nearest lower 4 MiB boundary. Clear the lower 22 bits, which represent the offset within the page
+	const uint32_t aligned_fault_addr = fault_addr & 0xFFC00000;
+	printf("[INFO] Aligned Address: 0x%x\n", aligned_fault_addr);
+	printf("[INFO] Page Fault Error occured\n", error_code);
+	const int32_t present = error_code & 0x1;	     // Bit 0: Page Present
+	const int32_t write = error_code & 0x2;		     // Bit 1: Write Access
+	const int32_t user_mode = error_code & 0x4;	     // Bit 2: User-/Supervisor-Modus
+	const int32_t reserved = error_code & 0x8;	     // Bit 3: Reserved Bits overwritten
+	const int32_t instruction_fetch = error_code & 0x10; // Bit 4: Instruction fetch
 
+	if (!present) {
+		printf("  - Page Not Present\n");
+	} else {
+		printf("  - Page Present\n");
+	};
+
+	if (write) {
+		printf("  - Write Access\n");
+	} else {
+		printf("  - Read Access\n");
+	};
+
+	if (user_mode) {
+		printf("  - User Mode\n");
+	} else {
+		printf("  - Supervisor Mode\n");
+	};
+
+	if (reserved) {
+		printf("  - Reserved Bits\n");
+	};
+
+	if (instruction_fetch) {
+		printf("  - Instruction Fetch\n");
+	};
+	// To-Do: Demand Paging
 	for (;;)
 		;
+	panic("[CRITICAL] System Halted due to Unrecoverable Page Fault!");
 	return;
 };
 
