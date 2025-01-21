@@ -29,14 +29,6 @@ static void _free(heap_t* self, void* ptr);
 static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev);
 static void _heap_grow(heap_t* self);
 
-typedef struct heap_block {
-	size_t size;
-	bool is_free;
-	size_t chunk_span;
-	struct heap_block* prev;
-	struct heap_block* next;
-} heap_block_t;
-
 typedef struct heap {
 	uintptr_t start_addr;
 	uintptr_t next_addr;

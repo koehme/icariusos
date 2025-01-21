@@ -228,6 +228,69 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 	return;
 };
 
+static void _test_vfs_read(const char file[])
+{
+	printf("\n");
+	printf("############################\n");
+	printf("##      VFS READ TEST     ##\n");
+	printf("##------------------------##\n");
+	const int32_t fd = vfs_fopen(file, "r");
+
+	if (fd < 0) {
+		printf("[ERROR] Failed to Open File %s\n", file);
+		return;
+	};
+	char buffer[1024] = {};
+
+	if (vfs_fseek(fd, 0x2300, SEEK_SET) < 0) {
+		printf("[ERROR] Failed to Seek in File Descriptor: %d\n", fd);
+		vfs_fclose(fd);
+		return;
+	};
+
+	if (vfs_fread(buffer, 10, 1, fd) <= 0) {
+		printf("[ERROR] Failed to Read from File Descriptor: %d\n", fd);
+		vfs_fclose(fd);
+		return;
+	};
+
+	if (vfs_fread(buffer, 10, 1, fd) <= 0) {
+		printf("[ERROR] Failed to Read from File Descriptor: %d\n", fd);
+		vfs_fclose(fd);
+		return;
+	};
+	printf("##        READ DATA:      ##\n");
+	printf("##       %s\n", buffer);
+	printf("############################\n");
+
+	if (vfs_fclose(fd) < 0) {
+		printf("[ERROR] Failed to Read from File Descriptor: %d\n", fd);
+	};
+	return;
+};
+
+static void _test_heap(const int32_t size)
+{
+	printf("\n");
+	printf("############################\n");
+	printf("##       HEAP TEST        ##\n");
+	printf("##------------------------##\n");
+
+	void* ptr = kzalloc(size);
+	if (!ptr) {
+		printf("## [ERROR] Failed to Allocate %d Bytes.\n", size);
+		printf("############################\n");
+		return;
+	};
+	printf("##    ALLOCATED MEMORY    ##\n");
+	printf("##   USER:  0x%x    ##\n", ptr);
+	void* block_ptr = (void*)((uint8_t*)ptr - sizeof(heap_block_t));
+	printf("##   BLOCK: 0x%x    ##\n", (uint32_t)block_ptr);
+	kfree(ptr);
+	printf("############################\n");
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -283,12 +346,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, false);
 
 	heap_init(&heap);
-
-	void* ptr1 = kzalloc(4096 * 1023);
-	void* ptr2 = kzalloc(4096 * 1023);
-	kfree(ptr2);
-	kfree(ptr1);
-	kzalloc(1024);
 	heap_dump(&heap);
 
 	fifo_init(&fifo_kbd);
@@ -297,31 +354,20 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	kbd_init(&kbd);
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
+
 	asm_do_sti();
 
-	uint32_t* pf = (uint32_t*)0xE0401000;
-	*pf = 42;
-
-	uint32_t* pf2 = (uint32_t*)0xE0402000;
-	*pf2 = 33;
-	/*
-	_render_spinner(64);
-	_motd();
+	// _render_spinner(64);
+	// pci_enumerate_bus();
 
 	vfs_init();
 	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
 
-	const int32_t fd = vfs_fopen("A:/LEET/TEST.TXT", "r");
-	char buffer[1024] = {};
-	vfs_fseek(fd, 0x2300, SEEK_SET);
-	vfs_fread(buffer, 10, 1, fd);
-	vfs_fread(buffer, 10, 1, fd);
-	printf("%s\n", buffer);
-
-	pci_enumerate_bus();
-	*/
+	_test_vfs_read("A:/LEET/TEST.TXT");
+	_test_heap(4096);
+	_motd();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
