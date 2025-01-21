@@ -302,6 +302,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	uint32_t* pf = (uint32_t*)0xE0401000;
 	*pf = 42;
 
+	uint32_t* pf2 = (uint32_t*)0xE0402000;
+	*pf2 = 33;
 	/*
 	_render_spinner(64);
 	_motd();
