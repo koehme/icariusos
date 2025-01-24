@@ -20,14 +20,17 @@ void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(const uint32_t virt_addr);
 uint32_t page_get_phys_addr(const uint32_t virt_addr);
 
+/* INTERNAL API */
+static uint32_t* _curr_page_dir;
+
 void page_set_directory(uint32_t* new_page_dir)
 {
-	curr_page_dir = new_page_dir;
-	asm volatile("mov %0, %%cr3" : : "r"(curr_page_dir));
+	_curr_page_dir = new_page_dir;
+	asm volatile("mov %0, %%cr3" : : "r"(_curr_page_dir));
 	return;
 };
 
-uint32_t* page_get_directory(void) { return curr_page_dir; };
+uint32_t* page_get_directory(void) { return _curr_page_dir; };
 
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 {
