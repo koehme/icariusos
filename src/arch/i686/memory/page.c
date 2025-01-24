@@ -1,6 +1,6 @@
 /**
  * @file page.c
- * @author
+ * @author Kevin Oehme
  * @copyright MIT
  * @brief Paging 4 MiB Pages
  * @date 2024-11-14

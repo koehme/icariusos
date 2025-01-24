@@ -304,7 +304,11 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 
 | Virtual Address Range     | Physical Address Range    | Description                                | Page Directory Entry |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
-| `0x00000000 - 0x003FFFFF` | `0x00000000 - 0x003FFFFF` | Identity apping for Kernel Initialization.| Entry 0              |
+| `0x00000000 - 0x003FFFFF` | `0x00000000 - 0x003FFFFF` | Identity Mapping for Kernel Initialization.| Entry 0              |
+|---------------------------|---------------------------|--------------------------------------------|----------------------|
+| `0x00000000 - 0x3FFFFFFF` |        Dynamic            | User Program Code (Max. 1 GiB)             | Entry   0-255        |
+| `0x40000000 - 0xBFBFFFFF` |        Dynamic            | User Heap (Grows Upwards, Max. 1,75 GiB)   | Entry 256-766        |
+| `0xBFC00000 - 0xBFFFFFFF` |        Dynamic            | User Stack (Grows Downwards, 4 MiB)   	 | Entry 767            |
 | `0xC0000000 - 0xC03FFFFF` | `0x00000000 - 0x003FFFFF` | Kernel Memory (| 	  4 MiB)                 | Entry 768            |
 | `0xC0400000 - 0xC07FFFFF` | `0x00400000 - 0x007FFFFF` | Kernel Memory (->   4 MiB)                 | Entry 769            |
 | `0xC0800000 - 0xC0BFFFFF` | `0x00800000 - 0x00BFFFFF` | Kernel Memory (->   4 MiB)                 | Entry 770            |
@@ -319,6 +323,7 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | `0xC2C00000 - 0xC2FFFFFF` | `0x02C00000 - 0x02FFFFFF` | Kernel Stack				                 | Entry 779            |
 | `0xE0000000 - 0xE03FFFFF` | `0xFD000000 - 0xFD3FFFFF` | Framebuffer                                | Entry 896            |
 | **Unmapped Addresses**    | -                         | Dynamic Allocation by PageFault Handler    | N/A                  |
+|---------------------------|---------------------------|--------------------------------------------|----------------------|
 
 ################################################
 ## Stack Memory Layout for Higher-Half Kernel ##

@@ -12,10 +12,10 @@
 
 tss_t tss = {
     .link = 0x0,
-    .esp0 = 0x0,
-    .ss0 = 0x0,
-    .esp1 = 0x0,
-    .ss1 = 0x0,
+    .esp0 = 0x0, // Kernel Stack Pointer to load when changing to Kernel mode
+    .ss0 = 0x0,	 // Kernel Stack Segment to load when changing to Kernel mode
+    .esp1 = 0x0, // User Stack Pointer to load when changing to Ring 3 User mode
+    .ss1 = 0x0,	 // User Stack Segment to load when changing to Ring 3 User mode
     .esp2 = 0x0,
     .ss2 = 0x0,
     .cr3 = 0x0,
@@ -45,8 +45,11 @@ void tss_load(uint16_t tss_selector);
 
 void tss_init(tss_t* self, uint32_t esp0, uint16_t ss0)
 {
+	// Ensure the TSS is initially zero'd
 	memset(self, 0, sizeof(tss_t));
+	// Set the kernel stack pointer
 	self->esp0 = esp0;
+	// Set the kernel stack segment
 	self->ss0 = ss0;
 	self->iopb = sizeof(tss_t);
 	return;
