@@ -4,8 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break kmain
-break asm_interrupt_14h
-break idt.c:isr_14h_handler
+break kmain:377
 
 c

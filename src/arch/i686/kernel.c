@@ -374,6 +374,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_test_heap(4096);
 	_motd();
 
+	const uint32_t* pd = page_create_directory(PAGE_PRESENT | PAGE_WRITABLE | PAGE_PS);
+
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
 		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);

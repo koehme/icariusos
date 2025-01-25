@@ -20,6 +20,7 @@
 #define PAGE_USER 0x4
 #define PAGE_PS 0x80 // Page Size (PS-Bit) = 4 MiB Pages
 
+uint32_t* page_create_directory(uint32_t flags);
 void page_set_directory(uint32_t* new_page_dir);
 uint32_t* page_get_directory(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
