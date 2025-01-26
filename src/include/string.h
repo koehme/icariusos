@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "errno.h"
 #include "kernel.h"
-#include "status.h"
 
 size_t strlen(const char* str);
 bool is_alpha(const char c);

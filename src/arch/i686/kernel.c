@@ -291,6 +291,26 @@ static void _test_heap(const int32_t size)
 	return;
 };
 
+static void _test_page_dir_create(const uint32_t* pd)
+{
+	if (!pd) {
+		printf("[ERROR] Failed to create Page Directory\n");
+		return;
+	};
+	// Debug information about the page directory
+	printf("[DEBUG INFO] New Page Directory created at Virtual Address: 0x%x\n", pd);
+	printf("[DEBUG INFO] First Kernel Mapping (768): 0x%x\n", pd[768]);
+	printf("[DEBUG INFO] Last Kernel Mapping (1023): 0x%x\n", pd[1023]);
+
+	// Iterate through kernel mappings
+	for (int32_t i = 768; i < 1024; i++) {
+		if (pd[i] & PAGE_PRESENT) {
+			printf(" - Entry %d: PhysAddr=0x%x | Flags=0x%x\n", i, pd[i] & 0xFFFFF000, pd[i] & 0xFFF);
+		};
+	};
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -370,14 +390,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
 
+	/*
 	_test_vfs_read("A:/LEET/TEST.TXT");
 	_test_heap(4096);
 	_motd();
-
-	const uint32_t* pd = page_create_directory(PAGE_PRESENT | PAGE_WRITABLE | PAGE_PS);
+	*/
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
 		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
 	};
+	return;
 };

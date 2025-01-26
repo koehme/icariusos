@@ -10,6 +10,7 @@ OBJ_DIR = ./obj
 
 SOURCES_C = \
     ./src/arch/i686/kernel.c \
+    ./src/arch/i686/errno.c \
     ./src/arch/i686/driver/ata.c \
     ./src/arch/i686/driver/cmos.c \
     ./src/arch/i686/driver/cursor.c \
@@ -88,6 +89,9 @@ $(OBJ_DIR)/kernel.c.o: ./src/arch/i686/kernel.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/errno.c.o: ./src/arch/i686/errno.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/gdt.c.o: ./src/arch/i686/gdt.c

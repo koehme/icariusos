@@ -15,10 +15,16 @@
 #include "pfa.h"
 
 #define PAGE_SIZE (1024 * 4 * 1024)
-#define PAGE_PRESENT 0x1
-#define PAGE_WRITABLE 0x2
-#define PAGE_USER 0x4
-#define PAGE_PS 0x80 // Page Size (PS-Bit) = 4 MiB Pages
+// Flags
+#define PAGE_PRESENT 0x1   // Page is present in physical memory
+#define PAGE_WRITABLE 0x2  // Page is writable (read/write access)
+#define PAGE_USER 0x4	   // User-mode access allowed (0 = kernel-only)
+#define PAGE_PWT 0x8	   // Page Write-Through enabled
+#define PAGE_PCD 0x10	   // Page Cache Disable (no caching for this page)
+#define PAGE_ACCESSED 0x20 // Set by the CPU when the page is accessed
+#define PAGE_DIRTY 0x40	   // Set by the CPU when the page is written to
+#define PAGE_PS 0x80	   // Page Size (1 = 4 MiB page, only in PDE)
+#define PAGE_GLOBAL 0x100  // Global page (remains cached in TLB across context switches)
 
 uint32_t* page_create_directory(uint32_t flags);
 void page_set_directory(uint32_t* new_page_dir);

@@ -19,8 +19,8 @@ typedef struct registers {
 } registers_t;
 
 typedef struct task {
-	registers_t regs;
-	uint32_t* dir;
+	registers_t reg;
+	uint32_t* page_dir;
 	struct task* next;
 	struct task* prev;
 } task_t;

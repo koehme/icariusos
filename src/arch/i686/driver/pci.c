@@ -2,10 +2,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "errno.h"
 #include "io.h"
 #include "kernel.h"
 #include "pci.h"
-#include "status.h"
 #include "stdio.h"
 
 /* PUBLIC API */
