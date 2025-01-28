@@ -108,12 +108,12 @@ static void _pic1_send_eoi(void)
 
 static void _pic2_send_eoi(void)
 {
-	outb(PIC_1_CTRL, PIC_ACK);
 	outb(PIC_2_CTRL, PIC_ACK);
+	outb(PIC_1_CTRL, PIC_ACK);
 	return;
 };
 
-void isr_14h_handler()
+void isr_14h_handler(void)
 {
 	uint32_t error_code;
 	asm volatile("mov %%eax, %0" : "=r"(error_code) : : "eax");
@@ -124,7 +124,7 @@ void isr_14h_handler()
 	const int32_t instruction_fetch = error_code & 0b10000;	  // Instruction Fetch
 	const int32_t pk_flag = error_code & 0b100000;		  // PK flag (bit 5)
 	const int32_t sgx_flag = error_code & 0b1000000000000000; // SGX flag (bit 15)
-	printf("[INFO] Page Fault occured\n", error_code);
+	printf("[INFO] Page Fault occured\n");
 
 	if (!present) {
 		printf(" - Page Not Present\n");
@@ -154,11 +154,11 @@ void isr_14h_handler()
 
 	if (pk_flag) {
 		printf(" - Protection Key Violation (PK flag)\n");
-	}
+	};
 
 	if (sgx_flag) {
 		printf(" - SGX-Specific Access Control Violation (SGX flag)\n");
-	}
+	};
 	uint32_t fault_addr;
 	asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
@@ -229,6 +229,7 @@ void idt_init(void)
 	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
+	// Hardware-specific ISRs are handled in their respective driver files
 	idt_set(14, asm_interrupt_14h);
 	asm_idt_loader(&idtr_descriptor);
 	return;
@@ -243,7 +244,7 @@ void idt_set(const int32_t isr_num, void* isr)
 	descriptor->isr_low = (uintptr_t)isr & 0xffff;
 	descriptor->kernel_cs = 0x08;
 	descriptor->reserved = 0x00;
-	descriptor->attributes = 0b11101110;
+	descriptor->attributes = 0b10001110;
 	descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
 	return;
 };
