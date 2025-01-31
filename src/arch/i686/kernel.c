@@ -36,6 +36,12 @@ static void _read_multiboot2(const uint32_t magic, const uint32_t addr, vbe_t* v
 static void _check_kernel_size(const uint32_t max_kernel_size);
 static void _init_fb(struct multiboot_tag* tag);
 static void _init_mmap(struct multiboot_tag* tag);
+static void _remove_identity_mapping(void);
+
+/* TEST API */
+static void _test_vfs_read(const char file[]);
+static void _test_heap(const int32_t size);
+static void _test_page_dir_create(const uint32_t* pd);
 
 void panic(const char* str)
 {
@@ -395,8 +401,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
 
-	pfa_dump(&pfa, false);
-
 	heap_init(&heap);
 	heap_dump(&heap);
 
@@ -417,16 +421,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
 
-	/*
+	page_dump_curr_directory();
+	_remove_identity_mapping();
+	pfa_dump(&pfa, true);
+
 	_test_vfs_read("A:/LEET/TEST.TXT");
 	_test_heap(4096);
 	_motd();
-	*/
-	page_dump_curr_directory();
-
-	_remove_identity_mapping();
-
-	pfa_dump(&pfa, true);
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

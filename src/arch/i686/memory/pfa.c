@@ -67,26 +67,28 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 		printf("Invalid PFA Pointer!\n");
 		return;
 	};
-	const size_t bits_per_entry = sizeof(self->frames_bitmap[0]) * 8;
-	const size_t total_frames = BITMAP_SIZE * bits_per_entry;
-	size_t used = 0, free = 0;
+	const size_t frames_per_block = sizeof(self->frames_bitmap[0]) * 8;
+	const size_t total_frames = BITMAP_SIZE * frames_per_block;
+	size_t used = 0;
+	size_t free = 0;
 
-	printf("\n====================================\n");
+	printf("\n");
+	printf("====================================\n");
 	printf("          PFA STATISTICS            \n");
 	printf("====================================\n");
 	printf("Total Frames: 			%d\n", total_frames);
 
 	for (size_t block_index = 0; block_index < BITMAP_SIZE; block_index++) {
 		const uint64_t frame_block = self->frames_bitmap[block_index];
-		const size_t frame_start_index = block_index * bits_per_entry;
-		const size_t frame_end_index = frame_start_index + bits_per_entry - 1;
+		const size_t frame_start_index = block_index * frames_per_block;
+		const size_t frame_end_index = frame_start_index + frames_per_block - 1;
 
 		if (verbose) {
 			printf("Frames %d - %d: ", frame_start_index, frame_end_index);
 		};
 
-		for (int bit = 0; bit < bits_per_entry; bit++) {
-			const bool is_used = frame_block & (1 << bit);
+		for (size_t frame = 0; frame < frames_per_block; frame++) {
+			const bool is_used = frame_block & (1 << frame);
 			is_used ? used++ : free++;
 
 			if (verbose) {

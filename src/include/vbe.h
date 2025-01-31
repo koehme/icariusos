@@ -9,13 +9,10 @@
 
 #define VBE_DEBUG_DELAY 0
 
-#define ASCII 128     // ASCII encoding with 128 characters
-#define FONT_WIDTH 8  // Width of a font character in pixels
-#define FONT_HEIGHT 8 // Height of a font character in pixels
-
-#include <stdint.h>
-
 #include "cursor.h"
+
+#include "icarius.h"
+#include <stdint.h>
 
 const static uint8_t ascii_bitmap[ASCII][FONT_WIDTH] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)

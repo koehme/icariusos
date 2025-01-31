@@ -28,7 +28,7 @@
 
 void page_dump_curr_directory(void);
 uint32_t* page_create_directory(uint32_t flags);
-void page_set_directory(uint32_t* new_page_dir);
+void page_set_directory(uint32_t* self);
 uint32_t* page_get_directory(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(uint32_t virt_addr);

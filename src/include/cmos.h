@@ -10,9 +10,6 @@
 #include "date.h"
 #include <stdint.h>
 
-#define CMOS_PORT_INDEX 0x70
-#define CMOS_PORT_DATA 0x71
-
 typedef struct cmos {
 	uint16_t values[128];
 } cmos_t;

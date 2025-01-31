@@ -11,14 +11,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "icarius.h"
 #include "pfa.h"
 
-#define CHUNK_SIZE 4096
-
-#define KERNEL_HEAP_START 0xC1000000
-#define KERNEL_HEAP_MAX 0xC2BFFFFF
-
 typedef struct heap heap_t;
+
 typedef struct heap_block {
 	size_t size;
 	bool is_free;

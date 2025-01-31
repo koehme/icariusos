@@ -2,44 +2,8 @@
  * @file vfs.c
  * @author Kevin Oehme
  * @copyright MIT
- * @brief Virtual File System (VFS) implementation.
+ * @brief Virtual File System (VFS) implementation
  * @date 2024-11-16
- *
- * This file implements the Virtual File System (VFS), a layer that abstracts
- * file system operations and provides a unified interface for different file
- * systems. It allows seamless interaction with various file systems like FAT16
- * and others, supporting standard file operations such as opening, reading,
- * seeking, and closing files.
- *
- * The VFS plays a crucial role in the kernel by managing mounted file systems
- * and maintaining file descriptors. It enables processes to work with files
- * without needing to know the underlying file system details, ensuring
- * modularity and extensibility.
- *
- * Key VFS Components:
- * - Filesystem: Manages registered file systems.
- * - File Descriptor Table: Keeps track of open files.
- * - Path Parsing: Resolves file paths and interacts with mounted file systems.
- *
- * Complete Flow:
- *
- *    [Application]          [VFS Layer]             [File System]             [ATA Driver]
- *          |                     |                         |                          |
- *          | fopen("file.txt")   |                         |                          |
- *          +-------------------->| vfs_fopen()             |                          |
- *                                |------------------------>| fat16_open()             |
- *                                |                         |                          |
- *          | fread(buffer)       |                         |                          |
- *          +-------------------->| vfs_fread()             |                          |
- *                                |------------------------>| fat16_read()             |
- *                                |                         |------------------------->|
- *                                |                         |      ata_read()          |
- *                                |                         |<-------------------------|
- *          |                     |<------------------------|                          |
- *          | fclose(fd)          |                         |                          |
- *          +-------------------->| vfs_fclose()            |                          |
- *                                |------------------------>| fat16_close()            |
- *                                |                         |                          |
  */
 
 #include "vfs.h"

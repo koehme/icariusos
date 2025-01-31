@@ -24,22 +24,22 @@ vga_t vga_display = {
 void vga_display_init(vga_t* self, uint16_t* framebuffer, const uint8_t width, const uint8_t height);
 void vga_display_set_cursor(vga_t* self, const uint8_t y, const uint8_t x);
 void vga_display_clear(vga_t* self);
-void vga_print(vga_t* self, const char* str, const vga_color_t color);
-void vga_print_ch(vga_t* self, const char ch, const vga_color_t color);
+void vga_print(vga_t* self, const char* str, const uint8_t color);
+void vga_print_ch(vga_t* self, const char ch, const uint8_t color);
 
 /* INTERNAL API */
-static uint16_t make_ch(const uint8_t ch, const vga_color_t color);
-static void vga_display_put_ch_at(vga_t* self, const uint8_t y, const uint8_t x, const uint8_t ch, const vga_color_t color);
+static uint16_t make_ch(const uint8_t ch, const uint8_t color);
+static void vga_display_put_ch_at(vga_t* self, const uint8_t y, const uint8_t x, const uint8_t ch, const uint8_t color);
 static void vga_clear_last_line(vga_t* self);
 static void vga_scroll_up(vga_t* self, const uint32_t lines);
 static void vga_scroll(vga_t* self);
-static void vga_display_write(vga_t* self, uint8_t ch, const vga_color_t color);
+static void vga_display_write(vga_t* self, uint8_t ch, const uint8_t color);
 
 // Create a VGA character with color attributes
-static uint16_t make_ch(const uint8_t ch, const vga_color_t color) { return ch | (uint16_t)(color << 8); };
+static uint16_t make_ch(const uint8_t ch, const uint8_t color) { return ch | (uint16_t)(color << 8); };
 
 // Places the specified character at the given coordinates (y, x)
-static void vga_display_put_ch_at(vga_t* self, const uint8_t y, const uint8_t x, const uint8_t ch, const vga_color_t color)
+static void vga_display_put_ch_at(vga_t* self, const uint8_t y, const uint8_t x, const uint8_t ch, const uint8_t color)
 {
 	const uint16_t linear_address = (y * self->width) + x;
 	self->framebuffer[linear_address] = make_ch(ch, color);
@@ -89,7 +89,7 @@ void vga_display_init(vga_t* self, uint16_t* framebuffer, const uint8_t width, c
 };
 
 // Writes a character to the display at the current cursor position
-static void vga_display_write(vga_t* self, uint8_t ch, const vga_color_t color)
+static void vga_display_write(vga_t* self, uint8_t ch, const uint8_t color)
 {
 	switch (ch) {
 	case '\n':
@@ -149,7 +149,7 @@ void vga_display_clear(vga_t* self)
 };
 
 // Prints a null-terminated string on the display
-void vga_print(vga_t* self, const char* str, const vga_color_t color)
+void vga_print(vga_t* self, const char* str, const uint8_t color)
 {
 	const size_t len = slen(str);
 
@@ -163,7 +163,7 @@ void vga_print(vga_t* self, const char* str, const vga_color_t color)
 };
 
 // Prints a single char on the display
-void vga_print_ch(vga_t* self, const char ch, const vga_color_t color)
+void vga_print_ch(vga_t* self, const char ch, const uint8_t color)
 {
 	vga_display_write(self, ch, color);
 	cursor_set_vga(self->cursor_y, self->cursor_x);

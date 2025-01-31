@@ -8,16 +8,7 @@
 #define VNODE_H
 
 #include "ata.h"
-
-// VNODE_SEEK_MODE
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-// VNODE_MODE
-#define READ 0
-#define WRITE 1
-#define APPEND 2
-#define INVALID 3
+#include "icarius.h"
 
 typedef struct vstat {
 	char st_dev[2];	     // Device ID (e.g., filesystem identifier)

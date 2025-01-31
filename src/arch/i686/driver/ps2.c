@@ -8,12 +8,12 @@
 #include "io.h"
 
 /* PUBLIC API */
-int ps2_wait(const ps2_buffer_t type);
+int ps2_wait(const uint8_t type);
 void ps2_send(const uint8_t port, const uint8_t byte);
 uint8_t ps2_receive(void);
 void ps2_dispatch(fifo_t* fifo, void (*handler)(void*, uint8_t), void* device);
 
-int ps2_wait(const ps2_buffer_t type)
+int ps2_wait(const uint8_t type)
 {
 	uint32_t timeout = 100000;
 

@@ -4,60 +4,6 @@
  * @copyright MIT
  * @brief FAT16 filesystem implementation.
  * @date 2024-11-13
- *
- * This file implements the FAT16 filesystem, providing basic functionality to
- * read, write, and manage files and directories within a FAT16 partition.
- *
- * FAT16, a widely used filesystem standard, divides the disk into clusters,
- * maintaining a File Allocation Table (FAT) to track the usage and linkage of clusters.
- * It is well-suited for small to medium-sized storage devices, making it an ideal
- * choice for embedded and legacy systems.
- *
- * This is my first attempt at implementing a filesystem, and I am still in the process of learning.
- * Throughout this project, I have gained valuable insights into how filesystems work, from
- * low-level disk operations to high-level abstractions. While this implementation covers the basics,
- * I plan to improve it as I continue to learn more about filesystem design and kernel development.
- *
- * Complete VFS ↔ FAT16 ↔ ATA Flow:
- *
- *    [kmain]                     [VFS]                     [FAT16]                 [ATA]
- *      |                           |                          |                      |
- *      | vfs_init()                |                          |                      |
- *      +-------------------------->| Initialize Filesystems   |                      |
- *                                  |------------------------->| fat16_init()         |
- *                                  |                          |                      |
- *                                  | Insert FAT16 as Default  |                      |
- *                                  |<-------------------------|                      |
- *      |                           |                          |                      |
- *      | ata_get(), ata_init()     |                          |                      |
- *      | ata_mount_fs()           |                          |                      |
- *      +-------------------------->| vfs_resolve()            |                      |
- *                                  |------------------------->| fat16_resolve()      |
- *                                  |<-------------------------|                      |
- *                                  |                          |                      |
- *      | vfs_fopen()               |                          |                      |
- *      +-------------------------->| Parse Path               |                      |
- *                                  |------------------------->| fat16_open()         |
- *                                  |<-------------------------|                      |
- *                                  | Return File Descriptor   |                      |
- *      |<--------------------------|                          |                      |
- *      |                           |                          |                      |
- *      | vfs_fseek()               |                          |                      |
- *      +-------------------------->| Seek File                |                      |
- *                                  |------------------------->| fat16_seek()         |
- *                                  |<-------------------------|                      |
- *      |                           |                          |                      |
- *      | vfs_fread()               |                          |                      |
- *      +-------------------------->| Read Data                |                      |
- *                                  |------------------------->| fat16_read()         |
- *                                  |                          |--------------------->|
- *                                  |                          |     ata_read()       |
- *                                  |                          |<---------------------|
- *                                  |<-------------------------|                      |
- *      |<--------------------------| Return Data              |                      |
- *      |                           |                          |                      |
- *      | printf(buffer)            |                          |                      |
- *      +-------------------------->| Output Data              |                      |
  */
 
 #include "fat16.h"

@@ -7,6 +7,7 @@
 #include <stddef.h>
 
 #include "cmos.h"
+#include "icarius.h"
 #include "idt.h"
 #include "io.h"
 

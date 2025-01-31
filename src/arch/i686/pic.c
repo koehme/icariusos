@@ -11,10 +11,10 @@
 void pic_init(void);
 
 /* INTERNAL API */
-static void pic_remap1(void);
-static void pic_remap2(void);  
+static void _pic_remap1(void);
+static void _pic_remap2(void);
 
-static void pic_remap1()
+static void _pic_remap1()
 {
 	// Send ICW1 to Master PIC
 	outb(PIC_1_CTRL, ICW_1);
@@ -27,7 +27,7 @@ static void pic_remap1()
 	return;
 };
 
-static void pic_remap2()
+static void _pic_remap2()
 {
 	// Send ICW1 to Slave PIC
 	outb(PIC_2_CTRL, ICW_1);
@@ -42,7 +42,7 @@ static void pic_remap2()
 
 void pic_init()
 {
-	pic_remap1();
-	pic_remap2();
+	_pic_remap1();
+	_pic_remap2();
 	return;
 };

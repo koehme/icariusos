@@ -10,7 +10,7 @@
 #include "pfa.h"
 #include "string.h"
 
-#define CHUNK_SIZE 4096
+#define KERNEL_HEAP_CHUNK_SIZE 4096
 
 /* EXTERNAL API */
 extern pfa_t pfa;
@@ -131,7 +131,7 @@ static void _heap_grow(heap_t* self)
 		return;
 	};
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
-	const size_t chunks = PAGE_SIZE / CHUNK_SIZE;
+	const size_t chunks = PAGE_SIZE / KERNEL_HEAP_CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
 
 	if (self->last_block) {
@@ -141,9 +141,9 @@ static void _heap_grow(heap_t* self)
 	};
 	heap_block_t* prev_block = self->last_block;
 
-	for (size_t chunk = 0; chunk < chunks; ++chunk, virt_addr += CHUNK_SIZE) {
+	for (size_t chunk = 0; chunk < chunks; ++chunk, virt_addr += KERNEL_HEAP_CHUNK_SIZE) {
 		heap_block_t* block = (heap_block_t*)virt_addr;
-		_init_heap_block(block, CHUNK_SIZE, prev_block);
+		_init_heap_block(block, KERNEL_HEAP_CHUNK_SIZE, prev_block);
 
 		if (prev_block) {
 			prev_block->next = block;
@@ -163,7 +163,7 @@ static void* _malloc(heap_t* self, size_t size)
 	if ((uintptr_t)self->next_addr + total_size_with_header > KERNEL_HEAP_MAX) {
 		return 0x0;
 	};
-	const size_t chunks_needed = (total_size_with_header + CHUNK_SIZE - 1) / CHUNK_SIZE;
+	const size_t chunks_needed = (total_size_with_header + KERNEL_HEAP_CHUNK_SIZE - 1) / KERNEL_HEAP_CHUNK_SIZE;
 
 	const size_t total_chunks = self->free_chunks + self->used_chunks;
 

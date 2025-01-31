@@ -7,8 +7,7 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#define KERNEL_VIRTUAL_START 0xC0000000
-#define MAX_KERNEL_SIZE (16 * 1024 * 1024) // 16 MiB
+#include "icarius.h"
 
 #define p2v(addr) ((void*)((addr) + KERNEL_VIRTUAL_START))
 #define v2p(addr) ((void*)((addr) - KERNEL_VIRTUAL_START))

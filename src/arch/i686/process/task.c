@@ -6,8 +6,8 @@
 
 #include "task.h"
 #include "errno.h"
+#include "icarius.h"
 #include "string.h"
-#include "umode.h"
 
 task_t* task_head = 0x0;
 task_t* task_tail = 0x0;

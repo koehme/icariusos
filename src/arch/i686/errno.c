@@ -7,5 +7,4 @@
 
 #include "errno.h"
 
-
-int32_t errno = 0; // Start with no error
+int32_t errno = 0;

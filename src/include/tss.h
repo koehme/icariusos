@@ -9,11 +9,7 @@
 
 #include <stdint.h>
 
-#define KERNEL_STACK_SIZE 0x8000				       // 32 KiB
-#define KERNEL_STACK_BOTTOM (KERNEL_HEAP_MAX + 1)		       // 0xC2C00000
-#define KERNEL_STACK_TOP (KERNEL_STACK_BOTTOM + KERNEL_STACK_SIZE - 1) // 0xC2C07FFF
-#define RESERVED_STACK_START (KERNEL_STACK_TOP + 1)		       // 0xC2C08000
-#define RESERVED_STACK_END 0xC2FFFFFF				       // Full 4 MiB Page Ends
+#include "icarius.h"
 
 typedef struct tss {
 	uint32_t link;	 // Previous TSS link (not used, set to 0)

@@ -16,14 +16,11 @@ extern uint32_t kernel_directory[1024];
 /* PUBLIC API */
 void page_dump_curr_directory(void);
 uint32_t* page_create_directory(uint32_t flags);
-void page_set_directory(uint32_t* new_page_dir);
+void page_set_directory(uint32_t* self);
 uint32_t* page_get_directory(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(const uint32_t virt_addr);
 uint32_t page_get_phys_addr(const uint32_t virt_addr);
-
-/* INTERNAL API */
-static uint32_t* _curr_page_dir;
 
 void page_dump_curr_directory(void)
 {
@@ -33,8 +30,9 @@ void page_dump_curr_directory(void)
 		printf("[ERROR] No active Page Directory found!\n");
 		return;
 	};
+	printf("\n");
 	printf("====================================\n");
-	printf("     PAGE DIRECTORY DUMP (4 MiB)    \n");
+	printf("          PAGE DIR STATISTICS       \n");
 	printf("====================================\n");
 
 	printf("Physical Address: 0x%x\n", page_directory);
@@ -73,10 +71,9 @@ uint32_t* page_create_directory(uint32_t flags)
 	return new_page_dir;
 };
 
-void page_set_directory(uint32_t* dir)
+void page_set_directory(uint32_t* self)
 {
-	_curr_page_dir = dir;
-	asm volatile("mov %0, %%cr3" : : "r"(dir));
+	asm volatile("mov %0, %%cr3" : : "r"(self));
 	return;
 };
 

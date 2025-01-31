@@ -4,61 +4,6 @@
  * @copyright MIT
  * @brief ATA driver implementation.
  * @date 2024-11-15
- *
- * This file implements the ATA driver, providing low-level functionality to
- * interact with ATA-compliant storage devices, including hard drives and SSDs.
- * It supports basic operations like reading and identifying drives, making it a
- * foundational component for higher-level filesystem interactions.
- *
- * The ATA (AT Attachment) interface is a widely used standard for connecting
- * storage devices. This implementation handles both PIO28 and PIO48 modes,
- * enabling compatibility with a variety of devices and configurations.
- *
- * Key Features:
- * - Device identification using the ATA IDENTIFY command.
- * - Support for PIO (Programmed Input/Output) modes.
- * - Read operations in both 28-bit and 48-bit LBA addressing.
- *
- * Complete VFS ↔ FAT16 ↔ ATA Flow:
- *
- *    [kmain]                     [VFS]                     [FAT16]                 [ATA]
- *      |                           |                          |                      |
- *      | vfs_init()                |                          |                      |
- *      +-------------------------->| Initialize Filesystems   |                      |
- *                                  |------------------------->| fat16_init()         |
- *                                  |                          |                      |
- *                                  | Insert FAT16 as Default  |                      |
- *                                  |<-------------------------|                      |
- *      |                           |                          |                      |
- *      | ata_get(), ata_init()     |                          |                      |
- *      | ata_mount_fs()            |                          |                      |
- *      +-------------------------->| vfs_resolve()            |                      |
- *                                  |------------------------->| fat16_resolve()      |
- *                                  |<-------------------------|                      |
- *                                  |                          |                      |
- *      | vfs_fopen()               |                          |                      |
- *      +-------------------------->| Parse Path               |                      |
- *                                  |------------------------->| fat16_open()         |
- *                                  |<-------------------------|                      |
- *                                  | Return File Descriptor   |                      |
- *      |<--------------------------|                          |                      |
- *      |                           |                          |                      |
- *      | vfs_fseek()               |                          |                      |
- *      +-------------------------->| Seek File                |                      |
- *                                  |------------------------->| fat16_seek()         |
- *                                  |<-------------------------|                      |
- *      |                           |                          |                      |
- *      | vfs_fread()               |                          |                      |
- *      +-------------------------->| Read Data                |                      |
- *                                  |------------------------->| fat16_read()         |
- *                                  |                          |--------------------->|
- *                                  |                          |     ata_read()       |
- *                                  |                          |<---------------------|
- *                                  |<-------------------------|                      |
- *      |<--------------------------| Return Data              |                      |
- *      |                           |                          |                      |
- *      | printf(buffer)            |                          |                      |
- *      +-------------------------->| Output Data              |                      |
  */
 
 #include "ata.h"

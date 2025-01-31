@@ -34,13 +34,10 @@ typedef struct fs {
 } fs_t;
 
 typedef struct fd_t {
-	int32_t index; // Serves as a rapid identifier for file descriptors within system data structures, facilitating efficient access and management
-	fs_t* fs; // Is essential for user-space programs in the kernel to access the required function pointers of the specific filesystem implementation. It
-		  // connects the virtual filesystem with the actual filesystem implementation, providing a unified interface for file operations
-	void* internal; // Is used so that the specific filesystem implementation or driver can write private data specific to the filesystem, which will be
-			// later required for reading or writing. From the VFS perspective, this is just a void pointer
-	ata_t* dev; // Needed because it can indicate different devices on which the filesystem may need to access storage. Through this pointer, the 'dev' can
-		    // utilize the specific filesystem on the device and perform various operations like read or write
+	int32_t index;
+	fs_t* fs;
+	void* internal;
+	ata_t* dev;
 } fd_t;
 
 void vfs_init();

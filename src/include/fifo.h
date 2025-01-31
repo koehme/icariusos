@@ -11,8 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define FIFO_BUFFER_SIZE 128 // Must be a power of 2
-#define FIFO_BUFFER_MASK (FIFO_BUFFER_SIZE - 1)
+#include "icarius.h"
 
 typedef struct fifo {
 	uint8_t buffer[FIFO_BUFFER_SIZE]; // 'ptr' to the elements in memory
