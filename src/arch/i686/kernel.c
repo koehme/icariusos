@@ -311,6 +311,21 @@ static void _test_page_dir_create(const uint32_t* pd)
 	return;
 };
 
+static void _remove_identity_mapping(void)
+{
+	const uint32_t kernel_page_dir_end = 1024 * 4096;
+
+	for (uint32_t addr = 0x00000000; addr < 0x02FFFFFF; addr += PAGE_SIZE) {
+		if (addr < kernel_page_dir_end) {
+			continue;
+		};
+		page_unmap(addr);
+		const uint64_t frame = addr / PAGE_SIZE;
+		pfa_clear(&pfa, frame);
+	};
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -324,7 +339,18 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 
 | Virtual Address Range     | Physical Address Range    | Description                                | Page Directory Entry |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
-| `0x00000000 - 0x003FFFFF` | `0x00000000 - 0x003FFFFF` | Identity Mapping for Kernel Initialization.| Entry 0              |
+| 0x00000000 - 0x003FFFFF   | 0x00000000 - 0x003FFFFF   | Identity Mapping for Kernel Initialization | Entry 0              |
+| 0x00400000 - 0x007FFFFF   | 0x00400000 - 0x007FFFFF   | Identity Mapping for Kernel Initialization | Entry 1              |
+| 0x00800000 - 0x00BFFFFF   | 0x00800000 - 0x00BFFFFF   | Identity Mapping for Kernel Initialization | Entry 2              |
+| 0x00C00000 - 0x00FFFFFF   | 0x00C00000 - 0x00FFFFFF   | Identity Mapping for Kernel Initialization | Entry 3              |
+| 0x01000000 - 0x013FFFFF   | 0x01000000 - 0x013FFFFF   | Identity Mapping for Kernel Initialization | Entry 4              |
+| 0x01400000 - 0x017FFFFF   | 0x01400000 - 0x017FFFFF   | Identity Mapping for Kernel Initialization | Entry 5              |
+| 0x01800000 - 0x01BFFFFF   | 0x01800000 - 0x01BFFFFF   | Identity Mapping for Kernel Initialization | Entry 6              |
+| 0x01C00000 - 0x01FFFFFF   | 0x01C00000 - 0x01FFFFFF   | Identity Mapping for Kernel Initialization | Entry 7              |
+| 0x02000000 - 0x023FFFFF   | 0x02000000 - 0x023FFFFF   | Identity Mapping for Kernel Initialization | Entry 8              |
+| 0x02400000 - 0x027FFFFF   | 0x02400000 - 0x027FFFFF   | Identity Mapping for Kernel Initialization | Entry 9              |
+| 0x02800000 - 0x02BFFFFF   | 0x02800000 - 0x02BFFFFF   | Identity Mapping for Kernel Initialization | Entry 10             |
+| 0x02C00000 - 0x02FFFFFF   | 0x02C00000 - 0x02FFFFFF   | Identity Mapping for Kernel Initialization | Entry 11             |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
 | `0x00000000 - 0x3FFFFFFF` |        Dynamic            | User Program Code (Max. 1 GiB)             | Entry   0-255        |
 | `0x40000000 - 0xBFBFFFFF` |        Dynamic            | User Heap (Grows Upwards, Max. 1,75 GiB)   | Entry 256-766        |
@@ -364,6 +390,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pic_init();
 	idt_init();
 	pfa_init(&pfa);
+	page_set_directory(page_get_directory());
 
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
@@ -395,6 +422,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_test_heap(4096);
 	_motd();
 	*/
+	page_dump_curr_directory();
+
+	_remove_identity_mapping();
+
+	pfa_dump(&pfa, true);
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

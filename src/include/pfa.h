@@ -37,6 +37,7 @@ void pfa_init(pfa_t* self);
 void pfa_dump(const pfa_t* self, const bool verbose);
 void pfa_set(pfa_t* self, uint64_t frame);
 void pfa_clear(pfa_t* self, uint64_t frame);
+bool pfa_test(const pfa_t* self, const uint64_t frame);
 uint64_t pfa_alloc(void);
 
 #endif
