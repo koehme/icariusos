@@ -317,18 +317,24 @@ static void _test_page_dir_create(const uint32_t* pd)
 	return;
 };
 
-static void _test_divide_by_zero(void)
+static void _test_divide_by_zero_fault(void)
 {
 	int a = 5;
 	int b = 0;
 	int c = a / b;
-	printf("Ergebnis: %d\n", c);
+	printf("%d\n", c);
 	return;
 };
 
 static void _test_debug_exception(void)
 {
 	asm volatile("int $1");
+	return;
+};
+
+static void _test_nmi_interrupt(void)
+{
+	asm volatile("int $2");
 	return;
 };
 
@@ -443,9 +449,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
-
-	// _test_divide_by_zero();
-	// _test_debug_exception();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

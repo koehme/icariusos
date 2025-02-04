@@ -1,5 +1,6 @@
-extern isr_0h_handler
+extern isr_0h_fault_handler
 extern isr_1h_handler
+extern isr_2h_nmi_interrupt_handler
 extern isr_14h_handler
 extern irq0_handler
 extern irq1_handler
@@ -14,6 +15,7 @@ global asm_do_cli
 
 global asm_isr0_divide_exception
 global asm_isr1_debug_exception
+global asm_isr2_nmi_interrupt
 global asm_isr14_page_fault
 global asm_irq0_timer
 global asm_irq1_keyboard
@@ -98,7 +100,7 @@ asm_isr0_divide_exception:
     ; Pass pointer to saved register state to the C handler
     mov eax, esp
     push eax
-    call isr_0h_handler           ; Call C-level exception handler
+    call isr_0h_fault_handler           ; Call C-level exception handler
 
     add esp, 4                    ; Clean up function argument
 
@@ -159,6 +161,66 @@ asm_isr1_debug_exception:
     mov eax, esp
     push eax
     call isr_1h_handler           ; Call C-level exception handler
+
+    add esp, 4                    ; Clean up function argument
+
+    ; Restore segment registers
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    ; Restore general-purpose registers (equivalent to popad)
+    pop edi
+    pop esi
+    pop ebp
+    add esp, 4                    ; Skip original ESP (not restored)
+    pop ebx
+    pop edx
+    pop ecx
+    pop eax
+
+    sti                           ; Re-enable interrupts
+    iret                          ; Return from interrupt
+
+;=============================================================================
+; asm_isr2_nmi_interrupt
+; @param None
+; @return None
+;=============================================================================
+asm_isr2_nmi_interrupt:
+    cli                           ; Disable interrupts to prevent nested exceptions
+
+    push eax                      ; Save EAX
+    push ecx                      ; Save ECX
+    push edx                      ; Save EDX
+    push ebx                      ; Save EBX
+
+    mov eax, esp
+    add eax, 16                   ; Adjust ESP for previous stack frame
+
+    push eax                      ; Save original ESP before modifications
+    push ebp                      ; Save EBP
+    push esi                      ; Save ESI
+    push edi                      ; Save EDI
+
+    ; Save segment registers
+    push ds
+    push es
+    push fs
+    push gs
+
+    ; Load kernel data segment (0x10) into all segment registers
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Pass pointer to saved register state to the C handler
+    mov eax, esp
+    push eax
+    call isr_2h_nmi_interrupt_handler           ; Call C-level exception handler
 
     add esp, 4                    ; Clean up function argument
 

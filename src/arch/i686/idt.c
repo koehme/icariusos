@@ -25,19 +25,19 @@ extern mouse_t mouse;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 
-typedef struct interrupt_frame interrupt_frame_t;
-
 extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default(void);
 extern void asm_isr0_divide_exception(void);
 extern void asm_isr1_debug_exception(void);
+extern void asm_isr2_nmi_interrupt(void);
 extern void asm_isr14_page_fault(void);
 
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr);
-void isr_0h_handler(interrupt_frame_t* regs);
+void isr_0h_fault_handler(interrupt_frame_t* regs);
 void isr_1h_handler(interrupt_frame_t* regs);
+void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);
 void isr_14h_handler(void);
 void irq0_handler(void);
 void irq1_handler(void);
@@ -48,24 +48,73 @@ void isr_default_handler(void);
 static void _pic1_send_eoi(void);
 static void _pic2_send_eoi(void);
 static void _init_isr(void);
+static void _dump_register(const interrupt_frame_t* regs);
 
-typedef struct interrupt_frame {
-	uint32_t gs;
-	uint32_t fs;
-	uint32_t es;
-	uint32_t ds;
-	uint32_t edi;
-	uint32_t esi;
-	uint32_t ebp;
-	uint32_t esp;
-	uint32_t ebx;
-	uint32_t edx;
-	uint32_t ecx;
-	uint32_t eax;
-	uint32_t eip;
-	uint32_t cs;
-	uint32_t eflags;
-} interrupt_frame_t;
+/*
+ * Interrupt Vector Table (IVT) Reference
+ * Based on Intel 64 and IA-32 Architecture
+ *
+ * CPU Exceptions (0 - 31)
+ * ---------------------------------------------
+ * | INT  | Error Code? | Type     | Description                      |
+ * |------|------------|----------|----------------------------------|
+ * |  0   | No         | Fault    | Division by Zero (#DE)          |
+ * |  1   | No         | Trap     | Debug Exception                 |
+ * |  2   | No         | Interrupt| Non-Maskable Interrupt (NMI)    |
+ * |  3   | No         | Trap     | Breakpoint Exception (INT3)     |
+ * |  4   | No         | Trap     | Overflow Exception (#OF)        |
+ * |  5   | No         | Fault    | BOUND Range Exceeded (#BR)      |
+ * |  6   | No         | Fault    | Invalid Opcode (#UD)            |
+ * |  7   | No         | Fault    | Device Not Available (#NM)      |
+ * |  8   | Yes        | Abort    | Double Fault Exception          |
+ * |  9   | No         | Fault    | Coprocessor Segment Overrun     |
+ * | 10   | Yes        | Fault    | Invalid TSS Exception           |
+ * | 11   | Yes        | Fault    | Segment Not Present (#NP)       |
+ * | 12   | Yes        | Fault    | Stack-Segment Fault (#SS)       |
+ * | 13   | Yes        | Fault    | General Protection Fault (#GP)  |
+ * | 14   | Yes        | Fault    | Page Fault (#PF)                |
+ * | 15   | No         | Reserved | (Reserved)                      |
+ * | 16   | No         | Fault    | x87 FPU Floating Point Exception |
+ * | 17   | Yes        | Fault    | Alignment Check Exception       |
+ * | 18   | No         | Abort    | Machine Check Exception         |
+ * | 19   | No         | Fault    | SIMD Floating-Point Exception   |
+ * | 20   | No         | Fault    | Virtualization Exception        |
+ * | 21   | No         | Fault    | Control Protection Exception (#CP) |
+ * | 22-27| No         | Reserved | (Reserved)                      |
+ * | 28   | No         | Reserved | (Reserved)                      |
+ * | 29   | Yes        | Fault    | Security Exception              |
+ * | 30   | No         | Reserved | (Reserved)                      |
+ * | 31   | No         | Reserved | (Reserved)                      |
+ * ---------------------------------------------
+ *
+ * Hardware Interrupts (IRQs, 32 - 47)
+ * ---------------------------------------------------
+ * | IRQ  | INT  | Description                         |
+ * |------|------|-------------------------------------|
+ * |  0   |  32  | Programmable Interval Timer (PIT)  |
+ * |  1   |  33  | Keyboard (PS/2)                    |
+ * |  2   |  34  | Cascade Interrupt (for PIC chaining) |
+ * |  3   |  35  | Serial Port COM2                   |
+ * |  4   |  36  | Serial Port COM1                   |
+ * |  5   |  37  | LPT2 (Legacy, often unused)        |
+ * |  6   |  38  | Floppy Disk Controller             |
+ * |  7   |  39  | LPT1 / Spurious Interrupt          |
+ * |  8   |  40  | CMOS Real-Time Clock (RTC)         |
+ * |  9   |  41  | Free (often used for ACPI)         |
+ * | 10   |  42  | Free (often used for SCSI/NICs)    |
+ * | 11   |  43  | Free (often used for USB controllers) |
+ * | 12   |  44  | PS/2 Mouse                         |
+ * | 13   |  45  | FPU / Coprocessor (Legacy)         |
+ * | 14   |  46  | Primary ATA Hard Disk Controller   |
+ * | 15   |  47  | Secondary ATA Hard Disk Controller |
+ * ---------------------------------------------------
+ *
+ * Legend:
+ * - Fault    = Exception that may be recoverable (e.g., Page Fault)
+ * - Trap     = Exception where execution continues after handling (e.g., Debug)
+ * - Abort    = Critical failure, usually unrecoverable (e.g., Machine Check)
+ * - Interrupt = Hardware-generated, typically from an external device (IRQ)
+ */
 
 static const char* interrupt_messages[] = {
     // CPU Interrupts
@@ -143,22 +192,22 @@ static void _dump_register(const interrupt_frame_t* regs)
 	printf("==========================\n");
 	printf("=   Register Dump		  \n");
 	printf("==========================\n");
-	printf("EAX:  0x%x\n", regs->eax);
-	printf("ECX:  0x%x\n", regs->ecx);
-	printf("EDX:  0x%x\n", regs->edx);
-	printf("EBX:  0x%x\n", regs->ebx);
-	printf("ESP:  0x%x\n", regs->esp);
-	printf("EBP:  0x%x\n", regs->ebp);
-	printf("ESI:  0x%x\n", regs->esi);
-	printf("EDI:  0x%x\n", regs->edi);
-	printf("DS:   0x%x\n", regs->ds);
-	printf("ES:   0x%x\n", regs->es);
-	printf("FS:   0x%x\n", regs->fs);
-	printf("GS:   0x%x\n", regs->gs);
-	printf("EIP:  0x%x\n", regs->eip);
-	printf("CS:   0x%x\n", regs->cs);
-	printf("EFLAGS: 0x%x\n", regs->eflags);
-
+	printf("EAX     0x%x\n", regs->eax);
+	printf("ECX     0x%x\n", regs->ecx);
+	printf("EDX     0x%x\n", regs->edx);
+	printf("EBX     0x%x\n", regs->ebx);
+	printf("ESP     0x%x\n", regs->esp);
+	printf("EBP     0x%x\n", regs->ebp);
+	printf("ESI     0x%x\n", regs->esi);
+	printf("EDI     0x%x\n", regs->edi);
+	printf("DS      0x%x\n", regs->ds);
+	printf("ES      0x%x\n", regs->es);
+	printf("FS      0x%x\n", regs->fs);
+	printf("GS      0x%x\n", regs->gs);
+	printf("EIP     0x%x\n", regs->eip);
+	printf("CS      0x%x\n", regs->cs);
+	printf("EFLAGS  0x%x\n", regs->eflags);
+	printf("\n");
 	printf("==========================\n");
 	printf("=   Stack Dump			  \n");
 	printf("==========================\n");
@@ -185,9 +234,15 @@ static void _dump_register(const interrupt_frame_t* regs)
 	return;
 };
 
-void isr_0h_handler(interrupt_frame_t* regs)
+void isr_0h_fault_handler(interrupt_frame_t* regs)
 {
 	_dump_register(regs);
+
+	if (regs->cs == GDT_USER_CODE_SEGMENT) {
+		printf("[INFO] User Process triggered %s detected.", interrupt_messages[0]);
+		// TODO: Implement user process termination on divide by zero, ensuring task removal, switch or fallback to idle
+		return;
+	};
 	panic(interrupt_messages[0]);
 	return;
 };
@@ -198,18 +253,42 @@ void isr_1h_handler(interrupt_frame_t* regs)
 	uint32_t dr6;
 	asm volatile("mov %%dr6, %0" : "=r"(dr6));
 
-	if (dr6 & (1 << 0))
+	if (dr6 & (1 << 0)) {
 		printf(" - Breakpoint 0 (DR0)\n");
-	if (dr6 & (1 << 1))
+	};
+	if (dr6 & (1 << 1)) {
 		printf(" - Breakpoint 1 (DR1)\n");
-	if (dr6 & (1 << 2))
+	};
+	if (dr6 & (1 << 2)) {
 		printf(" - Breakpoint 2 (DR2)\n");
-	if (dr6 & (1 << 3))
+	};
+	if (dr6 & (1 << 3)) {
 		printf(" - Breakpoint 3 (DR3)\n");
-	if (dr6 & (1 << 14))
+	};
+	if (dr6 & (1 << 14)) {
 		printf(" - Task-Switch Debug Exception\n");
+	};
 	asm volatile("mov %0, %%dr6" : : "r"(0x0));
 	printf("%s\n", interrupt_messages[1]);
+	return;
+};
+
+void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs)
+{
+	printf("[NMI] Non-Maskable Interrupt (INT 2)\n");
+	const uint8_t status = inb(0x61);
+
+	if (status & 0x80) {
+		printf("[NMI] Memory Parity Error!\n");
+	};
+	if (status & 0x40) {
+		printf("[NMI] I/O Channel Check Error!\n");
+	};
+	_dump_register(regs);
+
+	if (status & 0x80) {
+		panic("[NMI] Critical Memory Error - Halting system!\n");
+	};
 	return;
 };
 
@@ -331,6 +410,7 @@ void idt_init(void)
 	_init_isr();
 	idt_set(0, asm_isr0_divide_exception);
 	idt_set(1, asm_isr1_debug_exception);
+	idt_set(2, asm_isr2_nmi_interrupt);
 	idt_set(14, asm_isr14_page_fault);
 	asm_idt_loader(&idtr_descriptor);
 	return;

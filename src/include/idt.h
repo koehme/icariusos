@@ -28,7 +28,33 @@ typedef struct idtr {
 	uint32_t base;	// Pointing to the start address of the interrupt descriptor table
 } __attribute__((packed)) idtr_t;
 
+typedef struct interrupt_frame {
+	uint32_t gs;
+	uint32_t fs;
+	uint32_t es;
+	uint32_t ds;
+	uint32_t edi;
+	uint32_t esi;
+	uint32_t ebp;
+	uint32_t esp;
+	uint32_t ebx;
+	uint32_t edx;
+	uint32_t ecx;
+	uint32_t eax;
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+} interrupt_frame_t;
+
 void idt_init(void);
-void idt_set(const int32_t i, void* isr);
+void idt_set(const int32_t isr_num, void* isr);
+void isr_0h_fault_handler(interrupt_frame_t* regs);
+void isr_1h_handler(interrupt_frame_t* regs);
+void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);
+void isr_14h_handler(void);
+void irq0_handler(void);
+void irq1_handler(void);
+void irq12_handler(void);
+void isr_default_handler(void);
 
 #endif
