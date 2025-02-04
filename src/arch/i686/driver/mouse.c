@@ -12,7 +12,7 @@
 #include "ps2.h"
 
 /* EXTERNAL API */
-extern void asm_interrupt_32h(void);
+extern void asm_irq12_mouse(void);
 
 /* PUBLIC API */
 void mouse_handler(void* dev, const uint8_t data);
@@ -104,6 +104,6 @@ void mouse_init(mouse_t* self)
 	ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_SEND_COMMAND);
 	ps2_send(PS2_DATA_PORT, MOUSE_ENABLE_DATA_REPORT);
 	ps2_receive();
-	idt_set(0x2C, asm_interrupt_32h);
+	idt_set(0x2C, asm_irq12_mouse);
 	return;
 };

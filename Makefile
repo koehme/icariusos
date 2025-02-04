@@ -35,7 +35,6 @@ SOURCES_C = \
     ./src/arch/i686/memory/pfa.c \
     ./src/arch/i686/ds/fifo.c \
     ./src/arch/i686/process/tss.c \
-    ./src/arch/i686/process/umode.c \
     ./src/arch/i686/process/task.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \

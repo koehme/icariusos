@@ -29,24 +29,26 @@ typedef struct interrupt_frame interrupt_frame_t;
 
 extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default(void);
-extern void asm_interrupt_0h(void);
-extern void asm_interrupt_14h(void);
+extern void asm_isr0_divide_exception(void);
+extern void asm_isr1_debug_exception(void);
+extern void asm_isr14_page_fault(void);
 
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr);
-
 void isr_0h_handler(interrupt_frame_t* regs);
+void isr_1h_handler(interrupt_frame_t* regs);
 void isr_14h_handler(void);
-void isr_20h_handler(void);
-void isr_21h_handler(void);
-void isr_32h_handler(void);
+void irq0_handler(void);
+void irq1_handler(void);
+void irq12_handler(void);
 void isr_default_handler(void);
 
 /* INTERNAL API */
 static void _pic1_send_eoi(void);
 static void _pic2_send_eoi(void);
 static void _init_isr(void);
+
 typedef struct interrupt_frame {
 	uint32_t gs;
 	uint32_t fs;
@@ -190,6 +192,27 @@ void isr_0h_handler(interrupt_frame_t* regs)
 	return;
 };
 
+void isr_1h_handler(interrupt_frame_t* regs)
+{
+	_dump_register(regs);
+	uint32_t dr6;
+	asm volatile("mov %%dr6, %0" : "=r"(dr6));
+
+	if (dr6 & (1 << 0))
+		printf(" - Breakpoint 0 (DR0)\n");
+	if (dr6 & (1 << 1))
+		printf(" - Breakpoint 1 (DR1)\n");
+	if (dr6 & (1 << 2))
+		printf(" - Breakpoint 2 (DR2)\n");
+	if (dr6 & (1 << 3))
+		printf(" - Breakpoint 3 (DR3)\n");
+	if (dr6 & (1 << 14))
+		printf(" - Task-Switch Debug Exception\n");
+	asm volatile("mov %0, %%dr6" : : "r"(0x0));
+	printf("%s\n", interrupt_messages[1]);
+	return;
+};
+
 void isr_14h_handler(void)
 {
 	uint32_t error_code;
@@ -259,7 +282,7 @@ void isr_14h_handler(void)
 	return;
 };
 
-void isr_20h_handler(void)
+void irq0_handler(void)
 {
 	// printf("%d\n", timer.ticks);
 	timer.ticks++;
@@ -267,7 +290,7 @@ void isr_20h_handler(void)
 	return;
 };
 
-void isr_21h_handler(void)
+void irq1_handler(void)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t data = inb(PS2_DATA_PORT);
@@ -277,7 +300,7 @@ void isr_21h_handler(void)
 	return;
 };
 
-void isr_32h_handler(void)
+void irq12_handler(void)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t data = inb(PS2_DATA_PORT);
@@ -306,8 +329,9 @@ void idt_init(void)
 	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
-	idt_set(0, asm_interrupt_0h); // 
-	idt_set(14, asm_interrupt_14h); // Page Fault ISR
+	idt_set(0, asm_isr0_divide_exception);
+	idt_set(1, asm_isr1_debug_exception);
+	idt_set(14, asm_isr14_page_fault);
 	asm_idt_loader(&idtr_descriptor);
 	return;
 };

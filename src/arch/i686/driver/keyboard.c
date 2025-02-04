@@ -13,7 +13,7 @@
 #include "string.h"
 
 /* EXTERNAL API */
-extern void asm_interrupt_21h(void);
+extern void asm_irq1_keyboard(void);
 
 /* PUBLIC API */
 void kbd_init(kbd_t* self);
@@ -219,7 +219,7 @@ void kbd_init(kbd_t* self)
 	self->caps = false;
 	self->caps_lock = false;
 	self->alt_gr = false;
-	idt_set(0x21, asm_interrupt_21h);
+	idt_set(0x21, asm_irq1_keyboard);
 	return;
 };
 
