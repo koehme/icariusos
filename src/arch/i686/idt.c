@@ -25,13 +25,18 @@ extern mouse_t mouse;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 
+typedef struct interrupt_frame interrupt_frame_t;
+
 extern void asm_idt_loader(idtr_t* ptr);
-extern void asm_interrupt_default();
+extern void asm_interrupt_default(void);
+extern void asm_interrupt_0h(void);
 extern void asm_interrupt_14h(void);
 
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr);
+
+void isr_0h_handler(interrupt_frame_t* regs);
 void isr_14h_handler(void);
 void isr_20h_handler(void);
 void isr_21h_handler(void);
@@ -42,6 +47,23 @@ void isr_default_handler(void);
 static void _pic1_send_eoi(void);
 static void _pic2_send_eoi(void);
 static void _init_isr(void);
+typedef struct interrupt_frame {
+	uint32_t gs;
+	uint32_t fs;
+	uint32_t es;
+	uint32_t ds;
+	uint32_t edi;
+	uint32_t esi;
+	uint32_t ebp;
+	uint32_t esp;
+	uint32_t ebx;
+	uint32_t edx;
+	uint32_t ecx;
+	uint32_t eax;
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+} interrupt_frame_t;
 
 static const char* interrupt_messages[] = {
     // CPU Interrupts
@@ -110,6 +132,61 @@ static void _pic2_send_eoi(void)
 {
 	outb(PIC_2_CTRL, PIC_ACK);
 	outb(PIC_1_CTRL, PIC_ACK);
+	return;
+};
+
+static void _dump_register(const interrupt_frame_t* regs)
+{
+	printf("\n");
+	printf("==========================\n");
+	printf("=   Register Dump		  \n");
+	printf("==========================\n");
+	printf("EAX:  0x%x\n", regs->eax);
+	printf("ECX:  0x%x\n", regs->ecx);
+	printf("EDX:  0x%x\n", regs->edx);
+	printf("EBX:  0x%x\n", regs->ebx);
+	printf("ESP:  0x%x\n", regs->esp);
+	printf("EBP:  0x%x\n", regs->ebp);
+	printf("ESI:  0x%x\n", regs->esi);
+	printf("EDI:  0x%x\n", regs->edi);
+	printf("DS:   0x%x\n", regs->ds);
+	printf("ES:   0x%x\n", regs->es);
+	printf("FS:   0x%x\n", regs->fs);
+	printf("GS:   0x%x\n", regs->gs);
+	printf("EIP:  0x%x\n", regs->eip);
+	printf("CS:   0x%x\n", regs->cs);
+	printf("EFLAGS: 0x%x\n", regs->eflags);
+
+	printf("==========================\n");
+	printf("=   Stack Dump			  \n");
+	printf("==========================\n");
+	const uint32_t* stack = (uint32_t*)regs->esp;
+
+	for (int32_t i = 3; i >= 1; i--) {
+		const void* addr = stack + i;
+		const uint32_t offset = i * 4;
+
+		printf("\n--- [ESP + %d] ---\n", offset);
+		printf(" Address  : 0x%x\n", addr);
+		printf(" Value    : 0x%x\n", stack[i]);
+		printf("-------------------------\n");
+	};
+	for (int32_t i = 0; i < 3; i++) {
+		const void* addr = stack - i;
+		const uint32_t offset = i * 4;
+
+		printf("\n--- [ESP - %d] ---\n", offset);
+		printf(" Address  : 0x%x\n", addr);
+		printf(" Value    : 0x%x\n", stack[-i]);
+		printf("-------------------------\n");
+	};
+	return;
+};
+
+void isr_0h_handler(interrupt_frame_t* regs)
+{
+	_dump_register(regs);
+	panic(interrupt_messages[0]);
 	return;
 };
 
@@ -229,8 +306,8 @@ void idt_init(void)
 	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
-	// Hardware-specific ISRs are handled in their respective driver files
-	idt_set(14, asm_interrupt_14h);
+	idt_set(0, asm_interrupt_0h); // 
+	idt_set(14, asm_interrupt_14h); // Page Fault ISR
 	asm_idt_loader(&idtr_descriptor);
 	return;
 };

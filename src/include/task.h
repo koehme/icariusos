@@ -9,17 +9,14 @@
 
 #include <stdint.h>
 
-typedef struct registers {
-	uint32_t eax, ebx, ecx, edx;
-	uint32_t esi, edi, ebp, esp;
+typedef struct task_register {
 	uint32_t eip;
-	uint32_t eflags;
-	uint32_t cr3;
-	uint32_t cs, ds, es, fs, gs, ss;
-} registers_t;
+	uint32_t esp;
+	uint32_t ss;
+} task_register_t;
 
 typedef struct task {
-	registers_t reg;
+	task_register_t reg;
 	uint32_t* page_dir;
 	struct task* next;
 	struct task* prev;

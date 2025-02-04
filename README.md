@@ -11,31 +11,6 @@
 
 since childhood, technology has been my playground. the thrill of solving a tough problem after hours of trial and error is unmatched. and building an operating system? that's the ultimate challenge—a digital Everest. every step in creating **icariusOS** is pure, unfiltered joy. it's my drive, my obsession, and it fuels my relentless passion for innovation. 😊
 
-## core milestones 🏆
-
-- ✨ **bootloader**: custom-built for a flawless system launch.  
-- ✨ **ata driver**: loads kernel from hard drive into memory like a boss.  
-- ✨ **protected mode**: unlocked the power of 32-bit computing with full memory utilization.  
-- ✨ **interrupts**: implemented an elite IDT for superior interrupt handling.  
-- ✨ **PIC**: tamed the Programmable Interrupt Controller for precise IRQ management.  
-- ✨ **VGA driver**: smooth scrolling in text mode—because style matters.  
-- ✨ **heap magic**: dynamic memory allocation, optimized for performance.  
-- ✨ **logo**: startup is now a visual masterpiece with a sleek, custom logo. 😄  
-- ✨ **paging**: efficient virtual memory management, unlocking limitless potential.  
-
-## advanced warfare 🚀
-
-- 🔥 **interrupt-driven ATA reads**: eliminated CPU blockages for lightning-fast disk reads.  
-- 🔥 **printf 2.0**: upgraded to a pro-level print system for enhanced output.  
-- 🔥 **CMOS date reader**: cracked time retrieval directly from CMOS.  
-- 🔥 **real sleep function**: PIT-based sleep, because fake pauses are for amateurs.  
-- 🔥 **Multiboot2 integration**: ditched the homemade bootloader for GRUB-level precision.  
-- 🔥 **memory map**: harvested Multiboot2 data to conquer memory regions.  
-- 🔥 **motd**: delivering daily doses of motivation with a killer message of the day. 😎  
-- 🔥 **VFS layer**: file operations (`vfs_fopen`, `vfs_fread`) now operational.  
-- 🔥 **framebuffer rendering**: graphics upgrade with sleek bitmap font support.  
-- 🔥 **higher-half kernel**: kernel now thrives in upper memory realms.  
-
 ## current ops & next-gen goals 🔥
 
 - 🚧 **FAT16 driver**: filesystem access up and running.  
@@ -111,4 +86,10 @@ All-in-one for the lazy:
 ```bash
 ./swap.sh && qemu-system-i386 -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
-``````
+```
+
+# tree
+
+```bash
+tree | xclip -selection clipboard
+```

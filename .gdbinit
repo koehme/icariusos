@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break kmain:377
+break _test_divide_by_zero
 
 c

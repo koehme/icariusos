@@ -317,6 +317,14 @@ static void _test_page_dir_create(const uint32_t* pd)
 	return;
 };
 
+static void _test_divide_by_zero()
+{
+	int a = 5;
+	int b = 0;
+	int c = a / b;
+	printf("Ergebnis: %d\n", c);
+};
+
 static void _remove_identity_mapping(void)
 {
 	const uint32_t kernel_page_dir_end = 1024 * 4096;
@@ -421,13 +429,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
 
-	page_dump_curr_directory();
+	// page_dump_curr_directory();
 	_remove_identity_mapping();
-	pfa_dump(&pfa, true);
+	// pfa_dump(&pfa, true);
 
-	_test_vfs_read("A:/LEET/TEST.TXT");
-	_test_heap(4096);
-	_motd();
+	// _test_vfs_read("A:/LEET/TEST.TXT");
+	// _test_heap(4096);
+	// _motd();
+
+	_test_divide_by_zero();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
