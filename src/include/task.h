@@ -9,15 +9,24 @@
 
 #include <stdint.h>
 
-typedef struct task_register {
+typedef struct task_registers {
+	uint32_t edi;
+	uint32_t esi;
+	uint32_t ebp;
+	uint32_t ebx;
+	uint32_t edx;
+	uint32_t ecx;
+	uint32_t eax;
 	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
 	uint32_t esp;
 	uint32_t ss;
-} task_register_t;
+} task_registers_t;
 
 typedef struct task {
-	task_register_t reg;
 	uint32_t* page_dir;
+	task_registers_t registers;
 	struct task* next;
 	struct task* prev;
 } task_t;

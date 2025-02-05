@@ -21,9 +21,9 @@ int32_t task_init(task_t* self)
 	if (!self->page_dir) {
 		return -EIO;
 	};
-	self->reg.eip = USER_CODE_START;      // 0x00000000
-	self->reg.ss = GDT_USER_DATA_SEGMENT; // 0x20
-	self->reg.esp = USER_STACK_END;	      // start: 0xBFC00000 - end: 0xBFFFFFFF
+	self->registers.eip = USER_CODE_START;	    // 0x00000000
+	self->registers.ss = GDT_USER_DATA_SEGMENT; // 0x20
+	self->registers.esp = USER_STACK_END;	    // start: 0xBFC00000 - end: 0xBFFFFFFF
 	return 0;
 };
 
