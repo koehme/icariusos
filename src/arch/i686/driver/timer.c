@@ -22,7 +22,7 @@ void timer_init(timer_t* self, const uint32_t hz)
 {
 	self->ticks = 0;
 	self->hz = hz;
-	idt_set(0x20, asm_irq0_timer);
+	idt_set(0x20, asm_irq0_timer, IDT_KERNEL_INT_GATE);
 	// Base frequency of the PIT (Programmable Interval Timer)
 	const uint32_t pit_base_frequency = 1193180;
 	// Divisor is required to configure the PIT so that it ticks at a specific interval corresponding to the desired hz

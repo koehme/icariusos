@@ -9,6 +9,7 @@
 
 #include "ata.h"
 #include "fifo.h"
+#include "icarius.h"
 #include "idt.h"
 #include "io.h"
 #include "kernel.h"
@@ -27,6 +28,7 @@ extern fifo_t fifo_mouse;
 
 extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default(void);
+extern void asm_syscall(void);
 extern void asm_isr0_divide_exception(void);
 extern void asm_isr1_debug_exception(void);
 extern void asm_isr2_nmi_interrupt(void);
@@ -34,7 +36,7 @@ extern void asm_isr14_page_fault(void);
 
 /* PUBLIC API */
 void idt_init(void);
-void idt_set(const int32_t isr_num, void* isr);
+void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
 void isr_0h_fault_handler(interrupt_frame_t* regs);
 void isr_1h_handler(interrupt_frame_t* regs);
 void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);
@@ -398,7 +400,7 @@ void isr_default_handler(void)
 static void _init_isr(void)
 {
 	for (size_t i = 0; i < 256; i++) {
-		idt_set(i, asm_interrupt_default);
+		idt_set(i, asm_interrupt_default, IDT_KERNEL_INT_GATE);
 	};
 	return;
 };
@@ -408,15 +410,16 @@ void idt_init(void)
 	idtr_descriptor.limit = (uint16_t)sizeof(idt_desc_t) * 256 - 1;
 	idtr_descriptor.base = (uintptr_t)&idt[0];
 	_init_isr();
-	idt_set(0, asm_isr0_divide_exception);
-	idt_set(1, asm_isr1_debug_exception);
-	idt_set(2, asm_isr2_nmi_interrupt);
-	idt_set(14, asm_isr14_page_fault);
+	idt_set(0x0, asm_isr0_divide_exception, IDT_KERNEL_INT_GATE);
+	idt_set(0x1, asm_isr1_debug_exception, IDT_KERNEL_INT_GATE);
+	idt_set(0x2, asm_isr2_nmi_interrupt, IDT_KERNEL_INT_GATE);
+	idt_set(0xE, asm_isr14_page_fault, IDT_KERNEL_INT_GATE);
+	idt_set(0x80, asm_syscall, IDT_USER_INT_GATE);
 	asm_idt_loader(&idtr_descriptor);
 	return;
 };
 
-void idt_set(const int32_t isr_num, void* isr)
+void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes)
 {
 	if (isr_num < 0 || isr_num >= 256) {
 		return;
@@ -425,7 +428,7 @@ void idt_set(const int32_t isr_num, void* isr)
 	descriptor->isr_low = (uintptr_t)isr & 0xffff;
 	descriptor->kernel_cs = 0x08;
 	descriptor->reserved = 0x00;
-	descriptor->attributes = 0b10001110;
+	descriptor->attributes = attributes;
 	descriptor->isr_high = ((uintptr_t)isr >> 16) & 0xffff;
 	return;
 };

@@ -9,6 +9,33 @@
 
 /*
 ====================================
+    IDT Gate Type
+====================================
+*/
+#define IDT_GATE_TASK 0x05	 // Task Gate
+#define IDT_GATE_16BIT_INT 0x06	 // 16-bit Interrupt Gate
+#define IDT_GATE_16BIT_TRAP 0x07 // 16-bit Trap Gate
+#define IDT_GATE_32BIT_INT 0x0E	 // 32-bit Interrupt Gate
+#define IDT_GATE_32BIT_TRAP 0x0F // 32-bit Trap Gate
+/*
+====================================
+    IDT Descriptor Privilege Level (DPL)
+====================================
+*/
+#define IDT_DPL_KERNEL 0x00 // Ring 0 (Kernel)
+#define IDT_DPL_USER 0x60   // Ring 3 (Usermode) -> 01100000 (DPL 3)
+/*
+====================================
+    IDT Present Bit
+====================================
+*/
+#define IDT_PRESENT 0x80							  // Interrupt Descriptor Present
+#define IDT_KERNEL_INT_GATE (IDT_GATE_32BIT_INT | IDT_DPL_KERNEL | IDT_PRESENT)	  // 0x8E
+#define IDT_USER_INT_GATE (IDT_GATE_32BIT_INT | IDT_DPL_USER | IDT_PRESENT)	  // 0xEE
+#define IDT_KERNEL_TRAP_GATE (IDT_GATE_32BIT_TRAP | IDT_DPL_KERNEL | IDT_PRESENT) // 0x8F
+#define IDT_USER_TRAP_GATE (IDT_GATE_32BIT_TRAP | IDT_DPL_USER | IDT_PRESENT)	  // 0xEF
+/*
+====================================
     PIT
 ====================================
 */

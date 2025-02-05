@@ -47,7 +47,7 @@ typedef struct interrupt_frame {
 } interrupt_frame_t;
 
 void idt_init(void);
-void idt_set(const int32_t isr_num, void* isr);
+void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
 void isr_0h_fault_handler(interrupt_frame_t* regs);
 void isr_1h_handler(interrupt_frame_t* regs);
 void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);

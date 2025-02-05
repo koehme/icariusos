@@ -1,3 +1,5 @@
+extern syscall_dispatch
+
 extern isr_0h_fault_handler
 extern isr_1h_handler
 extern isr_2h_nmi_interrupt_handler
@@ -13,6 +15,7 @@ global asm_do_nop
 global asm_do_sti
 global asm_do_cli
 
+global asm_syscall
 global asm_isr0_divide_exception
 global asm_isr1_debug_exception
 global asm_isr2_nmi_interrupt
@@ -62,6 +65,28 @@ asm_idt_loader:
     lidt [ebx]            ; Load interrupt descriptor table register 
     pop ebp               ; Restore old base pointer
     ret
+
+asm_syscall:
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    call syscall_dispatch
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    iret
 
 ;=============================================================================
 ; asm_isr0_divide_exception

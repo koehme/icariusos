@@ -104,6 +104,6 @@ void mouse_init(mouse_t* self)
 	ps2_send(PS2_STATUS_COMMAND_PORT, MOUSE_SEND_COMMAND);
 	ps2_send(PS2_DATA_PORT, MOUSE_ENABLE_DATA_REPORT);
 	ps2_receive();
-	idt_set(0x2C, asm_irq12_mouse);
+	idt_set(0x2C, asm_irq12_mouse, IDT_KERNEL_INT_GATE);
 	return;
 };

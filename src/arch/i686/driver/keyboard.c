@@ -219,7 +219,7 @@ void kbd_init(kbd_t* self)
 	self->caps = false;
 	self->caps_lock = false;
 	self->alt_gr = false;
-	idt_set(0x21, asm_irq1_keyboard);
+	idt_set(0x21, asm_irq1_keyboard, IDT_KERNEL_INT_GATE);
 	return;
 };
 

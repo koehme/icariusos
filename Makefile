@@ -10,6 +10,7 @@ OBJ_DIR = ./obj
 
 SOURCES_C = \
     ./src/arch/i686/kernel.c \
+    ./src/arch/i686/syscall.c \
     ./src/arch/i686/errno.c \
     ./src/arch/i686/driver/ata.c \
     ./src/arch/i686/driver/cmos.c \
@@ -47,7 +48,8 @@ SOURCES_ASM = \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
-    ./src/arch/i686/memory/page.asm
+    ./src/arch/i686/memory/page.asm \
+    ./src/arch/i686/process/task.asm
 
 define obj_c
 $(OBJ_DIR)/$(notdir $(1:.c=.c.o))
@@ -90,6 +92,9 @@ $(OBJ_DIR)/kernel.c.o: ./src/arch/i686/kernel.c
 $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
+$(OBJ_DIR)/syscall.c.o: ./src/arch/i686/syscall.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
 $(OBJ_DIR)/errno.c.o: ./src/arch/i686/errno.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
@@ -112,6 +117,9 @@ $(OBJ_DIR)/io.asm.o: ./src/arch/i686/io.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/page.asm.o: ./src/arch/i686/memory/page.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/task.asm.o: ./src/arch/i686/process/task.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 image: $(OBJECTS)

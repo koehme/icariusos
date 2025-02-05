@@ -10,18 +10,20 @@
 #include <stdint.h>
 
 typedef struct task_registers {
-	uint32_t edi;
-	uint32_t esi;
-	uint32_t ebp;
-	uint32_t ebx;
-	uint32_t edx;
-	uint32_t ecx;
-	uint32_t eax;
-	uint32_t eip;
-	uint32_t cs;
-	uint32_t eflags;
-	uint32_t esp;
-	uint32_t ss;
+	uint32_t edi; // Offset +0   | General-purpose register EDI
+	uint32_t esi; // Offset +4   | General-purpose register ESI
+	uint32_t ebp; // Offset +8   | Base Pointer (stack frame)
+	uint32_t ebx; // Offset +12  | General-purpose register EBX
+	uint32_t edx; // Offset +16  | General-purpose register EDX
+	uint32_t ecx; // Offset +20  | General-purpose register ECX
+	uint32_t eax; // Offset +24  | General-purpose register EAX (Syscall Number)
+
+	uint32_t eip;	 // Offset +28  | Instruction Pointer (Usermode Entry)
+	uint32_t cs;	 // Offset +32  | Code Segment (Usermode CS)
+	uint32_t eflags; // Offset +36  | EFLAGS Register (Interrupts, System Flags)
+
+	uint32_t esp; // Offset +40  | Stack Pointer (Usermode ESP)
+	uint32_t ss;  // Offset +44  | Stack Segment (Usermode SS)
 } task_registers_t;
 
 typedef struct task {
