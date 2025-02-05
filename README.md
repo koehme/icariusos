@@ -7,32 +7,6 @@
 - Runs on i686 architecture
 ```
 
-# my journey into the world of tech 🌌
-
-since childhood, technology has been my playground. the thrill of solving a tough problem after hours of trial and error is unmatched. and building an operating system? that's the ultimate challenge—a digital Everest. every step in creating **icariusOS** is pure, unfiltered joy. it's my drive, my obsession, and it fuels my relentless passion for innovation. 😊
-
-## current ops & next-gen goals 🔥
-
-- 🚧 **FAT16 driver**: filesystem access up and running.  
-- 🚧 **keyboard & mouse drivers**: taking input control to the next level (in progress).  
-
-## page frame allocator 📦
-
-- 🚧 **build a robust system** to manage physical memory frames.  
-- 🚧 **efficient allocation and tracking** of free/used pages.  
-
-### Multiboot2 Memory Map Integration  
-- 🚧 **parse and interpret** the memory map provided by the Multiboot2 spec.  
-- 🚧 **identify available physical memory regions** for allocation.  
-
-### kzalloc Reimplementation  
-- 🚧 **refactor `kzalloc`** to request physical pages directly from the page frame allocator.  
-- 🚧 **maintain seamless dynamic memory allocation**, now with physical frame awareness.  
-
-### Page Directory Integration  
-- 🚧 **map physical pages into the page directory**.  
-- 🚧 **establish a solid link** between virtual addresses and physical memory for ultimate control.  
-
 # dependencies
 
 Before building icariusOS, ensure that you have the following dependencies:

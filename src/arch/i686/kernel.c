@@ -408,6 +408,14 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | Reserved Stack Space | `0xC2C08000`           | `0xC2FFFFFF`            | 4064 KiB        | Reserved for Stack Expansion          			|
 */
 
+void usermode_function(void)
+{
+	asm volatile("movl $1, %eax\n"
+		     "int $0x80\n"
+		     "hlt");
+	return;
+};
+
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
@@ -437,10 +445,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// _render_spinner(64);
 	// pci_enumerate_bus();
 
+	/*
 	vfs_init();
 	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
+	*/
 
 	// page_dump_curr_directory();
 	_remove_identity_mapping();
@@ -449,6 +459,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
+
+	/*
+	task_t* task = task_create_user(usermode_function);
+	asm_task_switch_to_userland(&task->registers);
+	printf("Zurück im Kernelmodus nach Usermode-Aufruf!\n");
+	*/
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

@@ -9,6 +9,7 @@
 #include "icarius.h"
 #include "string.h"
 
+
 task_t* task_head = 0x0;
 task_t* task_tail = 0x0;
 task_t* curr_task = 0x0;
@@ -51,6 +52,29 @@ task_t* task_new(void)
 		task_tail = new_task;
 	};
 	return new_task;
+};
+
+task_t* task_create_user(void (*entry_point)())
+{
+	task_t* user_task = task_new();
+
+	if (!user_task) {
+		return 0x0;
+	};
+	uint64_t user_code_phys = pfa_alloc();
+
+	if (!user_code_phys) {
+		return 0x0;
+	};
+	page_map(USER_CODE_START, user_code_phys, PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+	memcpy((void*)USER_CODE_START, (void*)entry_point, 4096);
+
+	user_task->registers.eip = USER_CODE_START;
+	user_task->registers.cs = GDT_USER_CODE_SEGMENT;
+	user_task->registers.eflags = 0x200;
+	user_task->registers.esp = USER_STACK_END;
+	user_task->registers.ss = GDT_USER_DATA_SEGMENT;
+	return user_task;
 };
 
 task_t* task_get_curr(void) { return curr_task; };

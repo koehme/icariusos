@@ -4,6 +4,7 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break _test_divide_by_zero
+break kernel.c:461
+break asm_task_switch_to_userland
 
 c

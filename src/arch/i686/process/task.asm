@@ -1,8 +1,9 @@
-global task_switch_to_userland
+global asm_task_switch_to_userland
 
-; void task_switch_to_userland(task_registers_t* regs)
-task_switch_to_userland:
-    mov ebx, [esp + 4]    ; var ebx = &regs;
+; void asm_task_switch_to_userland(task_registers_t* regs)
+asm_task_switch_to_userland:
+    mov ebp, esp
+    mov ebx, [ebp + 4]    ; var ebx = &regs;
 
     push dword [ebx + 44] ; put regs->ss onto stack for ring 3
     push dword [ebx + 40] ; put regs->esp onto stack for ring 3
@@ -22,6 +23,27 @@ task_switch_to_userland:
     mov fs, ax
     mov gs, ax
 
-    ; TODO restore registers
+    ; restore stored registers
+    push ebx ; ebx points to &regs
+    call asm_task_restore_register
+    add esp, 4
 
-    iretd   ; jmp to x86 userland
+    iretd  ; leave kernelland and walk to userland :D
+
+; void asm_task_restore_register(task_registers_t* regs);
+asm_task_restore_register:
+    push ebp
+    mov ebp, esp
+
+    mov ebx, [ebp + 8] ; Load pointer to task_registers_t
+
+    mov edi, [ebx]
+    mov esi, [ebx+4]
+    mov ebp, [ebx+8]
+    mov edx, [ebx+16]
+    mov ecx, [ebx+20]
+    mov eax, [ebx+24]
+    mov ebx, [ebx+12]
+
+    add esp, 4
+    ret

@@ -44,6 +44,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "ps2.h"
 #include "stream.h"
 #include "string.h"
+#include "task.h"
 #include "timer.h"
 #include "tss.h"
 #include "vbe.h"

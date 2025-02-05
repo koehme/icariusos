@@ -3,10 +3,12 @@ extern syscall_dispatch
 extern isr_0h_fault_handler
 extern isr_1h_handler
 extern isr_2h_nmi_interrupt_handler
+extern isr_13_gp_fault_handler
 extern isr_14h_handler
 extern irq0_handler
 extern irq1_handler
 extern irq12_handler
+
 
 extern isr_default_handler
 extern isr_error_handler
@@ -19,6 +21,7 @@ global asm_syscall
 global asm_isr0_divide_exception
 global asm_isr1_debug_exception
 global asm_isr2_nmi_interrupt
+global asm_isr13_gp_fault
 global asm_isr14_page_fault
 global asm_irq0_timer
 global asm_irq1_keyboard
@@ -268,6 +271,61 @@ asm_isr2_nmi_interrupt:
     sti                           ; Re-enable interrupts
     iret                          ; Return from interrupt
 
+asm_isr13_gp_fault:
+    cli                           ; Disable interrupts to prevent nested exceptions
+
+    push eax                      ; Save EAX
+    push ecx                      ; Save ECX
+    push edx                      ; Save EDX
+    push ebx                      ; Save EBX
+
+    mov eax, esp
+    add eax, 16                   ; Adjust ESP for previous stack frame
+
+    push eax                      ; Save original ESP before modifications
+    push ebp                      ; Save EBP
+    push esi                      ; Save ESI
+    push edi                      ; Save EDI
+
+    ; Save segment registers
+    push ds
+    push es
+    push fs
+    push gs
+
+    ; Load kernel data segment (0x10) into all segment registers
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Pass pointer to saved register state to the C handler
+    mov eax, esp
+    push eax
+    call isr_13_gp_fault_handler           ; Call C-level exception handler
+
+    add esp, 4                    ; Clean up function argument
+
+    ; Restore segment registers
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    ; Restore general-purpose registers (equivalent to popad)
+    pop edi
+    pop esi
+    pop ebp
+    add esp, 4                    ; Skip original ESP (not restored)
+    pop ebx
+    pop edx
+    pop ecx
+    pop eax
+
+    sti                           ; Re-enable interrupts
+    iret                          ; Return from interrupt
+
 ;=============================================================================
 ; asm_isr14_page_fault
 ; Page fault handler for interrupt 14h 
@@ -330,9 +388,56 @@ asm_irq12_mouse:
 ; @return None
 ;=============================================================================
 asm_interrupt_default:
-    cli                           ; Disable interrupts to prevent nested interrupts
-    pushad                        
+    cli                           ; Disable interrupts to prevent nested exceptions
+
+    push eax                      ; Save EAX
+    push ecx                      ; Save ECX
+    push edx                      ; Save EDX
+    push ebx                      ; Save EBX
+
+    mov eax, esp
+    add eax, 16                   ; Adjust ESP for previous stack frame
+
+    push eax                      ; Save original ESP before modifications
+    push ebp                      ; Save EBP
+    push esi                      ; Save ESI
+    push edi                      ; Save EDI
+
+    ; Save segment registers
+    push ds
+    push es
+    push fs
+    push gs
+
+    ; Load kernel data segment (0x10) into all segment registers
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Pass pointer to saved register state to the C handler
+    mov eax, esp
+    push eax
     call isr_default_handler      
-    popad                         ; Restore the saved state
-    sti                           ; Enable interrupts
+
+    add esp, 4                    ; Clean up function argument
+
+    ; Restore segment registers
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    ; Restore general-purpose registers (equivalent to popad)
+    pop edi
+    pop esi
+    pop ebp
+    add esp, 4                    ; Skip original ESP (not restored)
+    pop ebx
+    pop edx
+    pop ecx
+    pop eax
+
+    sti                           ; Re-enable interrupts
     iret                          ; Return from interrupt

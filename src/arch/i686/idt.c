@@ -32,6 +32,7 @@ extern void asm_syscall(void);
 extern void asm_isr0_divide_exception(void);
 extern void asm_isr1_debug_exception(void);
 extern void asm_isr2_nmi_interrupt(void);
+extern void asm_isr13_gp_fault(void);
 extern void asm_isr14_page_fault(void);
 
 /* PUBLIC API */
@@ -40,11 +41,12 @@ void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
 void isr_0h_fault_handler(interrupt_frame_t* regs);
 void isr_1h_handler(interrupt_frame_t* regs);
 void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);
+void isr_13_gp_fault_handler(interrupt_frame_t* regs);
 void isr_14h_handler(void);
 void irq0_handler(void);
 void irq1_handler(void);
 void irq12_handler(void);
-void isr_default_handler(void);
+void isr_default_handler(interrupt_frame_t* regs);
 
 /* INTERNAL API */
 static void _pic1_send_eoi(void);
@@ -277,7 +279,6 @@ void isr_1h_handler(interrupt_frame_t* regs)
 
 void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs)
 {
-	printf("[NMI] Non-Maskable Interrupt (INT 2)\n");
 	const uint8_t status = inb(0x61);
 
 	if (status & 0x80) {
@@ -291,6 +292,15 @@ void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs)
 	if (status & 0x80) {
 		panic("[NMI] Critical Memory Error - Halting system!\n");
 	};
+	printf("%s\n", interrupt_messages[2]);
+	return;
+};
+
+void isr_13_gp_fault_handler(interrupt_frame_t* regs)
+{
+	_dump_register(regs);
+	printf("%s\n", interrupt_messages[13]);
+	panic("GPF: Invalid Segment Access or Instruction!");
 	return;
 };
 
@@ -391,7 +401,7 @@ void irq12_handler(void)
 	return;
 };
 
-void isr_default_handler(void)
+void isr_default_handler(interrupt_frame_t* regs)
 {
 	_pic1_send_eoi();
 	return;
@@ -413,6 +423,7 @@ void idt_init(void)
 	idt_set(0x0, asm_isr0_divide_exception, IDT_KERNEL_INT_GATE);
 	idt_set(0x1, asm_isr1_debug_exception, IDT_KERNEL_INT_GATE);
 	idt_set(0x2, asm_isr2_nmi_interrupt, IDT_KERNEL_INT_GATE);
+	idt_set(0xD, asm_isr13_gp_fault, IDT_KERNEL_INT_GATE);
 	idt_set(0xE, asm_isr14_page_fault, IDT_KERNEL_INT_GATE);
 	idt_set(0x80, asm_syscall, IDT_USER_INT_GATE);
 	asm_idt_loader(&idtr_descriptor);

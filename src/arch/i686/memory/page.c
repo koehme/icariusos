@@ -68,6 +68,14 @@ uint32_t* page_create_directory(uint32_t flags)
 			new_page_dir[i] = (kernel_directory[i] & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE);
 		};
 	};
+	/* 🔥init usermode-stack for ring 3 */
+	const uint32_t user_stack_phys = pfa_alloc();
+
+	if (!user_stack_phys) {
+		return 0x0;
+	};
+	page_map(USER_STACK_START, user_stack_phys, PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+
 	return new_page_dir;
 };
 

@@ -51,10 +51,11 @@ void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
 void isr_0h_fault_handler(interrupt_frame_t* regs);
 void isr_1h_handler(interrupt_frame_t* regs);
 void isr_2h_nmi_interrupt_handler(interrupt_frame_t* regs);
+void isr_13_gp_fault_handler(interrupt_frame_t* regs);
 void isr_14h_handler(void);
 void irq0_handler(void);
 void irq1_handler(void);
 void irq12_handler(void);
-void isr_default_handler(void);
+void isr_default_handler(interrupt_frame_t* regs);
 
 #endif

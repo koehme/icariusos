@@ -93,6 +93,15 @@
 #define GDT_TSS_SEGMENT 0x28	     // Offset TSS-Segment
 /*
 ====================================
+    GDT Flags for i686 (32-bit Protected Mode)
+====================================
+*/
+#define GDT_FLAG_GRANULARITY_4K  0x80  // Use 4 KiB granularity
+#define GDT_FLAG_32BIT_MODE      0x40  // 32-bit protected mode
+#define GDT_FLAG_LIMIT_HIGH_MASK 0x0F  // Upper 4 bits of segment limit
+#define GDT_FLAGS_DEFAULT (GDT_FLAG_GRANULARITY_4K | GDT_FLAG_32BIT_MODE | GDT_FLAG_LIMIT_HIGH_MASK)  // 0xCF
+/*
+====================================
     Memory i686
 ====================================
 */

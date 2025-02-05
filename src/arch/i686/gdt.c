@@ -43,10 +43,10 @@ void gdt_init(void)
 	gdt.limit = (sizeof(gdt_entry_t) * 6) - 1;
 	gdt.base = (uint32_t)&gdt_entries;
 	gdt_set_entry(0, 0, 0, GDT_ACCESS_NULL, 0);
-	gdt_set_entry(1, 0, 0xFFFFFFFF, GDT_ACCESS_KERNEL_CODE, 0xCF);
-	gdt_set_entry(2, 0, 0xFFFFFFFF, GDT_ACCESS_KERNEL_DATA, 0xCF);
-	gdt_set_entry(3, 0, 0xFFFFFFFF, GDT_ACCESS_USER_CODE, 0xCF);
-	gdt_set_entry(4, 0, 0xFFFFFFFF, GDT_ACCESS_USER_DATA, 0xCF);
+	gdt_set_entry(1, 0, 0xFFFFFFFF, GDT_ACCESS_KERNEL_CODE, GDT_FLAGS_DEFAULT);
+	gdt_set_entry(2, 0, 0xFFFFFFFF, GDT_ACCESS_KERNEL_DATA, GDT_FLAGS_DEFAULT);
+	gdt_set_entry(3, 0, 0xFFFFFFFF, GDT_ACCESS_USER_CODE, GDT_FLAGS_DEFAULT);
+	gdt_set_entry(4, 0, 0xFFFFFFFF, GDT_ACCESS_USER_DATA, GDT_FLAGS_DEFAULT);
 	gdt_set_entry(5, (uint32_t)&tss, sizeof(tss_t) - 1, GDT_ACCESS_TSS, 0x00);
 	asm_gdt_flush((uint32_t)&gdt);
 	return;
