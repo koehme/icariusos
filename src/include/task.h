@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-
 typedef struct task_registers {
 	uint32_t edi; // Offset +0   | General-purpose register EDI
 	uint32_t esi; // Offset +4   | General-purpose register ESI

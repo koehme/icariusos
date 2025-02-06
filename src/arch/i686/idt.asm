@@ -1,9 +1,9 @@
 extern syscall_dispatch
 
-extern isr_0h_fault_handler
-extern isr_1h_handler
-extern isr_2h_nmi_interrupt_handler
-extern isr_13_gp_fault_handler
+extern isr_0_handler
+extern isr_1_handler
+extern isr_2_handler
+extern isr_13_handler
 extern isr_14h_handler
 extern irq0_handler
 extern irq1_handler
@@ -18,10 +18,10 @@ global asm_do_sti
 global asm_do_cli
 
 global asm_syscall
-global asm_isr0_divide_exception
-global asm_isr1_debug_exception
-global asm_isr2_nmi_interrupt
-global asm_isr13_gp_fault
+global asm_isr0_wrapper
+global asm_isr1_wrapper
+global asm_isr2_wrapper
+global asm_isr13_wrapper
 global asm_isr14_page_fault
 global asm_irq0_timer
 global asm_irq1_keyboard
@@ -92,239 +92,83 @@ asm_syscall:
     iret
 
 ;=============================================================================
-; asm_isr0_divide_exception
+; asm_isr0_wrapper
 ; @param None
 ; @return None
 ;=============================================================================
-asm_isr0_divide_exception:
-    cli                           ; Disable interrupts to prevent nested exceptions
+asm_isr0_wrapper:
+    cli
 
-    push eax                      ; Save EAX
-    push ecx                      ; Save ECX
-    push edx                      ; Save EDX
-    push ebx                      ; Save EBX
+    pushad        
 
-    mov eax, esp
-    add eax, 16                   ; Adjust ESP for previous stack frame
+    push esp       
+    push dword 0x0    
 
-    push eax                      ; Save original ESP before modifications
-    push ebp                      ; Save EBP
-    push esi                      ; Save ESI
-    push edi                      ; Save EDI
+    call isr_0_handler
+    add esp, 8      
 
-    ; Save segment registers
-    push ds
-    push es
-    push fs
-    push gs
+    popad         
 
-    ; Load kernel data segment (0x10) into all segment registers
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    ; Pass pointer to saved register state to the C handler
-    mov eax, esp
-    push eax
-    call isr_0h_fault_handler           ; Call C-level exception handler
-
-    add esp, 4                    ; Clean up function argument
-
-    ; Restore segment registers
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    ; Restore general-purpose registers (equivalent to popad)
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4                    ; Skip original ESP (not restored)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-
-    sti                           ; Re-enable interrupts
-    iret                          ; Return from interrupt
-
+    sti
+    iret
 ;=============================================================================
-; asm_isr1_debug_exception
+; asm_isr1_wrapper
 ; @param None
 ; @return None
 ;=============================================================================
-asm_isr1_debug_exception:
-    cli                           ; Disable interrupts to prevent nested exceptions
+asm_isr1_wrapper:
+    cli
 
-    push eax                      ; Save EAX
-    push ecx                      ; Save ECX
-    push edx                      ; Save EDX
-    push ebx                      ; Save EBX
+    pushad         
 
-    mov eax, esp
-    add eax, 16                   ; Adjust ESP for previous stack frame
+    push esp        
+    push dword 0x1
 
-    push eax                      ; Save original ESP before modifications
-    push ebp                      ; Save EBP
-    push esi                      ; Save ESI
-    push edi                      ; Save EDI
+    call isr_1_handler
+    add esp, 8      
 
-    ; Save segment registers
-    push ds
-    push es
-    push fs
-    push gs
+    popad         
 
-    ; Load kernel data segment (0x10) into all segment registers
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    ; Pass pointer to saved register state to the C handler
-    mov eax, esp
-    push eax
-    call isr_1h_handler           ; Call C-level exception handler
-
-    add esp, 4                    ; Clean up function argument
-
-    ; Restore segment registers
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    ; Restore general-purpose registers (equivalent to popad)
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4                    ; Skip original ESP (not restored)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-
-    sti                           ; Re-enable interrupts
-    iret                          ; Return from interrupt
+    sti
+    iret
 
 ;=============================================================================
-; asm_isr2_nmi_interrupt
+; asm_isr2_wrapper
 ; @param None
 ; @return None
 ;=============================================================================
-asm_isr2_nmi_interrupt:
-    cli                           ; Disable interrupts to prevent nested exceptions
+asm_isr2_wrapper:
+    cli
 
-    push eax                      ; Save EAX
-    push ecx                      ; Save ECX
-    push edx                      ; Save EDX
-    push ebx                      ; Save EBX
+    pushad         
 
-    mov eax, esp
-    add eax, 16                   ; Adjust ESP for previous stack frame
+    push esp        
+    push dword 0x2
 
-    push eax                      ; Save original ESP before modifications
-    push ebp                      ; Save EBP
-    push esi                      ; Save ESI
-    push edi                      ; Save EDI
+    call isr_2_handler
+    add esp, 8      
 
-    ; Save segment registers
-    push ds
-    push es
-    push fs
-    push gs
+    popad         
 
-    ; Load kernel data segment (0x10) into all segment registers
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    sti
+    iret
 
-    ; Pass pointer to saved register state to the C handler
-    mov eax, esp
+asm_isr13_wrapper:
+    cli
+
+    pushad         
+
+    push esp        
+    mov eax, [esp + 40]
     push eax
-    call isr_2h_nmi_interrupt_handler           ; Call C-level exception handler
 
-    add esp, 4                    ; Clean up function argument
+    call isr_13_handler
+    add esp, 8      
 
-    ; Restore segment registers
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    popad         
 
-    ; Restore general-purpose registers (equivalent to popad)
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4                    ; Skip original ESP (not restored)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-
-    sti                           ; Re-enable interrupts
-    iret                          ; Return from interrupt
-
-asm_isr13_gp_fault:
-    cli                           ; Disable interrupts to prevent nested exceptions
-
-    push eax                      ; Save EAX
-    push ecx                      ; Save ECX
-    push edx                      ; Save EDX
-    push ebx                      ; Save EBX
-
-    mov eax, esp
-    add eax, 16                   ; Adjust ESP for previous stack frame
-
-    push eax                      ; Save original ESP before modifications
-    push ebp                      ; Save EBP
-    push esi                      ; Save ESI
-    push edi                      ; Save EDI
-
-    ; Save segment registers
-    push ds
-    push es
-    push fs
-    push gs
-
-    ; Load kernel data segment (0x10) into all segment registers
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    ; Pass pointer to saved register state to the C handler
-    mov eax, esp
-    push eax
-    call isr_13_gp_fault_handler           ; Call C-level exception handler
-
-    add esp, 4                    ; Clean up function argument
-
-    ; Restore segment registers
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    ; Restore general-purpose registers (equivalent to popad)
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4                    ; Skip original ESP (not restored)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-
-    sti                           ; Re-enable interrupts
-    iret                          ; Return from interrupt
+    sti
+    iret
 
 ;=============================================================================
 ; asm_isr14_page_fault
@@ -333,14 +177,19 @@ asm_isr13_gp_fault:
 ; @return None
 ;=============================================================================
 asm_isr14_page_fault:
-    cli                           ; Disable interrupts to prevent nested interrupts
-    pushad                        ; Saving general purpose registers, as this is an interrupt to avoid side effects
+    cli                        
+
+    pushad                    
+    
     mov eax, [esp+32]
-    call isr_14h_handler          ; Call C interrupt service routine handler for interrupt 14  
+
+    call isr_14h_handler         
     add esp, 4
-    popad                         ; Restore the saved state
-    sti                           ; Enable interrupts
-    iret                          ; Return from interrupt
+    
+    popad                        
+
+    sti                       
+    iret                      
     
 ;=============================================================================
 ; asm_irq0_timer

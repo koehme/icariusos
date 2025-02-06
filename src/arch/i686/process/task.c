@@ -9,7 +9,6 @@
 #include "icarius.h"
 #include "string.h"
 
-
 task_t* task_head = 0x0;
 task_t* task_tail = 0x0;
 task_t* curr_task = 0x0;
@@ -61,7 +60,7 @@ task_t* task_create_user(void (*entry_point)())
 	if (!user_task) {
 		return 0x0;
 	};
-	uint64_t user_code_phys = pfa_alloc();
+	const uint64_t user_code_phys = pfa_alloc();
 
 	if (!user_code_phys) {
 		return 0x0;

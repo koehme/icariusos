@@ -317,7 +317,7 @@ static void _test_page_dir_create(const uint32_t* pd)
 	return;
 };
 
-static void _test_divide_by_zero_fault(void)
+static void _test_isr_0(void)
 {
 	int a = 5;
 	int b = 0;
@@ -326,15 +326,29 @@ static void _test_divide_by_zero_fault(void)
 	return;
 };
 
-static void _test_debug_exception(void)
+static void _test_isr_1(void)
 {
 	asm volatile("int $1");
 	return;
 };
 
-static void _test_nmi_interrupt(void)
+static void _test_isr_2(void)
 {
 	asm volatile("int $2");
+	return;
+};
+
+static void _test_isr_13(void)
+{
+	asm volatile("int $13");
+	return;
+};
+
+static void _test_isr_14(void)
+{
+	printf("[TEST] Triggering Page Fault...\n");
+	volatile char* ptr = (volatile char*)0xFD400000;
+	*ptr = 'A';
 	return;
 };
 
@@ -378,6 +392,8 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | 0x02400000 - 0x027FFFFF   | 0x02400000 - 0x027FFFFF   | Identity Mapping for Kernel Initialization | Entry 9              |
 | 0x02800000 - 0x02BFFFFF   | 0x02800000 - 0x02BFFFFF   | Identity Mapping for Kernel Initialization | Entry 10             |
 | 0x02C00000 - 0x02FFFFFF   | 0x02C00000 - 0x02FFFFFF   | Identity Mapping for Kernel Initialization | Entry 11             |
+|---------------------------|---------------------------|--------------------------------------------|----------------------|
+| 0x00400000 - 0x02FFFFFF   | 0x00400000 - 0x02FFFFFF   | _remove_identity_mapping()				 | Entry 1 - 11			|
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
 | `0x00000000 - 0x3FFFFFFF` |        Dynamic            | User Program Code (Max. 1 GiB)             | Entry   0-255        |
 | `0x40000000 - 0xBFBFFFFF` |        Dynamic            | User Heap (Grows Upwards, Max. 1,75 GiB)   | Entry 256-766        |
@@ -451,20 +467,20 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
 	*/
-
-	// page_dump_curr_directory();
 	_remove_identity_mapping();
 	// pfa_dump(&pfa, true);
 
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
+	// page_dump_curr_directory();
 
-	/*
-	task_t* task = task_create_user(usermode_function);
-	asm_task_switch_to_userland(&task->registers);
-	printf("Zurück im Kernelmodus nach Usermode-Aufruf!\n");
-	*/
+	// TODO Currently Protection Fault triggered. Research and Debugging ...
+	// task_t* task = task_create_user(usermode_function);
+	// asm_task_switch_to_userland(&task->registers);
+
+	// printf("Back in Ring 0 (Kernelmode) :D\n");
+	// _test_isr_14();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
