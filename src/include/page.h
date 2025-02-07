@@ -36,7 +36,7 @@ void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_map_between(uint32_t* dir, uint32_t virt_start, uint32_t virt_end, uint32_t flags);
 void page_unmap(uint32_t virt_addr);
-uint32_t page_get_phys_addr(const uint32_t virt_addr);
+uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr);
 void page_restore_kernel_dir(void);
 
 #endif

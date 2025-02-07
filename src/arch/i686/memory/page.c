@@ -21,7 +21,7 @@ uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(const uint32_t virt_addr);
-uint32_t page_get_phys_addr(const uint32_t virt_addr);
+uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr);
 
 void page_dump_dir(uint32_t* dir)
 {
@@ -76,6 +76,17 @@ uint32_t* page_create_dir(uint32_t flags, void (*entry_point)())
 	};
 	page_map_between(dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);
 	page_map_between(dir, USER_STACK_START, USER_STACK_END, flags);
+
+	const uint32_t user_code_phys = page_get_phys_addr(dir, USER_CODE_START);
+	printf("[INFO] USER_CODE_START at 0x%x\n", user_code_phys);
+	void* user_code_virt = (void*)p2v(user_code_phys);
+	memcpy(user_code_virt, (void*)entry_point, 1024);
+
+	if (memcmp(user_code_virt, (void*)entry_point, 1024) == 0) {
+		printf("[SUCCESS] Code copied to Userspace at 0x%x!\n", USER_CODE_START);
+	} else {
+		printf("[ERROR] Code copy failed.\n");
+	};
 	return dir;
 };
 
@@ -118,10 +129,9 @@ void page_unmap(const uint32_t virt_addr)
 	return;
 };
 
-uint32_t page_get_phys_addr(const uint32_t virt_addr)
+uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	uint32_t* dir = page_get_dir();
 
 	if (!(dir[pd_index] & PAGE_PRESENT)) {
 		return 0x0;

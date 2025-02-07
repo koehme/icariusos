@@ -460,7 +460,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	asm_do_sti();
 
-	// _render_spinner(64);
 	// pci_enumerate_bus();
 
 	/*
@@ -474,14 +473,16 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
-	// _motd();
 
 	// pfa_dump(&pfa, false);
-
-	page_dump_dir(page_get_dir());
+	// page_dump_dir(page_get_dir());
 	task_t* task = task_create(&usermode_function);
-	page_dump_dir(task->page_dir);
+	// page_dump_dir(task->page_dir);
 
+	/*
+	_render_spinner(64);
+	_motd();
+	*/
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
 		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
