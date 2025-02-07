@@ -14,34 +14,33 @@
 extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
-void page_dump_curr_directory(void);
-uint32_t* page_create_directory(uint32_t flags);
-void page_set_directory(uint32_t* self);
-uint32_t* page_get_directory(void);
+void page_dump_dir(void);
+uint32_t* page_create_dir(uint32_t flags);
+void page_set_dir(uint32_t* self);
+uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
-void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
+void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(const uint32_t virt_addr);
 uint32_t page_get_phys_addr(const uint32_t virt_addr);
 
-void page_dump_curr_directory(void)
+void page_dump_dir(void)
 {
-	uint32_t* page_directory = page_get_directory();
+	uint32_t* dir = page_get_dir();
 
-	if (!page_directory) {
-		printf("[ERROR] No active Page Directory found!\n");
+	if (!dir) {
+		printf("[ERROR] No Page Directory found!\n");
 		return;
 	};
 	printf("\n");
 	printf("====================================\n");
 	printf("          PAGE DIR STATISTICS       \n");
 	printf("====================================\n");
-
-	printf("Physical Address: 0x%x\n", page_directory);
+	printf("Physical Address: 0x%x\n", dir);
 
 	for (uint32_t i = 0; i < 1024; i++) {
-		if (page_directory[i] & PAGE_PRESENT) {
-			const uint32_t phys_addr = page_directory[i] & 0xFFC00000;
-			const uint32_t flags = page_directory[i] & 0xFFF;
+		if (dir[i] & PAGE_PRESENT) {
+			const uint32_t phys_addr = dir[i] & 0xFFC00000;
+			const uint32_t flags = dir[i] & 0xFFF;
 
 			printf("Entry %d: PhysAddr=0x%x | Flags=0x%x | %s %s %s\n", i, phys_addr, flags, (flags & PAGE_PRESENT) ? "P" : "-",
 			       (flags & PAGE_WRITABLE) ? "W" : "-", (flags & PAGE_USER) ? "U" : "K");
@@ -51,7 +50,7 @@ void page_dump_curr_directory(void)
 	return;
 };
 
-uint32_t* page_create_directory(uint32_t flags)
+uint32_t* page_create_dir(uint32_t flags)
 {
 	uint64_t phys_addr = pfa_alloc();
 
@@ -76,13 +75,13 @@ uint32_t* page_create_directory(uint32_t flags)
 	return new_page_dir;
 };
 
-void page_set_directory(uint32_t* self)
+void page_set_dir(uint32_t* self)
 {
 	asm volatile("mov %0, %%cr3" : : "r"(self));
 	return;
 };
 
-uint32_t* page_get_directory(void)
+uint32_t* page_get_dir(void)
 {
 	uint32_t cr3;
 	asm volatile("mov %%cr3, %0" : "=r"(cr3));
@@ -92,16 +91,16 @@ uint32_t* page_get_directory(void)
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	uint32_t* page_directory = page_get_directory();
-	page_directory[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
+	uint32_t* dir = page_get_dir();
+	dir[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
 	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
 	return;
 };
 
-void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
+void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	page_directory[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
+	dir[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
 	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
 	return;
 };
@@ -109,8 +108,8 @@ void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_ad
 void page_unmap(const uint32_t virt_addr)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	uint32_t* page_directory = page_get_directory();
-	page_directory[pd_index] = 0;
+	uint32_t* dir = page_get_dir();
+	dir[pd_index] = 0;
 	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
 	return;
 };
@@ -118,16 +117,17 @@ void page_unmap(const uint32_t virt_addr)
 uint32_t page_get_phys_addr(const uint32_t virt_addr)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	uint32_t* page_directory = page_get_directory();
+	uint32_t* dir = page_get_dir();
 
-	if (!(page_directory[pd_index] & PAGE_PRESENT)) {
+	if (!(dir[pd_index] & PAGE_PRESENT)) {
 		return 0x0;
 	};
-	return (page_directory[pd_index] & 0xFFC00000) + (virt_addr & 0x3FFFFF);
+	return (dir[pd_index] & 0xFFC00000) + (virt_addr & 0x3FFFFF);
 };
 
 void page_restore_kernel_dir(void)
 {
-	page_set_directory(kernel_directory);
+	const uint32_t phys_addr = (uint32_t)(v2p((void*)kernel_directory));
+	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
 	return;
 };

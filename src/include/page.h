@@ -26,10 +26,10 @@
 #define PAGE_PS 0x80	   // Page Size (1 = 4 MiB page, only in PDE)
 #define PAGE_GLOBAL 0x100  // Global page (remains cached in TLB across context switches)
 
-void page_dump_curr_directory(void);
-uint32_t* page_create_directory(uint32_t flags);
-void page_set_directory(uint32_t* self);
-uint32_t* page_get_directory(void);
+void page_dump_dir(void);
+uint32_t* page_create_dir(uint32_t flags);
+void page_set_dir(uint32_t* self);
+uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(uint32_t virt_addr);

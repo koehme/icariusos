@@ -441,7 +441,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pic_init();
 	idt_init();
 	pfa_init(&pfa);
-	page_set_directory(page_get_directory());
+
+	page_set_dir(page_get_dir());
+	page_restore_kernel_dir();
 
 	_read_multiboot2(magic, addr, &vbe_display);
 	_check_kernel_size(MAX_KERNEL_SIZE);
@@ -473,7 +475,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
-	page_dump_curr_directory();
+	page_dump_dir();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
