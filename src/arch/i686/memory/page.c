@@ -8,14 +8,14 @@
  */
 
 #include "page.h"
-#include "string.h"
+
 
 /* EXTERNAL API */
 extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
-void page_dump_dir(void);
-uint32_t* page_create_dir(uint32_t flags);
+void page_dump_dir(uint32_t* dir);
+uint32_t* page_create_dir(uint32_t flags, void (*entry_point)());
 void page_set_dir(uint32_t* self);
 uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
@@ -23,34 +23,33 @@ void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_
 void page_unmap(const uint32_t virt_addr);
 uint32_t page_get_phys_addr(const uint32_t virt_addr);
 
-void page_dump_dir(void)
+void page_dump_dir(uint32_t* dir)
 {
-	uint32_t* dir = page_get_dir();
-
 	if (!dir) {
-		printf("[ERROR] No Page Directory found!\n");
+		printf("[ERROR] Invalid Page Directory!\n");
 		return;
 	};
 	printf("\n");
 	printf("====================================\n");
 	printf("          PAGE DIR STATISTICS       \n");
 	printf("====================================\n");
-	printf("Physical Address: 0x%x\n", dir);
+	printf("Physical Address: 0x%x\n", v2p(dir));
 
 	for (uint32_t i = 0; i < 1024; i++) {
 		if (dir[i] & PAGE_PRESENT) {
-			const uint32_t phys_addr = dir[i] & 0xFFC00000;
+			const uint32_t virt_addr = i * 0x400000;
+			const uint32_t phys_addr = dir[i] & 0xFFC00000; // 4 MiB Page Mask
 			const uint32_t flags = dir[i] & 0xFFF;
 
-			printf("Entry %d: PhysAddr=0x%x | Flags=0x%x | %s %s %s\n", i, phys_addr, flags, (flags & PAGE_PRESENT) ? "P" : "-",
-			       (flags & PAGE_WRITABLE) ? "W" : "-", (flags & PAGE_USER) ? "U" : "K");
+			printf("%d  | 0x%x | 0x%x | 0x%x  | %s %s %s %s\n", i, virt_addr, phys_addr, flags, (flags & PAGE_PRESENT) ? "P" : "-",
+			       (flags & PAGE_WRITABLE) ? "W" : "-", (flags & PAGE_USER) ? "U" : "K", (flags & PAGE_PS) ? "4M" : "4K");
 		};
 	};
-	printf("====================================\n\n");
+	printf("====================================\n");
 	return;
 };
 
-uint32_t* page_create_dir(uint32_t flags)
+uint32_t* page_create_dir(uint32_t flags, void (*entry_point)())
 {
 	uint64_t phys_addr = pfa_alloc();
 
@@ -63,16 +62,21 @@ uint32_t* page_create_dir(uint32_t flags)
 		return 0x0;
 	};
 	const uint32_t virt_addr = (uint32_t)p2v((uint32_t)phys_addr);
-	uint32_t* new_page_dir = (uint32_t*)virt_addr;
-	page_map_dir(new_page_dir, virt_addr, phys_addr, flags);
+	uint32_t* dir = (uint32_t*)virt_addr;
+	page_map_dir(dir, virt_addr, phys_addr, flags);
+
 	memset((void*)virt_addr, 0, PAGE_SIZE);
 
 	for (int32_t i = 768; i < 1024; i++) {
-		if (kernel_directory[i] & PAGE_PRESENT) {
-			new_page_dir[i] = (kernel_directory[i] & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+		const uint32_t entry = kernel_directory[i];
+
+		if (entry & (1 << 0)) {
+			dir[i] = (entry & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE);
 		};
 	};
-	return new_page_dir;
+	page_map_between(dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);
+	page_map_between(dir, USER_STACK_START, USER_STACK_END, flags);
+	return dir;
 };
 
 void page_set_dir(uint32_t* self)
@@ -129,5 +133,27 @@ void page_restore_kernel_dir(void)
 {
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)kernel_directory));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
+	return;
+};
+
+void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, uint32_t flags)
+{
+	if (!dir) {
+		printf("[ERROR] Invalid Page Directory!\n");
+		return;
+	};
+	virt_start_addr &= 0xFFFFF000;
+	virt_end_addr = (virt_end_addr + 0xFFF) & 0xFFFFF000;
+
+	for (uint32_t virt_curr_addr = virt_start_addr; virt_curr_addr < virt_end_addr; virt_curr_addr += PAGE_SIZE) {
+		uint32_t phys_page = pfa_alloc();
+
+		if (!phys_page) {
+			printf("[ERROR] Page Frame Allocator exhausted!\n");
+			return;
+		};
+		page_map_dir(dir, virt_curr_addr, phys_page, flags);
+	};
+	printf("Mapped Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };

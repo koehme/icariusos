@@ -470,12 +470,17 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_mount_fs(ata_dev);
 	*/
 	_remove_identity_mapping();
-	// pfa_dump(&pfa, true);
+	pfa_dump(&pfa, true);
 
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
-	page_dump_dir();
+
+	// pfa_dump(&pfa, false);
+
+	page_dump_dir(page_get_dir());
+	task_t* task = task_create(&usermode_function);
+	page_dump_dir(task->page_dir);
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

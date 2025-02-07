@@ -31,7 +31,6 @@ typedef struct task {
 
 extern void asm_task_switch_to_userland(task_registers_t* regs);
 
-task_t* task_create_user(void (*entry_point)());
-void task_load_addr_space(task_t* task);
+task_t* task_create(void (*entry_point)());
 
 #endif

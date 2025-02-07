@@ -4,6 +4,7 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break kmain
+break task_create_user
+break page_map_between
 
 c
