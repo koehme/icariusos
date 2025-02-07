@@ -45,5 +45,5 @@ asm_task_restore_register:
     mov eax, [ebx+24]
     mov ebx, [ebx+12]
 
-    add esp, 4
+    pop ebp
     ret

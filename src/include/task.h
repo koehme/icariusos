@@ -37,5 +37,7 @@ extern void asm_task_switch_to_userland(task_registers_t* regs);
 
 int32_t task_init(task_t* self);
 task_t* task_create_user(void (*entry_point)());
+void task_restore_kernel_directory(void);
+void task_switch_page_directory(task_t* task);
 
 #endif

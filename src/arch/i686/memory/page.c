@@ -19,6 +19,7 @@ uint32_t* page_create_directory(uint32_t flags);
 void page_set_directory(uint32_t* self);
 uint32_t* page_get_directory(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
+void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_unmap(const uint32_t virt_addr);
 uint32_t page_get_phys_addr(const uint32_t virt_addr);
 
@@ -57,25 +58,21 @@ uint32_t* page_create_directory(uint32_t flags)
 	if (!phys_addr) {
 		return 0x0;
 	};
-	const uint32_t virt_addr = phys_addr + KERNEL_VIRTUAL_START;
-	page_map(virt_addr, phys_addr, flags);
 
-	memset((void*)virt_addr, 0, PAGE_SIZE);
+	if (phys_addr & 0x3FFFFF) {
+		printf("[ERROR] Page Directory phys_addr (0x%x) is not 4 MiB aligned!\n", phys_addr);
+		return 0x0;
+	};
+	const uint32_t virt_addr = (uint32_t)p2v((uint32_t)phys_addr);
 	uint32_t* new_page_dir = (uint32_t*)virt_addr;
+	page_map_dir(new_page_dir, virt_addr, phys_addr, flags);
+	memset((void*)virt_addr, 0, PAGE_SIZE);
 
 	for (int32_t i = 768; i < 1024; i++) {
 		if (kernel_directory[i] & PAGE_PRESENT) {
-			new_page_dir[i] = (kernel_directory[i] & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE);
+			new_page_dir[i] = (kernel_directory[i] & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 		};
 	};
-	/* 🔥init usermode-stack for ring 3 */
-	const uint32_t user_stack_phys = pfa_alloc();
-
-	if (!user_stack_phys) {
-		return 0x0;
-	};
-	page_map(USER_STACK_START, user_stack_phys, PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
-
 	return new_page_dir;
 };
 
@@ -101,6 +98,14 @@ void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 	return;
 };
 
+void page_map_dir(uint32_t* page_directory, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
+{
+	const uint32_t pd_index = virt_addr >> 22;
+	page_directory[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
+	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
+	return;
+};
+
 void page_unmap(const uint32_t virt_addr)
 {
 	const uint32_t pd_index = virt_addr >> 22;
@@ -119,4 +124,10 @@ uint32_t page_get_phys_addr(const uint32_t virt_addr)
 		return 0x0;
 	};
 	return (page_directory[pd_index] & 0xFFC00000) + (virt_addr & 0x3FFFFF);
+};
+
+void page_restore_kernel_dir(void)
+{
+	page_set_directory(kernel_directory);
+	return;
 };

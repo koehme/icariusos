@@ -426,9 +426,9 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 
 void usermode_function(void)
 {
-	asm volatile("movl $1, %eax\n"
+	asm volatile("movl $1, %eax\n" //
 		     "int $0x80\n"
-		     "hlt");
+		     "hlt\n");
 	return;
 };
 
@@ -473,14 +473,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
 	// _motd();
-	// page_dump_curr_directory();
-
-	// TODO Currently Protection Fault triggered. Research and Debugging ...
-	// task_t* task = task_create_user(usermode_function);
-	// asm_task_switch_to_userland(&task->registers);
-
-	// printf("Back in Ring 0 (Kernelmode) :D\n");
-	// _test_isr_14();
+	page_dump_curr_directory();
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);

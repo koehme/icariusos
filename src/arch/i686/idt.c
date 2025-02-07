@@ -340,8 +340,6 @@ void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		printf("[CRITICAL] Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
-		panic(interrupt_messages[13]);
 		break;
 	};
 	};
