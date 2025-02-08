@@ -29,8 +29,9 @@ typedef struct task {
 	task_registers_t registers;
 } task_t;
 
-extern void asm_task_switch_to_userland(task_registers_t* regs);
+extern void asm_enter_usermode(task_registers_t* regs);
 
-task_t* task_create(void (*entry_point)());
+task_t* task_create(void (*user_eip)());
+void task_dump(task_t* self);
 
 #endif

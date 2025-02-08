@@ -478,7 +478,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// page_dump_dir(page_get_dir());
 	task_t* task = task_create(&usermode_function);
 	// page_dump_dir(task->page_dir);
-
+	task_dump(task);
 	/*
 	_render_spinner(64);
 	_motd();

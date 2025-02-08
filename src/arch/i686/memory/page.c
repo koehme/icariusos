@@ -15,7 +15,7 @@ extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
 void page_dump_dir(uint32_t* dir);
-uint32_t* page_create_dir(uint32_t flags, void (*entry_point)());
+uint32_t* page_create_dir(uint32_t flags, void (*user_eip)());
 void page_set_dir(uint32_t* self);
 uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
@@ -49,7 +49,7 @@ void page_dump_dir(uint32_t* dir)
 	return;
 };
 
-uint32_t* page_create_dir(uint32_t flags, void (*entry_point)())
+uint32_t* page_create_dir(uint32_t flags, void (*user_eip)())
 {
 	uint64_t phys_addr = pfa_alloc();
 
@@ -80,12 +80,12 @@ uint32_t* page_create_dir(uint32_t flags, void (*entry_point)())
 	const uint32_t user_code_phys = page_get_phys_addr(dir, USER_CODE_START);
 	printf("[INFO] USER_CODE_START at 0x%x\n", user_code_phys);
 	void* user_code_virt = (void*)p2v(user_code_phys);
-	memcpy(user_code_virt, (void*)entry_point, 1024);
+	memcpy(user_code_virt, (void*)user_eip, 1024);
 
-	if (memcmp(user_code_virt, (void*)entry_point, 1024) == 0) {
-		printf("[SUCCESS] Code copied to Userspace at 0x%x!\n", USER_CODE_START);
+	if (memcmp(user_code_virt, (void*)user_eip, 1024) == 0) {
+		printf("[SUCCESS] User Code copied to Userspace at 0x%x\n", USER_CODE_START);
 	} else {
-		printf("[ERROR] Code copy failed.\n");
+		printf("[ERROR] User Code cannot be copied.\n");
 	};
 	return dir;
 };
