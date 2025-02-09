@@ -4,7 +4,7 @@ extern isr_0_handler
 extern isr_1_handler
 extern isr_2_handler
 extern isr_13_handler
-extern isr_14h_handler
+extern isr_14_handler
 extern irq0_handler
 extern irq1_handler
 extern irq12_handler
@@ -159,9 +159,9 @@ asm_isr13_wrapper:
     pushad         
 
     push esp        
-    mov eax, [esp + 40]
+    mov eax, [esp + 36]
     push eax
-
+    ; void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs)
     call isr_13_handler
     add esp, 8      
 
@@ -179,13 +179,18 @@ asm_isr13_wrapper:
 asm_isr14_page_fault:
     cli                        
 
-    pushad                    
+    pushad ; Push EAX, ECX, EDX, EBX, original ESP, EBP, ESI, and EDI (ecx at +4,+8,+12,+16,+20,+24,+28 .. )             
     
-    mov eax, [esp+32]
+    push esp    ; interrupt_frame_t
+    mov eax, [esp + 36] ; Errorcode at +36
+    push eax
 
-    call isr_14h_handler         
-    add esp, 4
-    
+    mov eax, cr2  
+    push eax
+    ; void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
+    call isr_14_handler         
+    add esp, 16
+
     popad                        
 
     sti                       

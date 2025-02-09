@@ -50,7 +50,7 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
-void isr_14h_handler(void);
+void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
 void irq0_handler(void);
 void irq1_handler(void);
 void irq12_handler(void);

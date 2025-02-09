@@ -347,7 +347,7 @@ static void _test_isr_13(void)
 static void _test_isr_14(void)
 {
 	printf("[TEST] Triggering Page Fault...\n");
-	volatile char* ptr = (volatile char*)0xFD400000;
+	volatile char* ptr = (volatile char*)0xE0400000; // Page Dir => 897
 	*ptr = 'A';
 	return;
 };
@@ -469,7 +469,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_mount_fs(ata_dev);
 	*/
 	_remove_identity_mapping();
-	pfa_dump(&pfa, true);
+	// pfa_dump(&pfa, true);
 
 	// _test_vfs_read("A:/LEET/TEST.TXT");
 	// _test_heap(4096);
@@ -478,7 +478,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// page_dump_dir(page_get_dir());
 	task_t* task = task_create(&usermode_function);
 	// page_dump_dir(task->page_dir);
-	task_dump(task);
+	// task_dump(task);
+
+	// page_dump_dir(page_get_dir());
+	_test_isr_14();
+	// page_dump_dir(page_get_dir());
 	/*
 	_render_spinner(64);
 	_motd();

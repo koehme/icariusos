@@ -42,7 +42,8 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
-void isr_14h_handler(void);
+void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
+
 void irq0_handler(void);
 void irq1_handler(void);
 void irq12_handler(void);
@@ -375,10 +376,8 @@ void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_14h_handler(void)
+void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
 {
-	uint32_t error_code;
-	asm volatile("mov %%eax, %0" : "=r"(error_code) : : "eax");
 	const int32_t present = error_code & 0b1;		  // Page Present
 	const int32_t write = error_code & 0b10;		  // Write Access
 	const int32_t user_mode = error_code & 0b100;		  // User-/Supervisor-Modus
@@ -421,8 +420,6 @@ void isr_14h_handler(void)
 	if (sgx_flag) {
 		printf(" - SGX-Specific Access Control Violation (SGX flag)\n");
 	};
-	uint32_t fault_addr;
-	asm volatile("mov %%cr2, %0" : "=r"(fault_addr));
 	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
 	// Align fault address to 4 MiB boundary by clearing lower 22 bits
 	const uint32_t aligned_fault_addr = fault_addr & 0xFFC00000;
