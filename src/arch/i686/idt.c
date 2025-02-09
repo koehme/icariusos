@@ -32,8 +32,11 @@ extern void asm_syscall(void);
 extern void asm_isr0_wrapper(void);
 extern void asm_isr1_wrapper(void);
 extern void asm_isr2_wrapper(void);
+extern void asm_isr6_wrapper(void);
+extern void asm_isr8_wrapper(void);
+extern void asm_isr12_wrapper(void);
 extern void asm_isr13_wrapper(void);
-extern void asm_isr14_page_fault(void);
+extern void asm_isr14_wrapper(void);
 
 /* PUBLIC API */
 void idt_init(void);
@@ -41,6 +44,9 @@ void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
 void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
+void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs);
+void isr_8_handler(uint32_t error_code, interrupt_frame_t* regs);
+void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs);
 void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
 void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
 
@@ -212,28 +218,23 @@ static void _dump_register(const interrupt_frame_t* regs)
 	if (regs->ss) {
 		printf("\n");
 		const uint32_t* stack = (uint32_t*)regs->esp;
-
 		printf("==========================\n");
-		printf("= Stack Dump (Only Ring 3)\n");
+		printf("= Stack Dump (ESP)\n");
 		printf("==========================\n");
 
 		for (int32_t i = 3; i >= 1; i--) {
 			const void* addr = stack + i;
 			const uint32_t offset = i * 4;
-
-			printf("\n--- [ESP + %d] ---\n", offset);
-			printf(" Address  : 0x%x\n", addr);
-			printf(" Value    : 0x%x\n", stack[i]);
-			printf("-------------------------\n");
+			offset >= 10 ? printf("ESP+%d", offset) : printf("ESP+%d ", offset);
+			printf(" (void*) 0x%x ", addr);
+			printf("[0x%x]\n", stack[i]);
 		};
 		for (int32_t i = 0; i < 3; i++) {
 			const void* addr = stack - i;
 			const uint32_t offset = i * 4;
-
-			printf("\n--- [ESP - %d] ---\n", offset);
-			printf(" Address  : 0x%x\n", addr);
-			printf(" Value    : 0x%x\n", stack[-i]);
-			printf("-------------------------\n");
+			offset >= 10 ? printf("ESP-%d", offset) : printf("ESP-%d ", offset);
+			printf(" (void*) 0x%x ", addr);
+			printf("[0x%x]\n", stack[-i]);
 		};
 	};
 	return;
@@ -241,6 +242,9 @@ static void _dump_register(const interrupt_frame_t* regs)
 
 void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 {
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Division by Zero (#DE) Exception\n");
+	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
 		_dump_register(regs);
@@ -248,11 +252,11 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 		return;
 	};
 	case GDT_USER_CODE_SEGMENT: {
-		printf("[INFO] User Process triggered %s detected.", interrupt_messages[0]);
+		printf(" - User Process triggered %s detected.", interrupt_messages[0]);
 		break;
 	};
 	default: {
-		printf("[CRITICAL] Unknown GDT Code Segment 0x%s detected.\n", regs->cs);
+		printf(" - Unknown GDT Code Segment 0x%s detected.\n", regs->cs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -262,6 +266,9 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 
 void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 {
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Debug Exception (#DB)\n");
+	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
 		_dump_register(regs);
@@ -272,7 +279,7 @@ void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		printf("[CRITICAL] Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		printf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
 		panic(interrupt_messages[isr_num]);
 		break;
 	};
@@ -301,16 +308,20 @@ void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 
 void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 {
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Non-Maskable Interrupt (NMI) Exception\n");
+	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
 		_dump_register(regs);
-		break;
+		panic(interrupt_messages[isr_num]);
+		return;
 	};
 	case GDT_USER_CODE_SEGMENT: {
 		break;
 	};
 	default: {
-		printf("[CRITICAL] Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		printf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
 		panic(interrupt_messages[isr_num]);
 		break;
 	};
@@ -318,66 +329,143 @@ void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	const uint8_t status = inb(0x61);
 
 	if (status & 0x80) {
-		printf("[NMI] Memory Parity Error!\n");
+		printf(" - Memory Parity Error!\n");
 	};
 	if (status & 0x40) {
-		printf("[NMI] I/O Channel Check Error!\n");
+		printf(" - I/O Channel Check Error!\n");
 	};
 	if (status & 0x80) {
-		panic("[NMI] Critical Memory Error - Halting system!\n");
+		panic(" - Critical Memory Error - Halting System!\n");
 	};
 	printf("%s\n", interrupt_messages[isr_num]);
 	return;
 };
 
-void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
+void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs)
 {
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Invalid Opcode (#UD) Exception\n");
+	printf("----------------------------------------------------\n");
+
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
 		_dump_register(regs);
-		break;
+		panic(interrupt_messages[isr_num]);
+		return;
 	};
 	case GDT_USER_CODE_SEGMENT: {
+		printf(" - User Process triggered an invalid Opcode exception.\n");
 		break;
 	};
 	default: {
-		break;
+		printf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		panic(interrupt_messages[isr_num]);
+		return;
 	};
+	};
+	return;
+};
+
+void isr_8_handler(uint32_t error_code, interrupt_frame_t* regs)
+{
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Double Fault (#DF) Exception\n");
+	printf("----------------------------------------------------\n");
+	printf(" - Error Code: 0x%x\n", error_code);
+	printf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
+	printf(" - Code Segment (CS): 0x%x\n", regs->cs);
+	_dump_register(regs);
+	panic(interrupt_messages[0x8]);
+	return;
+};
+
+void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs)
+{
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Stack-Segment Fault (#SS) Exception\n");
+	printf("----------------------------------------------------\n");
+	printf(" - Error Code: 0x%x\n", error_code);
+	printf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
+	printf(" - Code Segment (CS): 0x%x\n", regs->cs);
+
+	if (error_code & 1) {
+		printf(" - Protection Violation (Memory Access Violation)\n");
+	} else {
+		printf(" - Stack-Segment Not Present or Invalid Descriptor\n");
+	};
+
+	if (error_code & 2) {
+		printf(" - Fault occurred in USER MODE (Ring 3)\n");
+	} else {
+		printf(" - Fault occurred in KERNEL MODE (Ring 0)\n");
+	};
+	_dump_register(regs);
+	panic(interrupt_messages[0xC]);
+	return;
+};
+
+void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
+{
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] General Protection Fault (#GP) Exception\n");
+	printf("----------------------------------------------------\n");
+	printf(" - Error Code: 0x%x\n", error_code);
+	printf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
+	printf(" - Code Segment (CS): 0x%x\n", regs->cs);
+
+	if (error_code & 1) {
+		printf(" - Protection Violation (Memory Access Violation)\n");
+	} else {
+		printf(" - Segment Not Present or Invalid Descriptor\n");
+	};
+
+	if (error_code & 2) {
+		printf(" - Fault occurred in USER MODE (Ring 3)\n");
+	} else {
+		printf(" - Fault occurred in KERNEL MODE (Ring 0)\n");
+	};
+
+	if (error_code & 4) {
+		printf(" - LDT Segment Involved\n");
+	} else {
+		printf(" - GDT or IDT Segment Involved\n");
+	};
+
+	if (error_code & 8) {
+		printf(" - Fault Caused by Instruction Fetch (CS Problem)\n");
+	} else {
+		printf(" - Fault Caused by Data Access (DS/SS Problem)\n");
+	};
+	const uint16_t selector_index = error_code >> 3;
+	const uint8_t ext_bit = error_code & 1;
+	const uint8_t idt_bit = (error_code >> 1) & 1;
+	const uint8_t ti_bit = (error_code >> 2) & 1;
+	printf("Faulty Segment Selector Index: %d (0x%x)\n", selector_index, selector_index);
+
+	if (idt_bit) {
+		printf(" - Fault caused by an IDT Entry (Interrupt Descriptor)\n");
+	} else if (ti_bit) {
+		printf(" - Faulty Segment is located in the LDT (Local Descriptor Table)\n");
+	} else {
+		printf(" - Faulty Segment is located in the GDT (Global Descriptor Table)\n");
+	};
+
+	if (ext_bit) {
+		printf(" - Exception was caused by an External Event (e.g., CPU Violation)\n");
+	} else {
+		printf(" - Exception was caused by Software or invalid Segment\n");
 	};
 	printf("----------------------------------------------------\n");
-	printf("[INFO] Error Code: 0x%x\n", error_code);
-	printf("[INFO] Faulting Address (EIP): 0x%x\n", regs->eip);
-	printf("[INFO] Code Segment (CS): 0x%x\n", regs->cs);
-
-	if (error_code & (1 << 0)) {
-		printf("Protection Violation (Memory Access Violation)\n");
-	} else {
-		printf("Segment Not Present or Invalid Descriptor\n");
-	};
-
-	if (error_code & (1 << 1)) {
-		printf("Fault occurred in USER MODE (Ring 3)\n");
-	} else {
-		printf("Fault occurred in KERNEL MODE (Ring 0)\n");
-	};
-
-	if (error_code & (1 << 2)) {
-		printf("LDT Segment Involved\n");
-	} else {
-		printf("GDT or IDT Segment Involved\n");
-	};
-	if (error_code & (1 << 3)) {
-		printf("Fault Caused by Instruction Fetch (CS Problem)\n");
-	} else {
-		printf("[ℹFault Caused by Data Access (DS/SS Problem)\n");
-	};
-	printf("----------------------------------------------------\n");
-	panic("GPF: Invalid Segment Access or Instruction!");
+	_dump_register(regs);
+	panic(interrupt_messages[0xD]);
 	return;
 };
 
 void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
 {
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Page Fault (#PF) Exception\n");
+	printf("----------------------------------------------------\n");
 	const int32_t present = error_code & 0b1;		  // Page Present
 	const int32_t write = error_code & 0b10;		  // Write Access
 	const int32_t user_mode = error_code & 0b100;		  // User-/Supervisor-Modus
@@ -491,8 +579,11 @@ void idt_init(void)
 	idt_set(0x0, asm_isr0_wrapper, IDT_KERNEL_INT_GATE);
 	idt_set(0x1, asm_isr1_wrapper, IDT_KERNEL_INT_GATE);
 	idt_set(0x2, asm_isr2_wrapper, IDT_KERNEL_INT_GATE);
+	idt_set(0x6, asm_isr6_wrapper, IDT_KERNEL_INT_GATE);
+	idt_set(0x8, asm_isr8_wrapper, IDT_KERNEL_INT_GATE);
+	idt_set(0xC, asm_isr12_wrapper, IDT_KERNEL_INT_GATE);
 	idt_set(0xD, asm_isr13_wrapper, IDT_KERNEL_INT_GATE);
-	idt_set(0xE, asm_isr14_page_fault, IDT_KERNEL_INT_GATE);
+	idt_set(0xE, asm_isr14_wrapper, IDT_KERNEL_INT_GATE);
 	idt_set(0x80, asm_syscall, IDT_USER_INT_GATE);
 	asm_idt_loader(&idtr_descriptor);
 	return;

@@ -3,8 +3,12 @@ extern syscall_dispatch
 extern isr_0_handler
 extern isr_1_handler
 extern isr_2_handler
+extern isr_6_handler
+extern isr_8_handler
+extern isr_12_handler
 extern isr_13_handler
 extern isr_14_handler
+
 extern irq0_handler
 extern irq1_handler
 extern irq12_handler
@@ -21,8 +25,11 @@ global asm_syscall
 global asm_isr0_wrapper
 global asm_isr1_wrapper
 global asm_isr2_wrapper
+global asm_isr6_wrapper
+global asm_isr8_wrapper
+global asm_isr12_wrapper
 global asm_isr13_wrapper
-global asm_isr14_page_fault
+global asm_isr14_wrapper
 global asm_irq0_timer
 global asm_irq1_keyboard
 global asm_irq12_mouse
@@ -91,108 +98,99 @@ asm_syscall:
     popa
     iret
 
-;=============================================================================
-; asm_isr0_wrapper
-; @param None
-; @return None
-;=============================================================================
 asm_isr0_wrapper:
     cli
-
     pushad        
-
     push esp       
     push dword 0x0    
-
     call isr_0_handler
     add esp, 8      
-
     popad         
-
     sti
     iret
-;=============================================================================
-; asm_isr1_wrapper
-; @param None
-; @return None
-;=============================================================================
+
 asm_isr1_wrapper:
     cli
-
     pushad         
-
     push esp        
     push dword 0x1
-
     call isr_1_handler
     add esp, 8      
-
     popad         
-
     sti
     iret
 
-;=============================================================================
-; asm_isr2_wrapper
-; @param None
-; @return None
-;=============================================================================
 asm_isr2_wrapper:
     cli
-
     pushad         
-
     push esp        
     push dword 0x2
-
     call isr_2_handler
     add esp, 8      
-
     popad         
+    sti
+    iret
 
+asm_isr6_wrapper:
+    cli
+    pushad
+    push esp
+    push dword 0x6
+    call isr_6_handler
+    add esp, 8
+    popad
+    sti
+    iret
+
+asm_isr8_wrapper:
+    cli
+    pushad
+    push esp
+    mov eax, [esp + 36] ; Get error code
+    push eax
+    call isr_8_handler
+    add esp, 8
+    popad
+    sti
+    iret
+
+asm_isr12_wrapper:
+    cli
+    pushad
+    push esp
+    mov eax, [esp + 36] ; Get error code
+    push eax
+    call isr_12_handler
+    add esp, 8
+    popad
     sti
     iret
 
 asm_isr13_wrapper:
     cli
-
     pushad         
-
     push esp        
     mov eax, [esp + 36]
     push eax
     ; void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs)
     call isr_13_handler
     add esp, 8      
-
     popad         
-
     sti
     iret
 
-;=============================================================================
-; asm_isr14_page_fault
-; Page fault handler for interrupt 14h 
-; @param None
-; @return None
-;=============================================================================
-asm_isr14_page_fault:
+asm_isr14_wrapper:
     cli                        
-
     pushad ; Push EAX, ECX, EDX, EBX, original ESP, EBP, ESI, and EDI (ecx at +4,+8,+12,+16,+20,+24,+28 .. )             
-    
     push esp    ; interrupt_frame_t
     mov eax, [esp + 36] ; Errorcode at +36
     push eax
-
     mov eax, cr2  
     push eax
     ; void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
     call isr_14_handler         
     add esp, 16
-
     popad                        
-
     sti                       
     iret                      
     

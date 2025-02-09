@@ -319,6 +319,7 @@ static void _test_page_dir_create(const uint32_t* pd)
 
 static void _test_isr_0(void)
 {
+	printf("[TEST] Triggering Division by Zero Exception (#DE)...\n");
 	int a = 5;
 	int b = 0;
 	int c = a / b;
@@ -328,25 +329,56 @@ static void _test_isr_0(void)
 
 static void _test_isr_1(void)
 {
+	printf("[TEST] Triggering Debug Exception (#DB)...\n");
 	asm volatile("int $1");
 	return;
 };
 
 static void _test_isr_2(void)
 {
+	printf("[TEST] Triggering Non-Maskable Interrupt (NMI)...\n");
 	asm volatile("int $2");
+	return;
+};
+
+static void _test_isr_6(void)
+{
+	printf("[TEST] Triggering Invalid Opcode Exception (#UD)...\n");
+	asm volatile(".byte 0x0F, 0xFF"); // Invalid opcode to force #UD
+	return;
+};
+
+static void _test_isr_8(void)
+{
+	printf("[TEST] Triggering Double Fault Exception (#DF)...\n");
+	asm volatile("cli\n" // Disable interrupts
+		     "mov %esp, %eax\n"
+		     "mov %eax, %ss\n"	// Load an invalid stack segment
+		     "mov $0x0, %esp\n" // Cause a stack overflow to force a Double Fault
+	);
+	return;
+};
+
+static void _test_isr_12(void)
+{
+	printf("[TEST] Triggering Stack-Segment Fault (#SS)...\n");
+	asm volatile("mov $0x23, %ax\n" // Try to load an invalid segment selector
+		     "mov %ax, %ss\n"	// This will trigger a Stack-Segment Fault
+	);
 	return;
 };
 
 static void _test_isr_13(void)
 {
-	asm volatile("int $13");
+	printf("[TEST] Triggering General Protection Fault (#GP)...\n");
+	asm volatile("mov $0x42, %ax\n"
+		     "mov %ax, %ds\n");
 	return;
 };
 
 static void _test_isr_14(void)
 {
-	printf("[TEST] Triggering Page Fault...\n");
+	printf("[TEST] Triggering Page Fault (#PF)...\n");
 	volatile char* ptr = (volatile char*)0xE0400000; // Page Dir => 897
 	*ptr = 'A';
 	return;
@@ -481,7 +513,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// task_dump(task);
 
 	// page_dump_dir(page_get_dir());
-	_test_isr_14();
+	_test_isr_12();
 	// page_dump_dir(page_get_dir());
 	/*
 	_render_spinner(64);
