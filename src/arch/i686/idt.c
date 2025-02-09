@@ -25,6 +25,7 @@ extern kbd_t kbd;
 extern mouse_t mouse;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
+extern uint32_t kernel_directory[1024];
 
 extern void asm_idt_loader(idtr_t* ptr);
 extern void asm_interrupt_default(void);
@@ -461,7 +462,7 @@ void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
+void deprecated_isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
 {
 	printf("\n----------------------------------------------------\n");
 	printf("[ERROR] Page Fault (#PF) Exception\n");
@@ -525,6 +526,70 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 		page_flags &= ~PAGE_USER;
 	};
 	page_map(aligned_fault_addr, phys_addr, page_flags);
+	printf("[INFO] Mapped Virtual Address 0x%x to Physical Address 0x%x\n", aligned_fault_addr, phys_addr);
+	return;
+};
+
+void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
+{
+	printf("\n----------------------------------------------------\n");
+	printf("[ERROR] Page Fault (#PF) Exception\n");
+	printf("----------------------------------------------------\n");
+	const int32_t present = error_code & 0b1;		  // Page Present
+	const int32_t write = error_code & 0b10;		  // Write Access
+	const int32_t user_mode = error_code & 0b100;		  // User-/Supervisor-Modus
+	const int32_t reserved = error_code & 0b1000;		  // Reserved Bits Overwritten
+	const int32_t instruction_fetch = error_code & 0b10000;	  // Instruction Fetch
+	const int32_t pk_flag = error_code & 0b100000;		  // PK flag (bit 5)
+	const int32_t sgx_flag = error_code & 0b1000000000000000; // SGX flag (bit 15)
+	printf("[INFO] Page Fault occured\n");
+
+	if (!present) {
+		printf(" - Page Not Present\n");
+	} else {
+		printf(" - Page Present\n");
+	};
+
+	if (write) {
+		printf(" - Write Access\n");
+	} else {
+		printf(" - Read Access\n");
+	};
+
+	if (user_mode) {
+		printf(" - User Mode\n");
+	} else {
+		printf(" - Supervisor Mode\n");
+	};
+
+	if (reserved) {
+		printf(" - Reserved Bits\n");
+	};
+
+	if (instruction_fetch) {
+		printf(" - Instruction Fetch\n");
+	};
+
+	if (pk_flag) {
+		printf(" - Protection Key Violation (PK flag)\n");
+	};
+
+	if (sgx_flag) {
+		printf(" - SGX-Specific Access Control Violation (SGX flag)\n");
+	};
+	uint32_t* target_dir = (user_mode) ? task_get_curr()->page_dir : kernel_directory;
+	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
+	// Align fault address to 4 MiB boundary by clearing lower 22 bits
+	const uint32_t aligned_fault_addr = fault_addr & 0xFFC00000;
+	const uint64_t phys_addr = pfa_alloc();
+
+	if (!phys_addr) {
+		panic("[CRITICAL] System Halted due to Unrecoverable Page Fault!");
+		return;
+	};
+	uint32_t page_flags = PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE;
+	user_mode ? (page_flags |= PAGE_USER) : (page_flags &= ~PAGE_USER);
+	page_map_dir(target_dir, aligned_fault_addr, phys_addr, page_flags);
 	printf("[INFO] Mapped Virtual Address 0x%x to Physical Address 0x%x\n", aligned_fault_addr, phys_addr);
 	return;
 };

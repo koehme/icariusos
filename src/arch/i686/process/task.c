@@ -9,14 +9,23 @@
 #include "icarius.h"
 #include "string.h"
 
-
 /* PUBLIC API */
 task_t* task_create(void (*user_eip)());
+task_t* curr_task = 0x0;
 
 /* INTERNAL API */
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
 static void _set_task_dir(task_t* self);
+
+task_t* task_get_curr(void)
+{
+	if (!curr_task) {
+		printf("[ERROR] No current Task are available!\n");
+		return 0x0;
+	};
+	return curr_task;
+};
 
 static task_t* _init_task(void)
 {
@@ -42,6 +51,8 @@ static void _init_task_register(task_t* task)
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
 	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
+
+	curr_task = task;
 	return;
 };
 
@@ -57,14 +68,14 @@ task_t* task_create(void (*user_eip)())
 	task->page_dir = page_create_dir(flags, user_eip);
 	_init_task_register(task);
 
-	uint32_t user_stack_phys = page_get_phys_addr(task->page_dir, USER_STACK_END);
-	uint32_t user_code_phys = page_get_phys_addr(task->page_dir, USER_CODE_START);
+	const uint32_t user_stack_phys = page_get_phys_addr(task->page_dir, USER_STACK_END);
+	const uint32_t user_code_phys = page_get_phys_addr(task->page_dir, USER_CODE_START);
 
-	printf("[DEBUG] USER_STACK_END mapped to phys: 0x%x\n", user_stack_phys);
-	printf("[DEBUG] USER_CODE_START mapped to phys: 0x%x\n", user_code_phys);
+	printf("[DEBUG] USER_STACK_END mapped to Phys: 0x%x\n", user_stack_phys);
+	printf("[DEBUG] USER_CODE_START mapped to Phys: 0x%x\n", user_code_phys);
 
 	if (user_stack_phys == 0x0 || user_code_phys == 0x0) {
-		panic("[ERROR] User memory is not mapped! Stopping transition to Usermode.");
+		panic("[ERROR] User Memory is not mapped! Stopping transition to Ring 3.");
 	};
 	_set_task_dir(task);
 	asm_enter_usermode(&task->registers);

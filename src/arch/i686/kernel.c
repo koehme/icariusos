@@ -502,7 +502,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_mount_fs(ata_dev);
 	*/
 	_remove_identity_mapping();
-	// task_t* task = task_create(&usermode_function);
+	task_t* task = task_create(&usermode_function);
 
 	/*
 	_render_spinner(64);

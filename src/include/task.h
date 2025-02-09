@@ -29,9 +29,12 @@ typedef struct task {
 	task_registers_t registers;
 } task_t;
 
+extern task_t* curr_task;
+
 extern void asm_enter_usermode(task_registers_t* regs);
 
 task_t* task_create(void (*user_eip)());
+task_t* task_get_curr(void);
 void task_dump(task_t* self);
 
 #endif
