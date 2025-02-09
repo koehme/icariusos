@@ -42,32 +42,14 @@ asm_do_nop:
     nop
     ret
 
-;=============================================================================
-; asm_do_sti
-; Enable interrupts by clearing the Interrupt Flag (IF) in the EFLAGS register
-; @param None
-; @return None
-;=============================================================================
 asm_do_sti:
     sti
     ret
 
-;=============================================================================
-; asm_do_cli
-; Disable interrupts by setting the Interrupt Flag (IF) in the EFLAGS register
-; @param None
-; @return None
-;=============================================================================
 asm_do_cli:
     cli
     ret
 
-;=============================================================================
-; asm_idt_loader
-; Responsible for loading the Interrupt Descriptor Table Register (IDTR)
-; @param ebx: A pointer to the idtr_t
-; @return None
-;=============================================================================
 asm_idt_loader:
     push ebp              ; Save old base pointer
     mov ebp, esp          ; Use the current stack pointer 'asm_idt_loader' as new base pointer for the caller frame (return address +4, argument 1 = +8, argument n = +4)
@@ -77,25 +59,12 @@ asm_idt_loader:
     ret
 
 asm_syscall:
-    pusha
-    push ds
-    push es
-    push fs
-    push gs
-
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
+    pushad      
+    push esp
+    push eax
     call syscall_dispatch
-
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    popa
+    add esp, 8
+    popad
     iret
 
 asm_isr0_wrapper:
@@ -194,11 +163,6 @@ asm_isr14_wrapper:
     sti                       
     iret                      
     
-;=============================================================================
-; asm_irq0_timer
-; @param None
-; @return None
-;=============================================================================
 asm_irq0_timer:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        
@@ -207,11 +171,6 @@ asm_irq0_timer:
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
 
-;=============================================================================
-; asm_irq1_keyboard
-; @param None
-; @return None
-;=============================================================================
 asm_irq1_keyboard:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        
@@ -220,11 +179,6 @@ asm_irq1_keyboard:
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
 
-;=============================================================================
-; asm_irq12_mouse
-; @param None
-; @return None
-;=============================================================================
 asm_irq12_mouse:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        
@@ -233,12 +187,6 @@ asm_irq12_mouse:
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
 
-;=============================================================================
-; interrupt_default
-; Default handler 
-; @param None
-; @return None
-;=============================================================================
 asm_interrupt_default:
     cli                           ; Disable interrupts to prevent nested exceptions
 

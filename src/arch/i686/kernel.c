@@ -353,8 +353,10 @@ static void _test_isr_8(void)
 	printf("[TEST] Triggering Double Fault Exception (#DF)...\n");
 	asm volatile("cli\n" // Disable interrupts
 		     "mov %esp, %eax\n"
-		     "mov %eax, %ss\n"	// Load an invalid stack segment
-		     "mov $0x0, %esp\n" // Cause a stack overflow to force a Double Fault
+		     "mov %eax, %ss\n"	// Load an invalid stack segment (triggers #GP)
+		     "mov $0x0, %esp\n" // Set ESP to 0 (causes stack overflow)
+		     "pushl $0\n"	// Force a second fault (stack push fails)
+		     "pushl $0\n"	// This will cause the double fault (#DF)
 	);
 	return;
 };
@@ -491,7 +493,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	timer_init(&timer, 100);
 
 	asm_do_sti();
-
 	// pci_enumerate_bus();
 
 	/*
@@ -501,24 +502,13 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_mount_fs(ata_dev);
 	*/
 	_remove_identity_mapping();
-	// pfa_dump(&pfa, true);
+	// task_t* task = task_create(&usermode_function);
 
-	// _test_vfs_read("A:/LEET/TEST.TXT");
-	// _test_heap(4096);
-
-	// pfa_dump(&pfa, false);
-	// page_dump_dir(page_get_dir());
-	task_t* task = task_create(&usermode_function);
-	// page_dump_dir(task->page_dir);
-	// task_dump(task);
-
-	// page_dump_dir(page_get_dir());
-	_test_isr_12();
-	// page_dump_dir(page_get_dir());
 	/*
 	_render_spinner(64);
 	_motd();
 	*/
+
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
 		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);

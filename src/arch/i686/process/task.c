@@ -16,6 +16,7 @@ task_t* task_create(void (*user_eip)());
 /* INTERNAL API */
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
+static void _set_task_dir(task_t* self);
 
 static task_t* _init_task(void)
 {
@@ -36,10 +37,11 @@ static void _init_task_register(task_t* task)
 		return;
 	};
 	task->registers.eip = USER_CODE_START;
-	task->registers.cs = GDT_USER_CODE_SEGMENT;
 	task->registers.eflags = 0x200;
 	task->registers.esp = task->registers.ebp = USER_STACK_END;
-	task->registers.ss = GDT_USER_DATA_SEGMENT;
+
+	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
+	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
 	return;
 };
 
@@ -54,11 +56,20 @@ task_t* task_create(void (*user_eip)())
 	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 	task->page_dir = page_create_dir(flags, user_eip);
 	_init_task_register(task);
+
+	uint32_t user_stack_phys = page_get_phys_addr(task->page_dir, USER_STACK_END);
+	uint32_t user_code_phys = page_get_phys_addr(task->page_dir, USER_CODE_START);
+
+	printf("[DEBUG] USER_STACK_END mapped to phys: 0x%x\n", user_stack_phys);
+	printf("[DEBUG] USER_CODE_START mapped to phys: 0x%x\n", user_code_phys);
+
+	if (user_stack_phys == 0x0 || user_code_phys == 0x0) {
+		panic("[ERROR] User memory is not mapped! Stopping transition to Usermode.");
+	};
+	_set_task_dir(task);
+	asm_enter_usermode(&task->registers);
 	return task;
 };
-
-#include "stdio.h"
-#include "task.h"
 
 void task_dump(task_t* self)
 {
@@ -89,5 +100,17 @@ void task_dump(task_t* self)
 	printf("EDI  : 0x%x\n", self->registers.edi);
 
 	printf("====================================\n");
+	return;
+};
+
+static void _set_task_dir(task_t* self)
+{
+	if (!self || !self->page_dir) {
+		printf("[ERROR] task_set_directory: Invalid task or missing page directory!\n");
+		return;
+	};
+	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->page_dir));
+	printf("[INFO] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
+	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
 	return;
 };

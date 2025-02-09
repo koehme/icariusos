@@ -2,7 +2,8 @@
     "files.associations": {
         "stdlib.h": "c",
         "compare": "cpp",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "stdio.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
