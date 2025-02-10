@@ -468,8 +468,10 @@ void usermode_function(void)
 
 void kernel_shell(void)
 {
-	printf("_>");
 	asm_do_sti();
+	_render_spinner(64);
+	_motd();
+	printf("_>");
 
 	while (true) {
 		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
@@ -506,21 +508,16 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	timer_init(&timer, 100);
 
 	asm_do_sti();
-	// pci_enumerate_bus();
+	pci_enumerate_bus();
 
-	/*
 	vfs_init();
 	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
-	*/
+
 	_remove_identity_mapping();
 	task_t* task = task_create(&usermode_function);
 
-	/*
-	_render_spinner(64);
-	_motd();
-	*/
 	kernel_shell();
 	return;
 };
