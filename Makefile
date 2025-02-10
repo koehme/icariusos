@@ -48,7 +48,6 @@ SOURCES_ASM = \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
-    ./src/arch/i686/memory/page.asm \
     ./src/arch/i686/process/task.asm
 
 define obj_c
@@ -114,9 +113,6 @@ $(OBJ_DIR)/idt.asm.o: ./src/arch/i686/idt.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/io.asm.o: ./src/arch/i686/io.asm
-	$(ASSEMBLER) -f elf32 -g $< -o $@
-
-$(OBJ_DIR)/page.asm.o: ./src/arch/i686/memory/page.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/task.asm.o: ./src/arch/i686/process/task.asm
