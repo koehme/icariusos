@@ -53,6 +53,9 @@ static void _init_task_register(task_t* task)
 	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
 
 	curr_task = task;
+
+	task_dump(task);
+
 	return;
 };
 
@@ -66,19 +69,26 @@ task_t* task_create(void (*user_eip)())
 	};
 	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 	task->page_dir = page_create_dir(flags, user_eip);
+
+	/* Map code section at virtual addr 0x0 - 0x400000 in task page dir */
+	page_map_between(task->page_dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);
+	/* Map code section at virtual addr 0xBFC00000 - 0xBFFFFFFF in task page dir */
+	page_map_between(task->page_dir, USER_STACK_START, USER_STACK_END, flags);
+
+	_set_task_dir(task);
+	memcpy((void*)USER_CODE_START, (void*)user_eip, 1024);
+
+	if (memcmp((void*)USER_CODE_START, (void*)user_eip, 1024) == 0) {
+		printf("[SUCCESS] User Code copied to Userspace at 0x%x\n", USER_CODE_START);
+	} else {
+		printf("[ERROR] User Code copy failed!\n");
+	};
+	page_restore_kernel_dir();
 	_init_task_register(task);
 
-	const uint32_t user_stack_phys = page_get_phys_addr(task->page_dir, USER_STACK_END);
-	const uint32_t user_code_phys = page_get_phys_addr(task->page_dir, USER_CODE_START);
-
-	printf("[DEBUG] USER_STACK_END mapped to Phys: 0x%x\n", user_stack_phys);
-	printf("[DEBUG] USER_CODE_START mapped to Phys: 0x%x\n", user_code_phys);
-
-	if (user_stack_phys == 0x0 || user_code_phys == 0x0) {
-		panic("[ERROR] User Memory is not mapped! Stopping transition to Ring 3.");
-	};
 	_set_task_dir(task);
 	asm_enter_usermode(&task->registers);
+
 	return task;
 };
 
@@ -121,7 +131,7 @@ static void _set_task_dir(task_t* self)
 		return;
 	};
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->page_dir));
-	printf("[INFO] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
+	printf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
 	return;
 };

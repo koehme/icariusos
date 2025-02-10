@@ -74,19 +74,6 @@ uint32_t* page_create_dir(uint32_t flags, void (*user_eip)())
 			dir[i] = (entry & 0xFFFFF000) | (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE);
 		};
 	};
-	page_map_between(dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);
-	page_map_between(dir, USER_STACK_START, USER_STACK_END, flags);
-
-	const uint32_t user_code_phys = page_get_phys_addr(dir, USER_CODE_START);
-	printf("[INFO] USER_CODE_START at 0x%x\n", user_code_phys);
-	void* user_code_virt = (void*)p2v(user_code_phys);
-	memcpy(user_code_virt, (void*)user_eip, 1024);
-
-	if (memcmp(user_code_virt, (void*)user_eip, 1024) == 0) {
-		printf("[SUCCESS] User Code copied to Userspace at 0x%x\n", USER_CODE_START);
-	} else {
-		printf("[ERROR] User Code cannot be copied.\n");
-	};
 	return dir;
 };
 
@@ -143,6 +130,7 @@ void page_restore_kernel_dir(void)
 {
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)kernel_directory));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
+	printf("[DEBUG] Switched to Kernel Page Directory at Phys: 0x%x\n", phys_addr);
 	return;
 };
 
@@ -156,14 +144,15 @@ void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end
 	virt_end_addr = (virt_end_addr + 0xFFF) & 0xFFFFF000;
 
 	for (uint32_t virt_curr_addr = virt_start_addr; virt_curr_addr < virt_end_addr; virt_curr_addr += PAGE_SIZE) {
-		uint32_t phys_page = pfa_alloc();
+		const uint32_t frame = pfa_alloc();
 
-		if (!phys_page) {
+		if (!frame) {
 			printf("[ERROR] Page Frame Allocator exhausted!\n");
 			return;
 		};
-		page_map_dir(dir, virt_curr_addr, phys_page, flags);
+		page_map_dir(dir, virt_curr_addr, frame, flags);
+		printf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x (Flags: 0x%x)\n", virt_curr_addr, frame, flags);
 	};
-	printf("Mapped Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
+	printf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };

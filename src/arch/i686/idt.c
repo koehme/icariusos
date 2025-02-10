@@ -578,9 +578,16 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 		printf(" - SGX-Specific Access Control Violation (SGX flag)\n");
 	};
 	uint32_t* target_dir = (user_mode) ? task_get_curr()->page_dir : kernel_directory;
-	printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
+
+	printf("[DEBUG] Current Page Directory: 0x%x\n", (v2p((uint32_t)target_dir)));
+	_dump_register(regs);
+
+	// printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
+
 	// Align fault address to 4 MiB boundary by clearing lower 22 bits
 	const uint32_t aligned_fault_addr = fault_addr & 0xFFC00000;
+	printf("[DEBUG] Aligned Fault Address: 0x%x\n", aligned_fault_addr);
+
 	const uint64_t phys_addr = pfa_alloc();
 
 	if (!phys_addr) {
@@ -588,9 +595,15 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 		return;
 	};
 	uint32_t page_flags = PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE;
-	user_mode ? (page_flags |= PAGE_USER) : (page_flags &= ~PAGE_USER);
+
+	if (user_mode) {
+		page_flags |= PAGE_USER;
+	} else {
+		page_flags &= ~PAGE_USER;
+	};
 	page_map_dir(target_dir, aligned_fault_addr, phys_addr, page_flags);
 	printf("[INFO] Mapped Virtual Address 0x%x to Physical Address 0x%x\n", aligned_fault_addr, phys_addr);
+	panic("TEST");
 	return;
 };
 
