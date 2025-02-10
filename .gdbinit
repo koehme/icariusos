@@ -5,5 +5,6 @@ set print pretty on
 set disassembly-flavor intel
 
 break kernel.c:505
+break syscall_dispatch
 
 c

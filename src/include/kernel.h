@@ -56,5 +56,6 @@ void panic(const char* str);
 void sleep(const uint32_t ms);
 void busy_wait(const uint64_t delay);
 void kmain(const uint32_t magic, const uint32_t addr);
+void kernel_shell(void);
 
 #endif

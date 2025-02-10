@@ -42,6 +42,7 @@ extern void asm_isr14_wrapper(void);
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
+void idt_dump_interrupt_frame(const interrupt_frame_t* regs);
 void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
 void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
@@ -60,7 +61,6 @@ void isr_default_handler(interrupt_frame_t* regs);
 static void _pic1_send_eoi(void);
 static void _pic2_send_eoi(void);
 static void _init_isr(void);
-static void _dump_register(const interrupt_frame_t* regs);
 
 /*
  * Interrupt Vector Table (IVT) Reference
@@ -198,7 +198,7 @@ static void _pic2_send_eoi(void)
 	return;
 };
 
-static void _dump_register(const interrupt_frame_t* regs)
+void idt_dump_interrupt_frame(const interrupt_frame_t* regs)
 {
 	printf("\n");
 	printf("==========================\n");
@@ -248,7 +248,7 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		_dump_register(regs);
+		idt_dump_interrupt_frame(regs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -272,7 +272,7 @@ void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		_dump_register(regs);
+		idt_dump_interrupt_frame(regs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -314,7 +314,7 @@ void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	printf("----------------------------------------------------\n");
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		_dump_register(regs);
+		idt_dump_interrupt_frame(regs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -350,7 +350,7 @@ void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs)
 
 	switch (regs->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		_dump_register(regs);
+		idt_dump_interrupt_frame(regs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -375,7 +375,7 @@ void isr_8_handler(uint32_t error_code, interrupt_frame_t* regs)
 	printf(" - Error Code: 0x%x\n", error_code);
 	printf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
 	printf(" - Code Segment (CS): 0x%x\n", regs->cs);
-	_dump_register(regs);
+	idt_dump_interrupt_frame(regs);
 	panic(interrupt_messages[0x8]);
 	return;
 };
@@ -400,7 +400,7 @@ void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs)
 	} else {
 		printf(" - Fault occurred in KERNEL MODE (Ring 0)\n");
 	};
-	_dump_register(regs);
+	idt_dump_interrupt_frame(regs);
 	panic(interrupt_messages[0xC]);
 	return;
 };
@@ -457,7 +457,7 @@ void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
 		printf(" - Exception was caused by Software or invalid Segment\n");
 	};
 	printf("----------------------------------------------------\n");
-	_dump_register(regs);
+	idt_dump_interrupt_frame(regs);
 	panic(interrupt_messages[0xD]);
 	return;
 };
@@ -580,7 +580,7 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	uint32_t* target_dir = (user_mode) ? task_get_curr()->page_dir : kernel_directory;
 
 	printf("[DEBUG] Current Page Directory: 0x%x\n", (v2p((uint32_t)target_dir)));
-	_dump_register(regs);
+	idt_dump_interrupt_frame(regs);
 
 	// printf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
 

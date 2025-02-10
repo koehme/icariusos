@@ -7,7 +7,9 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
 
+#include "icarius.h"
 #include "idt.h"
+#include "kernel.h"
 #include "page.h"
 #include "stdio.h"
 

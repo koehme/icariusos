@@ -7,6 +7,7 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "idt.h"
 #include <stdint.h>
 
 typedef struct task_registers {
@@ -32,9 +33,11 @@ typedef struct task {
 extern task_t* curr_task;
 
 extern void asm_enter_usermode(task_registers_t* regs);
+extern void asm_restore_kernel_segment(void);
 
 task_t* task_create(void (*user_eip)());
 task_t* task_get_curr(void);
 void task_dump(task_t* self);
+void idt_dump_interrupt_frame(const interrupt_frame_t* regs);
 
 #endif

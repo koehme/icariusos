@@ -466,6 +466,19 @@ void usermode_function(void)
 	return;
 };
 
+void kernel_shell(void)
+{
+	printf("_>");
+	asm_do_sti();
+
+	while (true) {
+		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
+		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
+	};
+	return;
+};
+
+
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
@@ -499,7 +512,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	vfs_init();
 	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
-	ata_mount_fs(ata_dev);	
+	ata_mount_fs(ata_dev);
 	*/
 	_remove_identity_mapping();
 	task_t* task = task_create(&usermode_function);
@@ -508,10 +521,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_render_spinner(64);
 	_motd();
 	*/
-
-	while (true) {
-		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
-		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
-	};
+	kernel_shell();
 	return;
 };

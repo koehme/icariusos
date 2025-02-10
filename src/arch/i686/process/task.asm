@@ -1,4 +1,5 @@
 global asm_enter_usermode
+global asm_restore_kernel_segment
 
 ; ------------------------------------------------
 ; void asm_enter_usermode(task_registers_t* regs)
@@ -50,4 +51,12 @@ asm_task_restore_register:
     mov ebx, [ebx + 12]   ; Restore EBX
 
     pop ebp
+    ret
+
+asm_restore_kernel_segment:
+    mov ax, 0x10    ; Kernel Data Segment (GDT_KERNEL_DATA_SEGMENT)
+    mov ds, ax      ; Setze Data Segment
+    mov es, ax      ; Setze Extra Segment
+    mov fs, ax      ; Setze FS Segment
+    mov gs, ax      ; Setze GS Segment
     ret
