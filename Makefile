@@ -48,7 +48,8 @@ SOURCES_ASM = \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
-    ./src/arch/i686/process/task.asm
+    ./src/arch/i686/process/task.asm \
+    ./src/arch/i686/usermode.asm
 
 define obj_c
 $(OBJ_DIR)/$(notdir $(1:.c=.c.o))
@@ -116,6 +117,9 @@ $(OBJ_DIR)/io.asm.o: ./src/arch/i686/io.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 $(OBJ_DIR)/task.asm.o: ./src/arch/i686/process/task.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/usermode.asm.o: ./src/arch/i686/usermode.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 image: $(OBJECTS)

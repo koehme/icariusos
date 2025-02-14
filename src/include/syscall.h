@@ -10,9 +10,7 @@
 #include <stdint.h>
 
 #include "icarius.h"
-#include "idt.h"
 #include "kernel.h"
-#include "page.h"
 #include "stdio.h"
 
 void syscall_init(void);

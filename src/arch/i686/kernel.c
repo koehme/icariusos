@@ -20,6 +20,7 @@ extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 extern tss_t tss;
+extern void asm_usermode_entrypoint(void);
 
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
@@ -401,6 +402,20 @@ static void _remove_identity_mapping(void)
 	return;
 };
 
+void kernel_shell(void)
+{
+	asm_do_sti();
+	_render_spinner(64);
+	_motd();
+	printf("_>");
+
+	while (true) {
+		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
+		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
+	};
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -458,29 +473,6 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | Reserved Stack Space | `0xC2C08000`           | `0xC2FFFFFF`            | 4064 KiB        | Reserved for Stack Expansion          			|
 */
 
-void usermode_function(void)
-{
-	asm volatile("movl $1, %eax\n" //
-		     "int $0x80\n"
-		     "hlt\n");
-	return;
-};
-
-void kernel_shell(void)
-{
-	asm_do_sti();
-	_render_spinner(64);
-	_motd();
-	printf("_>");
-
-	while (true) {
-		ps2_dispatch(&fifo_kbd, kbd_handler, &kbd);
-		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
-	};
-	return;
-};
-
-
 void kmain(const uint32_t magic, const uint32_t addr)
 {
 	gdt_init();
@@ -518,7 +510,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_remove_identity_mapping();
 
 	syscall_init();
-	task_t* task = task_create(&usermode_function);
+	task_t* task = task_create(&asm_usermode_entrypoint);
 
 	kernel_shell();
 	return;
