@@ -96,10 +96,10 @@
     GDT Flags for i686 (32-bit Protected Mode)
 ====================================
 */
-#define GDT_FLAG_GRANULARITY_4K  0x80  // Use 4 KiB granularity
-#define GDT_FLAG_32BIT_MODE      0x40  // 32-bit protected mode
-#define GDT_FLAG_LIMIT_HIGH_MASK 0x0F  // Upper 4 bits of segment limit
-#define GDT_FLAGS_DEFAULT (GDT_FLAG_GRANULARITY_4K | GDT_FLAG_32BIT_MODE | GDT_FLAG_LIMIT_HIGH_MASK)  // 0xCF
+#define GDT_FLAG_GRANULARITY_4K 0x80								     // Use 4 KiB granularity
+#define GDT_FLAG_32BIT_MODE 0x40								     // 32-bit protected mode
+#define GDT_FLAG_LIMIT_HIGH_MASK 0x0F								     // Upper 4 bits of segment limit
+#define GDT_FLAGS_DEFAULT (GDT_FLAG_GRANULARITY_4K | GDT_FLAG_32BIT_MODE | GDT_FLAG_LIMIT_HIGH_MASK) // 0xCF
 /*
 ====================================
     Memory i686
@@ -350,6 +350,43 @@
 #define USER_HEAP_END 0xBFBFFFFF
 #define USER_STACK_START (USER_HEAP_END + 1)
 #define USER_STACK_END 0xBFFFFFFF
-
+/*
+====================================
+    POSIX-Compatible Syscalls
+====================================
+*/
+#define MAX_SYSCALL 256
+// Processes
+#define SYS_EXIT 1    // _exit(int status)
+#define SYS_FORK 2    // fork(void)
+#define SYS_EXECVE 3  // execve(const char *filename, char *const argv[], char *const envp[])
+#define SYS_WAITPID 4 // waitpid(pid_t pid, int *status, int options)
+#define SYS_GETPID 5  // getpid(void)
+// File System & I/O
+#define SYS_OPEN 6    // open(const char *pathname, int flags, mode_t mode)
+#define SYS_CLOSE 7   // close(int fd)
+#define SYS_READ 8    // read(int fd, void *buf, size_t count)
+#define SYS_WRITE 9   // write(int fd, const void *buf, size_t count)
+#define SYS_LSEEK 10  // lseek(int fd, off_t offset, int whence)
+#define SYS_UNLINK 11 // unlink(const char *pathname)
+#define SYS_STAT 12   // stat(const char *pathname, struct stat *statbuf)
+#define SYS_FSTAT 13  // fstat(int fd, struct stat *statbuf)
+#define SYS_DUP 14    // dup(int oldfd)
+#define SYS_DUP2 15   // dup2(int oldfd, int newfd)
+// Directory Operations
+#define SYS_GETCWD 16 // getcwd(char *buf, size_t size)
+#define SYS_CHDIR 17  // chdir(const char *path)
+#define SYS_MKDIR 18  // mkdir(const char *pathname, mode_t mode)
+#define SYS_RMDIR 19  // rmdir(const char *pathname)
+// Memory Management
+#define SYS_SBRK 20 // sbrk(intptr_t increment)
+// Time & Signals
+#define SYS_TIME 21  // time(time_t *tloc)
+#define SYS_SLEEP 22 // sleep(unsigned int seconds)
+// System Control
+#define SYS_YIELD 23 // sched_yield(void)
+#define SYS_IOCTL 24 // ioctl(int fd, unsigned long request, ...)
+// Special Kernel Operations
+#define SYS_REBOOT 25 // reboot(int cmd)
 
 #endif
