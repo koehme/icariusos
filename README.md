@@ -1,171 +1,127 @@
 # icariusOS
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Lizenz: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-```bash
-- Booted with GRUB2 bootloader
-- Runs on i686 architecture
-```
+Minimalistischer Kernel für x86
 
-# icariusOS – kernel specs
+## 🚀 Features (Top 5)
 
-## architecture  
-- i686, higher half (starting at 0xc0000000)  
-- 4 mib paging (page_ps) for efficient memory management  
-- strict separation between user and kernel space  
-- supervisor mode for kernel – full control  
+- **Speicherverwaltung mit Paging (4 MiB Pages)** – inklusive Page Frame Allocator
+- **Multitasking mit Task-Switching** – jeder Task hat sein eigenes Seitenverzeichnis
+- **Syscalls über `int 0x80`** – sicherer Übergang von Benutzer- zu Kernelmodus
+- **Interrupt-Handling** – IDT mit erweiterten Fehleranalysen für Debugging
+- **4 KiB Chunk-basierter Heap-Allocator** – Wachstum erfolgt automatisch, wenn zu wenig freier Speicher vorhanden ist
 
-## boot mechanism  
-- grub multiboot2 for flexible kernel loading  
-- initial stack before enabling paging  
-- identity mapping only temporary during boot  
+## 🔜 Nächste Schritte
 
-## paging & memory management  
-- pfa (page frame allocator): 4 mib pages for higher performance  
-- page directory:  
-  - kernel pages start at entry 768  
-  - user-mode code pages from 0x00000000 – 0x400000  
-- stack grows downward from 0xbfc00000  
-- heap: dynamic allocation for future memory management  
+- **Speicherlecks fixen** – Tasks sauber freiräumen 🧹
+- **Scheduler bauen** – Round-Robin-Scheduler für mehrere Tasks 🕒
+- **Standardbibliothek aufbauen** – POSIX-ähnliche Funktionen ✨
+- **Mehr Syscalls** – für bessere Benutzermodus Unterstützung 🛠️
 
-## process & task management  
-- each task has its own page directory  
-- task switching: changes cr3 (page directory) on context switch  
-- stack management: user esp set to user_stack_end  
+## 🎯 Der Weg ist das Ziel
 
-## interrupt & syscall handling  
-- syscalls via int 0x80 (ring 3 → ring 0)  
-- asm wrapper + pushad for saving register state  
-- enhanced page fault handling for user-mode errors  
-- tss (task state segment): manages kernel stack on interrupts  
+Kennst du das Gefühl, wenn du etwas baust, das wirklich von Grund auf entsteht? Kein Framework, keine Bibliothek, keine Abkürzungen – nur du, deine Ideen und der Code, der das System kontrolliert. Genau das ist Kernel-Entwicklung für mich.
 
-## cr3 (page directory base register)  
-- always points to the active task's page directory  
-- kernel remains mapped in the kernel directory  
-- automatic switch on task switch or syscall exit  
+Hier gibt es keine Sicherheitsnetze – ich (bzw. wir) bin allein verantwortlich dafür, wie Speicher verwaltet wird, wie Tasks kommunizieren und ob der Code das System zum Laufen bringt oder alles abstürzen lässt. Und genau das macht es so faszinierend! Als mein erster Task-Switch funktionierte oder mein Debugger endlich die richtige Speicheradresse ausgab, fühlte sich das an wie ein verdammter Sieg. 🏆
 
-## debugging & error handling  
-- tools: page_dump_dir(), p/x v2p(task->page_dir), stack & register dumps  
-- qemu with gdb: low-level debugging  
-- advanced page fault handlers with detailed error codes  
-- idt_dump_interrupt_frame() for precise error analysis  
+Ja, manchmal könnte ich den Bildschirm aus dem Fenster werfen (👀 looking at you, Page Faults), aber sobald ich das Problem löse – dieses Gefühl ist unbeschreiblich. Kernel-Entwicklung ist mein persönliches Low-Level-Puzzlespiel, das mich ständig herausfordert und wachsen lässt.
 
-## performance & optimization  
-- 8 mib user space per task (initial)  
-- direct memory allocation minimized for syscalls  
-- page_map_between() optimized for larger memory regions  
+Und das Beste? Es gibt kein festes Ziel. Ich baue hier keinen Linux-Konkurrenten – ich erkunde, lerne und genieße jeden Fortschritt.
 
-## security & protection mechanisms  
-- no page_user flags for kernel mappings  
-- user-mode processes isolated – no direct kernel access  
-- stack segment validation during syscall handling  
-- page fault handling prevents unauthorized memory access  
+Das Abenteuer hört nie auf – und genau das macht es so spannend. 🚀
 
-## user-mode implementation  
-- kernel can jump into user mode via iret  
-- proper syscall handling: int 0x80 returns correctly to the kernel  
-- after a syscall, the system returns to the kernel shell instead of an infinite loop  
-- full support for user programs with isolated memory space  
+# 🤝 Mitmachen
 
-## core milestones  
-- bootloader: custom-built for a flawless system launch  
-- ata driver: loads kernel from hard drive into memory  
-- protected mode: unlocked the power of 32-bit computing with full memory utilization  
-- interrupts: implemented an elite idt for superior interrupt handling  
-- pic: tamed the programmable interrupt controller for precise irq management  
-- vga driver: smooth scrolling in text mode  
-- heap management: dynamic memory allocation optimized for performance  
-- logo: startup features a sleek, custom logo  
-- paging: efficient virtual memory management  
+Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
 
-## advanced features  
-- interrupt-driven ata reads: eliminated cpu blockages for fast disk reads  
-- improved printf: upgraded to a pro-level print system  
-- cmos date reader: time retrieval directly from cmos  
-- real sleep function: pit-based sleep  
-- multiboot2 integration: switched to grub for precision booting  
-- memory map: harvested multiboot2 data to manage memory regions  
-- motd: message of the day for system status or notifications  
-- vfs layer: file operations (vfs_fopen, vfs_fread) now operational  
-- framebuffer rendering: graphics upgrade with bitmap font support  
-- higher-half kernel: kernel now operates in upper memory realms  
+1️⃣ Repo forken:
+Klick oben rechts auf Fork, um dein eigenes Repository zu erstellen.
 
-## current development  
-- fat16 driver: filesystem in progress  
-- keyboard & mouse drivers: advanced input handling under development  
+2️⃣ Projekt klonen:
 
-## page frame allocator  
-- build a robust system to manage physical memory frames  
-- efficient allocation and tracking of free/used pages  
+git clone https://github.com/dein-nutzername/icariusOS.git
+cd icariusOS
 
-### multiboot2 memory map integration  
-- parse and interpret the memory map provided by the multiboot2 spec  
-- identify available physical memory regions for allocation  
+3️⃣ Branch erstellen:
 
-### kzalloc reimplementation  
-- refactor kzalloc to request physical pages directly from the page frame allocator  
-- maintain seamless dynamic memory allocation with physical frame awareness  
+git checkout -b feature/dein-feature
 
-### page directory integration  
-- map physical pages into the page directory  
-- establish a solid link between virtual addresses and physical memory  
+4️⃣ Änderungen machen
 
-# dependencies
+git add .
+git commit -m "Feature: Kurzbeschreibung der Änderung"
 
-Before building icariusOS, ensure that you have the following dependencies:
+- **Sprache** – Ich akzeptiere nur Commits in Englisch und mit einem klaren Fokus auf das "Warum", nicht nur auf das "Was"
+- **Hinweis** – Falls du dir unsicher bist, ob eine Änderung sinnvoll ist, erstelle vorab eine Issue, um sie zu besprechen
 
-- **Ubuntu LTS**: I recommend using the latest Long Term Support (LTS) version of Ubuntu for development. 
-You can download it from the [official Ubuntu website](https://ubuntu.com/download) and follow their installation instructions.
+5️⃣ Pushen & Pull Request erstellen:
 
-- **i686 Cross-Compiler**: Run the following commands to install the necessary dependencies
+git push origin feature/dein-feature
+
+Danach kannst du auf GitHub einen Pull Request (PR) eröffnen. Ich schaue mir alle PRs an und gebe dir so schnell ich kann Feedback.
+
+📌 Hinweis:
+
+Bitte halte dich an den Code-Stil des Projekts und teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
+
+Viel Spaß beim Kernel Hacking! 😎🔥
+
+## Abhängigkeiten
+
+Bevor du icariusOS baust, stelle sicher, dass du folgende Abhängigkeiten installiert hast:
+
+- **Ubuntu** – (LTS)-Version von Ubuntu 
+- **Cross-Compiler** – Um Code zu erzeugen, der freistehend ist und ohne Standardbibliothek auskommt.
 
 ```bash
 ./i686.sh
 ```
 
-# run
+# Starten
 
-Before running icariusOS, ensure you have generated the FAT16 filesystem using the following command:
+Bevor du icariusOS startest, stelle sicher, dass das dazugehörige FAT16-Dateisystem generiert wurde, indem du die folgenden Befehle ausführst:
 
 ```bash
 ./build.sh
 ./fat16.sh
 ```
 
-To rebuild and launch the kernel, use the following commands:
+# Kompilieren
+
+Um den Kernel neu zu bauen und zu starten, verwende diesen Befehl:
 
 ```bash
 ./build.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-# update
+# Aktualisieren
 
-If you need to update the kernel, use the following command to swap the ICARIUS.BIN file in the FAT16 filesystem:
+Falls du den Kernel aktualisieren möchtest, ersetze die ICARIUS.BIN-Datei im FAT16-Dateisystem mit:
 
 ```bash
 ./swap.sh 
 ```
-
-After updating the kernel, run the following command to launch icariusOS with the new kernel:
+Nach der Aktualisierung kannst du icariusOS mit dem neuen Kernel starten:
 
 ```bash
 qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-All-in-one for the lazy:
+Für die Bequemen - In einem Befehl:
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-# debug
+# GNU Debugger
 
 ```bash
 ./swap.sh && qemu-system-i386 -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
-# tree
+# Verzeichnisstruktur ausgeben
 
 ```bash
 tree | xclip -selection clipboard
