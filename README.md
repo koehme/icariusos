@@ -25,7 +25,7 @@ Kennst du das Gefühl, wenn du etwas baust, das wirklich von Grund auf entsteht?
 
 Hier gibt es keine Sicherheitsnetze – ich (bzw. wir) bin allein verantwortlich dafür, wie Speicher verwaltet wird, wie Tasks kommunizieren und ob der Code das System zum Laufen bringt oder alles abstürzen lässt. Und genau das macht es so faszinierend! Als mein erster Task-Switch funktionierte oder mein Debugger endlich die richtige Speicheradresse ausgab, fühlte sich das an wie ein verdammter Sieg. 🏆
 
-Ja, manchmal könnte ich den Bildschirm aus dem Fenster werfen (👀 looking at you, Page Faults), aber sobald ich das Problem löse – dieses Gefühl ist unbeschreiblich. Kernel-Entwicklung ist mein persönliches Low-Level-Puzzlespiel, das mich ständig herausfordert und wachsen lässt.
+Ja, manchmal könnte ich den Bildschirm aus dem Fenster werfen (Ein Seitenfehler 👀), aber sobald ich das Problem löse – dieses Gefühl ist unbeschreiblich. Kernel-Entwicklung ist mein Low-Level-Puzzle, das mich ständig herausfordert und wachsen lässt.
 
 Und das Beste? Es gibt kein festes Ziel. Ich baue hier keinen Linux-Konkurrenten – ich erkunde, lerne und genieße jeden Fortschritt.
 

@@ -68,7 +68,7 @@ task_t* task_create(void (*user_eip)())
 		return 0x0;
 	};
 	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
-	task->page_dir = page_create_dir(flags, user_eip);
+	task->page_dir = page_create_dir(flags);
 
 	/* Map code section at virtual addr 0x0 - 0x400000 in task page dir */
 	page_map_between(task->page_dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);

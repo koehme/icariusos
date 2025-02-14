@@ -29,7 +29,7 @@
 #define PAGE_GLOBAL 0x100  // Global page (remains cached in TLB across context switches)
 
 void page_dump_dir(uint32_t* dir);
-uint32_t* page_create_dir(uint32_t flags, void (*user_eip)());
+uint32_t* page_create_dir(uint32_t flags);
 void page_set_dir(uint32_t* self);
 uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);

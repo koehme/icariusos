@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-#include "icarius.h"
 #include "kernel.h"
 #include "stdio.h"
 

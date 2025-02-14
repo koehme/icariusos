@@ -6,6 +6,8 @@
 
 #include "syscall.h"
 
+#include "icarius.h"
+
 typedef void (*syscall_handler_t)(int32_t);
 
 typedef struct syscall_entry {
@@ -105,7 +107,7 @@ static void _run_syscall(const int32_t syscall_id, const int32_t arg)
 void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 {
 	printf("=====================================\n");
-	printf("  Syscall Invoked! (ID: %d)\n", syscall_id);
+	printf("  Syscall Dispatcher: %s  - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
 	printf("=====================================\n");
 
 	// idt_dump_interrupt_frame(frame);

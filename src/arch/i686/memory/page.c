@@ -15,7 +15,7 @@ extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
 void page_dump_dir(uint32_t* dir);
-uint32_t* page_create_dir(uint32_t flags, void (*user_eip)());
+uint32_t* page_create_dir(uint32_t flags);
 void page_set_dir(uint32_t* self);
 uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
@@ -49,7 +49,7 @@ void page_dump_dir(uint32_t* dir)
 	return;
 };
 
-uint32_t* page_create_dir(uint32_t flags, void (*user_eip)())
+uint32_t* page_create_dir(uint32_t flags)
 {
 	uint64_t phys_addr = pfa_alloc();
 
