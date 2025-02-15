@@ -5,6 +5,7 @@
  */
 
 #include "syscall.h"
+#include "errno.h"
 
 typedef void (*syscall_handler_t)(int32_t);
 
@@ -107,10 +108,12 @@ void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 	printf("=====================================\n");
 	printf("  Syscall Dispatcher: %s  - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
 	printf("=====================================\n");
-	idt_dump_interrupt_frame(frame);
+
+	// idt_dump_interrupt_frame(frame);
 	page_restore_kernel_dir();
-	task_save(frame);
 	asm_restore_kernel_segment();
+
+	task_save(frame);
 
 	_run_syscall(syscall_id, 0x0);
 	return;

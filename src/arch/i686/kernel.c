@@ -389,24 +389,17 @@ static void _test_isr_14(void)
 
 static void _remove_identity_mapping(void)
 {
-	const uint32_t kernel_page_dir_end = 1024 * 4096;
-
-	for (uint32_t addr = 0x00000000; addr < 0x02FFFFFF; addr += PAGE_SIZE) {
-		if (addr < kernel_page_dir_end) {
-			continue;
-		};
-		page_unmap(addr);
-		const uint64_t frame = addr / PAGE_SIZE;
-		pfa_clear(&pfa, frame);
-	};
+	printf("[INFO] Removing Identity Mapping...\n");
+	page_unmap_between(page_get_dir(), 0x00000000, 0x00400000);
+	printf("[SUCCESS] Identity Mapping removed!\n");
 	return;
 };
 
 void kernel_shell(void)
 {
 	asm_do_sti();
-	_render_spinner(64);
-	_motd();
+	// _render_spinner(64);
+	// _motd();
 	// heap_dump(&heap);
 
 	printf("_>");
@@ -501,15 +494,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
 
-	pci_enumerate_bus();
+	// pci_enumerate_bus();
 
-	vfs_init();
-	ata_t* ata_dev = ata_get("A");
-	ata_init(ata_dev);
-	ata_mount_fs(ata_dev);
+	// vfs_init();
+	// ata_t* ata_dev = ata_get("A");
+	// ata_init(ata_dev);
+	// ata_mount_fs(ata_dev);
 
 	_remove_identity_mapping();
-
+	// pfa_dump(&pfa, true);
 	syscall_init();
 	task_create(&asm_user_shell);
 	return;

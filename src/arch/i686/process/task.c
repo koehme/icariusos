@@ -11,12 +11,32 @@
 
 /* PUBLIC API */
 task_t* task_create(void (*user_eip)());
+void task_dump(task_t* self);
+int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
+task_t* task_get_curr(void);
 task_t* curr_task = 0x0;
 
 /* INTERNAL API */
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
 static void _set_task_dir(task_t* self);
+static inline bool _is_addr_userspace(const void* addr);
+
+static inline bool _is_addr_userspace(const void* addr) { return ((uintptr_t)addr < KERNEL_VIRTUAL_START); };
+
+void task_exit(void)
+{
+	if (!curr_task) {
+		return;
+	};
+	printf("[TASK] Task 0x%x exited. Cleaning up...\n", curr_task);
+	task_t* old_task = curr_task;
+	// To-Do => Later if we implement task schedule => Set new curr_task and switch to next Task
+	// Free all used task pages
+	// Give the pfa the pages as frames back
+	kfree(old_task);
+	return;
+};
 
 task_t* task_get_curr(void)
 {
@@ -148,6 +168,17 @@ void task_save(interrupt_frame_t* frame)
 	task->registers.ss = frame->ss;
 	task_dump(task);
 	return;
+};
+
+int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
+{
+	const uint32_t* stack = (uint32_t*)frame->esp;
+
+	if (!_is_addr_userspace(&stack[i])) {
+		printf("[SECURITY] Invalid Task Stack Access\n");
+		return -EINVAL;
+	};
+	return stack[i];
 };
 
 static void _set_task_dir(task_t* self)

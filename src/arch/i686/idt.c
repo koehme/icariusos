@@ -603,7 +603,6 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	};
 	page_map_dir(target_dir, aligned_fault_addr, phys_addr, page_flags);
 	printf("[INFO] Mapped Virtual Address 0x%x to Physical Address 0x%x\n", aligned_fault_addr, phys_addr);
-	panic("TEST");
 	return;
 };
 

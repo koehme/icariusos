@@ -11,6 +11,7 @@
 
 
 /* EXTERNAL API */
+extern pfa_t pfa;
 extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
@@ -20,7 +21,9 @@ void page_set_dir(uint32_t* self);
 uint32_t* page_get_dir(void);
 void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
 void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
-void page_unmap(const uint32_t virt_addr);
+void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, uint32_t flags);
+void page_unmap_dir(uint32_t* dir, const uint32_t virt_addr);
+void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr);
 uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr);
 
 void page_dump_dir(uint32_t* dir)
@@ -63,10 +66,11 @@ uint32_t* page_create_dir(uint32_t flags)
 	};
 	const uint32_t virt_addr = (uint32_t)p2v((uint32_t)phys_addr);
 	uint32_t* dir = (uint32_t*)virt_addr;
-	page_map_dir(dir, virt_addr, phys_addr, flags);
-
+	// Map the new page dir temporarily into the kernel page dir :D
+	page_map_dir(page_get_dir(), virt_addr, phys_addr, flags);
+	// Init the new page dir with 0x0
 	memset((void*)virt_addr, 0, PAGE_SIZE);
-
+	// Map kernel pages into the new dir
 	for (int32_t i = 768; i < 1024; i++) {
 		const uint32_t entry = kernel_directory[i];
 
@@ -107,10 +111,9 @@ void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_
 	return;
 };
 
-void page_unmap(const uint32_t virt_addr)
+void page_unmap_dir(uint32_t* dir, const uint32_t virt_addr)
 {
 	const uint32_t pd_index = virt_addr >> 22;
-	uint32_t* dir = page_get_dir();
 	dir[pd_index] = 0;
 	asm volatile("invlpg (%0)" ::"r"(virt_addr) : "memory");
 	return;
@@ -154,5 +157,27 @@ void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end
 		printf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x (Flags: 0x%x)\n", virt_curr_addr, frame, flags);
 	};
 	printf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
+	return;
+};
+
+void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr)
+{
+	if (!dir) {
+		printf("[ERROR] Invalid Page Directory!\n");
+		return;
+	};
+	virt_start_addr &= 0xFFFFF000;
+
+	for (uint32_t virt_curr_addr = virt_start_addr; virt_curr_addr < virt_end_addr; virt_curr_addr += PAGE_SIZE) {
+		const uint32_t phys_addr = page_get_phys_addr(dir, virt_curr_addr);
+
+		if (phys_addr) {
+			page_unmap_dir(dir, virt_curr_addr);
+			const uint64_t frame = phys_addr / PAGE_SIZE;
+			pfa_clear(&pfa, frame);
+			printf("[DEBUG] Unmapped Virtual: 0x%x\n", virt_curr_addr);
+		};
+	};
+	printf("Unmapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };
