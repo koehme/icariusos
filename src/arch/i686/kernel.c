@@ -20,7 +20,7 @@ extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 extern tss_t tss;
-extern void asm_usermode_entrypoint(void);
+extern void asm_user_shell(void);
 
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
@@ -407,6 +407,8 @@ void kernel_shell(void)
 	asm_do_sti();
 	_render_spinner(64);
 	_motd();
+	// heap_dump(&heap);
+
 	printf("_>");
 
 	while (true) {
@@ -499,7 +501,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
 
-	asm_do_sti();
 	pci_enumerate_bus();
 
 	vfs_init();
@@ -510,8 +511,6 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_remove_identity_mapping();
 
 	syscall_init();
-	task_t* task = task_create(&asm_usermode_entrypoint);
-
-	kernel_shell();
+	task_create(&asm_user_shell);
 	return;
 };

@@ -38,6 +38,6 @@ extern void asm_restore_kernel_segment(void);
 task_t* task_create(void (*user_eip)());
 task_t* task_get_curr(void);
 void task_dump(task_t* self);
-void idt_dump_interrupt_frame(const interrupt_frame_t* regs);
+void task_save(interrupt_frame_t* frame);
 
 #endif

@@ -6,8 +6,6 @@
 
 #include "syscall.h"
 
-#include "icarius.h"
-
 typedef void (*syscall_handler_t)(int32_t);
 
 typedef struct syscall_entry {
@@ -15,7 +13,7 @@ typedef struct syscall_entry {
 	syscall_handler_t handler;
 } syscall_entry_t;
 
-syscall_entry_t syscalls[MAX_SYSCALL] = {
+static syscall_entry_t syscalls[MAX_SYSCALL] = {
     {
 	0x0,
 	0x0,
@@ -93,12 +91,12 @@ static void _run_syscall(const int32_t syscall_id, const int32_t arg)
 		printf("[ERROR] Invalid Syscall %s - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
 		return;
 	};
-	const syscall_entry_t syscall = syscalls[syscall_id];
+	const syscall_handler_t handler = syscalls[syscall_id].handler;
 
-	if (!syscall.handler) {
+	if (!handler) {
 		printf("[ERROR] Unimplemented Syscall: %s - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
 	} else {
-		syscall.handler(arg);
+		handler(arg);
 	};
 	kernel_shell();
 	return;
@@ -109,9 +107,9 @@ void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 	printf("=====================================\n");
 	printf("  Syscall Dispatcher: %s  - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
 	printf("=====================================\n");
-
-	// idt_dump_interrupt_frame(frame);
+	idt_dump_interrupt_frame(frame);
 	page_restore_kernel_dir();
+	task_save(frame);
 	asm_restore_kernel_segment();
 
 	_run_syscall(syscall_id, 0x0);
@@ -121,7 +119,8 @@ void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 void syscall_init(void)
 {
 	for (int32_t id = 0; id < MAX_SYSCALL; id++) {
-		syscalls[id] = (syscall_entry_t){id, 0x0};
+		const syscall_entry_t stub = {id, 0x0};
+		syscalls[id] = stub;
 	};
 	syscalls[SYS_EXIT].handler = _sys_exit;
 	return;

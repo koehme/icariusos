@@ -124,6 +124,32 @@ void task_dump(task_t* self)
 	return;
 };
 
+void task_save(interrupt_frame_t* frame)
+{
+	task_t* task = task_get_curr();
+
+	if (!task) {
+		printf("[ERROR] No current Task to SAVE!\n");
+		return;
+	};
+	printf("[TASK] Saving Task State for 0x%x\n", task);
+	task->registers.edi = frame->edi;
+	task->registers.esi = frame->esi;
+	task->registers.ebp = frame->ebp;
+	task->registers.ebx = frame->ebx;
+	task->registers.edx = frame->edx;
+	task->registers.ecx = frame->ecx;
+	task->registers.eax = frame->eax;
+
+	task->registers.eip = frame->eip;
+	task->registers.cs = frame->cs;
+	task->registers.eflags = frame->eflags;
+	task->registers.esp = frame->esp;
+	task->registers.ss = frame->ss;
+	task_dump(task);
+	return;
+};
+
 static void _set_task_dir(task_t* self)
 {
 	if (!self || !self->page_dir) {
