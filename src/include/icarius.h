@@ -371,30 +371,7 @@
 ====================================
 */
 #define MAX_SYSCALL 256
-#define SYS_EXIT 1    // _exit(int status)
-#define SYS_FORK 2    // fork(void)
-#define SYS_EXECVE 3  // execve(const char *filename, char *const argv[], char *const envp[])
-#define SYS_WAITPID 4 // waitpid(pid_t pid, int *status, int options)
-#define SYS_GETPID 5  // getpid(void)
-#define SYS_OPEN 6    // open(const char *pathname, int flags, mode_t mode)
-#define SYS_CLOSE 7   // close(int fd)
-#define SYS_READ 8    // read(int fd, void *buf, size_t count)
-#define SYS_WRITE 9   // write(int fd, const void *buf, size_t count)
-#define SYS_LSEEK 10  // lseek(int fd, off_t offset, int whence)
-#define SYS_UNLINK 11 // unlink(const char *pathname)
-#define SYS_STAT 12   // stat(const char *pathname, struct stat *statbuf)
-#define SYS_FSTAT 13  // fstat(int fd, struct stat *statbuf)
-#define SYS_DUP 14    // dup(int oldfd)
-#define SYS_DUP2 15   // dup2(int oldfd, int newfd)
-#define SYS_GETCWD 16 // getcwd(char *buf, size_t size)
-#define SYS_CHDIR 17  // chdir(const char *path)
-#define SYS_MKDIR 18  // mkdir(const char *pathname, mode_t mode)
-#define SYS_RMDIR 19  // rmdir(const char *pathname)
-#define SYS_SBRK 20   // sbrk(intptr_t increment)
-#define SYS_TIME 21   // time(time_t *tloc)
-#define SYS_SLEEP 22  // sleep(unsigned int seconds)
-#define SYS_YIELD 23  // sched_yield(void)
-#define SYS_IOCTL 24  // ioctl(int fd, unsigned long request, ...)
-#define SYS_REBOOT 25 // reboot(int cmd)
+#define SYS_EXIT 1  // _exit(int status)
+#define SYS_WRITE 4 // write(int fd, const void *buf, size_t count)
 
 #endif

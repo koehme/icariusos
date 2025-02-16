@@ -19,7 +19,7 @@ task_t* curr_task = 0x0;
 /* INTERNAL API */
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
-static void _set_task_dir(task_t* self);
+void task_restore_dir(task_t* self);
 static inline bool _is_addr_userspace(const void* addr);
 
 static inline bool _is_addr_userspace(const void* addr) { return ((uintptr_t)addr < KERNEL_VIRTUAL_START); };
@@ -95,7 +95,7 @@ task_t* task_create(void (*user_eip)())
 	/* Map code section at virtual addr 0xBFC00000 - 0xBFFFFFFF in task page dir */
 	page_map_between(task->page_dir, USER_STACK_START, USER_STACK_END, flags);
 
-	_set_task_dir(task);
+	task_restore_dir(task);
 	memcpy((void*)USER_CODE_START, (void*)user_eip, 1024);
 
 	if (memcmp((void*)USER_CODE_START, (void*)user_eip, 1024) == 0) {
@@ -106,7 +106,7 @@ task_t* task_create(void (*user_eip)())
 	page_restore_kernel_dir();
 	_init_task_register(task);
 
-	_set_task_dir(task);
+	task_restore_dir(task);
 	asm_enter_usermode(&task->registers);
 
 	return task;
@@ -181,7 +181,7 @@ int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
 	return stack[i];
 };
 
-static void _set_task_dir(task_t* self)
+void task_restore_dir(task_t* self)
 {
 	if (!self || !self->page_dir) {
 		printf("[ERROR] task_set_directory: Invalid task or missing page directory!\n");

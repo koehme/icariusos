@@ -6,99 +6,53 @@
 
 #include "syscall.h"
 #include "errno.h"
+#include "icarius.h"
 
-typedef void (*syscall_handler_t)(int32_t);
+typedef int32_t (*syscall_handler_t)(interrupt_frame_t*);
 
-typedef struct syscall_entry {
-	int32_t num;
-	syscall_handler_t handler;
-} syscall_entry_t;
+static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame);
+void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame);
+void syscall_init(void);
 
-static syscall_entry_t syscalls[MAX_SYSCALL] = {
-    {
-	0x0,
-	0x0,
-    },
-};
+int32_t _sys_exit(interrupt_frame_t* frame);
+size_t _sys_write(interrupt_frame_t* frame);
+static const char* _get_name(const int32_t syscall_id);
 
-const char* _get_syscall_name(const int32_t syscall_id)
+void* syscalls[MAX_SYSCALL] = {};
+
+static const char* _get_name(const int32_t syscall_id)
 {
 	switch (syscall_id) {
 	case SYS_EXIT:
 		return "SYS_EXIT";
-	case SYS_FORK:
-		return "SYS_FORK";
-	case SYS_EXECVE:
-		return "SYS_EXECVE";
-	case SYS_WAITPID:
-		return "SYS_WAITPID";
-	case SYS_GETPID:
-		return "SYS_GETPID";
-	case SYS_OPEN:
-		return "SYS_OPEN";
-	case SYS_CLOSE:
-		return "SYS_CLOSE";
-	case SYS_READ:
-		return "SYS_READ";
 	case SYS_WRITE:
 		return "SYS_WRITE";
-	case SYS_LSEEK:
-		return "SYS_LSEEK";
-	case SYS_UNLINK:
-		return "SYS_UNLINK";
-	case SYS_STAT:
-		return "SYS_STAT";
-	case SYS_FSTAT:
-		return "SYS_FSTAT";
-	case SYS_DUP:
-		return "SYS_DUP";
-	case SYS_DUP2:
-		return "SYS_DUP2";
-	case SYS_GETCWD:
-		return "SYS_GETCWD";
-	case SYS_CHDIR:
-		return "SYS_CHDIR";
-	case SYS_MKDIR:
-		return "SYS_MKDIR";
-	case SYS_RMDIR:
-		return "SYS_RMDIR";
-	case SYS_SBRK:
-		return "SYS_SBRK";
-	case SYS_TIME:
-		return "SYS_TIME";
-	case SYS_SLEEP:
-		return "SYS_SLEEP";
-	case SYS_YIELD:
-		return "SYS_YIELD";
-	case SYS_IOCTL:
-		return "SYS_IOCTL";
-	case SYS_REBOOT:
-		return "SYS_REBOOT";
 	default:
 		return "Unknown Syscall";
 	};
 	return 0x0;
 };
 
-static void _sys_exit(const int32_t code)
+int32_t _sys_exit(interrupt_frame_t* frame)
 {
-	printf("[INFO] Usermode Task EXITED with %d! Back to Kernel-Land (Ring 0)\n", code);
-	return;
+	const int32_t status = frame->ebx;
+	printf("[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
+	// TODO: Exit TASK!!
+	return 0;
 };
 
-static void _run_syscall(const int32_t syscall_id, const int32_t arg)
+size_t _sys_write(interrupt_frame_t* frame) { return 1; };
+
+static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 {
-	if (syscall_id < 0 || syscall_id >= MAX_SYSCALL) {
-		printf("[ERROR] Invalid Syscall %s - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
+	if (syscall_id < 0 || syscall_id >= MAX_SYSCALL || !syscalls[syscall_id]) {
+		printf("[ERROR] Invalid Syscall %s - [%d]\n", _get_name(syscall_id), syscall_id);
 		return;
 	};
-	const syscall_handler_t handler = syscalls[syscall_id].handler;
+	syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
+	int32_t result = handler(frame);
 
-	if (!handler) {
-		printf("[ERROR] Unimplemented Syscall: %s - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
-	} else {
-		handler(arg);
-	};
+	printf("[INFO] Syscall [%d] Returned [EAX]: %d\n", syscall_id, result);
 	kernel_shell();
 	return;
 };
@@ -106,25 +60,25 @@ static void _run_syscall(const int32_t syscall_id, const int32_t arg)
 void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 {
 	printf("=====================================\n");
-	printf("  Syscall Dispatcher: %s  - [%d]\n", _get_syscall_name(syscall_id), syscall_id);
+	printf("  Syscall Dispatcher: %s  - [%d]\n", _get_name(syscall_id), syscall_id);
 	printf("=====================================\n");
 
-	// idt_dump_interrupt_frame(frame);
+	idt_dump_interrupt_frame(frame);
 	page_restore_kernel_dir();
 	asm_restore_kernel_segment();
 
 	task_save(frame);
 
-	_run_syscall(syscall_id, 0x0);
+	_run_syscall(syscall_id, frame);
 	return;
 };
 
 void syscall_init(void)
 {
 	for (int32_t id = 0; id < MAX_SYSCALL; id++) {
-		const syscall_entry_t stub = {id, 0x0};
-		syscalls[id] = stub;
+		syscalls[id] = 0x0;
 	};
-	syscalls[SYS_EXIT].handler = _sys_exit;
+	syscalls[SYS_EXIT] = (void*)_sys_exit;
+	syscalls[SYS_WRITE] = (void*)_sys_write;
 	return;
 };

@@ -39,5 +39,6 @@ task_t* task_create(void (*user_eip)());
 task_t* task_get_curr(void);
 void task_dump(task_t* self);
 void task_save(interrupt_frame_t* frame);
+void task_restore_dir(task_t* self);
 
 #endif
