@@ -1,5 +1,6 @@
 global asm_enter_usermode
 global asm_restore_kernel_segment
+global asm_restore_user_segment
 
 ; ------------------------------------------------
 ; void asm_enter_usermode(task_registers_t* regs)
@@ -55,8 +56,16 @@ asm_task_restore_register:
 
 asm_restore_kernel_segment:
     mov ax, 0x10    ; Kernel Data Segment (GDT_KERNEL_DATA_SEGMENT)
-    mov ds, ax      ; Setze Data Segment
-    mov es, ax      ; Setze Extra Segment
-    mov fs, ax      ; Setze FS Segment
-    mov gs, ax      ; Setze GS Segment
+    mov ds, ax      ; Data Segment
+    mov es, ax      ; Extra Segment
+    mov fs, ax      ; FS Segment
+    mov gs, ax      ; GS Segment
+    ret
+
+asm_restore_user_segment:
+    mov ax, 0x23    ; USER_DS (Ring 3 Data-Segment)
+    mov ds, ax      ; Data Segment
+    mov es, ax      ; Extra Segment
+    mov fs, ax      ; FS Segment
+    mov gs, ax      ; GS Segment
     ret

@@ -65,7 +65,7 @@ asm_syscall:
     call syscall_dispatch
     add esp, 8
     popad
-    iret
+    iretd
 
 asm_isr0_wrapper:
     cli

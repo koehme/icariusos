@@ -365,6 +365,10 @@
 #define USER_HEAP_END 0xBFBFFFFF
 #define USER_STACK_START (USER_HEAP_END + 1)
 #define USER_STACK_END 0xBFFFFFFF
+#define FD_STDIN 0  // Standard Input
+#define FD_STDOUT 1 // Standard Output
+#define FD_STDERR 2 // Standard Error
+#define FD_FILE 3
 /*
 ====================================
     POSIX-Compatible Syscalls

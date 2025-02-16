@@ -20,9 +20,6 @@ task_t* curr_task = 0x0;
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
 void task_restore_dir(task_t* self);
-static inline bool _is_addr_userspace(const void* addr);
-
-static inline bool _is_addr_userspace(const void* addr) { return ((uintptr_t)addr < KERNEL_VIRTUAL_START); };
 
 void task_exit(void)
 {
@@ -174,7 +171,7 @@ int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
 {
 	const uint32_t* stack = (uint32_t*)frame->esp;
 
-	if (!_is_addr_userspace(&stack[i])) {
+	if ((uintptr_t)stack[i] < KERNEL_VIRTUAL_START) {
 		printf("[SECURITY] Invalid Task Stack Access\n");
 		return -EINVAL;
 	};

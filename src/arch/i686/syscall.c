@@ -6,7 +6,9 @@
 
 #include "syscall.h"
 #include "errno.h"
+#include "heap.h"
 #include "icarius.h"
+#include "task.h"
 
 typedef int32_t (*syscall_handler_t)(interrupt_frame_t*);
 
@@ -41,7 +43,40 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 	return 0;
 };
 
-size_t _sys_write(interrupt_frame_t* frame) { return 1; };
+size_t _sys_write(interrupt_frame_t* frame)
+{
+	const int32_t syscall_id = frame->eax;
+	const int32_t fd = frame->ebx;
+
+	const size_t count = frame->edx;
+
+	void* write_buf = kzalloc(count);
+
+	if (!write_buf) {
+		return 0;
+	};
+	task_restore_dir(curr_task);
+	void* user_buf = (void*)frame->ecx;
+
+	memcpy(write_buf, user_buf, count);
+	page_restore_kernel_dir();
+
+	switch (fd) {
+	case FD_STDOUT: {
+		printf("%s\n", (uint8_t*)write_buf);
+		break;
+	};
+	case FD_STDERR: {
+		printf("%s\n", (uint8_t*)write_buf);
+		break;
+	};
+	default:
+		printf("File Descriptor %d Not implemented yet %s\n", fd);
+		break;
+	};
+	kfree(write_buf);
+	return count;
+};
 
 static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 {
@@ -50,10 +85,9 @@ static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 		return;
 	};
 	syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
-	int32_t result = handler(frame);
-
-	printf("[INFO] Syscall [%d] Returned [EAX]: %d\n", syscall_id, result);
-	kernel_shell();
+	const int32_t result = handler(frame);
+	printf("[DEBUG] Syscall [%d] Returned [EAX]: 0x%x\n", syscall_id, result);
+	// kernel_shell();
 	return;
 };
 
@@ -70,6 +104,9 @@ void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 	task_save(frame);
 
 	_run_syscall(syscall_id, frame);
+
+	task_restore_dir(curr_task);
+	asm_restore_user_segment();
 	return;
 };
 

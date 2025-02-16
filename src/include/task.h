@@ -34,6 +34,7 @@ extern task_t* curr_task;
 
 extern void asm_enter_usermode(task_registers_t* regs);
 extern void asm_restore_kernel_segment(void);
+extern void asm_restore_user_segment(void);
 
 task_t* task_create(void (*user_eip)());
 task_t* task_get_curr(void);

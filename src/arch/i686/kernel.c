@@ -401,7 +401,6 @@ void kernel_shell(void)
 	// _render_spinner(64);
 	// _motd();
 	// heap_dump(&heap);
-
 	printf("_>");
 
 	while (true) {
@@ -504,6 +503,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_remove_identity_mapping();
 	// pfa_dump(&pfa, true);
 	syscall_init();
+
+	asm_do_sti();
+
 	task_create(&asm_user_shell);
 	return;
 };
