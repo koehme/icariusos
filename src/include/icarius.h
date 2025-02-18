@@ -371,11 +371,12 @@
 #define FD_FILE 3
 /*
 ====================================
-    POSIX-Compatible Syscalls
+    i686 POSIX-Compatible Syscalls
 ====================================
 */
 #define MAX_SYSCALL 256
 #define SYS_EXIT 1  // _exit(int status)
+#define SYS_READ 3  // ssize_t read(int fd, void *buf, size_t count);
 #define SYS_WRITE 4 // write(int fd, const void *buf, size_t count)
 
 #endif

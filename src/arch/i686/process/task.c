@@ -149,7 +149,7 @@ void task_save(interrupt_frame_t* frame)
 		printf("[ERROR] No current Task to SAVE!\n");
 		return;
 	};
-	printf("[TASK] Saving Task State for 0x%x\n", task);
+	// printf("[TASK] Saving Task State for 0x%x\n", task);
 	task->registers.edi = frame->edi;
 	task->registers.esi = frame->esi;
 	task->registers.ebp = frame->ebp;
@@ -163,7 +163,7 @@ void task_save(interrupt_frame_t* frame)
 	task->registers.eflags = frame->eflags;
 	task->registers.esp = frame->esp;
 	task->registers.ss = frame->ss;
-	task_dump(task);
+	// task_dump(task);
 	return;
 };
 
@@ -186,6 +186,6 @@ void task_restore_dir(task_t* self)
 	};
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->page_dir));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
-	printf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
+	// printf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
 	return;
 };

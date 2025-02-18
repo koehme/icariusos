@@ -17,7 +17,7 @@ typedef struct pathparser {
 } pathparser_t;
 
 typedef struct pathnode {
-	char identifier[8];
+	char identifier[11];
 	struct pathnode* next;
 } pathnode_t;
 

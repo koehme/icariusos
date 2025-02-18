@@ -114,12 +114,25 @@ pathnode_t* _path_parser_parse_dir(pathparser_t* self, pathlexer_t* lexer, pathn
 
 pathnode_t* _path_parser_parse_filename(pathparser_t* self, pathlexer_t* lexer, pathnode_t* curr_node)
 {
-	size_t bytes = self->prev.len;
-	_path_parser_eat(self, lexer, PT_DOT, "Expect an '.' in an filename.");
-	memcpy(curr_node->identifier + bytes, self->prev.start, self->prev.len);
-	bytes += self->prev.len;
-	_path_parser_eat(self, lexer, PT_IDENTIFIER, "Expect an 'identifier' at the end of an filename.");
-	memcpy(curr_node->identifier + bytes, self->prev.start, self->prev.len);
+	size_t bytes = 0;
+	// Copy up to 8 characters for the filename (e.g., "SHELL   ")
+	size_t namelen = (self->prev.len < 8) ? self->prev.len : 8;
+	memcpy(curr_node->identifier, self->prev.start, namelen);
+	bytes += namelen;
+	// Expect a dot (.) separator between name and extension
+	_path_parser_eat(self, lexer, PT_DOT, "Expect an '.' in a filename.");
+	// Expect and copy up to 3 characters for the extension (e.g., "BIN")
+	_path_parser_eat(self, lexer, PT_IDENTIFIER, "Expect an identifier at the end of a filename.");
+	const size_t extlen = (self->prev.len < 3) ? self->prev.len : 3;
+	// Insert dot before the extension
+	memcpy(curr_node->identifier + bytes, ".", 1);
+	bytes += 1;
+	// Copy the ext (e.g., "BIN")
+	memcpy(curr_node->identifier + bytes, self->prev.start, extlen + 1);
+	bytes += extlen;
+	// Null-terminate the string
+	curr_node->identifier[bytes] = '\0';
+	printf("[DEBUG] Parsed FAT16 Filename: %s\n", curr_node->identifier);
 	curr_node->next = 0x0;
 	return curr_node;
 };

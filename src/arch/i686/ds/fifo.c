@@ -2,7 +2,6 @@
  * @file fifo.c
  * @author Kevin Oehme
  * @copyright MIT
- * @brief Circular FIFO buffer implementation
  * @date 2024-11-14
  * @see https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)
  */
@@ -13,9 +12,9 @@
 void fifo_init(fifo_t* self);
 bool fifo_enqueue(fifo_t* self, const uint8_t data);
 bool fifo_dequeue(fifo_t* self, uint8_t* data);
+bool fifo_is_empty(const fifo_t* self);
 
 /* INTERNAL API */
-static inline bool _is_empty(const fifo_t* self);
 static inline bool _is_full(const fifo_t* self);
 
 fifo_t fifo_kbd = {
@@ -34,7 +33,7 @@ fifo_t fifo_mouse = {
 
 void fifo_init(fifo_t* self)
 {
-	if (self == NULL) {
+	if (self == 0x0) {
 		return;
 	};
 	self->head = 0;
@@ -56,7 +55,7 @@ bool fifo_enqueue(fifo_t* self, const uint8_t data)
 
 bool fifo_dequeue(fifo_t* self, uint8_t* data)
 {
-	if (!self || _is_empty(self)) {
+	if (!self || fifo_is_empty(self)) {
 		return false;
 	};
 	*data = self->buffer[self->tail];
@@ -65,6 +64,6 @@ bool fifo_dequeue(fifo_t* self, uint8_t* data)
 	return true;
 };
 
-static inline bool _is_empty(const fifo_t* self) { return self->count == 0; };
+bool fifo_is_empty(const fifo_t* self) { return self->count == 0; };
 
 static inline bool _is_full(const fifo_t* self) { return self->count == FIFO_BUFFER_SIZE; }

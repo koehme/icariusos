@@ -20,7 +20,6 @@ extern cmos_t cmos;
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
 extern tss_t tss;
-extern void asm_user_shell(void);
 
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
@@ -397,7 +396,6 @@ static void _remove_identity_mapping(void)
 
 void kernel_shell(void)
 {
-	asm_do_sti();
 	// _render_spinner(64);
 	// _motd();
 	// heap_dump(&heap);
@@ -495,10 +493,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	// pci_enumerate_bus();
 
-	// vfs_init();
-	// ata_t* ata_dev = ata_get("A");
-	// ata_init(ata_dev);
-	// ata_mount_fs(ata_dev);
+	vfs_init();
+	ata_t* ata_dev = ata_get("A");
+	ata_init(ata_dev);
+	ata_mount_fs(ata_dev);
 
 	_remove_identity_mapping();
 	// pfa_dump(&pfa, true);
@@ -506,6 +504,24 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	asm_do_sti();
 
-	task_create(&asm_user_shell);
+	const int32_t fd = vfs_fopen("A:/LEET/SHELL.BIN", "r");
+	vstat_t stat_buf = {};
+	vfs_fstat(fd, &stat_buf);
+
+	uint8_t* buf = kzalloc(stat_buf.st_size);
+	const int32_t bytes_read = vfs_fread(buf, stat_buf.st_size, 1, fd);
+	printf("[DEBUG] Read %d Bytes from SHELL.BIN\n", bytes_read);
+
+	for (size_t i = 0; i < stat_buf.st_size; i++) {
+		const uint8_t byte = buf[i];
+		const uint8_t high = (byte >> 4) & 0x0F;
+		const uint8_t low = byte & 0x0F;
+		printf("0x%x%x ", high, low);
+	};
+	printf("\n");
+	kfree(buf);
+
+	kernel_shell();
+	// task_create(&asm_user_shell);
 	return;
 };

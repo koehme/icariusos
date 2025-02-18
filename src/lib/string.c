@@ -12,6 +12,7 @@
 #include "string.h"
 
 /* PUBLIC API */
+char* strncpy(char* dest, const char* src, size_t n);
 size_t strlen(const char* str);
 bool is_alpha(const char c);
 char* sptr(char* str, const char c);
@@ -23,6 +24,19 @@ void* memset16(void* ptr, uint16_t value, size_t num);
 void* memmove(void* dest, const void* src, size_t count);
 void* memcpy(void* dest, const void* src, size_t n);
 int memcmp(const void* ptr1, const void* ptr2, size_t num);
+
+char* strncpy(char* dest, const char* src, size_t n)
+{
+	size_t i;
+
+	for (i = 0; i < n && src[i] != '\0'; i++) {
+		dest[i] = src[i];
+	};
+	for (; i < n; i++) {
+		dest[i] = '\0';
+	};
+	return dest;
+};
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
 

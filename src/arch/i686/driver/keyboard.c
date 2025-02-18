@@ -282,3 +282,36 @@ void kbd_handler(void* dev, const uint8_t data)
 	_process_keystroke(self, mc, bc);
 	return;
 };
+
+uint8_t kbd_translate(const uint8_t scancode)
+{
+	static bool shift = false;
+	static bool caps_lock = false;
+
+	switch (scancode) {
+	case 0x2A:
+	case 0x36:
+		shift = true;
+		return 0;
+	case 0xAA:
+	case 0xB6:
+		shift = false;
+		return 0;
+	case 0x3A:
+		caps_lock = !caps_lock;
+		return 0;
+	};
+	if (scancode & 0x80) {
+		return 0;
+	}
+	uint8_t ascii;
+
+	if (shift) {
+		ascii = qwertz_upper[scancode];
+	} else if (caps_lock && (scancode >= 16 && scancode <= 40)) {
+		ascii = qwertz_upper[scancode];
+	} else {
+		ascii = qwertz_lower[scancode];
+	};
+	return ascii;
+}

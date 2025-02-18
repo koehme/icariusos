@@ -66,11 +66,11 @@ uint32_t* page_create_dir(uint32_t flags)
 	};
 	const uint32_t virt_addr = (uint32_t)p2v((uint32_t)phys_addr);
 	uint32_t* dir = (uint32_t*)virt_addr;
-	// Map the new page dir temporarily into the kernel page dir :D
+	// Map the newly created page directory into the kernel's page directory so it can be accessed from kernel space
 	page_map_dir(page_get_dir(), virt_addr, phys_addr, flags);
 	// Init the new page dir with 0x0
 	memset((void*)virt_addr, 0, PAGE_SIZE);
-	// Map kernel pages into the new dir
+	// Copy kernel mappings into the new page directory
 	for (int32_t i = 768; i < 1024; i++) {
 		const uint32_t entry = kernel_directory[i];
 
@@ -133,7 +133,7 @@ void page_restore_kernel_dir(void)
 {
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)kernel_directory));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
-	printf("[DEBUG] Switched to Kernel Page Directory at Phys: 0x%x\n", phys_addr);
+	// printf("[DEBUG] Switched to Kernel Page Directory at Phys: 0x%x\n", phys_addr);
 	return;
 };
 

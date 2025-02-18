@@ -126,3 +126,9 @@ gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```bash
 tree | xclip -selection clipboard
 ```
+
+# Benutzershell 'SHELL.BIN'
+
+```bash
+make shell
+```

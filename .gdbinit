@@ -4,7 +4,8 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break asm_user_shell
-break asm_syscall
+break vfs_fopen
+break path_parser_parse
+break _path_parser_parse_filename
 
 c
