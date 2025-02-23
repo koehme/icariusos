@@ -376,7 +376,7 @@ static void _print_dir_entry(size_t i, fat16_dir_entry_t* entry, const int32_t d
 	printf("=   Low Cluster: %d\n", entry->low_cluster);
 	printf("=   File Size: %d Bytes\n", entry->file_size);
 	printf("==========================\n");
-	busy_wait(delay);
+	// busy_wait(delay);
 	return;
 };
 
@@ -390,7 +390,7 @@ static void _print_lfn_entry(size_t i, fat16_dir_entry_t* entry, const int32_t d
 	printf("==========================\n");
 	printf("=   LFN: %s (Long File Name NOT SUPPORTED)\n", "-");
 	printf("==========================\n");
-	busy_wait(delay);
+	// busy_wait(delay);
 	return;
 };
 
@@ -444,7 +444,7 @@ int32_t fat16_resolve(ata_t* dev)
 	stream_t root_dir = {};
 	stream_init(&root_dir, dev);
 	stream_seek(&root_dir, root_dir_area_absolute);
-	_dump_root_dir_entries(&fat16_header.bpb, &root_dir);
+	// _dump_root_dir_entries(&fat16_header.bpb, &root_dir);
 
 	const uint32_t fat_area_offset = _calc_fat_area_offset(&fat16_header.bpb);
 	const uint32_t fat_area_absolute = _calc_fat_area_absolute(&fat16_header.bpb, partition_offset);
@@ -455,7 +455,7 @@ int32_t fat16_resolve(ata_t* dev)
 	printf("FAT Area Absolute: 0x%x\n", fat_area_absolute);
 	printf("FAT Area Size: %d\n", fat_area_size);
 	printf("FAT Area Entries: %d\n", fat_area_entries);
-	busy_wait(FAT16_DEBUG_DELAY);
+	// busy_wait(FAT16_DEBUG_DELAY);
 
 	const uint32_t total_sectors = fat16_header.bpb.tot_sec_16 == 0 ? fat16_header.bpb.tot_sec_32 : fat16_header.bpb.tot_sec_16;
 	printf("Total Sectors: %d\n", total_sectors);

@@ -10,7 +10,7 @@
 #include "string.h"
 
 /* PUBLIC API */
-task_t* task_create(void (*user_eip)());
+task_t* task_create(const uint8_t* file);
 void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
 task_t* task_get_curr(void);
@@ -20,6 +20,7 @@ task_t* curr_task = 0x0;
 static task_t* _init_task(void);
 static void _init_task_register(task_t* task);
 void task_restore_dir(task_t* self);
+static void _load_binary_into_task(const uint8_t* file);
 
 void task_exit(void)
 {
@@ -76,7 +77,36 @@ static void _init_task_register(task_t* task)
 	return;
 };
 
-task_t* task_create(void (*user_eip)())
+static void _load_binary_into_task(const uint8_t* file)
+{
+	const int32_t fd = vfs_fopen((char*)file, "r");
+	vstat_t stat_buf = {};
+	vfs_fstat(fd, &stat_buf);
+
+	uint8_t* buf = kzalloc(stat_buf.st_size);
+	const int32_t bytes_read = vfs_fread(buf, stat_buf.st_size, 1, fd);
+	printf("[DEBUG] Read %d Bytes from SHELL.BIN\n", bytes_read);
+
+	for (size_t i = 0; i < stat_buf.st_size; i++) {
+		const uint8_t byte = buf[i];
+		const uint8_t high = (byte >> 4) & 0x0F;
+		const uint8_t low = byte & 0x0F;
+		printf("0x%x%x ", high, low);
+	};
+	printf("\n");
+
+	memcpy((void*)USER_CODE_START, (void*)buf, bytes_read);
+
+	if (memcmp((void*)USER_CODE_START, (void*)buf, bytes_read) == 0) {
+		printf("[SUCCESS] Usercode copied to Userspace at 0x%x\n", USER_CODE_START);
+	} else {
+		printf("[ERROR] Usercode copy failed.\n");
+	};
+	kfree(buf);
+	return;
+};
+
+task_t* task_create(const uint8_t* file)
 {
 	task_t* task = _init_task();
 
@@ -86,20 +116,14 @@ task_t* task_create(void (*user_eip)())
 	};
 	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 	task->page_dir = page_create_dir(flags);
-
-	/* Map code section at virtual addr 0x0 - 0x400000 in task page dir */
-	page_map_between(task->page_dir, USER_CODE_START, (USER_CODE_START + PAGE_SIZE), flags);
-	/* Map code section at virtual addr 0xBFC00000 - 0xBFFFFFFF in task page dir */
+	page_map_between(task->page_dir, USER_CODE_START, USER_BSS_END, flags);
+	page_map_between(task->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
 	page_map_between(task->page_dir, USER_STACK_START, USER_STACK_END, flags);
 
 	task_restore_dir(task);
-	memcpy((void*)USER_CODE_START, (void*)user_eip, 1024);
 
-	if (memcmp((void*)USER_CODE_START, (void*)user_eip, 1024) == 0) {
-		printf("[SUCCESS] User Code copied to Userspace at 0x%x\n", USER_CODE_START);
-	} else {
-		printf("[ERROR] User Code copy failed!\n");
-	};
+	_load_binary_into_task(file);
+
 	page_restore_kernel_dir();
 	_init_task_register(task);
 

@@ -126,4 +126,5 @@ clean:
 	rm -rf $(OBJ_DIR)/*.o
 
 shell:
-	nasm -f bin ./src/arch/i686/user/shell.asm -o ./bin/LEET/SHELL.BIN
+	$(ASSEMBLER) -f elf32 ./src/arch/i686/user/shell.asm -o ./obj/shell.asm.o
+	i686-elf-ld -T ./src/arch/i686/user/user.ld ./obj/shell.asm.o --oformat=binary -o ./bin/LEET/SHELL.BIN

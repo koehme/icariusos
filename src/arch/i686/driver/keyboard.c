@@ -20,13 +20,8 @@ void kbd_init(kbd_t* self);
 void kbd_handler(void* dev, const uint8_t data);
 
 /* INTERNAL API */
-static void _process_keystroke(kbd_t* self, const uint8_t makecode, const uint8_t breakcode);
 
-kbd_t kbd = {
-    .caps = false,
-    .caps_lock = false,
-    .alt_gr = false,
-};
+kbd_t kbd = {};
 
 const static uint8_t qwertz_lower[] = {
     0,	  // 0
@@ -216,70 +211,7 @@ const static uint8_t qwertz_altgr[] = {
 
 void kbd_init(kbd_t* self)
 {
-	self->caps = false;
-	self->caps_lock = false;
-	self->alt_gr = false;
 	idt_set(0x21, asm_irq1_keyboard, IDT_KERNEL_INT_GATE);
-	return;
-};
-
-static void _process_keystroke(kbd_t* self, const uint8_t makecode, const uint8_t breakcode)
-{
-	switch (makecode) {
-	case 1:
-	case 29:
-	case 56:
-	case 59:
-	case 60:
-	case 61:
-	case 62:
-	case 63:
-	case 64:
-	case 65:
-	case 66:
-	case 67:
-	case 68:
-	case 87:
-	case 88:
-		break;
-	case KALTGR: {
-		self->alt_gr = !self->alt_gr;
-		break;
-	};
-	case KLEFT_SHIFT: {
-		self->caps = !self->caps;
-		break;
-	};
-	case KCAPS_LOCK: {
-		if (breakcode == 0) {
-			self->caps_lock = !self->caps_lock;
-		};
-		break;
-	};
-	default: {
-		if (breakcode == 0) {
-			if (self->caps || self->caps_lock) {
-				printf("%c", qwertz_upper[makecode]);
-			} else if (kbd.alt_gr) {
-				printf("%c", qwertz_altgr[makecode]);
-			} else {
-				printf("%c", qwertz_lower[makecode]);
-			};
-			break;
-		};
-		break;
-	};
-	};
-	return;
-};
-
-void kbd_handler(void* dev, const uint8_t data)
-{
-	kbd_t* self = (kbd_t*)dev;
-	const uint8_t ps2_package = data;
-	const uint8_t mc = ps2_package & 0b01111111;
-	const uint8_t bc = ps2_package & 0b10000000; // state can be released == 128 or pressed == 0
-	_process_keystroke(self, mc, bc);
 	return;
 };
 

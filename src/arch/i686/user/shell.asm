@@ -36,7 +36,7 @@ asm_user_shell:
 .exit:
     ; Exit the user process
     mov eax, 0x1         ; Syscall: SYS_EXIT (1)
-    xor ebx, ebx         ; Exit code 0
+    xor ebx, ebx         ; Set exit code 0
     int 0x80             ; Invoke syscall
 
 section .data
@@ -44,4 +44,4 @@ section .data
     msg_len equ $ - msg          ; Compute message length
 
 section .bss
-    buf resb 2  ; Reserve 2 byte for input character
+    buf resb 2

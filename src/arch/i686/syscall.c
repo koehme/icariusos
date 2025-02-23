@@ -46,6 +46,7 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 	const int32_t status = frame->ebx;
 	printf("[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
 	// TODO: Exit TASK!!
+	kernel_shell();
 	return 0;
 };
 
