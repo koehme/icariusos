@@ -402,6 +402,7 @@ void kernel_shell(void)
 	_motd();
 
 	printf("icariusOS_>\n");
+	// pfa_dump(&pfa, false);
 
 	while (true) {
 		uint8_t key;
@@ -440,7 +441,7 @@ Example: 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | 0x02800000 - 0x02BFFFFF   | 0x02800000 - 0x02BFFFFF   | Identity Mapping for Kernel Initialization | Entry 10             |
 | 0x02C00000 - 0x02FFFFFF   | 0x02C00000 - 0x02FFFFFF   | Identity Mapping for Kernel Initialization | Entry 11             |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
-| 0x00400000 - 0x02FFFFFF   | 0x00400000 - 0x02FFFFFF   | _remove_identity_mapping()				 | Entry 1 - 11			|
+| 0x00000000 - 0x003FFFFF   | 0x00000000 - 0x003FFFFF   | _remove_identity_mapping()				 | Entry 1				|
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
 | `0x00000000 - 0x3FFFFFFF` |        Dynamic            | User Program Code (Max. 1 GiB)             | Entry   0-255        |
 | `0x40000000 - 0xBFBFFFFF` |        Dynamic            | User Heap (Grows Upwards, Max. 1,75 GiB)   | Entry 256-766        |
@@ -508,7 +509,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-
+	pfa_dump(&pfa, true);
 	task_create((uint8_t*)"A:/LEET/SHELL.BIN");
 	return;
 };

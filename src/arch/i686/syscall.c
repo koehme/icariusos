@@ -44,8 +44,8 @@ static const char* _get_name(const int32_t syscall_id)
 int32_t _sys_exit(interrupt_frame_t* frame)
 {
 	const int32_t status = frame->ebx;
-	printf("[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
-	// TODO: Exit TASK!!
+	printf("\n[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
+	task_exit(curr_task);
 	kernel_shell();
 	return 0;
 };

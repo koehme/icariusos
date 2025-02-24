@@ -154,9 +154,9 @@ void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end
 			return;
 		};
 		page_map_dir(dir, virt_curr_addr, frame, flags);
-		printf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x (Flags: 0x%x)\n", virt_curr_addr, frame, flags);
+		printf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x at Frame: %d (Flags: 0x%x)\n", virt_curr_addr, frame, frame / PAGE_SIZE, flags);
 	};
-	printf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
+	// printf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };
 

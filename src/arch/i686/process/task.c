@@ -9,7 +9,10 @@
 #include "icarius.h"
 #include "string.h"
 
+extern pfa_t pfa;
+
 /* PUBLIC API */
+void task_exit(task_t* self);
 task_t* task_create(const uint8_t* file);
 void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
@@ -22,17 +25,33 @@ static void _init_task_register(task_t* task);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
-void task_exit(void)
+void task_exit(task_t* self)
 {
 	if (!curr_task) {
 		return;
 	};
-	printf("[TASK] Task 0x%x exited. Cleaning up...\n", curr_task);
-	task_t* old_task = curr_task;
-	// To-Do => Later if we implement task schedule => Set new curr_task and switch to next Task
-	// Free all used task pages
-	// Give the pfa the pages as frames back
-	kfree(old_task);
+	printf("[TASK] Task->Page_Dir 0x%x exited. Cleaning up...\n", self->page_dir);
+	uint32_t* dir = self->page_dir;
+
+	for (uint32_t i = 0; i < 768; i++) {
+		if (dir[i] & PAGE_PRESENT) {
+			const uint32_t virt_addr = i * 0x400000;
+			const uint32_t phys_addr = page_get_phys_addr(dir, virt_addr);
+			page_unmap_dir(dir, virt_addr);
+			const uint64_t frame = phys_addr / PAGE_SIZE;
+			pfa_clear(&pfa, frame);
+			printf("[DEBUG] Freeing Page: Virt=0x%x, Phys=0x%x at Frame %d\n", virt_addr, phys_addr, frame);
+		};
+	};
+	const uint32_t phys_addr = (uint32_t)v2p((void*)self->page_dir);
+	const uint64_t frame = phys_addr / PAGE_SIZE;
+	page_unmap_dir(page_get_dir(), (uint32_t)self->page_dir);
+	pfa_clear(&pfa, frame);
+	printf("[DEBUG] Freeing Page Directory: Virt=0x%x, Phys=0x%x at Frame %d\n", self->page_dir, phys_addr, frame);
+
+	kfree(self);
+	pfa_dump(&pfa, false);
+
 	return;
 };
 

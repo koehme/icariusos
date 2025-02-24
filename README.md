@@ -117,7 +117,7 @@ Für die Bequemen - In einem Befehl:
 # GNU Debugger
 
 ```bash
-./swap.sh && qemu-system-i386 -s -S ./ICARIUS.img
+./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 

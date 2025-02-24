@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break *0x0
+break _heap_grow
 
 c

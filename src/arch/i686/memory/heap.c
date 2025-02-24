@@ -124,13 +124,15 @@ static void _init_heap_block(heap_block_t* self, size_t size, heap_block_t* prev
 
 static void _heap_grow(heap_t* self)
 {
-	const uint64_t phys_addr = pfa_alloc();
+	const uint32_t phys_addr = pfa_alloc();
 
 	if (!phys_addr) {
 		panic("[CRITICAL] Out of Physical Memory. Unable to Allocate more Mem.\n");
 		return;
 	};
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
+	const uint32_t frame = phys_addr / PAGE_SIZE;
+	printf("[DEBUG] Mapped Virt=0x%x -> Phys=0x%x at Frame %d\n", phys_addr, self->next_addr, frame);
 	const size_t chunks = PAGE_SIZE / KERNEL_HEAP_CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
 
