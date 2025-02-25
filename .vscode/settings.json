@@ -5,5 +5,6 @@
         "cstdint": "cpp",
         "stdio.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "github.copilot.editor.enableAutoCompletions": false,
 }

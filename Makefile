@@ -37,6 +37,7 @@ SOURCES_C = \
     ./src/arch/i686/ds/fifo.c \
     ./src/arch/i686/process/tss.c \
     ./src/arch/i686/process/task.c \
+    ./src/arch/i686/process/process.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \

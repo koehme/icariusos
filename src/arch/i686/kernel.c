@@ -510,6 +510,14 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	asm_do_sti();
 	pfa_dump(&pfa, true);
-	task_create((uint8_t*)"A:/LEET/SHELL.BIN");
+	// task_create((uint8_t*)"A:/LEET/SHELL.BIN");
+
+	process_spawn("A:/LEET/SHELL.BIN");
+	process_spawn("A:/LEET/SHELL.BIN");
+	process_spawn("A:/LEET/SHELL.BIN");
+
+	process_list_dump();
+
+	kernel_shell();
 	return;
 };

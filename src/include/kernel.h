@@ -41,6 +41,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "pci.h"
 #include "pfa.h"
 #include "pic.h"
+#include "process.h"
 #include "ps2.h"
 #include "stream.h"
 #include "string.h"

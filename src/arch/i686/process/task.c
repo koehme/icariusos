@@ -17,6 +17,7 @@ task_t* task_create(const uint8_t* file);
 void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
 task_t* task_get_curr(void);
+void task_start(task_t* task);
 task_t* curr_task = 0x0;
 
 /* INTERNAL API */
@@ -125,6 +126,16 @@ static void _load_binary_into_task(const uint8_t* file)
 	return;
 };
 
+void task_start(task_t* task)
+{
+	if (!task)
+		return;
+	printf("[TASK] Starting Task 0x%x\n", task);
+	task_restore_dir(task);
+	asm_enter_usermode(&task->registers);
+	return;
+};
+
 task_t* task_create(const uint8_t* file)
 {
 	task_t* task = _init_task();
@@ -146,8 +157,8 @@ task_t* task_create(const uint8_t* file)
 	page_restore_kernel_dir();
 	_init_task_register(task);
 
-	task_restore_dir(task);
-	asm_enter_usermode(&task->registers);
+	// task_restore_dir(task);
+	// asm_enter_usermode(&task->registers);
 
 	return task;
 };
