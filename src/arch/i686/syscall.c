@@ -46,6 +46,9 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 	const int32_t status = frame->ebx;
 	printf("\n[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
 	task_exit(curr_task);
+	// TODO Process Cleanup !!!
+	// Workaround -> curr_process = 0x0
+	curr_process = 0x0;
 	kernel_shell();
 	return 0;
 };
@@ -93,12 +96,17 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	asm_do_sti();
 	void* kernel_buf = kzalloc(count);
 
+	process_t* caller = curr_process;
+
+	if (!caller)
+		return -1;
+
 	for (size_t i = 0; i < count; i++) {
-		while (fifo_is_empty(&fifo_kbd)) {
+		while (fifo_is_empty(caller->keyboard_buffer)) {
 			//	asm volatile("hlt");
 		};
 
-		if (!fifo_dequeue(&fifo_kbd, (uint8_t*)kernel_buf + i)) {
+		if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
 			kfree(kernel_buf);
 			return i;
 		};

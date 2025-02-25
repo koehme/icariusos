@@ -59,7 +59,8 @@ static process_t* _process_alloc(const char* filepath)
 	new_process->pid = next_pid++;
 	strncpy(new_process->filename, filepath, sizeof(new_process->filename) - 1);
 	new_process->filetype = PROCESS_BINARY;
-
+	new_process->keyboard_buffer = kzalloc(sizeof(fifo_t));
+	fifo_init(new_process->keyboard_buffer);
 	return new_process;
 };
 

@@ -45,11 +45,13 @@ typedef struct process {
 		elf_file_t* elf_file;
 	};
 	uint32_t size;
-	fifo_t keyboard_buffer;
+	fifo_t* keyboard_buffer;
 	process_arguments_t arguments;
 	struct process* prev;
 	struct process* next;
 } process_t;
+
+extern process_t* curr_process;
 
 process_t* process_spawn(const char* filepath);
 void process_list_dump(void);

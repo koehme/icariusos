@@ -19,6 +19,7 @@
 #include "string.h"
 
 /* EXTERNAL API */
+extern process_t* curr_process;
 extern ata_t ata_dev;
 extern timer_t timer;
 extern kbd_t kbd;
@@ -553,7 +554,11 @@ void irq1_handler(void)
 		const char ascii = kbd_translate(scancode);
 
 		if (ascii) {
-			fifo_enqueue(&fifo_kbd, ascii);
+			if (curr_process) {
+				fifo_enqueue(curr_process->keyboard_buffer, ascii);
+			} else {
+				fifo_enqueue(&fifo_kbd, ascii);
+			};
 		};
 	};
 	_pic1_send_eoi();

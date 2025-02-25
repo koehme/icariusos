@@ -401,7 +401,7 @@ void kernel_shell(void)
 	_render_spinner(32);
 	_motd();
 
-	printf("icariusOS_>\n");
+	printf("icarsh_>\n");
 	// pfa_dump(&pfa, false);
 
 	while (true) {
@@ -512,12 +512,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	pfa_dump(&pfa, true);
 	// task_create((uint8_t*)"A:/LEET/SHELL.BIN");
 
-	process_spawn("A:/LEET/SHELL.BIN");
-	process_spawn("A:/LEET/SHELL.BIN");
-	process_spawn("A:/LEET/SHELL.BIN");
-
-	process_list_dump();
-
+	process_t* proc = process_spawn("A:/LEET/SHELL.BIN");
+	task_start(proc->tasks[0]);
 	kernel_shell();
 	return;
 };
