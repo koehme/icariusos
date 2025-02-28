@@ -92,5 +92,6 @@ extern process_t* curr_process;
 
 process_t* process_spawn(const char* filepath);
 void process_list_dump(void);
+void process_exit(process_t* self);
 
 #endif

@@ -25,37 +25,21 @@ static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
-void task_exit(task_t* self)
+void  task_exit(task_t* self)
 {
-	self->parent->task_count--;
-
-	if (self->parent->task_count == 0) {
-		printf("TASK COUNT == 0\n");
-		curr_task = 0x0;
+	if (!self) {
+		return;
 	};
-	/*
-	printf("[TASK] Task->Page_Dir 0x%x exited. Cleaning up...\n", self->page_dir);
-	uint32_t* dir = self->page_dir;
+	process_t* parent = self->parent;
+	printf("[TASK] Task 0x%x exited. Remaining Tasks: %d\n", self, parent->task_count - 1);
 
-	for (uint32_t i = 0; i < 768; i++) {
-		if (dir[i] & PAGE_PRESENT) {
-			const uint32_t virt_addr = i * 0x400000;
-			const uint32_t phys_addr = page_get_phys_addr(dir, virt_addr);
-			page_unmap_dir(dir, virt_addr);
-			const uint64_t frame = phys_addr / PAGE_SIZE;
-			pfa_clear(&pfa, frame);
-			printf("[DEBUG] Freeing Page: Virt=0x%x, Phys=0x%x at Frame %d\n", virt_addr, phys_addr, frame);
+	for (size_t i = 0; i < PROCESS_MAX_THREAD; i++) {
+		if (parent->tasks[i] == self) {
+			parent->tasks[i] = 0x0;
+			break;
 		};
 	};
-	const uint32_t phys_addr = (uint32_t)v2p((void*)self->page_dir);
-	const uint64_t frame = phys_addr / PAGE_SIZE;
-	page_unmap_dir(page_get_dir(), (uint32_t)self->page_dir);
-	pfa_clear(&pfa, frame);
-	printf("[DEBUG] Freeing Page Directory: Virt=0x%x, Phys=0x%x at Frame %d\n", self->page_dir, phys_addr, frame);
-
-	kfree(self);
-	pfa_dump(&pfa, false);
-	*/
+	self->parent->task_count--;
 	return;
 };
 

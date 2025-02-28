@@ -9,11 +9,14 @@
 #include "string.h"
 #include "task.h"
 
+extern pfa_t pfa;
+
 /* PUBLIC API */
 process_t* curr_process = 0x0;
 process_t* processes = 0x0;
 process_t* process_spawn(const char* filepath);
 void process_list_dump(void);
+void process_exit(process_t* self);
 
 /* INTERNAL API */
 static uint16_t next_pid = 1;
@@ -40,7 +43,41 @@ void process_list_dump(void)
 		printf("  Name: %s\n", process->filename);
 		printf("  Tasks: %d | File Type: %s\n", process->task_count, process->filetype == PROCESS_ELF ? "ELF" : "BINARY");
 		printf("  Filesize: %d Bytes\n", process->size);
+		printf("  Page Directory: 0x%x\n", process->page_dir);
+		printf("  Keyboard Buffer: 0x%x\n", process->keyboard_buffer);
 		printf("  Prev: 0x%x | Next: 0x%x\n", process->prev, process->next);
+
+		printf("  Task List:\n");
+		for (size_t i = 0; i < PROCESS_MAX_THREAD; i++) {
+			const task_t* task = process->tasks[i];
+
+			if (task) {
+				printf("    - Task[%d]: 0x%x (Stack: 0x%x - 0x%x)\n", i, task, task->stack_top, task->stack_bottom);
+			};
+		};
+
+		printf("  Allocations:\n");
+		for (size_t i = 0; i < PROCESS_MAX_ALLOCATION; i++) {
+			const process_allocation_t allocation = process->allocations[i];
+
+			if (allocation.addr) {
+				printf("    - Alloc[%d]: Addr=0x%x, Size=%d Bytes\n", i, allocation.addr, allocation.size);
+			};
+		};
+
+		if (process->filetype == PROCESS_ELF && process->elf_file) {
+			printf("  ELF File:\n");
+			printf("    - Entry Point: 0x%x\n", process->elf_file->entry);
+			printf("    - PH Offset: 0x%x | PH Num: %d | PH Size: %d\n", process->elf_file->ph_offset, process->elf_file->ph_num,
+			       process->elf_file->ph_size);
+			printf("    - SH Offset: 0x%x | SH Num: %d | SH Size: %d\n", process->elf_file->sh_offset, process->elf_file->sh_num,
+			       process->elf_file->sh_size);
+		};
+
+		printf("  Arguments (argc=%d):\n", process->arguments.argc);
+		for (size_t i = 0; i < process->arguments.argc; i++) {
+			printf("    - argv[%d]: %s\n", i, process->arguments.argv[i]);
+		};
 		printf("------------------------------------\n");
 		process = process->next;
 	} while (process && process != processes);
@@ -124,4 +161,46 @@ process_t* process_spawn(const char* filepath)
 
 	_process_list_insert(new_process);
 	return new_process;
+};
+
+void process_exit(process_t* self)
+{
+	printf("[DEBUG] Process PID [%d] exited. Page_Dir 0x%x  Cleaning up...\n", self->pid, self->page_dir);
+	uint32_t* dir = self->page_dir;
+
+	if (self->prev) {
+		self->prev->next = self->next;
+	}
+	if (self->next) {
+		self->next->prev = self->prev;
+	}
+
+	if (processes == self) {
+		processes = self->next;
+	};
+
+	if (curr_process == self) {
+		curr_process = 0x0;
+	};
+
+	for (uint32_t i = 0; i < 768; i++) {
+		if (dir[i] & PAGE_PRESENT) {
+			const uint32_t virt_addr = i * 0x400000;
+			const uint32_t phys_addr = page_get_phys_addr(dir, virt_addr);
+			page_unmap_dir(dir, virt_addr);
+			const uint32_t frame = phys_addr / PAGE_SIZE;
+			pfa_clear(&pfa, frame);
+			printf("[DEBUG] Freeing Page: Virt=0x%x, Phys=0x%x at Frame %d\n", virt_addr, phys_addr, frame);
+		};
+	};
+	const uint32_t phys_addr = (uint32_t)v2p((void*)self->page_dir);
+	const uint32_t frame = phys_addr / PAGE_SIZE;
+	page_unmap_dir(page_get_dir(), (uint32_t)self->page_dir);
+	pfa_clear(&pfa, frame);
+	printf("[DEBUG] Freeing Page Directory: Virt=0x%x, Phys=0x%x at Frame %d\n", self->page_dir, phys_addr, frame);
+
+	kfree(self->keyboard_buffer);
+	kfree(self);
+	pfa_dump(&pfa, false);
+	return;
 };

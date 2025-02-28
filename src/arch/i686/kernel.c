@@ -401,8 +401,9 @@ void kernel_shell(void)
 	_render_spinner(32);
 	_motd();
 
-	printf("icarsh_>\n");
-	// pfa_dump(&pfa, false);
+	printf("Icarsh_>\n");
+	pfa_dump(&pfa, false);
+	process_list_dump();
 
 	while (true) {
 		uint8_t key;
@@ -509,11 +510,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-	pfa_dump(&pfa, true);
-	// task_create((uint8_t*)"A:/LEET/SHELL.BIN");
+	pfa_dump(&pfa, false);
 
-	process_t* proc = process_spawn("A:/LEET/SHELL.BIN");
-	task_start(proc->tasks[0]);
+	process_t* proc1 = process_spawn("A:/LEET/SHELL.BIN");
+	// process_t* proc2 = process_spawn("A:/LEET/SHELL.BIN");
+
+	// process_list_dump();
+	pfa_dump(&pfa, false);
+	task_start(proc1->tasks[0]);
+
 	kernel_shell();
 	return;
 };

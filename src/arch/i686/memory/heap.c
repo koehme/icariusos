@@ -132,7 +132,7 @@ static void _heap_grow(heap_t* self)
 	};
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
 	const uint32_t frame = phys_addr / PAGE_SIZE;
-	printf("[DEBUG] Mapped Virt=0x%x -> Phys=0x%x at Frame %d\n", phys_addr, self->next_addr, frame);
+	printf("[DEBUG] Heap is growing eating Frame %d\n", frame);
 	const size_t chunks = PAGE_SIZE / KERNEL_HEAP_CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
 

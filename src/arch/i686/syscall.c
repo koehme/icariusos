@@ -53,7 +53,8 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 
 	if (parent_process->task_count == 0) {
 		printf("[INFO] Process PID [%d] exit. Starting Kernel Shell..\n", parent_process->pid);
-		// TODO => 1) Cleanup parent page dir 2) kfree parent_process 3) set curr_process = 0x0
+		curr_task = 0x0;
+		process_exit(parent_process);
 	};
 	kernel_shell();
 	return status;
