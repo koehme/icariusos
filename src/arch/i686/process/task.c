@@ -13,7 +13,7 @@ extern pfa_t pfa;
 
 /* PUBLIC API */
 void task_exit(task_t* self);
-task_t* task_create(const uint8_t* file);
+task_t* task_create(process_t* parent, const uint8_t* file);
 void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
 task_t* task_get_curr(void);
@@ -21,16 +21,19 @@ void task_start(task_t* task);
 task_t* curr_task = 0x0;
 
 /* INTERNAL API */
-static task_t* _init_task(void);
-static void _init_task_register(task_t* task);
+static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
 void task_exit(task_t* self)
 {
-	if (!curr_task) {
-		return;
+	self->parent->task_count--;
+
+	if (self->parent->task_count == 0) {
+		printf("TASK COUNT == 0\n");
+		curr_task = 0x0;
 	};
+	/*
 	printf("[TASK] Task->Page_Dir 0x%x exited. Cleaning up...\n", self->page_dir);
 	uint32_t* dir = self->page_dir;
 
@@ -52,7 +55,7 @@ void task_exit(task_t* self)
 
 	kfree(self);
 	pfa_dump(&pfa, false);
-
+	*/
 	return;
 };
 
@@ -65,7 +68,7 @@ task_t* task_get_curr(void)
 	return curr_task;
 };
 
-static task_t* _init_task(void)
+static task_t* _init_task(process_t* parent)
 {
 	task_t* task = kzalloc(sizeof(task_t));
 
@@ -74,27 +77,10 @@ static task_t* _init_task(void)
 		return 0x0;
 	};
 	memset(task, 0x0, sizeof(task_t));
+
+	task->parent = parent;
+
 	return task;
-};
-
-static void _init_task_register(task_t* task)
-{
-	if (!task) {
-		printf("[ERROR] Invalid Task!\n");
-		return;
-	};
-	task->registers.eip = USER_CODE_START;
-	task->registers.eflags = 0x200;
-	task->registers.esp = task->registers.ebp = USER_STACK_END;
-
-	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
-	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
-
-	curr_task = task;
-
-	task_dump(task);
-
-	return;
 };
 
 static void _load_binary_into_task(const uint8_t* file)
@@ -131,35 +117,56 @@ void task_start(task_t* task)
 	if (!task)
 		return;
 	printf("[TASK] Starting Task 0x%x\n", task);
+	curr_task = task;
 	task_restore_dir(task);
 	asm_enter_usermode(&task->registers);
 	return;
 };
 
-task_t* task_create(const uint8_t* file)
+task_t* task_create(process_t* parent, const uint8_t* file)
 {
-	task_t* task = _init_task();
-
-	if (!task) {
-		errno = ENOMEM;
+	if (parent->task_count >= PROCESS_MAX_THREAD) {
+		printf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
 		return 0x0;
 	};
+	task_t* task = _init_task(parent);
+
+	if (!task) {
+		return 0x0;
+	};
+
+	if (!parent || !parent->page_dir) {
+		printf("[ERROR] Invalid Process or has no valid Page Directory!\n");
+		return 0x0;
+	};
+	/*
 	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
 	task->page_dir = page_create_dir(flags);
 	page_map_between(task->page_dir, USER_CODE_START, USER_BSS_END, flags);
 	page_map_between(task->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
 	page_map_between(task->page_dir, USER_STACK_START, USER_STACK_END, flags);
+	*/
+	const uint32_t offset = parent->task_count * (USER_STACK_SIZE / PROCESS_MAX_THREAD); // 256 KiB per Stack
+	const uint32_t stack_top = USER_STACK_END - offset;
+	const uint32_t stack_bottom = stack_top - (USER_STACK_SIZE / PROCESS_MAX_THREAD) + 1;
+	task->stack_top = stack_top;
+	task->stack_bottom = stack_bottom;
+	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+	page_map_between(parent->page_dir, stack_bottom, stack_top, flags);
 
 	task_restore_dir(task);
-
 	_load_binary_into_task(file);
-
 	page_restore_kernel_dir();
-	_init_task_register(task);
+
+	task->registers.eip = USER_CODE_START;
+	task->registers.eflags = 0x200;
+	task->registers.esp = task->registers.ebp = task->stack_top;
+
+	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
+	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
 
 	// task_restore_dir(task);
 	// asm_enter_usermode(&task->registers);
-
 	return task;
 };
 
@@ -174,7 +181,7 @@ void task_dump(task_t* self)
 	printf("          TASK STATE DUMP           \n");
 	printf("====================================\n");
 
-	printf("Task Page Directory: 0x%x\n", v2p(self->page_dir));
+	printf("Task Page Directory: 0x%x\n", v2p(self->parent->page_dir));
 	printf("EIP  (Instruction Pointer) : 0x%x\n", self->registers.eip);
 	printf("ESP  (Stack Pointer)       : 0x%x\n", self->registers.esp);
 	printf("EBP  (Base Pointer)        : 0x%x\n", self->registers.ebp);
@@ -234,11 +241,11 @@ int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
 
 void task_restore_dir(task_t* self)
 {
-	if (!self || !self->page_dir) {
+	if (!self || !self->parent->page_dir) {
 		printf("[ERROR] task_set_directory: Invalid task or missing page directory!\n");
 		return;
 	};
-	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->page_dir));
+	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->parent->page_dir));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
 	// printf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
 	return;

@@ -510,7 +510,7 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	if (sgx_flag) {
 		printf(" - SGX-Specific Access Control Violation (SGX flag)\n");
 	};
-	uint32_t* target_dir = (user_mode) ? task_get_curr()->page_dir : kernel_directory;
+	uint32_t* target_dir = (user_mode) ? task_get_curr()->parent->page_dir : kernel_directory;
 
 	printf("[DEBUG] Current Page Directory: 0x%x\n", (v2p((uint32_t)target_dir)));
 	idt_dump_interrupt_frame(regs);
@@ -554,11 +554,11 @@ void irq1_handler(void)
 		const char ascii = kbd_translate(scancode);
 
 		if (ascii) {
-			if (curr_process) {
-				fifo_enqueue(curr_process->keyboard_buffer, ascii);
+			if (curr_task && curr_task->parent) {
+				fifo_enqueue(curr_task->parent->keyboard_buffer, ascii);
 			} else {
 				fifo_enqueue(&fifo_kbd, ascii);
-			};
+			}
 		};
 	};
 	_pic1_send_eoi();

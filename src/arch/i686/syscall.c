@@ -45,12 +45,18 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 {
 	const int32_t status = frame->ebx;
 	printf("\n[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
-	task_exit(curr_task);
-	// TODO Process Cleanup !!!
-	// Workaround -> curr_process = 0x0
-	curr_process = 0x0;
+
+	task_t* task = curr_task;
+	process_t* parent_process = task->parent;
+
+	task_exit(task);
+
+	if (parent_process->task_count == 0) {
+		printf("[INFO] Process PID [%d] exit. Starting Kernel Shell..\n", parent_process->pid);
+		// TODO => 1) Cleanup parent page dir 2) kfree parent_process 3) set curr_process = 0x0
+	};
 	kernel_shell();
-	return 0;
+	return status;
 };
 
 size_t _sys_write(interrupt_frame_t* frame)
@@ -96,7 +102,7 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	asm_do_sti();
 	void* kernel_buf = kzalloc(count);
 
-	process_t* caller = curr_process;
+	process_t* caller = curr_task->parent;
 
 	if (!caller)
 		return -1;

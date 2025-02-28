@@ -106,16 +106,22 @@ process_t* process_spawn(const char* filepath)
 		errno = -ENOMEM;
 		return 0x0;
 	};
-	task_t* initial_task = task_create((uint8_t*)new_process->filename);
+	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+	new_process->page_dir = page_create_dir(flags);
+	page_map_between(new_process->page_dir, USER_CODE_START, USER_BSS_END, flags);
+	page_map_between(new_process->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
 
-	if (!initial_task) {
+	task_t* task = task_create(new_process, (uint8_t*)new_process->filename);
+
+	if (!task) {
 		kfree(new_process);
 		return 0x0;
 	};
 	new_process->size = _process_get_filesize(new_process->filename);
 
-	new_process->tasks[0] = initial_task;
+	new_process->tasks[new_process->task_count] = task;
 	new_process->task_count++;
+
 	_process_list_insert(new_process);
 	return new_process;
 };

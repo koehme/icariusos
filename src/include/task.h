@@ -8,7 +8,11 @@
 #define TASK_H
 
 #include "idt.h"
+#include "process.h"
 #include <stdint.h>
+
+struct process;
+typedef struct process process_t;
 
 typedef struct task_registers {
 	uint32_t edi;	 // Offset +0   | General-purpose register EDI
@@ -26,8 +30,10 @@ typedef struct task_registers {
 } task_registers_t;
 
 typedef struct task {
-	uint32_t* page_dir;
+	uint32_t stack_top;
+	uint32_t stack_bottom;
 	task_registers_t registers;
+	process_t* parent;
 } task_t;
 
 extern task_t* curr_task;
@@ -37,7 +43,7 @@ extern void asm_restore_kernel_segment(void);
 extern void asm_restore_user_segment(void);
 
 void task_exit(task_t* self);
-task_t* task_create(const uint8_t* file);
+task_t* task_create(process_t* parent, const uint8_t* file);
 task_t* task_get_curr(void);
 void task_dump(task_t* self);
 void task_save(interrupt_frame_t* frame);
