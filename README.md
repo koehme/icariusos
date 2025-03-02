@@ -7,29 +7,29 @@ Minimalistischer Kernel für x86
 ## 🚀 Features (Top 5)
 
 - **Speicherverwaltung mit Paging (4 MiB Pages)** – inklusive Page Frame Allocator
-- **Multitasking mit Task-Switching** – jeder Task hat sein eigenes Seitenverzeichnis
+- **Multitasking mit Task-Switching** – jeder Prozess hat sein eigenes Seitenverzeichnis
 - **Syscalls über `int 0x80`** – sicherer Übergang von Benutzer- zu Kernelmodus
 - **Interrupt-Handling** – IDT mit erweiterten Fehleranalysen für Debugging
 - **4 KiB Chunk-basierter Heap-Allocator** – Wachstum erfolgt automatisch, wenn zu wenig freier Speicher vorhanden ist
 
 ## 🔜 Nächste Schritte
 
-- **Speicherlecks fixen** – Tasks sauber freiräumen 🧹
+- **Speicherlecks fixen** – Tasks bzw. Prozesse sauber freiräumen 🧹
 - **Scheduler bauen** – Round-Robin-Scheduler für mehrere Tasks 🕒
 - **Standardbibliothek aufbauen** – POSIX-ähnliche Funktionen ✨
 - **Mehr Syscalls** – für bessere Benutzermodus Unterstützung 🛠️
 
 ## 🎯 Der Weg ist das Ziel
 
-Kennst du das Gefühl, wenn du etwas baust, das wirklich von Grund auf entsteht? Kein Framework, keine Bibliothek, keine Abkürzungen – nur du, deine Ideen und der Code, der das System kontrolliert. Genau das ist Kernel-Entwicklung für mich.
+Kennst du das Gefühl, wenn du wirklich von Null etwas erschaffst? Das fühlt sich richtig echt an. Ohne Frameworks, keine Bibliotheken und vor allem keine fertigen Lösungen, die ins System hineingepfuscht werden. Nur ich, meine Ideen im Kopf und die komplette Kontrolle über das System, das Stück für Stück entsteht.
 
-Hier gibt es keine Sicherheitsnetze – ich (bzw. wir) bin allein verantwortlich dafür, wie Speicher verwaltet wird, wie Tasks kommunizieren und ob der Code das System zum Laufen bringt oder alles abstürzen lässt. Und genau das macht es so faszinierend! Als mein erster Task-Switch funktionierte oder mein Debugger endlich die richtige Speicheradresse ausgab, fühlte sich das an wie ein verdammter Sieg. 🏆
+Hier gibt’s nichts, was dich vor Fehlern bewahrt – wenn der Speicher falsch verwaltet wird oder der Wechsel in den Benutzermodus nicht sauber läuft, liegt es an mir, das zu fixen. Und genau das macht es so verdammt spannend! Als mein erster Wechsel in den Benutzermodus funktioniert hat oder mein Debugger endlich die richtige Speicheradresse ausgespuckt hat, fühlte sich das verdammt gut an. Genau das macht Kernel-Entwicklung für mich so verdammt reizvoll.
 
-Ja, manchmal könnte ich den Bildschirm aus dem Fenster werfen (Ein Seitenfehler 👀), aber sobald ich das Problem löse – dieses Gefühl ist unbeschreiblich. Kernel-Entwicklung ist mein Low-Level-Puzzle, das mich ständig herausfordert und wachsen lässt.
+Klar, manchmal will ich den Monitor aus dem Fenster werfen – "Och nö, schon wieder ein Seitenfehler? MAN!" 👀 Aber wenn ich den Bug dann finde – dieses Gefühl ist einfach unersetzbar. Kernel-Entwicklung ist eine krasse Herausforderung, an der man ständig wachsen kann, wenn man es zulässt.
 
-Und das Beste? Es gibt kein festes Ziel. Ich baue hier keinen Linux-Konkurrenten – ich erkunde, lerne und genieße jeden Fortschritt.
+Und das Beste daran? Es gibt kein Endziel. Ich baue hier auch keinen Linux-Konkurrenten – ich experimentiere, lerne und genieße einfach jeden noch so kleinen Fortschritt.
 
-Das Abenteuer hört nie auf – und genau das macht es so spannend. 🚀
+Das Abenteuer geht immer weiter – und genau das macht es so cool. 🚀
 
 # 🤝 Mitmachen
 
