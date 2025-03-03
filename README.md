@@ -127,8 +127,14 @@ gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 tree | xclip -selection clipboard
 ```
 
-# Benutzershell 'SHELL.BIN'
+# Benutzershellv1 in puren Assembler 'SHELL.BIN'
 
 ```bash
 make shell
 ```
+
+# Benutzershellv1 in C mit libc 'ICARSH.BIN'
+
+```bash
+make icarsh
+``` 

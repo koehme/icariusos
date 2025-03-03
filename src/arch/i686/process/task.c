@@ -25,7 +25,7 @@ static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
-void  task_exit(task_t* self)
+void task_exit(task_t* self)
 {
 	if (!self) {
 		return;
@@ -75,7 +75,7 @@ static void _load_binary_into_task(const uint8_t* file)
 
 	uint8_t* buf = kzalloc(stat_buf.st_size);
 	const int32_t bytes_read = vfs_fread(buf, stat_buf.st_size, 1, fd);
-	printf("[DEBUG] Read %d Bytes from SHELL.BIN\n", bytes_read);
+	printf("[DEBUG] Read %d Bytes from %s\n", bytes_read, file);
 
 	for (size_t i = 0; i < stat_buf.st_size; i++) {
 		const uint8_t byte = buf[i];

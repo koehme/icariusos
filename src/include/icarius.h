@@ -388,5 +388,13 @@
 #define SYS_EXIT 1  // _exit(int status)
 #define SYS_READ 3  // ssize_t read(int fd, void *buf, size_t count);
 #define SYS_WRITE 4 // write(int fd, const void *buf, size_t count)
+/*
+====================================
+    Processes
+====================================
+*/
+#define PROCESS_MAX_FILENAME 128
+#define PROCESS_MAX_THREAD 16
+#define PROCESS_MAX_ALLOCATION 16
 
 #endif

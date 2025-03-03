@@ -5,6 +5,8 @@ FLAGS = -std=gnu99 -g -ffreestanding -falign-jumps -falign-functions -falign-lab
         -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 ASSEMBLER = nasm
 GCC = i686-elf-gcc
+OBJCOPY = i686-elf-objcopy
+AR = i686-elf-ar
 
 OBJ_DIR = ./obj
 
@@ -129,3 +131,27 @@ clean:
 shell:
 	$(ASSEMBLER) -f elf32 ./src/arch/i686/user/shell.asm -o ./obj/shell.asm.o
 	i686-elf-ld -T ./src/arch/i686/user/user.ld ./obj/shell.asm.o --oformat=binary -o ./bin/LEET/SHELL.BIN
+
+icarsh:
+	# Kompiliere die libc
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/string.c -o ./src/libc/obj/string.o
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/syscall.c -o ./src/libc/obj/syscall.o
+
+	# Erstelle libc.a
+	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
+
+	# Kompiliere den Assembler-Wrapper für `main()`
+	nasm -f elf32 ./src/user/entry.asm -o ./src/user/obj/entry.o
+
+	# Kompiliere die Usershell
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -c ./src/user/icarsh.c -o ./src/user/obj/icarsh.o
+
+	# Linke Usershell mit Assembler-Wrapper und libc.a
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -T ./src/user/user.ld ./src/user/obj/entry.o ./src/user/obj/icarsh.o -o ./src/user/elf/icarsh.elf ./src/libc/lib/libc.a
+
+	# Konvertiere ELF nach Flat Binary
+	$(OBJCOPY) -O binary ./src/user/elf/icarsh.elf ./src/user/bin/ICARSH.BIN
+
+	# Kopiere Usershell ins OS-Dateisystem
+	cp ./src/user/bin/ICARSH.BIN ./bin/LEET/ICARSH.BIN

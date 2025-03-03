@@ -74,6 +74,8 @@ size_t _sys_write(interrupt_frame_t* frame)
 	void* user_buf = (void*)frame->ecx;
 
 	memcpy(kernel_buf, user_buf, count);
+	((uint8_t*)kernel_buf)[count] = '\0';
+
 	page_restore_kernel_dir();
 
 	switch (fd) {

@@ -7,6 +7,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "icarius.h"
 #include <fifo.h>
 #include <stdint.h>
 
@@ -14,10 +15,6 @@ struct task;
 typedef struct task task_t;
 
 #include <task.h>
-
-#define PROCESS_MAX_FILENAME 128
-#define PROCESS_MAX_THREAD 16
-#define PROCESS_MAX_ALLOCATION 16
 
 typedef enum process_filetype { PROCESS_ELF, PROCESS_BINARY } process_filetype_t;
 
