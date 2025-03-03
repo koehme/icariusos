@@ -4,20 +4,21 @@
 
 Minimalistischer Kernel für x86
 
-## 🚀 Features (Top 5)
+## 🚀 Features (Top 6)
 
-- **Speicherverwaltung mit Paging (4 MiB Pages)** – inklusive Page Frame Allocator
-- **Multitasking mit Task-Switching** – jeder Prozess hat sein eigenes Seitenverzeichnis
-- **Syscalls über `int 0x80`** – sicherer Übergang von Benutzer- zu Kernelmodus
-- **Interrupt-Handling** – IDT mit erweiterten Fehleranalysen für Debugging
-- **4 KiB Chunk-basierter Heap-Allocator** – Wachstum erfolgt automatisch, wenn zu wenig freier Speicher vorhanden ist
+Usermode-Programme in C – Dank einer eigenen libc laufen User-Programme jetzt nativ! 🔥
+Speicherverwaltung mit 4 MiB Paging – Schnelle Speicherverwaltung mit einem optimierten 4 MiB Page Frame Allocator
+Echtes Multitasking mit Task-Switching – Jeder Prozess bekommt ein eigenes Page Directory für maximale Isolation
+Syscalls über int 0x80 – Sicherer Übergang zwischen User- und Kernelmodus für flexible Systemaufrufe
+Erweitertes Interrupt-Handling – Präzise Fehleranalysen mit der IDT für bessere Debugging-Möglichkeiten
+Dynamischer Heap mit 4 KiB Chunks – Automatisches Wachstum für effiziente Speicherverwaltung im Kernel
 
 ## 🔜 Nächste Schritte
 
-- **Speicherlecks fixen** – Tasks bzw. Prozesse sauber freiräumen 🧹
-- **Scheduler bauen** – Round-Robin-Scheduler für mehrere Tasks 🕒
-- **Standardbibliothek aufbauen** – POSIX-ähnliche Funktionen ✨
-- **Mehr Syscalls** – für bessere Benutzermodus Unterstützung 🛠️
+Eigener Scheduler – Ein Round-Robin-Scheduler für echtes Multitasking! 🕒
+Standardbibliothek ausbauen – Mehr POSIX-ähnliche Funktionen für Usermode-Programme ✨
+Weitere Syscalls – Noch mehr Funktionen für Usermode-Programme und besseren Kernel-Support! 🛠️
+Ordnerstruktur überarbeiten – Nur noch architektur-spezifische Dinge im arch/ Ordner, der Rest wandert in src/ für mehr Übersichtlichkeit 📂
 
 ## 🎯 Der Weg ist das Ziel
 
@@ -102,6 +103,7 @@ Falls du den Kernel aktualisieren möchtest, ersetze die ICARIUS.BIN-Datei im FA
 ```bash
 ./swap.sh 
 ```
+
 Nach der Aktualisierung kannst du icariusOS mit dem neuen Kernel starten:
 
 ```bash
@@ -116,25 +118,25 @@ Für die Bequemen - In einem Befehl:
 
 # GNU Debugger
 
+Das Skript startet QEMU mit Debugging-Unterstützung und lädt den GNU Debugger (GDB) mit vorkonfigurierten Einstellungen, was die Fehlersuche im Kernel erheblich erleichtert.
+
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
+# Benutzershell 'ICARSH.BIN'
+
+Dieses Skript kompiliert die Benutzer-Shell und integriert sie direkt ins FAT16-Dateisystem, wodurch sie im OS ausführbar wird.
+
+```bash
+make icarsh && ./fat16.sh
+``` 
+
 # Verzeichnisstruktur ausgeben
+
+Die tree-Ausgabe wird direkt in die Zwischenablage kopiert, was eine schnelle Weiterverarbeitung oder Dokumentation der Projektstruktur ermöglicht.
 
 ```bash
 tree | xclip -selection clipboard
 ```
-
-# Benutzershellv1 in puren Assembler 'SHELL.BIN'
-
-```bash
-make shell
-```
-
-# Benutzershellv1 in C mit libc 'ICARSH.BIN'
-
-```bash
-make icarsh
-``` 
