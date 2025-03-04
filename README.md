@@ -6,26 +6,26 @@ Minimalistischer i686 Kernel
 
 ## 🚀 Features (Top 6)
 
+- **Benutzershell icarsh** – Endlich eine erste Shell für icariusOS! Starte Programme, navigiere demnächst durch das Dateisystem und fühle dich wie ein echter Hacker! :D
 - **Usermode-Programme in C** – Dank einer eigenen libc laufen User-Programme jetzt nativ! 🔥
 - **Speicherverwaltung mit 4 MiB Paging** – Schnelle Speicherverwaltung mit einem optimierten 4 MiB Page Frame Allocator
 - **Syscalls über int 0x80** – Sicherer Übergang zwischen User- und Kernelmodus für flexible Systemaufrufe
-- **Interrupt-Handling** Erweitertes Interrupt-Handling – Präzise Fehleranalysen mit der IDT für bessere Debugging-Möglichkeiten
+- **Interrupt-Handling** - Präzise Fehleranalysen mit der IDT für bessere Debugging-Möglichkeiten
 - **Dynamischer Kernel Heap mit 4 KiB Chunks** – Automatisches Wachstum für effiziente Speicherverwaltung im Kernel
 
 ## ⚒️ Nächste Schritte
 
 🔜 **Scheduler**  
-Ein **Round-Robin-Scheduler** für echtes **Multitasking auf Task- bzw. Thread-Ebene**! Threads werden in einer **globalen Task-Liste nach Prozessen sortiert** eingefügt, um **TLB-Flushes zu minimieren** und schnellere Kontextwechsel zu ermöglichen.  
+Ein **Round-Robin-Scheduler** für echtes **Multitasking auf Task- bzw. Thread-Ebene**! Threads werden in einer **globalen Task-Liste nach Prozessen sortiert** eingefügt, um **TLB-Flushes zu minimieren** und schnellere Kontextwechsel zu ermöglichen
 
 🔜 **Standardbibliothek ausbauen**  
-Mehr **POSIX-ähnliche Funktionen** für Usermode-Programme, um eine **saubere Schnittstelle** zu bieten.  
+Mehr **POSIX-ähnliche Funktionen** für Usermode-Programme, um eine **saubere Schnittstelle** zu bieten 
 
 🔜 **Weitere Syscalls**  
-Noch mehr **Systemaufrufe für Usermode-Programme**, um die Funktionalität weiter auszubauen.  
+Noch mehr **Systemaufrufe für Usermode-Programme**, um die Funktionalität weiter auszubauen
 
 🔜 **Ordnerstruktur überarbeiten**  
-Nur noch **architektur-spezifische Dinge** im `arch/`-Ordner – der Rest wandert in `src/` für eine **bessere Übersichtlichkeit**.  
-
+Nur noch **architektur-spezifische Dinge** im `arch/`-Ordner – der Rest wandert in `src/` für eine **bessere Übersichtlichkeit**
 
 ## 🎯 Warum icariusOS?
 
