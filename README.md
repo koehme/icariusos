@@ -139,3 +139,9 @@ Die tree-Ausgabe wird direkt in die Zwischenablage kopiert, was eine schnelle We
 ```bash
 tree | xclip -selection clipboard
 ```
+
+# Sync Git
+
+```bash
+git checkout feature/task && git add . && git commit -m "Refactoring" && git checkout dev && git merge feature/task && git push origin dev && git checkout main && git merge dev && git push origin main && git checkout feature/task
+```
