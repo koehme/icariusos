@@ -1,26 +1,21 @@
-#include <stdio.h>
-#include <string.h>
-#include <syscall.h>
+#include "builtin.h"
+#include "readline/readline.h"
+#include "stdio.h"
+#include "string.h"
+#include "syscall.h"
+
+#define PROMPT "[icarSH]:~# "
 
 int main(int argc, char* argv[])
 {
-	char buf[1] = {0};
-	puts("[icarSH]:~#");
-
 	while (1) {
-		const int bytes_read = read(0, buf, 1);
+		const char* input = readline(PROMPT);
 
-		if (bytes_read <= 0) {
-			puts("\n[ERROR] Failed to Read. Exiting...\n");
-			exit(1);
+		if (!input) {
+			continue;
 		};
-		write(1, buf, 1);
-
-		if (buf[0] == 'q') {
-			puts("\nExiting icarSh...\n");
-			exit(0);
-		};
-		memcpy(buf, "\0", sizeof(buf));
+		execute_builtin(input);
+		write(1, "\n", 1);
 	};
 	return 0;
 };

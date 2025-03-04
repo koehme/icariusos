@@ -134,21 +134,23 @@ shell:
 
 icarsh:
 	# Kompiliere die libc
-	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
-	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/string.c -o ./src/libc/obj/string.o
-	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -Wall -Wextra -O2 -c ./src/libc/syscall.c -o ./src/libc/obj/syscall.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string.c -o ./src/libc/obj/string.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/readline.c -o ./src/libc/obj/readline.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/syscall.c -o ./src/libc/obj/syscall.o
 
 	# Erstelle libc.a
-	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
+	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
 
 	# Kompiliere den Assembler-Wrapper für `main()`
 	nasm -f elf32 ./src/user/entry.asm -o ./src/user/obj/entry.o
 
 	# Kompiliere die Usershell
-	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -c ./src/user/icarsh.c -o ./src/user/obj/icarsh.o
+	$(GCC) -I ./src/libc/include/ -I ./src/user/include/ -ffreestanding -nostdlib -c ./src/user/icarsh.c -o ./src/user/obj/icarsh.o
+	$(GCC) -I ./src/libc/include/ -I ./src/user/include/ -ffreestanding -nostdlib -c ./src/user/builtin.c -o ./src/user/obj/builtin.o
 
 	# Linke Usershell mit Assembler-Wrapper und libc.a
-	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -T ./src/user/user.ld ./src/user/obj/entry.o ./src/user/obj/icarsh.o -o ./src/user/elf/icarsh.elf ./src/libc/lib/libc.a
+	$(GCC) -I ./src/libc/include/ -ffreestanding -nostdlib -T ./src/user/user.ld ./src/user/obj/entry.o ./src/user/obj/icarsh.o ./src/user/obj/builtin.o -o ./src/user/elf/icarsh.elf ./src/libc/lib/libc.a
 
 	# Konvertiere ELF nach Flat Binary
 	$(OBJCOPY) -O binary ./src/user/elf/icarsh.elf ./src/user/bin/ICARSH.BIN

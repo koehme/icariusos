@@ -7,8 +7,8 @@ static inline int syscall(int num, int arg1, int arg2, int arg3)
 	return ret;
 };
 
-int write(int fd, const void* buf, int count) { return syscall(4, fd, (int)buf, count); };
+void exit(int status) { syscall(1, status, 0, 0); };
 
 int read(int fd, void* buf, int count) { return syscall(3, fd, (int)buf, count); };
 
-void exit(int status) { syscall(1, status, 0, 0); };
+int write(int fd, const void* buf, int count) { return syscall(4, fd, (int)buf, count); };

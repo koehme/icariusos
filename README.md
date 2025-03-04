@@ -2,35 +2,34 @@
 
 [![Lizenz: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Minimalistischer Kernel für x86
+Minimalistischer i686 Kernel
 
 ## 🚀 Features (Top 6)
 
-Usermode-Programme in C – Dank einer eigenen libc laufen User-Programme jetzt nativ! 🔥
-Speicherverwaltung mit 4 MiB Paging – Schnelle Speicherverwaltung mit einem optimierten 4 MiB Page Frame Allocator
-Echtes Multitasking mit Task-Switching – Jeder Prozess bekommt ein eigenes Page Directory für maximale Isolation
-Syscalls über int 0x80 – Sicherer Übergang zwischen User- und Kernelmodus für flexible Systemaufrufe
-Erweitertes Interrupt-Handling – Präzise Fehleranalysen mit der IDT für bessere Debugging-Möglichkeiten
-Dynamischer Heap mit 4 KiB Chunks – Automatisches Wachstum für effiziente Speicherverwaltung im Kernel
+- **Usermode-Programme in C** – Dank einer eigenen libc laufen User-Programme jetzt nativ! 🔥
+- **Speicherverwaltung mit 4 MiB Paging** – Schnelle Speicherverwaltung mit einem optimierten 4 MiB Page Frame Allocator
+- **Syscalls über int 0x80** – Sicherer Übergang zwischen User- und Kernelmodus für flexible Systemaufrufe
+- **Interrupt-Handling** Erweitertes Interrupt-Handling – Präzise Fehleranalysen mit der IDT für bessere Debugging-Möglichkeiten
+- **Dynamischer Kernel Heap mit 4 KiB Chunks** – Automatisches Wachstum für effiziente Speicherverwaltung im Kernel
 
-## 🔜 Nächste Schritte
+## ⚒️ Nächste Schritte
 
-Eigener Scheduler – Ein Round-Robin-Scheduler für echtes Multitasking! 🕒
-Standardbibliothek ausbauen – Mehr POSIX-ähnliche Funktionen für Usermode-Programme ✨
-Weitere Syscalls – Noch mehr Funktionen für Usermode-Programme und besseren Kernel-Support! 🛠️
-Ordnerstruktur überarbeiten – Nur noch architektur-spezifische Dinge im arch/ Ordner, der Rest wandert in src/ für mehr Übersichtlichkeit 📂
+🔜 **Scheduler**  
+Ein **Round-Robin-Scheduler** für echtes **Multitasking auf Task- bzw. Thread-Ebene**! Threads werden in einer **globalen Task-Liste nach Prozessen sortiert** eingefügt, um **TLB-Flushes zu minimieren** und schnellere Kontextwechsel zu ermöglichen.  
 
-## 🎯 Der Weg ist das Ziel
+🔜 **Standardbibliothek ausbauen**  
+Mehr **POSIX-ähnliche Funktionen** für Usermode-Programme, um eine **saubere Schnittstelle** zu bieten.  
 
-Kennst du das Gefühl, wenn du wirklich von Null etwas erschaffst? Das fühlt sich richtig echt an. Ohne Frameworks, keine Bibliotheken und vor allem keine fertigen Lösungen, die ins System hineingepfuscht werden. Nur ich, meine Ideen im Kopf und die komplette Kontrolle über das System, das Stück für Stück entsteht.
+🔜 **Weitere Syscalls**  
+Noch mehr **Systemaufrufe für Usermode-Programme**, um die Funktionalität weiter auszubauen.  
 
-Hier gibt’s nichts, was dich vor Fehlern bewahrt – wenn der Speicher falsch verwaltet wird oder der Wechsel in den Benutzermodus nicht sauber läuft, liegt es an mir, das zu fixen. Und genau das macht es so verdammt spannend! Als mein erster Wechsel in den Benutzermodus funktioniert hat oder mein Debugger endlich die richtige Speicheradresse ausgespuckt hat, fühlte sich das verdammt gut an. Genau das macht Kernel-Entwicklung für mich so verdammt reizvoll.
+🔜 **Ordnerstruktur überarbeiten**  
+Nur noch **architektur-spezifische Dinge** im `arch/`-Ordner – der Rest wandert in `src/` für eine **bessere Übersichtlichkeit**.  
 
-Klar, manchmal will ich den Monitor aus dem Fenster werfen – "Och nö, schon wieder ein Seitenfehler? MAN!" 👀 Aber wenn ich den Bug dann finde – dieses Gefühl ist einfach unersetzbar. Kernel-Entwicklung ist eine krasse Herausforderung, an der man ständig wachsen kann, wenn man es zulässt.
 
-Und das Beste daran? Es gibt kein Endziel. Ich baue hier auch keinen Linux-Konkurrenten – ich experimentiere, lerne und genieße einfach jeden noch so kleinen Fortschritt.
+## 🎯 Warum icariusOS?
 
-Das Abenteuer geht immer weiter – und genau das macht es so cool. 🚀
+icariusOS ist ein Abenteuer voller Herausforderungen und Erfolgsmomente. Ohne Frameworks oder Bibliotheken erschafft man etwas völlig Eigenes – jede Idee nimmt langsam Form an. Jeder weitere Implementierung bringt neue Fragen und Rätsel: Ein falsch verwalteter Speicher, ein fehlerhafter Moduswechsel – und die Lösung liegt allein in den eigenen Händen. Doch genau das macht es so spannend. Wenn der erste Wechsel in den Benutzermodus klappt oder der Debugger endlich die richtige Adresse ausgibt, ist das Gefühl unbeschreiblich. Es geht mir nicht darum, ein weiterer Linux-Konkurrent zu sein, sondern ums Experimentieren, Lernen und das Feiern jedes kleinen Fortschritts. OS-Dev ist ein nie endendes Projekt – und genau das macht es so unglaublich reizvoll.
 
 # 🤝 Mitmachen
 
@@ -88,7 +87,7 @@ Bevor du icariusOS startest, stelle sicher, dass das dazugehörige FAT16-Dateisy
 ./fat16.sh
 ```
 
-# Kompilieren
+# icariusOS bauen
 
 Um den Kernel neu zu bauen und zu starten, verwende diesen Befehl:
 
@@ -116,7 +115,7 @@ Für die Bequemen - In einem Befehl:
 ./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-# GNU Debugger
+# Fehlersuche mit GNU Debugger 
 
 Das Skript startet QEMU mit Debugging-Unterstützung und lädt den GNU Debugger (GDB) mit vorkonfigurierten Einstellungen, was die Fehlersuche im Kernel erheblich erleichtert.
 
@@ -125,7 +124,7 @@ Das Skript startet QEMU mit Debugging-Unterstützung und lädt den GNU Debugger 
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
-# Benutzershell 'ICARSH.BIN'
+# Benutzershell 'ICARSH.BIN' bauen
 
 Dieses Skript kompiliert die Benutzer-Shell und integriert sie direkt ins FAT16-Dateisystem, wodurch sie im OS ausführbar wird.
 
