@@ -27,6 +27,7 @@ void ata_init(ata_t* self);
 void ata_mount_fs(ata_t* self);
 ata_t* ata_get(const char dev[2]);
 int32_t ata_read(ata_t* self, const size_t start_block, const size_t n_blocks);
+int32_t ata_write(ata_t* self, const size_t start_block, const size_t n_blocks, const uint8_t* buffer);
 
 /* INTERNAL API */
 static void _load_into_buffer(uint16_t* buffer, const size_t size);
@@ -43,6 +44,8 @@ static uint64_t _calculate_total_sectors_pio48(uint16_t* buffer);
 static uint64_t _calculate_total_sectors_pio28(uint16_t* buffer);
 static inline uint64_t _calculate_capacity(const uint64_t total_sectors, const uint16_t sector_size);
 static void set_pio_features(ata_t* self, const bool is_pio48);
+static int32_t _write_pio28(ata_t* self, const uint32_t lba, const uint8_t sectors, const uint8_t* buffer);
+static int32_t _write_pio48(ata_t* self, const uint64_t lba, const uint16_t sectors, const uint8_t* buffer);
 
 static void _load_into_buffer(uint16_t* buffer, const size_t size)
 {
@@ -288,4 +291,91 @@ int32_t ata_read(ata_t* self, const size_t start_block, const size_t n_blocks)
 		return _read_pio48(self, start_block, n_blocks);
 	};
 	return _read_pio28(self, start_block, n_blocks);
+};
+
+int32_t ata_write(ata_t* self, const size_t start_block, const size_t n_blocks, const uint8_t* buffer)
+{
+	if (!self || !buffer) {
+		return -EIO;
+	};
+	const bool has_pio48 = self->features & (1 << 1);
+
+	if (has_pio48) {
+		return _write_pio48(self, start_block, n_blocks, buffer);
+	};
+	return _write_pio28(self, start_block, n_blocks, buffer);
+};
+
+static int32_t _write_pio28(ata_t* self, const uint32_t lba, const uint8_t sectors, const uint8_t* buffer)
+{
+	if (!self || !buffer) {
+		return -EIO;
+	};
+	// Select master/slave and set LBA mode
+	outb(ATA_CONTROL_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
+	// Set number of sectors & LBA address (28-bit)
+	outb(ATA_SECTOR_COUNT_PORT, sectors);
+	outb(ATA_LBA_LOW_PORT, lba & 0xFF);
+	outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
+	outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
+	// Send “WRITE SECTORS” command (0x30)
+	outb(ATA_COMMAND_PORT, ATA_CMD_WRITE_SECTORS);
+
+	for (size_t i = 0; i < sectors; ++i) {
+		// Wait for DRQ (Data Request)
+		while (!(inb(ATA_COMMAND_PORT) & ATA_STATUS_DRQ))
+			;
+		// Write 512 bytes with delay between `outw()` and `outw()`
+		for (size_t j = 0; j < 256; j++) {
+			outw(ATA_DATA_PORT, ((uint16_t*)buffer)[j]);
+			__asm__ __volatile__("jmp 1f\n1: jmp 1f\n1:");
+		};
+		buffer += 512;
+	};
+	// Cache flush (send ATA command `0xE7`)
+	outb(ATA_COMMAND_PORT, ATA_CMD_CACHE_FLUSH);
+	// Wait for BSY (Busy Flag) → Confirms that the flush is complete
+	while (inb(ATA_COMMAND_PORT) & ATA_STATUS_BSY)
+		;
+	return 0;
+};
+
+static int32_t _write_pio48(ata_t* self, const uint64_t lba, const uint16_t sectors, const uint8_t* buffer)
+{
+	if (!self || !buffer) {
+		return -EIO;
+	};
+	// Select master/slave and set LBA mode (bit 6 = 0x40 must be set)
+	outb(ATA_CONTROL_PORT, 0x40 | ATA_DRIVE_MASTER);
+	// Write the **upper bytes** of the number of sectors & LBA first
+	outb(ATA_SECTOR_COUNT_PORT, (sectors >> 8) & 0xFF);
+	outb(ATA_LBA_LOW_PORT, (lba >> 24) & 0xFF);
+	outb(ATA_LBA_MID_PORT, (lba >> 32) & 0xFF);
+	outb(ATA_LBA_HIGH_PORT, (lba >> 40) & 0xFF);
+	// Then write the **lower bytes** of the number of sectors & LBA
+	outb(ATA_SECTOR_COUNT_PORT, sectors & 0xFF);
+	outb(ATA_LBA_LOW_PORT, lba & 0xFF);
+	outb(ATA_LBA_MID_PORT, (lba >> 8) & 0xFF);
+	outb(ATA_LBA_HIGH_PORT, (lba >> 16) & 0xFF);
+	// Send “WRITE SECTORS EXT” command (0x34)
+	outb(ATA_COMMAND_PORT, ATA_CMD_WRITE_SECTORS_EXT);
+
+	for (size_t i = 0; i < sectors; ++i) {
+		// Wait for DRQ (data request)
+		while (!(inb(ATA_COMMAND_PORT) & ATA_STATUS_DRQ))
+			;
+
+		// Write 512 bytes to the ATA data port (no `rep outsw`)
+		for (size_t j = 0; j < 256; j++) {
+			outw(ATA_DATA_PORT, ((uint16_t*)buffer)[j]);
+			__asm__ __volatile__("jmp 1f\n1: jmp 1f\n1:");
+		};
+		buffer += 512;
+	};
+	// Send cache flush (0xE7) to ensure that data is on the hard disk
+	outb(ATA_COMMAND_PORT, ATA_CMD_CACHE_FLUSH);
+	//  Wait until the write process is complete
+	while (inb(ATA_COMMAND_PORT) & ATA_STATUS_BSY)
+		;
+	return 0;
 };

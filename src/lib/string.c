@@ -12,6 +12,7 @@
 #include "string.h"
 
 /* PUBLIC API */
+int32_t strcmp(const char* str1, const char* str2);
 char* strncpy(char* dest, const char* src, size_t n);
 size_t strlen(const char* str);
 bool is_alpha(const char c);
@@ -24,6 +25,15 @@ void* memset16(void* ptr, uint16_t value, size_t num);
 void* memmove(void* dest, const void* src, size_t count);
 void* memcpy(void* dest, const void* src, size_t n);
 int memcmp(const void* ptr1, const void* ptr2, size_t num);
+
+int32_t strcmp(const char* str1, const char* str2)
+{
+	while (*str1 && (*str1 == *str2)) {
+		str1++;
+		str2++;
+	};
+	return *(const unsigned char*)str1 - *(const unsigned char*)str2;
+};
 
 char* strncpy(char* dest, const char* src, size_t n)
 {

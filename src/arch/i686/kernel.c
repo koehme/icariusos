@@ -9,6 +9,8 @@
 
 #include "kernel.h"
 
+#include "fat16.h"
+
 /* EXTERNAL API */
 extern vbe_t vbe_display;
 extern pfa_t pfa;
@@ -416,6 +418,61 @@ void kernel_shell(void)
 	return;
 };
 
+void test_ata_write(ata_t* dev)
+{
+	if (!dev) {
+		return;
+	};
+	const uint32_t test_sector = 4096;
+	const char* test_data = "Hello IcariusOS!";
+
+	uint8_t write_buffer[512] = {};
+	memset(write_buffer, 0, 512);
+	memcpy(write_buffer, test_data, strlen(test_data));
+
+	for (int i = 0; i < 512; i++) {
+		const uint8_t byte = write_buffer[i];
+		const uint8_t high = (byte >> 4) & 0x0F;
+		const uint8_t low = byte & 0x0F;
+		printf("0x%x%x ", high, low);
+	};
+	printf("\n");
+	printf("[KERNEL] Writing Test Data to Sector %d...\n", test_sector);
+	int32_t res = ata_write(dev, test_sector, 1, write_buffer);
+
+	outb(ATA_COMMAND_PORT, 0xE7);
+	while (inb(ATA_COMMAND_PORT) & ATA_STATUS_BSY)
+		;
+
+	if (res < 0) {
+		return;
+	};
+	printf("[KERNEL] Reading Back from Sector %d...\n", test_sector);
+	res = ata_read(dev, test_sector, 1);
+
+	if (res < 0) {
+		return;
+	};
+	uint8_t read_buffer[512] = {};
+	memcpy(read_buffer, dev->buffer, 512);
+
+	for (int i = 0; i < 512; i++) {
+		const uint8_t byte = read_buffer[i];
+		const uint8_t high = (byte >> 4) & 0x0F;
+		const uint8_t low = byte & 0x0F;
+		printf("0x%x%x ", high, low);
+	};
+	printf("\n");
+
+	if (memcmp(read_buffer, test_data, strlen(test_data)) == 0) {
+		printf("[KERNEL] SUCCESS: ata_write()!\n");
+	} else {
+		printf("[KERNEL] ERROR: ata_write()!\n");
+	};
+	busy_wait(500000);
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -510,15 +567,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-	pfa_dump(&pfa, false);
 
-	process_t* proc1 = process_spawn("A:/LEET/ICARSH.BIN");
-	// process_t* proc2 = process_spawn("A:/LEET/SHELL.BIN");
+	// process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
+	// task_start(proc1->tasks[0]);
 
-	// process_list_dump();
-	pfa_dump(&pfa, false);
-	task_start(proc1->tasks[0]);
-
+	vfs_fopen("A:/OMG.BIN", "w");
+	test_fat16_root_dir_entry(ata_dev);
 	kernel_shell();
 	return;
 };

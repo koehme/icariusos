@@ -20,5 +20,6 @@ typedef struct stream {
 void stream_init(stream_t* self, ata_t* dev);
 void stream_seek(stream_t* self, const size_t pos);
 int32_t stream_read(stream_t* self, uint8_t* buffer, size_t n_bytes);
+int32_t stream_write(stream_t* self, const uint8_t* buffer, const size_t n_bytes);
 
 #endif

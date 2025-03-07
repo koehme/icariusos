@@ -24,6 +24,7 @@ size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd
 int32_t vfs_fclose(const int32_t fd);
 int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence);
 int32_t vfs_fstat(const int32_t fd, vstat_t* buffer);
+size_t vfs_fwrite(const void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd);
 
 /* INTERNAL API */
 static fs_t** _find_empty_fs(void);
@@ -111,9 +112,10 @@ fs_t* vfs_resolve(ata_t* dev)
 static uint8_t _get_vmode(const char* mode)
 {
 	switch (*mode) {
-	case 'r': {
+	case 'r':
 		return READ;
-	};
+	case 'w':
+		return WRITE;
 	default:
 		break;
 	};
@@ -122,41 +124,40 @@ static uint8_t _get_vmode(const char* mode)
 
 int32_t vfs_fopen(const char* filename, const char* mode)
 {
-	int32_t res = 0;
 	const uint8_t vmode = _get_vmode(mode);
 
-	if (vmode != READ) {
-		res = -EINVAL;
-		return res;
+	if (vmode != READ && vmode != WRITE) {
+		errno = EINVAL;
+		return -EINVAL;
 	};
 	pathparser_t path_parser = {};
 	pathroot_node_t* root = path_parser_parse(&path_parser, filename);
-
+	/*
 	if (!root->path->next) {
 		printf("[WARNING] Files in '/' are prohibited\n");
-		res = -EINVAL;
-		return res;
+		errno = EINVAL;
+		return -EINVAL;
 	};
+	*/
 	ata_t* dev = ata_get(root->drive);
 
 	if (!dev || !dev->fs) {
-		res = -EIO;
-		return res;
+		errno = EIO;
+		return -EIO;
 	};
 	void* internal = dev->fs->open_cb(dev, root->path, vmode);
 	path_parser_free(root);
 
 	fd_t* fdescriptor = 0x0;
-	res = _create_fd(&fdescriptor);
+	int32_t res = _create_fd(&fdescriptor);
 
 	if (res < 0) {
-		res = -ENOMEM;
-		return res;
+		errno = ENOMEM;
+		return -ENOMEM;
 	};
 	fdescriptor->dev = dev;
 	fdescriptor->internal = internal;
-	res = fdescriptor->index;
-	return res;
+	return fdescriptor->index;
 };
 
 size_t vfs_fread(void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd)
@@ -226,4 +227,22 @@ int32_t vfs_fstat(const int32_t fd, vstat_t* buffer)
 	}
 	fdescriptor->dev->fs->stat_cb(fdescriptor->dev, fdescriptor->internal, buffer);
 	return res;
+};
+
+size_t vfs_fwrite(const void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd)
+{
+	if (fd < 1 || !buffer || n_bytes == 0 || n_blocks == 0) {
+		return -EINVAL;
+	};
+	fd_t* fdescriptor = _get_fd(fd);
+
+	if (!fdescriptor) {
+		return -EBADF;
+	};
+
+	if (!fdescriptor->dev->fs->write_cb) {
+		return -EIO;
+	};
+	const size_t total_written = fdescriptor->dev->fs->write_cb(fdescriptor->dev, fdescriptor->internal, buffer, n_bytes, n_blocks);
+	return total_written;
 };

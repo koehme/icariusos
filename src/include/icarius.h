@@ -301,6 +301,9 @@
 */
 #define ATA_CMD_READ_SECTORS 0x20
 #define ATA_CMD_IDENTIFY 0xEC
+#define ATA_CMD_WRITE_SECTORS 0x30
+#define ATA_CMD_CACHE_FLUSH 0xE7
+#define ATA_CMD_WRITE_SECTORS_EXT 0x34
 /*
 ====================================
     ATA Status Flags

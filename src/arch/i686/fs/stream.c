@@ -56,3 +56,31 @@ int32_t stream_read(stream_t* self, uint8_t* buffer, const size_t n_bytes)
 	};
 	return ata_status;
 };
+
+int32_t stream_write(stream_t* self, const uint8_t* buffer, const size_t n_bytes)
+{
+	if (!self || !buffer) {
+		return -1;
+	};
+	const size_t block_size = self->dev->sector_size;
+	size_t remaining_bytes = n_bytes;
+	size_t write_size = n_bytes > block_size ? block_size : n_bytes;
+
+	while (remaining_bytes) {
+		const size_t lba_block = self->pos / block_size;
+		const size_t offset = self->pos % block_size;
+		ata_read(self->dev, lba_block, 1);
+
+		for (size_t i = 0; i < write_size; i++) {
+			self->dev->buffer[offset + i] = *buffer++;
+		};
+		int32_t ata_status = ata_write(self->dev, lba_block, 1, self->dev->buffer);
+
+		if (ata_status < 0) {
+			return ata_status;
+		};
+		self->pos += write_size;
+		remaining_bytes -= write_size;
+	};
+	return 0;
+};

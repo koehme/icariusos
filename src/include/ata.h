@@ -29,5 +29,6 @@ void ata_init(ata_t* self);
 void ata_mount_fs(ata_t* self);
 ata_t* ata_get(const char dev[2]);
 int32_t ata_read(ata_t* self, const size_t start_block, const size_t n_blocks);
+int32_t ata_write(ata_t* self, const size_t start_block, const size_t n_blocks, const uint8_t* buffer);
 
 #endif

@@ -4,6 +4,9 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break asm_enter_usermode
+break test_ata_write
+break fat16_open
+break _create_fat16_file
+break fat16_write
 
 c

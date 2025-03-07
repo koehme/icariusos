@@ -148,3 +148,41 @@ git checkout dev && git pull origin dev && git merge feature/task && git push or
 git checkout main && git pull origin main && git merge dev && git push origin main && \
 git checkout feature/task
 ```
+
+# FAT16 Partition  
+
+Hier sind die relevanten Werte des FAT16-Dateisystems `./fat16.sh`, das in ICARIUS verwendet wird:
+
+- Ein FAT16-Eintrag in der File Allocation Table (FAT) besteht immer aus 16 Bit (2 Bytes)
+- Ein FAT-Eintrag speichert keine Daten, sondern nur Metadaten über den Status eines Clusters
+- Jeder Eintrag in der FAT zeigt auf den nächsten Cluster einer Datei oder enthält spezielle Werte (z. B. EOF oder Bad Cluster)
+- Cluster-Groeße = Bytes pro Sektor × Sektoren pro Cluster also 512 × 16 = 8192 Bytes (8KiB)
+
+- Partition Offset: 0x100000
+- Root Directory Start: 0x142000
+- Root Directory Entry 6: 0x1420C0 => 0x142000 + (6* sizeof(fat16_dir_entry_t))
+
+| Parameter           | Wert          | Erklärung |
+|---------------------|--------------|-----------------------------------------|
+| **Jump Code**      | 0xeb 0x3c 0x90 | Bootsektor-Sprungbefehl für den Code |
+| **OEM Name**       | mkfs.fat      | Name des Erstellers des Dateisystems |
+| **Bytes Per Sec**  | 512          | Bytes pro Sektor (Standard: 512) |
+| **Sec Per Cluster**| 16           | Anzahl der Sektoren pro Cluster |
+| **Reserved Sectors** | 1          | Reservierte Sektoren für Bootsektor/FAT-Header |
+| **Number of FATs** | 2            | Anzahl der FAT-Kopien (meistens 2) |
+| **Root Entry Count** | 512        | Maximale Anzahl an Einträgen im Root-Verzeichnis |
+| **Total Sectors16** | 0          | Falls 0 → Wert steht in *Total Sectors32* |
+| **Media Type**     | 0xf8         | Medientyp (0xF8 = Festplatte) |
+| **FAT Size 16**    | 256          | Anzahl der Sektoren pro FAT-Tabelle |
+| **Sectors Per Trk** | 63         | Anzahl der Sektoren pro Spur (Track) |
+| **Number of Heads** | 32         | Anzahl der Leseköpfe (z.B. für CHS-Adressierung) |
+| **Hidden Sectors** | 0           | Versteckte Sektoren vor der Partition |
+| **Total Sectors32** | 1.046.493  | Gesamtanzahl der Sektoren der Partition |
+
+# FAT16 Dateisystem prüfen
+
+Nachdem eine Datei erfolgreich im FAT16-Dateisystem `./fat16.sh` angelegt wurde, kann mit `hexdump` überprüft werden, ob der Eintrag tatsächlich im Root Directory geschrieben wurde.
+
+```bash
+hexdump -C -s 0x1420C0 -n 512 ICARIUS.img
+```

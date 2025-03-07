@@ -13,6 +13,7 @@
 #include "errno.h"
 #include "kernel.h"
 
+int32_t strcmp(const char* str1, const char* str2);
 char* strncpy(char* dest, const char* src, size_t n);
 size_t strlen(const char* str);
 bool is_alpha(const char c);

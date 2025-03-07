@@ -22,6 +22,7 @@ typedef size_t (*read_fn)(ata_t* dev, void* internal, uint8_t* buffer, size_t n_
 typedef int32_t (*close_fn)(void* internal);
 typedef int32_t (*stat_fn)(ata_t* dev, void* internal, vstat_t* buffer);
 typedef int32_t (*seek_fn)(void* internal, const uint32_t offset, const uint8_t whence);
+typedef size_t (*write_fn)(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_bytes, size_t n_blocks);
 
 typedef struct fs {
 	resolve_fn resolve_cb;
@@ -30,6 +31,7 @@ typedef struct fs {
 	close_fn close_cb;
 	stat_fn stat_cb;
 	seek_fn seek_cb;
+	write_fn write_cb;
 	char name[10];
 } fs_t;
 
@@ -48,5 +50,6 @@ fs_t* vfs_resolve(ata_t* dev);
 int32_t vfs_fclose(const int32_t fd);
 int32_t vfs_fstat(const int32_t fd, vstat_t* buffer);
 int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence);
+size_t vfs_fwrite(const void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd);
 
 #endif
