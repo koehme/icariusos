@@ -571,8 +571,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	// process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	// task_start(proc1->tasks[0]);
 
-	vfs_fopen("A:/OMG.BIN", "w");
-	test_fat16_root_dir_entry(ata_dev);
+	vfs_fopen("A:/HEY.BIN", "w");
+	fat16_dump_root_dir_entry_at(ata_dev, 6);
+
 	kernel_shell();
 	return;
 };
