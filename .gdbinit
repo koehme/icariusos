@@ -8,5 +8,6 @@ break test_ata_write
 break fat16_open
 break _create_fat16_file
 break fat16_write
+break _update_fat_entry
 
 c

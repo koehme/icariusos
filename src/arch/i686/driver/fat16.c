@@ -195,7 +195,7 @@ static void _convert_userland_filename_to_native(uint8_t* native, const uint8_t*
 static uint32_t _combine_clusters(const uint16_t high_cluster, const uint16_t low_cluster);
 static fat16_dir_entry_t* _get_entry_in_subdir(ata_t* dev, const uint16_t start_cluster, const uint8_t* native_file_name, fat16_folder_t* fat16_folder,
 					       fat16_dir_entry_t* fat16_dir_entry);
-static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, fat16_dir_entry_t* root_dir_entry, pathnode_t* path_identifier);
+static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, pathnode_t* path, fat16_dir_entry_t* entry, fat16_folder_t* folder);
 static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path);
 void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode);
 static uint32_t _get_start_cluster_from_descriptor(fat16_fd_t* fat16_descriptor);
@@ -595,7 +595,7 @@ static fat16_dir_entry_t* _get_entry_in_subdir(ata_t* dev, const uint16_t start_
 };
 
 // Searches for a specific file or directory in the FAT16 root directory to locate its entry for further access or manipulation
-static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, fat16_dir_entry_t* root_dir_entry, pathnode_t* path_identifier)
+static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, pathnode_t* path, fat16_dir_entry_t* entry, fat16_folder_t* folder)
 {
 	const uint32_t partition_offset = 0x100000;
 	const uint32_t root_dir_area_absolute = _calc_root_dir_area_absolute(&fat16_header.bpb, partition_offset);
@@ -608,6 +608,7 @@ static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, fat16_dir_entry_t* roo
 	    (fat16_header.bpb.root_ent_cnt * sizeof(fat16_dir_entry_t) + fat16_header.bpb.byts_per_sec - 1) / fat16_header.bpb.byts_per_sec;
 	const uint32_t first_data_sector = fat16_header.bpb.rsvd_sec + fat16_header.bpb.num_fats * fat16_header.bpb.fatsz16 + (root_dir_sectors);
 	const uint32_t first_root_dir_sector = first_data_sector - root_dir_sectors;
+	const uint32_t last_root_dir_sector = first_root_dir_sector + root_dir_sectors - 1;
 	const uint32_t root_dir_size = fat16_header.bpb.root_ent_cnt * sizeof(fat16_dir_entry_t);
 	uint8_t buffer[root_dir_size];
 
@@ -622,19 +623,75 @@ static fat16_dir_entry_t* _get_root_dir_entry(ata_t* dev, fat16_dir_entry_t* roo
 	for (size_t i = 0; i < fat16_header.bpb.root_ent_cnt; i++, curr_root_entry++) {
 		if (curr_root_entry->file_name[0] != 0x0) {
 			uint8_t native_dir_name[11] = {};
-			_convert_userland_filename_to_native(native_dir_name, (uint8_t*)path_identifier);
+			_convert_userland_filename_to_native(native_dir_name, (uint8_t*)path);
 
 			if (memcmp(curr_root_entry->file_name, native_dir_name, 11) == 0) {
-				memcpy(root_dir_entry, curr_root_entry, sizeof(fat16_dir_entry_t));
+				memcpy(entry, curr_root_entry, sizeof(fat16_dir_entry_t));
+				folder->start_sector = first_root_dir_sector;
+				folder->end_sector = last_root_dir_sector;
+				folder->total = fat16_header.bpb.root_ent_cnt;
 				break;
 			};
 		};
 	};
-	return root_dir_entry;
+	return entry;
+};
+
+static fat16_node_t* _create_fat16_entry_node(fat16_dir_entry_t* entry)
+{
+	if (!entry) {
+		return 0x0;
+	};
+	fat16_node_t* node = kzalloc(sizeof(fat16_node_t));
+
+	if (!node) {
+		return 0x0;
+	};
+	node->file = kzalloc(sizeof(fat16_dir_entry_t));
+
+	if (!node->file) {
+		kfree(node);
+		return 0x0;
+	};
+	node->type = FAT16_ENTRY_TYPE_FILE;
+	memcpy(node->file, entry, sizeof(fat16_dir_entry_t));
+	return node;
+};
+
+static fat16_node_t* _create_fat16_dir_node(fat16_folder_t* folder, fat16_dir_entry_t* entry)
+{
+	if (!folder || !entry) {
+		return 0x0;
+	};
+	fat16_node_t* node = kzalloc(sizeof(fat16_node_t));
+
+	if (!node) {
+		return 0x0;
+	};
+	node->dir = kzalloc(sizeof(fat16_folder_t));
+
+	if (!node->dir) {
+		kfree(node);
+		return 0x0;
+	};
+	node->dir->entry = kzalloc(sizeof(fat16_dir_entry_t));
+
+	if (!node->dir->entry) {
+		kfree(node->dir);
+		kfree(node);
+		return 0x0;
+	};
+	node->type = FAT16_ENTRY_TYPE_DIRECTORY;
+	memcpy(node->dir->entry, entry, sizeof(fat16_dir_entry_t));
+	memcpy(node->dir, folder, sizeof(fat16_folder_t));
+	return node;
 };
 
 static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path)
 {
+	if (!dev || !path) {
+		return 0x0;
+	};
 	pathnode_t* curr = path;
 
 	while (curr && curr->next) {
@@ -643,32 +700,30 @@ static fat16_node_t* _get_entry(ata_t* dev, pathnode_t* path)
 	uint8_t native[11] = {};
 	_convert_userland_filename_to_native(native, (uint8_t*)curr);
 
-	fat16_dir_entry_t root_dir_entry = {};
-	_get_root_dir_entry(dev, &root_dir_entry, path);
-
-	const uint32_t root_dir_entry_cluster = _combine_clusters(root_dir_entry.high_cluster, root_dir_entry.low_cluster);
-	uint32_t start_cluster = root_dir_entry_cluster;
-
-	fat16_folder_t folder = {};
 	fat16_dir_entry_t entry = {};
+	fat16_folder_t folder = {};
+	_get_root_dir_entry(dev, path, &entry, &folder);
+
+	if (!path->next) {
+		if (entry.file_name[0] && (entry.attributes & DIRECTORY)) {
+			return _create_fat16_dir_node(&folder, &entry);
+		};
+
+		if (entry.file_name[0] && (entry.attributes & ARCHIVE)) {
+			return _create_fat16_entry_node(&entry);
+		};
+	};
+	const uint32_t root_dir_entry_cluster = _combine_clusters(entry.high_cluster, entry.low_cluster);
+	const uint32_t start_cluster = root_dir_entry_cluster;
+
 	_get_entry_in_subdir(dev, start_cluster, native, &folder, &entry);
 
 	if (entry.file_name[0] && (entry.attributes & DIRECTORY)) {
-		fat16_node_t* node = kzalloc(sizeof(fat16_node_t));
-		node->dir = kzalloc(sizeof(fat16_folder_t));
-		node->dir->entry = kzalloc(sizeof(fat16_dir_entry_t));
-		node->type = FAT16_ENTRY_TYPE_DIRECTORY;
-		memcpy(node->dir->entry, &entry, sizeof(fat16_dir_entry_t));
-		memcpy(node->dir, &folder, sizeof(fat16_folder_t));
-		return node;
+		return _create_fat16_dir_node(&folder, &entry);
 	};
 
 	if (entry.file_name[0] && (entry.attributes & ARCHIVE)) {
-		fat16_node_t* node = kzalloc(sizeof(fat16_node_t));
-		node->file = kzalloc(sizeof(fat16_dir_entry_t));
-		node->type = FAT16_ENTRY_TYPE_FILE;
-		memcpy(node->file, &entry, sizeof(fat16_dir_entry_t));
-		return node;
+		return _create_fat16_entry_node(&entry);
 	};
 	return 0x0;
 };
@@ -1080,7 +1135,7 @@ static bool _update_fat_entry(ata_t* dev, uint32_t cluster, uint16_t value)
 	stream_seek(&fat_stream, fat_entry_offset);
 
 	uint8_t fat_entry[2] = {(uint8_t)(value & 0xFF), (uint8_t)((value >> 8) & 0xFF)};
-	int32_t res = stream_write(&fat_stream, fat_entry, sizeof(uint16_t));
+	const int32_t res = stream_write(&fat_stream, (uint8_t*)fat_entry, sizeof(uint16_t));
 
 	if (res < 0) {
 		printf("[FAT16] ERROR: Failed to update FAT Entry for Cluster %d\n", cluster);
