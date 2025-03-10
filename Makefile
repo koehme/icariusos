@@ -25,6 +25,7 @@ SOURCES_C = \
     ./src/arch/i686/driver/mouse.c \
     ./src/arch/i686/driver/ps2.c \
     ./src/arch/i686/driver/fat16.c \
+    ./src/driver/fat16/fat16_dump.c \
     ./src/arch/i686/fs/pathlexer.c \
     ./src/arch/i686/fs/pathparser.c \
     ./src/arch/i686/fs/stream.c \
@@ -68,6 +69,9 @@ OBJECTS = $(OBJECTS_C) $(OBJECTS_ASM)
 all: $(OBJECTS) image
 
 $(OBJ_DIR)/%.c.o: ./src/lib/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/driver/fat16/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/arch/i686/process/%.c

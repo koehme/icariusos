@@ -399,5 +399,36 @@
 #define PROCESS_MAX_FILENAME 128
 #define PROCESS_MAX_THREAD 16
 #define PROCESS_MAX_ALLOCATION 16
+/*
+====================================
+    FAT16
+====================================
+*/
+#define FAT16_VALUE_FREE 0x0000
+#define FAT16_VALUE_RESERVED 0x0001
+#define FAT16_VALUE_BAD_CLUSTER 0xFFF7
+#define FAT16_VALUE_END_OF_CHAIN 0xFFF8
+/*
+====================================
+    FAT16 LIMIT
+====================================
+*/
+#define FAT16_MIN_CLUSTERS 4085
+#define FAT16_MAX_CLUSTERS 65525
+/*
+====================================
+    FAT16 Attributes
+====================================
+*/
+#define READ_WRITE 0x00
+#define READ_ONLY 0x01
+#define HIDDEN 0x02
+#define SYSTEM 0x04
+#define VOLUME_ID 0x08
+#define DIRECTORY 0x10
+#define ARCHIVE 0x20
+#define LFN (READ_ONLY | HIDDEN | SYSTEM | VOLUME_ID)
+#define DEVICE 0x40
+#define DELETED 0xE5
 
 #endif

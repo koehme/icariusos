@@ -2,14 +2,12 @@
  * @file kernel.c
  * @author Kevin Oehme
  * @copyright MIT
- * @brief The heart of the operating system. This is where the magic happens.
- * @version 1.0
- * @date 2024-11-15
  */
 
 #include "kernel.h"
 
 #include "fat16.h"
+#include "fat16_dump.h"
 
 /* EXTERNAL API */
 extern vbe_t vbe_display;
@@ -568,12 +566,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	asm_do_sti();
 
-	// process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
-	// task_start(proc1->tasks[0]);
+	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
+	task_start(proc1->tasks[0]);
 
-	vfs_fopen("A:/CDE.BIN", "w");
-	fat16_dump_root_dir_entry_at(ata_dev, 15);
-	fat16_dump_root_dir_entry_at(ata_dev, 16);
+	vfs_fopen("A:/RUNE.TXT", "w");
+	fat16_dump_root_dir_entry_at(ata_dev, 18);
+
 	kernel_shell();
 	return;
 };

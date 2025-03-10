@@ -132,13 +132,6 @@ int32_t vfs_fopen(const char* filename, const char* mode)
 	};
 	pathparser_t path_parser = {};
 	pathroot_node_t* root = path_parser_parse(&path_parser, filename);
-	/*
-	if (!root->path->next) {
-		printf("[WARNING] Files in '/' are prohibited\n");
-		errno = EINVAL;
-		return -EINVAL;
-	};
-	*/
 	ata_t* dev = ata_get(root->drive);
 
 	if (!dev || !dev->fs) {
