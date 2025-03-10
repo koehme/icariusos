@@ -2,7 +2,6 @@
  * @file ata.c
  * @author Kevin Oehme
  * @copyright MIT
- * @brief ATA driver implementation.
  * @date 2024-11-15
  */
 

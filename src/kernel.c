@@ -6,9 +6,6 @@
 
 #include "kernel.h"
 
-#include "fat16.h"
-#include "fat16_dump.h"
-
 /* EXTERNAL API */
 extern vbe_t vbe_display;
 extern pfa_t pfa;
@@ -565,13 +562,15 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-
+	/*
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
+	*/
+	const int32_t fd = vfs_fopen("A:/RUNE.TXT", "w");
 
-	vfs_fopen("A:/RUNE.TXT", "w");
-	fat16_dump_root_dir_entry_at(ata_dev, 18);
-
+	if (fd) {
+		// TODO
+	};
 	kernel_shell();
 	return;
 };

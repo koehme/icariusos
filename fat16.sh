@@ -26,9 +26,9 @@ sudo grub-install --target=i386-pc --root-directory=/mnt --no-floppy --modules="
 sudo cp ./iso/boot/grub/grub.cfg /mnt/boot/grub/grub.cfg
 sudo cp ./bin/ICARIUS.BIN /mnt/boot/ICARIUS.BIN
 # 🔥 3️⃣ Alle FAT16-Dateien und -Verzeichnisse kopieren
-sudo cp ./bin/TEST.BIN /mnt/  # Direkt ins Root Dir
-sudo cp -r ./bin/BIN /mnt/    # Ganzes BIN-Verzeichnis kopieren
-sudo cp -r ./bin/BLA /mnt/    # Ganzes BLA-Verzeichnis kopieren
+sudo cp -r ./bin/BIN /mnt/
+sudo cp -r ./bin/DEV /mnt/  
+sudo cp -r ./bin/TMP /mnt/  
 # 🔥 4️⃣ Sicherstellen, dass alles geschrieben wird
 sudo sync
 ls -l /mnt/

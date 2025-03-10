@@ -1,4 +1,15 @@
+/**
+ * @file fat16_dump.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
+#include "stream.h"
+#include "string.h"
+
+#include "fat16.h"
 #include "fat16_dump.h"
+#include "fat16_get.h"
 
 void fat16_dump_ebpb_header(const ebpb_t* ebpb, const char* msg, const int32_t delay)
 {
@@ -47,11 +58,11 @@ void fat16_dump_base_header(const bpb_t* bpb, const char* msg, const int32_t del
 
 void fat_16_dump_entry(size_t i, fat16_dir_entry_t* entry, const int32_t delay)
 {
-	const fat16_time_t create_time = fat16_unpack_time(entry->create_time);
-	const fat16_date_t create_date = fat16_unpack_date(entry->create_date);
-	const fat16_date_t last_access_date = fat16_unpack_date(entry->last_access_date);
-	const fat16_time_t mod_time = fat16_unpack_time(entry->modification_time);
-	const fat16_date_t mod_date = fat16_unpack_date(entry->modification_date);
+	const fat16_time_t create_time = fat16_get_unpacked_time(entry->create_time);
+	const fat16_date_t create_date = fat16_get_unpacked_date(entry->create_date);
+	const fat16_date_t last_access_date = fat16_get_unpacked_date(entry->last_access_date);
+	const fat16_time_t mod_time = fat16_get_unpacked_time(entry->modification_time);
+	const fat16_date_t mod_date = fat16_get_unpacked_date(entry->modification_date);
 
 	uint8_t buffer[11] = {};
 	memcpy(buffer, entry->file_name, 11);
@@ -86,14 +97,14 @@ void fat16_dump_lfn_entry(size_t i, fat16_dir_entry_t* entry, const int32_t dela
 	return;
 };
 
-void fat16_dump_root_dir(const bpb_t* bpb, stream_t* stream_t)
+void fat16_dump_root_dir(const bpb_t* bpb, stream_t* stream)
 {
 	const uint32_t root_dir_size = bpb->root_ent_cnt * sizeof(fat16_dir_entry_t);
 	const uint32_t root_dir_entries = root_dir_size / sizeof(fat16_dir_entry_t);
 
 	for (size_t i = 0; i < bpb->root_ent_cnt; i++) {
 		fat16_dir_entry_t entry = {};
-		const int32_t res = stream_read(stream_t, (uint8_t*)&entry, sizeof(fat16_dir_entry_t));
+		const int32_t res = stream_read(stream, (uint8_t*)&entry, sizeof(fat16_dir_entry_t));
 
 		if (res != 0) {
 			printf("FAT16 Error: Failed to read FAT16 Header\n");

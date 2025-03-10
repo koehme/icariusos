@@ -11,36 +11,38 @@ AR = i686-elf-ar
 OBJ_DIR = ./obj
 
 SOURCES_C = \
-    ./src/arch/i686/kernel.c \
-    ./src/arch/i686/syscall.c \
-    ./src/arch/i686/errno.c \
-    ./src/arch/i686/driver/ata.c \
-    ./src/arch/i686/driver/cmos.c \
-    ./src/arch/i686/driver/cursor.c \
-    ./src/arch/i686/driver/keyboard.c \
-    ./src/arch/i686/driver/timer.c \
-    ./src/arch/i686/driver/vga.c \
-    ./src/arch/i686/driver/vbe.c \
-    ./src/arch/i686/driver/pci.c \
-    ./src/arch/i686/driver/mouse.c \
-    ./src/arch/i686/driver/ps2.c \
-    ./src/arch/i686/driver/fat16.c \
+    ./src/kernel.c \
+    ./src/syscall.c \
+    ./src/errno.c \
+    ./src/driver/ata.c \
+    ./src/driver/cmos.c \
+    ./src/driver/cursor.c \
+    ./src/driver/keyboard.c \
+    ./src/driver/timer.c \
+    ./src/driver/vga.c \
+    ./src/driver/vbe.c \
+    ./src/driver/pci.c \
+    ./src/driver/mouse.c \
+    ./src/driver/ps2.c \
+    ./src/driver/fat16/fat16.c \
     ./src/driver/fat16/fat16_dump.c \
-    ./src/arch/i686/fs/pathlexer.c \
-    ./src/arch/i686/fs/pathparser.c \
-    ./src/arch/i686/fs/stream.c \
-    ./src/arch/i686/fs/vfs.c \
-    ./src/arch/i686/fs/vnode.c \
+    ./src/driver/fat16/fat16_get.c \
+    ./src/driver/fat16/fat16_create.c \
+    ./src/fs/pathlexer.c \
+    ./src/fs/pathparser.c \
+    ./src/fs/stream.c \
+    ./src/fs/vfs.c \
+    ./src/fs/vnode.c \
     ./src/arch/i686/idt.c \
     ./src/arch/i686/gdt.c \
     ./src/arch/i686/pic.c \
-    ./src/arch/i686/memory/heap.c \
-    ./src/arch/i686/memory/page.c \
-    ./src/arch/i686/memory/pfa.c \
-    ./src/arch/i686/ds/fifo.c \
-    ./src/arch/i686/process/tss.c \
-    ./src/arch/i686/process/task.c \
-    ./src/arch/i686/process/process.c \
+    ./src/memory/heap.c \
+    ./src/memory/page.c \
+    ./src/memory/pfa.c \
+    ./src/ds/fifo.c \
+    ./src/process/tss.c \
+    ./src/process/task.c \
+    ./src/process/process.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
@@ -52,7 +54,7 @@ SOURCES_ASM = \
     ./src/arch/i686/boot/loader.asm \
     ./src/arch/i686/idt.asm \
     ./src/arch/i686/io.asm \
-    ./src/arch/i686/process/task.asm \
+    ./src/process/task.asm \
 
 define obj_c
 $(OBJ_DIR)/$(notdir $(1:.c=.c.o))
@@ -70,38 +72,35 @@ all: $(OBJECTS) image
 
 $(OBJ_DIR)/%.c.o: ./src/lib/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+    
+$(OBJ_DIR)/%.c.o: ./src/fs/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/driver/fat16/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/process/%.c
+$(OBJ_DIR)/%.c.o: ./src/driver/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/driver/%.c
+$(OBJ_DIR)/%.c.o: ./src/process/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/fs/%.c
+$(OBJ_DIR)/%.c.o: ./src/ds/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/ds/%.c
+$(OBJ_DIR)/%.c.o: ./src/memory/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/memory/%.c
-	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
-
-$(OBJ_DIR)/%.c.o: ./src/arch/i686/string/%.c
-	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
-
-$(OBJ_DIR)/kernel.c.o: ./src/arch/i686/kernel.c
+$(OBJ_DIR)/kernel.c.o: ./src/kernel.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/idt.c.o: ./src/arch/i686/idt.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/syscall.c.o: ./src/arch/i686/syscall.c
+$(OBJ_DIR)/syscall.c.o: ./src/syscall.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
-$(OBJ_DIR)/errno.c.o: ./src/arch/i686/errno.c
+$(OBJ_DIR)/errno.c.o: ./src/errno.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/gdt.c.o: ./src/arch/i686/gdt.c
@@ -122,7 +121,7 @@ $(OBJ_DIR)/idt.asm.o: ./src/arch/i686/idt.asm
 $(OBJ_DIR)/io.asm.o: ./src/arch/i686/io.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
-$(OBJ_DIR)/task.asm.o: ./src/arch/i686/process/task.asm
+$(OBJ_DIR)/task.asm.o: ./src/process/task.asm
 	$(ASSEMBLER) -f elf32 -g $< -o $@
 
 image: $(OBJECTS)
@@ -131,10 +130,6 @@ image: $(OBJECTS)
 
 clean:
 	rm -rf $(OBJ_DIR)/*.o
-
-shell:
-	$(ASSEMBLER) -f elf32 ./src/arch/i686/user/shell.asm -o ./obj/shell.asm.o
-	i686-elf-ld -T ./src/arch/i686/user/user.ld ./obj/shell.asm.o --oformat=binary -o ./bin/LEET/SHELL.BIN
 
 icarsh:
 	# Kompiliere die libc

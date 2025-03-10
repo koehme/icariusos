@@ -110,9 +110,9 @@ typedef struct fat16_fd {
 } fat16_fd_t;
 
 extern fat16_internal_header_t fat16_header;
+extern fs_t fat16;
 
 fs_t* fat16_init(void);
-
 int32_t fat16_resolve(ata_t* dev);
 void* fat16_open(ata_t* dev, pathnode_t* path, const uint8_t mode);
 size_t fat16_read(ata_t* dev, void* internal, uint8_t* buffer, const size_t n_bytes, const size_t n_blocks);
@@ -120,12 +120,5 @@ int32_t fat16_close(void* internal);
 int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat_t);
 int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin);
 size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_bytes, size_t n_blocks);
-uint32_t fat16_convert_cluster_to_sector(const uint32_t cluster);
-fat16_time_t fat16_unpack_time(const uint16_t time);
-fat16_date_t fat16_unpack_date(const uint16_t date);
-uint32_t fat16_get_root_dir_offset(const bpb_t* bpb);
-uint32_t fat16_get_root_dir_absolute(const bpb_t* bpb, const uint32_t partition_offset);
-uint32_t fat16_get_fat_table_offset(const bpb_t* bpb);
-uint32_t fat16_get_fat_table_absolute(const bpb_t* bpb, const uint32_t partition_offset);
 
 #endif

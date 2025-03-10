@@ -160,7 +160,7 @@ Hier sind die relevanten Werte des FAT16-Dateisystems `./fat16.sh`, das in ICARI
 
 - Partition Offset: 0x100000
 - Root Directory Start: 0x142000
-- Root Directory Entry 6: 0x1420C0 => 0x142000 + (6* sizeof(fat16_dir_entry_t))
+- Root Directory Entry 6: 0x1420C0 => 0x142000 + (2 * sizeof(fat16_dir_entry_t))
 
 | Parameter           | Wert          | Erklärung |
 |---------------------|--------------|-----------------------------------------|
