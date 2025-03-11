@@ -120,5 +120,6 @@ int32_t fat16_close(void* internal);
 int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat_t);
 int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin);
 size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_bytes, size_t n_blocks);
+void fat16_dump(ata_t* dev, uint16_t start_cluster, size_t depth);
 
 #endif

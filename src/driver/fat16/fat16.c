@@ -710,9 +710,14 @@ fat16_dir_entry_t* fat16_get_root_dir_entry(ata_t* dev, pathnode_t* path, fat16_
 
 uint32_t fat16_get_sector_from_cluster(const uint32_t cluster)
 {
+	// Calculate the number of sectors occupied by the root directory and ensures that we round up if the root directory size is not a multiple of the
+	// sector size
 	const uint32_t root_dir_sectors =
-	    (fat16_header.bpb.root_ent_cnt * sizeof(fat16_dir_entry_t) + fat16_header.bpb.byts_per_sec - 1) / fat16_header.bpb.byts_per_sec;
-	const uint32_t data_start_sector = fat16_header.bpb.rsvd_sec + (fat16_header.bpb.num_fats * fat16_header.bpb.fatsz16) + root_dir_sectors;
+	    (fat16_header.bpb.root_ent_cnt * sizeof(fat16_dir_entry_t) + fat16_header.bpb.byts_per_sec - 1) / fat16_header.bpb.byts_per_sec; // 32
+	// Compute the first sector of the data region
+	const uint32_t data_start_sector = fat16_header.bpb.rsvd_sec + (fat16_header.bpb.num_fats * fat16_header.bpb.fatsz16) + root_dir_sectors; // 560
+	// FAT16 cluster numbering starts at 2 for data clusters. Cluster 0 and 1 are reserved and not used for storing data. Subtracting 2 aligns the cluster
+	// number with the correct sector offset
 	return data_start_sector + ((cluster - 2) * fat16_header.bpb.sec_per_clus);
 };
 

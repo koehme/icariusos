@@ -6,6 +6,8 @@
 
 #include "kernel.h"
 
+#include "fat16.h"
+
 /* EXTERNAL API */
 extern vbe_t vbe_display;
 extern pfa_t pfa;
@@ -566,16 +568,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
 	*/
-
-	// CASE 1 => SUBDIR + FILE EXIST
-	// const int32_t fd = vfs_fopen("A:/TMP/LOG.TXT", "w");
-
-	// CASE 2 => SUBDIR + FILE NOT EXIST
-	const int32_t fd = vfs_fopen("A:/DEV/LOG.TXT", "w");
-
-	if (fd) {
-		// TODO
-	};
+	const int32_t fd1 = vfs_fopen("A:/TMP/LOG.TXT", "w");
+	const int32_t fd2 = vfs_fopen("A:/TMP/BUM.TXT", "w");
 	kernel_shell();
 	return;
 };
