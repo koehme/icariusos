@@ -425,6 +425,7 @@
     FAT16 Attributes
 ====================================
 */
+#define FREE 0x00
 #define READ_WRITE 0x00
 #define READ_ONLY 0x01
 #define HIDDEN 0x02

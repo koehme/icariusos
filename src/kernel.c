@@ -566,7 +566,12 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
 	*/
-	const int32_t fd = vfs_fopen("A:/RUNE.TXT", "w");
+
+	// CASE 1 => SUBDIR + FILE EXIST
+	// const int32_t fd = vfs_fopen("A:/TMP/LOG.TXT", "w");
+
+	// CASE 2 => SUBDIR + FILE NOT EXIST
+	const int32_t fd = vfs_fopen("A:/DEV/LOG.TXT", "w");
 
 	if (fd) {
 		// TODO

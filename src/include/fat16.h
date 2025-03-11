@@ -98,8 +98,8 @@ typedef struct fat16_folder {
 
 typedef struct fat16_node {
 	union {
-		fat16_dir_entry_t* file; // Pointer to the file
-		fat16_folder_t* dir;	 // Pointer to the folder
+		fat16_dir_entry_t* file;
+		fat16_folder_t* dir;
 	};
 	fat16_entry_t type;
 } fat16_node_t;

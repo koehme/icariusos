@@ -25,9 +25,6 @@ SOURCES_C = \
     ./src/driver/mouse.c \
     ./src/driver/ps2.c \
     ./src/driver/fat16/fat16.c \
-    ./src/driver/fat16/fat16_dump.c \
-    ./src/driver/fat16/fat16_get.c \
-    ./src/driver/fat16/fat16_create.c \
     ./src/fs/pathlexer.c \
     ./src/fs/pathparser.c \
     ./src/fs/stream.c \
