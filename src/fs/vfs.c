@@ -25,6 +25,7 @@ int32_t vfs_fclose(const int32_t fd);
 int32_t vfs_fseek(const int32_t fd, const uint32_t offset, const uint8_t whence);
 int32_t vfs_fstat(const int32_t fd, vstat_t* buffer);
 size_t vfs_fwrite(const void* buffer, size_t n_bytes, size_t n_blocks, const int32_t fd);
+int32_t vfs_readdir(const int32_t fd, vfs_dirent_t* dir);
 
 /* INTERNAL API */
 static fs_t** _find_empty_fs(void);
@@ -238,4 +239,27 @@ size_t vfs_fwrite(const void* buffer, size_t n_bytes, size_t n_blocks, const int
 	};
 	const size_t total_written = fdescriptor->dev->fs->write_cb(fdescriptor->dev, fdescriptor->internal, buffer, n_bytes, n_blocks);
 	return total_written;
+};
+
+int32_t vfs_readdir(const int32_t fd, vfs_dirent_t* dir)
+{
+
+	if (fd < 1 || !dir) {
+		return -EINVAL;
+	};
+	fd_t* fdescriptor = _get_fd(fd);
+
+	if (!fdescriptor) {
+		return -EBADF;
+	};
+
+	if (!fdescriptor->dev->fs->readdir_cb) {
+		return -EIO;
+	};
+	const size_t res = fdescriptor->dev->fs->readdir_cb(fdescriptor->dev, fdescriptor->internal, dir, fdescriptor->dir_offset);
+
+	if (res > 0) {
+		fdescriptor->dir_offset++;
+	};
+	return res;
 };

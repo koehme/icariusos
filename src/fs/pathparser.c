@@ -187,6 +187,12 @@ pathroot_node_t* _path_parser_parse_path(pathparser_t* self, pathlexer_t* lexer)
 {
 	pathroot_node_t* root = _path_parser_parse_drive(self, lexer);
 	root->path = _path_parser_parse_entries(self, lexer, 0x0);
+
+	if (root->path->identifier[0] == '\0' && !root->path->next) {
+		char buf[11] = {"/"};
+		buf[1] = '\0';
+		strncpy(root->path->identifier, buf, sizeof(uint8_t) * 11);
+	};
 	return root;
 };
 

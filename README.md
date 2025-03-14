@@ -153,36 +153,95 @@ git checkout feature/task
 
 Hier sind die relevanten Werte des FAT16-Dateisystems `./fat16.sh`, das in ICARIUS verwendet wird:
 
-- Ein FAT16-Eintrag in der File Allocation Table (FAT) besteht immer aus 16 Bit (2 Bytes)
-- Ein FAT-Eintrag speichert keine Daten, sondern nur Metadaten über den Status eines Clusters
-- Jeder Eintrag in der FAT zeigt auf den nächsten Cluster einer Datei oder enthält spezielle Werte (z. B. EOF oder Bad Cluster)
-- Cluster-Groeße = Bytes pro Sektor × Sektoren pro Cluster also 512 × 16 = 8192 Bytes (8KiB)
+- **Bootsektor** → Enthält wichtige Parameter (z. B. Reserved Sectors, FAT Size, Root Entry Count).  
+- **FAT-Tabelle** → Zeigt an, welche Cluster zusammengehören (Verkettung von Dateien).  
+- **Root Directory** → Speichert Dateinamen und Startcluster.  
+- **Datenbereich** → Hier liegen die eigentlichen Dateiinhalte.  
 
-- Partition Offset: 0x100000
-- Root Directory Start: 0x142000
-- Root Directory Entry 6: 0x1420C0 => 0x142000 + (2 * sizeof(fat16_dir_entry_t))
+✅ **Sektoren, Cluster, Offsets sind immer nach fester Logik aufgebaut.**  
+✅ **Die FAT ist einfach eine "Verkettungstabelle", die sagt, welcher Cluster nach welchem kommt.**  
+✅ **Wenn man das Partitionsoffset beachtet, kann man jede Datei direkt auslesen!**  
+
+## 📌 Bootsektor-Daten  
 
 | Parameter           | Wert          | Erklärung |
 |---------------------|--------------|-----------------------------------------|
-| **Jump Code**      | 0xeb 0x3c 0x90 | Bootsektor-Sprungbefehl für den Code |
-| **OEM Name**       | mkfs.fat      | Name des Erstellers des Dateisystems |
-| **Bytes Per Sec**  | 512          | Bytes pro Sektor (Standard: 512) |
-| **Sec Per Cluster**| 16           | Anzahl der Sektoren pro Cluster |
-| **Reserved Sectors** | 1          | Reservierte Sektoren für Bootsektor/FAT-Header |
-| **Number of FATs** | 2            | Anzahl der FAT-Kopien (meistens 2) |
-| **Root Entry Count** | 512        | Maximale Anzahl an Einträgen im Root-Verzeichnis |
-| **Total Sectors16** | 0          | Falls 0 → Wert steht in *Total Sectors32* |
-| **Media Type**     | 0xf8         | Medientyp (0xF8 = Festplatte) |
-| **FAT Size 16**    | 256          | Anzahl der Sektoren pro FAT-Tabelle |
-| **Sectors Per Trk** | 63         | Anzahl der Sektoren pro Spur (Track) |
-| **Number of Heads** | 32         | Anzahl der Leseköpfe (z.B. für CHS-Adressierung) |
-| **Hidden Sectors** | 0           | Versteckte Sektoren vor der Partition |
-| **Total Sectors32** | 1.046.493  | Gesamtanzahl der Sektoren der Partition |
+| **Jump Code**      | `0xeb 0x3c 0x90` | Bootsektor-Sprungbefehl für den Code |
+| **OEM Name**       | `mkfs.fat`      | Name des Erstellers des Dateisystems |
+| **Bytes Per Sec**  | `512`          | Bytes pro Sektor (Standard: 512) |
+| **Sec Per Cluster**| `16`           | Anzahl der Sektoren pro Cluster |
+| **Reserved Sectors** | `1`          | Reservierte Sektoren für Bootsektor/FAT-Header |
+| **Number of FATs** | `2`            | Anzahl der FAT-Kopien (meistens 2) |
+| **Root Entry Count** | `512`        | Maximale Anzahl an Einträgen im Root-Verzeichnis |
+| **Total Sectors16** | `0`          | Falls 0 → Wert steht in *Total Sectors32* |
+| **Media Type**     | `0xf8`         | Medientyp (0xF8 = Festplatte) |
+| **FAT Size 16**    | `256`          | Anzahl der Sektoren pro FAT-Tabelle |
+| **Sectors Per Trk** | `63`         | Anzahl der Sektoren pro Spur (Track) |
+| **Number of Heads** | `32`         | Anzahl der Leseköpfe (z.B. für CHS-Adressierung) |
+| **Hidden Sectors** | `0`           | Versteckte Sektoren vor der Partition |
+| **Total Sectors32** | `1.046.493`  | Gesamtanzahl der Sektoren der Partition |
 
+| Parameter         | Wert (Hex)  | Wert (Dezimal) | Bedeutung |
+|------------------|------------|---------------|-----------|
+| **Sektorgröße**  | `0x200`     | `512`         | Standardgröße eines Sektors |
+| **Gesamtsektoren** | `0x100000` | `1.048.576` | Gesamtanzahl an Sektoren im Dateisystem |
+| **Kapazität**    | `0x80000`   | `524288 KiB`  | Größe der Partition |
+| **Root Dir Offset** | `0x42000`  | `270336`     | Offset zum Root Directory innerhalb der Partition |
+| **Root Dir Abs** | `0x140000`  | `1.310.720`   | Absoluter Offset des Root Directories auf der Festplatte |
+| **Root Dir Größe** | `0x4000`  | `16.384 Bytes` | Größe des Root Directory Bereichs (512 Einträge * 32 Bytes) |
+| **FAT Offset**  | `0x2000`    | `8192`        | Offset zur ersten FAT-Tabelle innerhalb der Partition |
+| **FAT Absolut** | `0x102000`  | `1.056.768`   | Absoluter Offset zur ersten FAT-Tabelle auf der Festplatte |
+| **FAT Größe** | `0x20000`    | `131.072 Bytes` | Größe der FAT-Tabelle in Bytes |
+| **Root Dir Sek** | `0x20`     | `32`          | Anzahl der belegten Sektoren für das Root Directory |
+| **1 Daten-Sektor** | `0x230`   | `560`         | Sektor, in dem der erste Datencluster beginnt |
+| **Daten-Sektoren** | `0xFF5D`  | `1.045.933`   | Anzahl der nutzbaren Daten-Sektoren |
+
+## 📌 FAT16-Speicherlayout  
+
+| Offset   | Größe   | Sektoren | Berechnung (512B) | Name |
+|----------|--------|----------|-------------------|-----------------------------------------|
+| `0x00000` | `0x2000`  | `16` | `16 * 512` | Reserved Sectors (inkl. Bootsektor) |
+| `0x02000` | `0x20000` | `256` | `256 * 512` | 1st FAT |
+| `0x22000` | `0x20000` | `256` | `256 * 512` | 2nd FAT |
+| `0x42000` | `0x4000`  | `32` | `512 * 32` | Root Directory Area |
+| `0x46000` | `0x4000`  | `32` | `2 * 8192` | Data Area (Cluster 0: Boot Code, Cluster 1) |
+| `0x4A000` |||| Data Area (Files & Subdirectories) |
+
+**Gesamt: 560 Sektoren bis zum Datenbereich** 🚀
+
+## 📌 Weitere Offsets  
+
+| Bezeichnung | Hex-Wert | Dezimalwert | Bedeutung |
+|------------|---------|------------|------------|
+| **FAT-Bereich Offset** | `0x2000` | `8192` | Offset zur FAT (relativ zur Partition) |
+| **FAT-Bereich Absolut** | `0x102000` | `1056768` | Absoluter Speicherort der FAT auf der Festplatte |
+| **Root-Dir Offset** | `0x42000` | `270336` | Offset zum Root Directory (relativ zur Partition) |
+| **Root-Dir Absolut** | `0x142000` | `1310720` | Absoluter Speicherort des Root Directories |
+| **Erster Daten-Sektor** | `0x230` | `560` | Startsektor des ersten Datenclusters |
+| **Daten-Sektoren** | `0xFF5A` | `65370` | Gesamte Anzahl der nutzbaren Sektoren für Daten |
+| **Gesamtanzahl Cluster** | `0xFF5A` | `65370` | Anzahl der Cluster im Dateisystem |
+
+## 📌 Beispiel: Cluster 770  
+
+Die **Adresse eines Clusters** im Datenbereich berechnet sich wie folgt:
+
+Partition 0x100000
+
+Datenbereich Offset = 560 × 512 = 0x46000
+0x46000 ist der Offset des ersten nutzbaren Clusters innerhalb der Partition.
+
+Cluster Offset = (Cluster - 2) * Bytes per Cluster
+(770−2)×8192=768×8192=0x600000
+0x600000 ist der relative Offset des Clusters im Datenbereich.
+
+Cluster 770 Absoluter Offset = Partition Offset + Datenbereich Offset + Cluster Offset
+                              = 0x100000 + 0x46000 + 0x600000
+                              = 0x742000
+                              
 # FAT16 Dateisystem prüfen
 
 Nachdem eine Datei erfolgreich im FAT16-Dateisystem `./fat16.sh` angelegt wurde, kann mit `hexdump` überprüft werden, ob der Eintrag tatsächlich im Root Directory geschrieben wurde.
 
 ```bash
-hexdump -C -s 0x1420C0 -n 512 ICARIUS.img
+hexdump -C -s 0x742060 -n 512 ICARIUS.img
 ```

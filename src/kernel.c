@@ -470,6 +470,41 @@ void test_ata_write(ata_t* dev)
 	return;
 };
 
+void test_readdir(const char* path)
+{
+	const int32_t fd = vfs_fopen(path, "r");
+	vfs_dirent_t dir = {};
+
+	if (fd < 0) {
+		printf("Error: Could not open %s\n", path);
+		return;
+	};
+	printf("\n%s\n", path);
+	printf("========================\n");
+
+	while (vfs_readdir(fd, &dir)) {
+		const int32_t name_length = strlen(dir.name);
+
+		if (dir.type == 1 && strcmp(dir.name, ".") != 0 && strcmp(dir.name, "..") != 0) {
+			printf("/");
+		};
+		printf("%s", dir.name);
+
+		for (size_t i = name_length; i < 12; i++) {
+			printf(" ");
+		};
+
+		if (dir.type == 1) {
+			printf("[DIR]\n");
+		} else {
+			printf(" %d KB\n", dir.size / 1024);
+		};
+	};
+	printf("\n");
+	vfs_fclose(fd);
+	return;
+};
+
 /*
 ############################
 ## Memory Layout Overview ##
@@ -568,8 +603,10 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
 	*/
-	const int32_t fd1 = vfs_fopen("A:/TMP/LOG.TXT", "w");
-	const int32_t fd2 = vfs_fopen("A:/TMP/BUM.TXT", "w");
+	// const int32_t fd1 = vfs_fopen("A:/TMP/LOG.TXT", "w");
+
+	test_readdir("A:/");
+	test_readdir("A:/BIN");
 	kernel_shell();
 	return;
 };

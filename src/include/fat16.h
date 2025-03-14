@@ -21,6 +21,7 @@ typedef struct fat16 {
 	close_fn close_cb;
 	stat_fn stat_cb;
 	write_fn write_cb;
+	readdir_fn readdir_cb;
 	char name[10];
 } fat16_t;
 
