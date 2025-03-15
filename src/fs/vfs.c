@@ -142,6 +142,10 @@ int32_t vfs_fopen(const char* filename, const char* mode)
 	void* internal = dev->fs->open_cb(dev, root->path, vmode);
 	path_parser_free(root);
 
+	if (!internal) {
+		errno = ENOENT;
+		return -ENOENT;
+	};
 	fd_t* fdescriptor = 0x0;
 	int32_t res = _create_fd(&fdescriptor);
 

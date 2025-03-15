@@ -350,6 +350,12 @@
 #define WRITE 1
 #define APPEND 2
 #define INVALID 3
+#define VFS_RDONLY 0x0000
+#define VFS_WRONLY 0x0001
+#define VFS_RDWR 0x0002
+#define VFS_CREATE 0x0040
+#define VFS_APPEND 0x0400
+#define VFS_TRUNC 0x0200
 /*
 ====================================
     FIFO

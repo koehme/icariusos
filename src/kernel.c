@@ -415,7 +415,7 @@ void kernel_shell(void)
 	return;
 };
 
-void test_ata_write(ata_t* dev)
+static void _test_ata_write(ata_t* dev)
 {
 	if (!dev) {
 		return;
@@ -470,7 +470,7 @@ void test_ata_write(ata_t* dev)
 	return;
 };
 
-void test_readdir(const char* path)
+static void _test_readdir(const char* path)
 {
 	const int32_t fd = vfs_fopen(path, "r");
 	vfs_dirent_t dir = {};
@@ -497,11 +497,27 @@ void test_readdir(const char* path)
 		if (dir.type == 1) {
 			printf("[DIR]\n");
 		} else {
-			printf(" %d KB\n", dir.size / 1024);
+			printf(" %d Bytes\n", dir.size);
 		};
 	};
 	printf("\n");
 	vfs_fclose(fd);
+	return;
+};
+
+static void _test_vfs_write(char msg[], const uint8_t bytes)
+{
+	const int32_t fd = vfs_fopen("A:/TMP/LOG.TXT", "w");
+
+	if (fd < 0) {
+		return;
+	};
+	char buf[bytes];
+
+	strncpy(buf, msg, bytes);
+	vfs_fwrite(buf, bytes, 1, fd);
+	vfs_fclose(fd);
+	printf("[FAT16] LOG.TXT was successfully written.\n");
 	return;
 };
 
@@ -599,14 +615,17 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-	/*
+
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
-	*/
-	// const int32_t fd1 = vfs_fopen("A:/TMP/LOG.TXT", "w");
 
-	test_readdir("A:/");
-	test_readdir("A:/BIN");
+	_test_readdir("A:/");
+	_test_readdir("A:/BIN");
+	_test_readdir("A:/TMP");
+	_test_readdir("A:/HAHA");
+
+	_test_vfs_write("Kernel lacht über schlechte Dateisysteme", 42);
+
 	kernel_shell();
 	return;
 };

@@ -1315,11 +1315,37 @@ size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_b
 	if (!dev || !internal || !buffer || n_bytes == 0 || n_blocks == 0) {
 		return -EINVAL;
 	};
+	const uint32_t partition_offset = 0x100000;
+
 	fat16_fd_t* fd = (fat16_fd_t*)internal;
 	fat16_dir_entry_t* file_entry = fd->entry->file;
-	uint16_t curr_cluster = fat16_get_combined_cluster(file_entry->high_cluster, file_entry->low_cluster);
+	const uint16_t start_cluster = fat16_get_combined_cluster(file_entry->high_cluster, file_entry->low_cluster);
 	size_t bytes_written = 0;
-	size_t bytes_to_write = n_bytes * n_blocks;
+	size_t remaining_bytes = n_bytes * n_blocks;
+
+	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
+
+	stream_t data_stream = {};
+	stream_init(&data_stream, dev);
+
+	uint32_t cluster_offset = 0;
+	uint16_t curr_cluster = start_cluster;
+
+	while (remaining_bytes) {
+		const size_t free_space_in_cluster = max_cluster_size_bytes - cluster_offset;
+		const size_t write_size = (remaining_bytes > free_space_in_cluster) ? free_space_in_cluster : remaining_bytes;
+		const uint32_t sector = fat16_get_sector_from_cluster(curr_cluster);
+		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec);
+		stream_seek(&data_stream, data_pos + cluster_offset);
+		stream_write(&data_stream, buffer + bytes_written, write_size);
+
+		bytes_written += write_size;
+		remaining_bytes -= write_size;
+		cluster_offset += write_size;
+
+		if (cluster_offset >= max_cluster_size_bytes && remaining_bytes > 0) {
+		};
+	};
 	return 0;
 };
 
@@ -1394,7 +1420,7 @@ int32_t fat16_readdir(ata_t* dev, void* internal, vfs_dirent_t* dir, uint32_t di
 		};
 		fat16_get_userland_filename_from_native(dir->name, entry.file_name);
 		dir->type = (entry.attributes & DIRECTORY) ? 1 : 0;
-		dir->size = (dir->type == 1) ? 0 : entry.file_size;
+		dir->size = (dir->type == 1) ? 0 : (entry.file_size < 0) || (-entry.file_size) ? 0 : entry.file_size;
 		dir->modified_time = entry.modification_time;
 		return 1;
 	};
@@ -1446,7 +1472,7 @@ int32_t fat16_readdir(ata_t* dev, void* internal, vfs_dirent_t* dir, uint32_t di
 				};
 				fat16_get_userland_filename_from_native(dir->name, entry->file_name);
 				dir->type = (entry->attributes & DIRECTORY) ? 1 : 0;
-				dir->size = (dir->type == 1) ? 0 : entry->file_size;
+				dir->size = (dir->type == 1) ? 0 : entry->file_size < 0 ? 0 : entry->file_size;
 				dir->modified_time = entry->modification_time;
 				return 1;
 			};

@@ -1,1 +1,1 @@
-ICALOG
+ICARIUS OS hat jetzt offiziell das FAT16-Schreibrecht erlangt! STATUS: Die ersten 8192 Bytes gehören uns... für jetzt. Nächstes Ziel: Die FAT16-Welt komplett dominieren! 
