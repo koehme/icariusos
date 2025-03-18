@@ -13,10 +13,11 @@
 
 /* PUBLIC API */
 date_t cmos_date(cmos_t* self);
+int32_t cmos_bcd_to_decimal(const int32_t bcd);
 
 /* INTERNAL API */
-static int32_t _bcd_to_decimal(const int32_t bcd);
 static void _dump_cmos(cmos_t* self);
+static int32_t _bcd_to_decimal(const int32_t bcd);
 
 cmos_t cmos = {
     .values = {},
@@ -42,6 +43,25 @@ static void _dump_cmos(cmos_t* self)
 		self->values[i] = value;
 	};
 	return;
+};
+
+time_t cmos_time(cmos_t* self)
+{
+	_dump_cmos(self);
+	const int32_t bcd_hour = self->values[4];
+	const int32_t bcd_minute = self->values[2];
+	const int32_t bcd_second = self->values[0];
+
+	const int32_t hour = _bcd_to_decimal(bcd_hour);
+	const int32_t minute = _bcd_to_decimal(bcd_minute);
+	const int32_t second = _bcd_to_decimal(bcd_second);
+
+	time_t time = {
+	    .hour = hour,
+	    .minute = minute,
+	    .second = second,
+	};
+	return time;
 };
 
 date_t cmos_date(cmos_t* self)

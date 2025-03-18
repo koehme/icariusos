@@ -6,10 +6,12 @@
  */
 
 #include "fat16.h"
+#include "cmos.h"
 #include "icarius.h"
 #include "stream.h"
 #include "string.h"
 
+fat16_time_t fat16_get_curr_time(void);
 uint16_t fat16_get_next_cluster(stream_t* fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster);
 void fat16_dump_fat_entry(ata_t* dev, uint16_t cluster);
 uint32_t fat16_find_free_entry_in_dir(ata_t* dev, uint16_t start_cluster);
@@ -17,7 +19,7 @@ fat16_node_t* fat16_create_file(ata_t* dev, pathnode_t* path, fat16_node_t* node
 bool fat16_create_fat_entry(ata_t* dev, uint32_t cluster, uint16_t value);
 bool fat16_create_root_dir_entry(ata_t* dev, uint32_t entry_sector, fat16_dir_entry_t* new_entry);
 bool fat16_create_dir_entry(ata_t* dev, uint32_t entry_sector, fat16_dir_entry_t* new_entry);
-fat16_node_t* fat16_create_node_from_entry(fat16_dir_entry_t* entry);
+fat16_node_t* fat16_create_node_from_entry(fat16_dir_entry_t* entry, const uint32_t parent_sector_start);
 fat16_node_t* fat16_create_node_from_dir(fat16_folder_t* folder, fat16_dir_entry_t* entry);
 void fat16_create_file_stat(fat16_fd_t* fat16_descriptor, ata_t* dev, vstat_t* vstat, uint32_t max_cluster_size_bytes, uint32_t used_blocks);
 uint32_t fat16_get_cluster_from_path(ata_t* dev, pathnode_t* path);
@@ -96,6 +98,30 @@ fat16_internal_header_t fat16_header = {
 	    .vol_lab = {0},
 	    .fil_sys_type = {0},
 	},
+};
+
+fat16_date_t fat16_get_curr_date(void)
+{
+	const date_t date = cmos_date(&cmos);
+
+	fat16_date_t fat16_date = {
+	    .day = date.day,
+	    .month = date.month,
+	    .year = date.year,
+	};
+	return fat16_date;
+};
+
+fat16_time_t fat16_get_curr_time(void)
+{
+	const time_t time = cmos_time(&cmos);
+
+	fat16_time_t fat16_time = {
+	    .hour = time.hour,
+	    .minute = time.minute,
+	    .second = time.second,
+	};
+	return fat16_time;
 };
 
 fs_t* fat16_init(void)
@@ -241,8 +267,8 @@ fat16_node_t* fat16_create_file(ata_t* dev, pathnode_t* path, fat16_node_t* node
 	} else {
 		// Use FAT CHAIN to find a free entry
 		printf("[FAT16] Creating File %s in Folder '%s'\n", curr->identifier, path->identifier);
-		const uint32_t parent_cluster = fat16_get_combined_cluster(node->dir->entry->high_cluster, node->dir->entry->low_cluster);
-		free_entry_offset = fat16_find_free_entry_in_dir(dev, parent_cluster);
+		const uint32_t cluster = fat16_get_combined_cluster(node->dir->entry->high_cluster, node->dir->entry->low_cluster);
+		free_entry_offset = fat16_find_free_entry_in_dir(dev, cluster);
 	};
 	// BUILD NEW FAT ENTRY
 	fat16_dir_entry_t new_entry = {};
@@ -285,66 +311,6 @@ fat16_node_t* fat16_create_file(ata_t* dev, pathnode_t* path, fat16_node_t* node
 
 	printf("[FAT16] SUCCESS: Created file '%s' in '%s'\n", userland, path->identifier);
 	return fat16_entry;
-	/*
-	pathnode_t* curr = path;
-	// Step 2: Check if the parent directory is the root
-	const bool is_root_dir = !curr->next;
-	pathnode_t* parent = curr;
-	// Step 3: Get the starting cluster or fixed root directory area
-	const uint32_t partition_offset = 0x100000;
-	const uint32_t parent_cluster =
-	    is_root_dir ? fat16_get_root_dir_absolute(&fat16_header.bpb, partition_offset) : fat16_get_cluster_from_path(dev, parent);
-	// Step 4: If the parent directory does not exist, abort file creation
-	if (!parent_cluster) {
-		printf("[FAT16] ERROR: Parent directory '%s' not found. File creation failed.\n", is_root_dir ? "/" : parent->identifier);
-		return 0x0;
-	};
-	printf("[FAT16] INFO: Creating File in %s (Cluster: %d)\n", is_root_dir ? "Root Directory" : parent->identifier, parent_cluster);
-	// Step 5: Find a free directory entry
-	const uint32_t free_entry = is_root_dir ? fat16_get_free_root_dir_entry(dev) : fat16_get_free_dir_entry(dev, parent_cluster);
-
-	if (!free_entry) {
-		printf("[FAT16] ERROR: No free Space in Directory for '%s'\n", path->identifier);
-		return 0x0;
-	};
-	// Step 6: Find a free cluster for the file's data storage
-	stream_t fat_stream = {};
-	stream_init(&fat_stream, dev);
-	const uint32_t free_cluster = fat16_get_next_free_cluster(&fat_stream, partition_offset);
-
-	if (!free_cluster) {
-		printf("[FAT16] ERROR: No free clusters available. File creation failed.\n");
-		return 0x0;
-	};
-	printf("[FAT16] INFO: Allocated Cluster %d for new File '%s'\n", free_cluster, path->identifier);
-	// Step 7: Prepare the file entry
-	fat16_dir_entry_t new_entry = {};
-	memset(&new_entry, 0, sizeof(fat16_dir_entry_t));
-	fat16_get_native_filename_from_userland(new_entry.file_name, (uint8_t*)path->identifier);
-	new_entry.attributes = ARCHIVE;
-	new_entry.high_cluster = (free_cluster >> 16) & 0xFFFF;
-	new_entry.low_cluster = free_cluster & 0xFFFF;
-	new_entry.file_size = 0;
-	// fat16_dump_fat_table(dev);
-	// Step 8: Mark the allocated cluster in the FAT as EOF (end of file)
-	fat16_create_fat_entry(dev, free_cluster, FAT16_VALUE_END_OF_CHAIN);
-	// Step 9: Write the file entry into the directory
-	if (is_root_dir) {
-		fat16_create_root_dir_entry(dev, free_entry, &new_entry);
-	} else {
-		fat16_create_dir_entry(dev, parent_cluster, &new_entry);
-	};
-	// Step 10: Return a FAT16 node representing the new file
-	fat16_node_t* fat16_entry = kzalloc(sizeof(fat16_node_t));
-	fat16_entry->file = kzalloc(sizeof(fat16_dir_entry_t));
-	memcpy(fat16_entry->file, &new_entry, sizeof(fat16_dir_entry_t));
-	fat16_entry->type = FAT16_ENTRY_TYPE_FILE;
-	// Convert the native fat16 filename to more userland friendly 'BLA     .BIN' to 'BLA.BIN'
-	char userland[11];
-	fat16_get_userland_filename_from_native(userland, fat16_entry->file->file_name);
-	printf("[FAT16] SUCCESS: Created file '%s' in '%s'\n", userland, is_root_dir ? "/" : parent->identifier);
-	return fat16_entry;
-	*/
 };
 
 bool fat16_create_fat_entry(ata_t* dev, uint32_t cluster, uint16_t value)
@@ -392,7 +358,7 @@ bool fat16_create_root_dir_entry(ata_t* dev, uint32_t entry_sector, fat16_dir_en
 	return true;
 };
 
-fat16_node_t* fat16_create_node_from_entry(fat16_dir_entry_t* entry)
+fat16_node_t* fat16_create_node_from_entry(fat16_dir_entry_t* entry, uint32_t parent_sector_start)
 {
 	if (!entry) {
 		return 0x0;
@@ -412,6 +378,8 @@ fat16_node_t* fat16_create_node_from_entry(fat16_dir_entry_t* entry)
 	memcpy(node->file, entry, sizeof(fat16_dir_entry_t));
 	return node;
 };
+
+bool fat16_update_dir_entry(ata_t* dev, fat16_dir_entry_t* update, char filename[11]) { return true; };
 
 fat16_node_t* fat16_create_node_from_dir(fat16_folder_t* folder, fat16_dir_entry_t* entry)
 {
@@ -657,6 +625,8 @@ uint16_t fat16_get_packed_date(const fat16_date_t date)
 	packed_date |= (date.day & 0x1F);
 	return packed_date;
 };
+
+uint16_t fat16_get_packed_time(fat16_time_t time) { return ((time.hour & 0x1F) << 11) | ((time.minute & 0x3F) << 5) | ((time.second / 2) & 0x1F); };
 
 uint32_t fat16_get_combined_cluster(const uint16_t high_cluster, const uint16_t low_cluster)
 {
@@ -1090,13 +1060,18 @@ fat16_node_t* fat16_get_node_from_path(ata_t* dev, pathnode_t* path)
 		};
 
 		if (entry.file_name[0] && (entry.attributes & ARCHIVE)) {
-			return fat16_create_node_from_entry(&entry);
+			return fat16_create_node_from_entry(&entry, folder.start_sector);
 		};
 	};
 	const uint32_t root_dir_entry_cluster = fat16_get_combined_cluster(entry.high_cluster, entry.low_cluster);
 	const uint32_t start_cluster = root_dir_entry_cluster;
+	const uint32_t parent_sector = folder.start_sector;
+	fat16_dir_entry_t* found_entry = fat16_get_node_from_path_in_cluster_chain(dev, start_cluster, native, &folder, &entry);
 
-	fat16_get_node_from_path_in_cluster_chain(dev, start_cluster, native, &folder, &entry);
+	if (!found_entry) {
+		printf("Error: Folder '%s' not found!\n", curr->identifier);
+		return 0x0;
+	};
 
 	if (entry.file_name[0] && (entry.attributes & DIRECTORY)) {
 		folder.entry = &entry;
@@ -1104,7 +1079,7 @@ fat16_node_t* fat16_get_node_from_path(ata_t* dev, pathnode_t* path)
 	};
 
 	if (entry.file_name[0] && (entry.attributes & ARCHIVE)) {
-		return fat16_create_node_from_entry(&entry);
+		return fat16_create_node_from_entry(&entry, parent_sector);
 	};
 	return 0x0;
 };
@@ -1310,6 +1285,137 @@ int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin)
 	return res;
 };
 
+void fat16_free_unused_clusters(ata_t* dev, stream_t* fat_stream, uint16_t start_cluster, size_t required_clusters, size_t existing_clusters,
+				uint32_t fat_table_offset)
+{
+	if (!dev || !fat_stream || required_clusters >= existing_clusters || start_cluster < 2) {
+		return;
+	};
+	uint16_t curr_cluster = start_cluster;
+	uint16_t prev_cluster = 0;
+	size_t cluster_count = 1;
+
+	while (cluster_count <= required_clusters && curr_cluster < FAT16_VALUE_END_OF_CHAIN) {
+		prev_cluster = curr_cluster;
+		curr_cluster = fat16_get_next_cluster(fat_stream, curr_cluster, fat_table_offset);
+		cluster_count++;
+	};
+	if (curr_cluster >= FAT16_VALUE_END_OF_CHAIN) {
+		return;
+	};
+	fat16_create_fat_entry(dev, prev_cluster, FAT16_VALUE_END_OF_CHAIN);
+
+	while (curr_cluster >= 2 && curr_cluster < FAT16_VALUE_END_OF_CHAIN) {
+		uint16_t next_cluster = fat16_get_next_cluster(fat_stream, fat_table_offset, curr_cluster);
+		fat16_create_fat_entry(dev, curr_cluster, FAT16_VALUE_FREE);
+		curr_cluster = next_cluster;
+	};
+	return;
+};
+
+uint32_t fat16_scan_dir(ata_t* dev, uint32_t dir_cluster, const uint8_t* filename)
+{
+	const uint32_t partition_offset = 0x100000;
+	stream_t fat_stream = {}, data_stream = {};
+	stream_init(&fat_stream, dev);
+	stream_init(&data_stream, dev);
+	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
+
+	uint16_t curr_cluster = dir_cluster;
+
+	while (curr_cluster < FAT16_VALUE_END_OF_CHAIN) {
+		const uint32_t sector = fat16_get_sector_from_cluster(curr_cluster);
+		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec);
+		stream_seek(&data_stream, data_pos);
+
+		uint8_t buffer[max_cluster_size_bytes];
+
+		if (stream_read(&data_stream, buffer, max_cluster_size_bytes) < 0) {
+			printf("[FAT16] ERROR: Cluster %d cannot be read.\n", curr_cluster);
+			return 0;
+		};
+		fat16_dir_entry_t* entry = (fat16_dir_entry_t*)buffer;
+		const size_t num_entries = max_cluster_size_bytes / sizeof(fat16_dir_entry_t);
+
+		for (size_t i = 0; i < num_entries; i++, entry++) {
+			if (memcmp(entry->file_name, filename, 11) == 0) {
+				printf("[FAT16] INFO: File '%s' found in Cluster %d.\n", filename, curr_cluster);
+				return curr_cluster;
+			};
+		};
+		curr_cluster = fat16_get_next_cluster(&fat_stream, partition_offset, curr_cluster);
+	};
+	return 0;
+};
+
+uint32_t fat16_get_parent_cluster(ata_t* dev, const uint8_t* filename)
+{
+	const uint32_t partition_offset = 0x100000;
+	stream_t fat_stream = {}, data_stream = {};
+	stream_init(&fat_stream, dev);
+	stream_init(&data_stream, dev);
+	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
+
+	uint32_t root_dir_sector = fat16_get_root_dir_absolute(&fat16_header.bpb, partition_offset);
+	uint32_t root_dir_size = fat16_header.bpb.root_ent_cnt * sizeof(fat16_dir_entry_t);
+
+	stream_seek(&data_stream, root_dir_sector);
+	uint8_t buffer[root_dir_size];
+
+	if (stream_read(&data_stream, buffer, root_dir_size) < 0) {
+		return 0;
+	};
+	fat16_dir_entry_t* entry = (fat16_dir_entry_t*)buffer;
+
+	for (size_t i = 0; i < fat16_header.bpb.root_ent_cnt; i++, entry++) {
+		if (entry->attributes & DIRECTORY) {
+			const uint32_t folder_cluster = fat16_get_combined_cluster(entry->high_cluster, entry->low_cluster);
+
+			if (folder_cluster >= 2) {
+				const uint32_t parent_cluster = fat16_scan_dir(dev, folder_cluster, filename);
+
+				if (parent_cluster != 0) {
+					return folder_cluster;
+				};
+			};
+		};
+	};
+	return 0;
+};
+
+uint32_t fat16_find_entry_offset(ata_t* dev, uint32_t folder_cluster, const uint8_t* filename)
+{
+	const uint32_t partition_offset = 0x100000;
+	stream_t fat_stream = {}, data_stream = {};
+	stream_init(&fat_stream, dev);
+	stream_init(&data_stream, dev);
+	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
+
+	uint16_t curr_cluster = folder_cluster;
+	while (curr_cluster < FAT16_VALUE_END_OF_CHAIN) {
+		const uint32_t sector = fat16_get_sector_from_cluster(curr_cluster);
+		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec);
+		stream_seek(&data_stream, data_pos);
+
+		uint8_t buffer[max_cluster_size_bytes];
+		if (stream_read(&data_stream, buffer, max_cluster_size_bytes) < 0) {
+			printf("[FAT16] ERROR: Cluster %d can't be read.\n", curr_cluster);
+			return 0;
+		};
+		fat16_dir_entry_t* entry = (fat16_dir_entry_t*)buffer;
+		size_t num_entries = max_cluster_size_bytes / sizeof(fat16_dir_entry_t);
+
+		for (size_t i = 0; i < num_entries; i++, entry++) {
+			if (memcmp(entry->file_name, filename, 11) == 0) {
+				printf("[FAT16] INFO: File '%s' found in Cluster %d.\n", filename, curr_cluster);
+				return data_pos + (i * sizeof(fat16_dir_entry_t));
+			};
+		};
+		curr_cluster = fat16_get_next_cluster(&fat_stream, partition_offset, curr_cluster);
+	};
+	return 0;
+};
+
 size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_bytes, size_t n_blocks)
 {
 	if (!dev || !internal || !buffer || n_bytes == 0 || n_blocks == 0) {
@@ -1331,6 +1437,17 @@ size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_b
 	uint32_t cluster_offset = 0;
 	uint16_t curr_cluster = start_cluster;
 
+	stream_t fat_stream = {};
+	stream_init(&fat_stream, dev);
+	const uint32_t fat_table_offset = fat16_get_fat_table_absolute(&fat16_header.bpb, partition_offset);
+	stream_seek(&fat_stream, fat_table_offset);
+
+	const size_t existing_clusters = fat16_get_cluster_chain_length(&fat_stream, max_cluster_size_bytes, curr_cluster, partition_offset);
+	const size_t required_clusters = (n_bytes + max_cluster_size_bytes - 1) / max_cluster_size_bytes;
+
+	const size_t additional_clusters = (required_clusters > existing_clusters) ? required_clusters - existing_clusters : 0;
+	stream_seek(&fat_stream, fat_table_offset);
+
 	while (remaining_bytes) {
 		const size_t free_space_in_cluster = max_cluster_size_bytes - cluster_offset;
 		const size_t write_size = (remaining_bytes > free_space_in_cluster) ? free_space_in_cluster : remaining_bytes;
@@ -1344,9 +1461,54 @@ size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_b
 		cluster_offset += write_size;
 
 		if (cluster_offset >= max_cluster_size_bytes && remaining_bytes > 0) {
+			uint16_t next_cluster = fat16_get_next_cluster(&fat_stream, partition_offset, curr_cluster);
+
+			if (next_cluster >= FAT16_VALUE_END_OF_CHAIN) {
+				if (!additional_clusters) {
+					return -ENOSPC;
+				};
+				const uint16_t new_cluster = fat16_get_next_free_cluster(&fat_stream, partition_offset);
+
+				if (!new_cluster) {
+					return -ENOSPC;
+				};
+				// Link the curr cluster to the new cluster
+				fat16_create_fat_entry(dev, curr_cluster, new_cluster);
+				// Mark the last new sector at EOF
+				fat16_create_fat_entry(dev, new_cluster, FAT16_VALUE_END_OF_CHAIN);
+				next_cluster = new_cluster;
+			};
+			curr_cluster = next_cluster;
+			cluster_offset = 0;
 		};
 	};
-	return 0;
+	// Case if required_clusters < existing_clusters, we must free the clusters..
+	if (required_clusters < existing_clusters) {
+		fat16_free_unused_clusters(dev, &fat_stream, curr_cluster, required_clusters, existing_clusters, fat_table_offset);
+	};
+	if (bytes_written > file_entry->file_size) {
+		file_entry->file_size = bytes_written;
+		const uint32_t parent_cluster = fat16_get_parent_cluster(dev, fd->entry->file->file_name);
+		const uint32_t entry_offset = fat16_find_entry_offset(dev, parent_cluster, fd->entry->file->file_name);
+
+		if (!entry_offset) {
+			return -EIO;
+		};
+		fat16_time_t current_time = fat16_get_curr_time();
+		fat16_date_t current_date = fat16_get_curr_date();
+
+		file_entry->modification_time = fat16_get_packed_time(current_time);
+		file_entry->modification_date = fat16_get_packed_date(current_date);
+
+		stream_t dir_stream = {};
+		stream_init(&dir_stream, dev);
+		stream_seek(&dir_stream, entry_offset);
+		stream_write(&dir_stream, (uint8_t*)file_entry, sizeof(fat16_dir_entry_t));
+
+		printf("[FAT16] SUCCESS: File-Entry updated: Size %d Bytes, Timestamp %d:%d:%d %d-%d-%d\n", file_entry->file_size, current_time.hour,
+		       current_time.minute, current_time.second, current_date.day, current_date.month, current_date.year);
+	};
+	return bytes_written;
 };
 
 int32_t fat16_readdir(ata_t* dev, void* internal, vfs_dirent_t* dir, uint32_t dir_offset)
@@ -1424,11 +1586,11 @@ int32_t fat16_readdir(ata_t* dev, void* internal, vfs_dirent_t* dir, uint32_t di
 		dir->modified_time = entry.modification_time;
 		return 1;
 	};
-	// step 3) no root dir? we must use the fat chain. we just use cluster from fat16_descriptor->entry->dir->entry->low_cluster to fed into the stream :D
-	// build up a fat stream and put it into the right fat absolute offset :D i think we have a func for this
-	// then build a uint8_t value[2] and give it into a func which use this buff to fed into the fat table 16 byte value
-	// in this value is the next cluster contained, which we must use for a another function read_next_cluster, i think we have a func for this <:
-	// the next logic is simliar to the logic above we use the dir_offset to read the whole 8192 byte cluster until we found end of cluster chain xD
+	// step 3) no root dir? we must use the fat chain. we just use cluster from fat16_descriptor->entry->dir->entry->low_cluster to fed into the
+	// stream :D build up a fat stream and put it into the right fat absolute offset :D i think we have a func for this then build a uint8_t
+	// value[2] and give it into a func which use this buff to fed into the fat table 16 byte value in this value is the next cluster contained,
+	// which we must use for a another function read_next_cluster, i think we have a func for this <: the next logic is simliar to the logic above
+	// we use the dir_offset to read the whole 8192 byte cluster until we found end of cluster chain xD
 	const uint16_t start_cluster =
 	    fat16_get_combined_cluster(fat16_descriptor->entry->dir->entry->high_cluster, fat16_descriptor->entry->dir->entry->low_cluster);
 

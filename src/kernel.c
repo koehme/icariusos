@@ -88,12 +88,14 @@ static void _render_spinner(const int32_t frames)
 static void _motd(void)
 {
 	const date_t date = cmos_date(&cmos);
+	const time_t time = cmos_time(&cmos);
 	printf(" _             _         _____ _____ \n");
 	printf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
 	printf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
 	printf("|_|___|__,|_| |_|___|___|_____|_____|\n");
 	printf("\nicariusOS is running on an i686 CPU.\n");
-	printf("%s, %d %s %d\n", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
+	printf("Booted at %s, %d %s %d at ", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
+	printf("%d:%d:%d\n", time.hour, time.minute, time.second);
 	return;
 };
 
@@ -505,7 +507,7 @@ static void _test_readdir(const char* path)
 	return;
 };
 
-static void _test_vfs_write(char msg[], const uint8_t bytes)
+static void _test_vfs_write(char msg[], const uint32_t bytes)
 {
 	const int32_t fd = vfs_fopen("A:/TMP/LOG.TXT", "w");
 
@@ -615,16 +617,18 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	syscall_init();
 
 	asm_do_sti();
-
+	/*
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
-
+	*/
 	_test_readdir("A:/");
 	_test_readdir("A:/BIN");
 	_test_readdir("A:/TMP");
 	_test_readdir("A:/HAHA");
 
-	_test_vfs_write("Kernel lacht über schlechte Dateisysteme", 42);
+	_test_readdir("A:/TMP/BLA");
+
+	_test_vfs_write("HAHA", 40960);
 
 	kernel_shell();
 	return;

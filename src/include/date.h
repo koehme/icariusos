@@ -24,4 +24,10 @@ typedef struct date {
 	uint16_t year;
 } date_t;
 
+typedef struct {
+	int32_t hour;
+	int32_t minute;
+	int32_t second;
+} time_t;
+
 #endif

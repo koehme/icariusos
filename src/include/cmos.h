@@ -14,6 +14,9 @@ typedef struct cmos {
 	uint16_t values[128];
 } cmos_t;
 
+extern cmos_t cmos;
+
 date_t cmos_date(cmos_t* self);
+time_t cmos_time(cmos_t* self);
 
 #endif
