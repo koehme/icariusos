@@ -625,10 +625,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_test_readdir("A:/BIN");
 	_test_readdir("A:/TMP");
 	_test_readdir("A:/HAHA");
-
 	_test_readdir("A:/TMP/BLA");
 
-	_test_vfs_write("HAHA", 40960);
+	_test_vfs_write("https://github.com/koehme/icariusos", 8000);
 
 	kernel_shell();
 	return;

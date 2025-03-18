@@ -236,7 +236,7 @@ uint32_t fat16_find_free_entry_in_dir(ata_t* dev, uint16_t start_cluster)
 
 	if (stream_write(&data_stream, buffer, max_cluster_size_bytes) < 0) {
 		printf("[FAT16] ERROR: Failed initializing new cluster %d\n", new_cluster);
-		return 0;
+		return -EIO;
 	};
 	printf("[FAT16] INFO: Created and initialized new cluster %d\n", new_cluster);
 	return new_data_pos;
@@ -296,7 +296,11 @@ fat16_node_t* fat16_create_file(ata_t* dev, pathnode_t* path, fat16_node_t* node
 	stream_t dir_stream = {};
 	stream_init(&dir_stream, dev);
 	stream_seek(&dir_stream, free_entry_offset);
-	stream_write(&dir_stream, (uint8_t*)&new_entry, sizeof(fat16_dir_entry_t));
+
+	if (stream_write(&dir_stream, (uint8_t*)&new_entry, sizeof(fat16_dir_entry_t) < 0)) {
+		printf("[FAT16] ERROR: Failed Writing.\n");
+		return 0x0;
+	};
 	printf("[FAT16] SUCCESS: File '%s' created at Offset 0x%x (Cluster: %d)\n", curr->identifier, free_entry_offset, free_cluster);
 
 	// Create new fat16 node
@@ -1454,8 +1458,12 @@ size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_b
 		const uint32_t sector = fat16_get_sector_from_cluster(curr_cluster);
 		const uint32_t data_pos = partition_offset + (sector * fat16_header.bpb.byts_per_sec);
 		stream_seek(&data_stream, data_pos + cluster_offset);
-		stream_write(&data_stream, buffer + bytes_written, write_size);
+		const int32_t res = stream_write(&data_stream, buffer + bytes_written, write_size);
 
+		if (res < 0) {
+			printf("[ERROR] Writing Error.\n");
+			return -EIO;
+		};
 		bytes_written += write_size;
 		remaining_bytes -= write_size;
 		cluster_offset += write_size;
@@ -1503,8 +1511,12 @@ size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_b
 		stream_t dir_stream = {};
 		stream_init(&dir_stream, dev);
 		stream_seek(&dir_stream, entry_offset);
-		stream_write(&dir_stream, (uint8_t*)file_entry, sizeof(fat16_dir_entry_t));
+		const int32_t res = stream_write(&dir_stream, (uint8_t*)file_entry, sizeof(fat16_dir_entry_t));
 
+		if (res < 0) {
+			printf("[ERROR] Writing Error\n");
+			return -EIO;
+		};
 		printf("[FAT16] SUCCESS: File-Entry updated: Size %d Bytes, Timestamp %d:%d:%d %d-%d-%d\n", file_entry->file_size, current_time.hour,
 		       current_time.minute, current_time.second, current_date.day, current_date.month, current_date.year);
 	};
