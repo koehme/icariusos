@@ -397,6 +397,9 @@ static void _remove_identity_mapping(void)
 
 void kernel_shell(void)
 {
+	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
+	task_start(proc1->tasks[0]);
+	/*
 	asm_do_sti();
 
 	_render_spinner(32);
@@ -414,6 +417,7 @@ void kernel_shell(void)
 		};
 		ps2_dispatch(&fifo_mouse, mouse_handler, &mouse);
 	};
+	*/
 	return;
 };
 
@@ -621,13 +625,16 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
 	*/
+
+	/*
 	_test_readdir("A:/");
 	_test_readdir("A:/BIN");
 	_test_readdir("A:/TMP");
 	_test_readdir("A:/HAHA");
 	_test_readdir("A:/TMP/BLA");
-
+	_test_readdir("A:/DEV");
 	_test_vfs_write("https://github.com/koehme/icariusos", 8000);
+	*/
 
 	kernel_shell();
 	return;

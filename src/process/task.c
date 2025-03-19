@@ -123,13 +123,6 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 		printf("[ERROR] Invalid Process or has no valid Page Directory!\n");
 		return 0x0;
 	};
-	/*
-	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
-	task->page_dir = page_create_dir(flags);
-	page_map_between(task->page_dir, USER_CODE_START, USER_BSS_END, flags);
-	page_map_between(task->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
-	page_map_between(task->page_dir, USER_STACK_START, USER_STACK_END, flags);
-	*/
 	const uint32_t offset = parent->task_count * (USER_STACK_SIZE / PROCESS_MAX_THREAD); // 256 KiB per Stack
 	const uint32_t stack_top = USER_STACK_END - offset;
 	const uint32_t stack_bottom = stack_top - (USER_STACK_SIZE / PROCESS_MAX_THREAD) + 1;
@@ -148,9 +141,6 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
 	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
-
-	// task_restore_dir(task);
-	// asm_enter_usermode(&task->registers);
 	return task;
 };
 
