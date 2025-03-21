@@ -152,4 +152,4 @@ icarsh:
 	$(OBJCOPY) -O binary ./src/user/elf/icarsh.elf ./src/user/bin/ICARSH.BIN
 
 	# Kopiere Usershell ins OS-Dateisystem
-	cp ./src/user/bin/ICARSH.BIN ./bin/LEET/ICARSH.BIN
+	cp ./src/user/bin/ICARSH.BIN ./bin/BIN/ICARSH.BIN

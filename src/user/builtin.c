@@ -18,7 +18,29 @@ void help_builtin(void)
 {
 	printf("\nAvailable Built-in Commands:\n");
 	printf("  `exit` - Quit the icariusOS Shell\n");
-	printf("  `help` - List all built-ins");
+	printf("  `ls` - Peek into the filesystem\n");
+	printf("  `help` - Show all built-ins\n");
+	return;
+};
+
+void ls_builtin(void)
+{
+	char buf[256] = {"A:/TMP/LOG.TXT"};
+	int fd = open(buf, 0);
+
+	printf("\n");
+
+	if (fd < 0) {
+		printf("[ERROR] Failed to open directory %s!\n", buf);
+	} else {
+		printf("[SUCCESS] Opened directory %s! FD: %d\n", buf, fd);
+
+		if (close(fd) == 0) {
+			printf("[SUCCESS] Directory %s closed.\n", buf);
+		} else {
+			printf("[WARNING] Directory %s not closed.\n", buf);
+		};
+	};
 	return;
 };
 
@@ -32,6 +54,7 @@ void unknown_builtin(const char* input)
 builtin_t builtins[] = {
     {"exit", exit_builtin},
     {"help", help_builtin},
+    {"ls", ls_builtin},
 };
 
 void execute_builtin(const char* input)

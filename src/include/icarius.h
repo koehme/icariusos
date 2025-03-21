@@ -397,6 +397,8 @@
 #define SYS_EXIT 1  // _exit(int status)
 #define SYS_READ 3  // ssize_t read(int fd, void *buf, size_t count);
 #define SYS_WRITE 4 // write(int fd, const void *buf, size_t count)
+#define SYS_OPEN 5  // int open(const char* path, int flags);
+#define SYS_CLOSE 6 // int close(int fd);
 /*
 ====================================
     Processes

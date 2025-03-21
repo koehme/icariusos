@@ -31,14 +31,27 @@ static const char* _get_name(const int32_t syscall_id)
 	switch (syscall_id) {
 	case SYS_EXIT:
 		return "SYS_EXIT";
-	case SYS_WRITE:
-		return "SYS_WRITE";
 	case SYS_READ:
 		return "SYS_READ";
+	case SYS_WRITE:
+		return "SYS_WRITE";
+	case SYS_OPEN:
+		return "SYS_OPEN";
 	default:
-		return "Unknown Syscall";
+		return "UNKNOWN Syscall";
 	};
 	return 0x0;
+};
+
+int32_t _sys_close(interrupt_frame_t* frame)
+{
+	const int32_t fd = frame->ebx;
+
+	if (fd < 1 || fd >= 512) {
+		return -EBADF;
+	};
+	const int32_t res = vfs_fclose(fd);
+	return res;
 };
 
 int32_t _sys_exit(interrupt_frame_t* frame)
@@ -58,6 +71,53 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 	};
 	kernel_shell();
 	return status;
+};
+
+int32_t _sys_open(interrupt_frame_t* frame)
+{
+	task_restore_dir(curr_task);
+	const char* user_buf = (const char*)frame->ebx;
+	const size_t count = strlen(user_buf);
+
+	if ((uintptr_t)user_buf >= KERNEL_VIRTUAL_START) {
+		return -EFAULT;
+	};
+	page_restore_kernel_dir();
+	int flag = frame->ecx;
+	void* kernel_buf = kzalloc(count + 1);
+
+	if (!kernel_buf) {
+		return -ENOMEM;
+	};
+	task_restore_dir(curr_task);
+	strncpy(kernel_buf, user_buf, count);
+
+	((uint8_t*)kernel_buf)[count] = '\0';
+	page_restore_kernel_dir();
+
+	char* mode;
+
+	switch (flag) {
+	case READ: {
+		mode = "r";
+		break;
+	};
+	case WRITE: {
+		mode = "w";
+		break;
+	};
+	default: {
+		kfree(kernel_buf);
+		return -EINVAL;
+	};
+	};
+	const int32_t fd = vfs_fopen(kernel_buf, mode);
+	kfree(kernel_buf);
+
+	if (fd < 1) {
+		return -ENOENT;
+	};
+	return fd;
 };
 
 size_t _sys_write(interrupt_frame_t* frame)
@@ -138,7 +198,7 @@ static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 		return;
 	};
 	syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
-	const int32_t result = handler(frame);
+	frame->eax = handler(frame);
 	// printf("[DEBUG] Syscall [%d] Returned [EAX]: 0x%x\n", syscall_id, result);
 	// kernel_shell();
 	return;
@@ -171,5 +231,7 @@ void syscall_init(void)
 	syscalls[SYS_EXIT] = (void*)_sys_exit;
 	syscalls[SYS_WRITE] = (void*)_sys_write;
 	syscalls[SYS_READ] = (void*)_sys_read;
+	syscalls[SYS_OPEN] = (void*)_sys_open;
+	syscalls[SYS_CLOSE] = (void*)_sys_close;
 	return;
 };
