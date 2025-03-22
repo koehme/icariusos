@@ -6,13 +6,23 @@ Minimalistischer i686 Kernel
 
 ## 🎯 Warum icariusOS?
 
-icariusOS ist ein Abenteuer voller Herausforderungen und Erfolgsmomente. Ohne Frameworks oder Bibliotheken erschafft man etwas völlig Eigenes – jede Idee nimmt langsam Form an. Jeder weitere Implementierung bringt neue Fragen und Rätsel: Ein falsch verwalteter Speicher, ein fehlerhafter Moduswechsel – und die Lösung liegt allein in den eigenen Händen. Doch genau das macht es so spannend. Wenn der erste Wechsel in den Benutzermodus klappt oder der Debugger endlich die richtige Adresse ausgibt, ist das Gefühl unbeschreiblich. Es geht mir nicht darum, ein weiterer Linux-Konkurrent zu sein, sondern ums Experimentieren, Lernen und das Feiern jedes kleinen Fortschritts. OS-Dev ist ein nie endendes Projekt – und genau das macht es so unglaublich reizvoll.
+icariusOS ist für mich ein Abenteuer – voller Fragen, Rätsel und Erfolgsmomente.
+Hier entsteht alles von Grund auf selbst. Jeder Schritt, jede Entscheidung formt das System weiter – und genau das macht es so spannend.
+
+Ich baue icariusOS nicht, um irgendein Linux-Konkurrent zu werden.
+Ich baue es, weil ich lernen will. Weil ich’s spannend finde. Weil ich’s kann. Und ich feiere jeden kleinen Fortschritt:
+- 🟢 Der erste Benutzerprozess.
+- 📦 Das erste korrekt gemappte Page Directory.
+- 🧵 Der erste Task-Switch.
+
+Das ist ein verdammt gutes Gefühl.
 
 # 🤝 Mitmachen
 
 Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
 
 1️⃣ Repo forken:
+
 Klick oben rechts auf Fork, um dein eigenes Repository zu erstellen.
 
 2️⃣ Projekt klonen:
@@ -26,11 +36,8 @@ git checkout -b feature/dein-feature
 
 4️⃣ Änderungen machen
 
-git add .
+git add . &&
 git commit -m "Feature: Kurzbeschreibung der Änderung"
-
-- **Sprache** – Ich akzeptiere nur Commits in Englisch und mit einem klaren Fokus auf das "Warum", nicht nur auf das "Was"
-- **Hinweis** – Falls du dir unsicher bist, ob eine Änderung sinnvoll ist, erstelle vorab eine Issue, um sie zu besprechen
 
 5️⃣ Pushen & Pull Request erstellen:
 
@@ -38,9 +45,20 @@ git push origin feature/dein-feature
 
 Danach kannst du auf GitHub einen Pull Request (PR) eröffnen. Ich schaue mir alle PRs an und gebe dir so schnell ich kann Feedback.
 
+## Commit-Richtlinien (aka die liebevollen Rahmenbedingungen)
+
+Sprache:
+Du darfst committen, wie du möchtest – Englisch ist empfohlen, weil’s für andere im Projekt (und dein Zukunfts-Ich) am verständlichsten ist.
+
+Inhalt:
+Bitte schreib nicht nur WAS du geändert hast, sondern auch WARUM.
+
+Stilfreiheit:
+Kein Format-Dogma 
+
 📌 Hinweis:
 
-Bitte halte dich an den Code-Stil des Projekts und teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
+Teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
 
 Viel Spaß beim Kernel Hacking! 😎🔥
 

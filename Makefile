@@ -44,7 +44,12 @@ SOURCES_C = \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
     ./src/lib/string.c \
-    ./src/lib/ctype.c
+    ./src/lib/ctype.c \
+    ./src/test/ata_test.c \
+    ./src/test/heap_test.c \
+    ./src/test/isr_test.c \
+    ./src/test/page_test.c \
+    ./src/test/vfs_test.c \
 
 SOURCES_ASM = \
     ./src/arch/i686/gdt.asm \
@@ -68,6 +73,9 @@ OBJECTS = $(OBJECTS_C) $(OBJECTS_ASM)
 all: $(OBJECTS) image
 
 $(OBJ_DIR)/%.c.o: ./src/lib/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/test/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
     
 $(OBJ_DIR)/%.c.o: ./src/fs/%.c
