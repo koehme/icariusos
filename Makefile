@@ -131,12 +131,13 @@ clean:
 icarsh:
 	# Kompiliere die libc
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdlib.c -o ./src/libc/obj/stdlib.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string.c -o ./src/libc/obj/string.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/readline.c -o ./src/libc/obj/readline.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/syscall.c -o ./src/libc/obj/syscall.o
 
 	# Erstelle libc.a
-	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
+	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/stdlib.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
 
 	# Kompiliere den Assembler-Wrapper für `main()`
 	nasm -f elf32 ./src/user/entry.asm -o ./src/user/obj/entry.o

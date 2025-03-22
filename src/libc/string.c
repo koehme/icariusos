@@ -53,3 +53,50 @@ char* strncpy(char* dest, const char* src, size_t n)
 	};
 	return dest;
 };
+
+char* strchr(const char* str, int c)
+{
+	while (*str) {
+		if (*str == (char)c) {
+			return (char*)str;
+		};
+		str++;
+	};
+
+	if (c == '\0') {
+		return (char*)str;
+	};
+	return 0;
+};
+
+char* strtok(char* str, const char* delim)
+{
+	static char* strtok_ptr;
+
+	if (str != 0x0) {
+		strtok_ptr = str;
+	}
+
+	if (strtok_ptr == 0x0 || *strtok_ptr == '\0') {
+		return 0x0;
+	};
+
+	while (*strtok_ptr && strchr(delim, *strtok_ptr)) {
+		strtok_ptr++;
+	}
+
+	if (*strtok_ptr == '\0') {
+		return 0x0;
+	};
+	char* token_start = strtok_ptr;
+
+	while (*strtok_ptr && !strchr(delim, *strtok_ptr)) {
+		strtok_ptr++;
+	};
+
+	if (*strtok_ptr) {
+		*strtok_ptr = '\0';
+		strtok_ptr++;
+	};
+	return token_start;
+};

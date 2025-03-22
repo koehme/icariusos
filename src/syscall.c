@@ -128,7 +128,7 @@ size_t _sys_write(interrupt_frame_t* frame)
 	void* kernel_buf = kzalloc(count);
 
 	if (!kernel_buf) {
-		return 0;
+		return -ENOMEM;
 	};
 	task_restore_dir(curr_task);
 	void* user_buf = (void*)frame->ecx;
@@ -138,15 +138,15 @@ size_t _sys_write(interrupt_frame_t* frame)
 
 	page_restore_kernel_dir();
 
-	switch (fd) {
-	case FD_STDERR:
-	case FD_STDOUT: {
+	if (fd == FD_STDOUT || fd == FD_STDERR) {
 		printf("%s", (uint8_t*)kernel_buf);
-		break;
+		kfree(kernel_buf);
+		return count;
 	};
-	default:
-		printf("File Descriptor [%d] - Not implemented yet %s\n", fd);
-		break;
+	const size_t written = vfs_fwrite(kernel_buf, count, 1, fd);
+
+	if (written < 0) {
+		printf("[ERROR] Failed to write to file FD: %d\n", fd);
 	};
 	kfree(kernel_buf);
 	return count;
