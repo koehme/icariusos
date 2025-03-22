@@ -20,12 +20,17 @@ char* readline(const char* prompt)
 			return 0x0;
 		};
 
-		if (c == 0xD || pos >= BUFFER_SIZE - 1) {
+		if (c == '\n' || c == '\r') {
+			write(1, "\n", 1);
 			buffer[pos] = '\0';
 			return buffer;
+		} else if ((c == 0x08 || c == 0x7F) && pos > 0) {
+			pos--;
+			write(1, "\b \b", 3);
+		} else if (c >= 32 && c <= 126 && pos < BUFFER_SIZE - 1) {
+			buffer[pos++] = c;
+			write(1, &c, 1);
 		};
-		write(1, &c, 1);
-		buffer[pos++] = c;
 	};
 	return 0x0;
 };
