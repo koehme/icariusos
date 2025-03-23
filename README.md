@@ -11,11 +11,16 @@ Hier entsteht alles von Grund auf selbst. Jeder Schritt, jede Entscheidung formt
 
 Ich baue icariusOS nicht, um irgendein Linux-Konkurrent zu werden.
 Ich baue es, weil ich lernen will. Weil ich’s spannend finde. Weil ich’s kann. Und ich feiere jeden kleinen Fortschritt:
+
 - 🟢 Der erste Benutzerprozess.
 - 📦 Das erste korrekt gemappte Page Directory.
 - 🧵 Der erste Task-Switch.
 
-Das ist ein verdammt gutes Gefühl.
+Und jetzt? 
+
+- ls listet zum ersten Mal ein echtes Verzeichnis im Usermode. Und ich war ernsthaft beeindruckt, als mir klar wurde, wie viele Schichten das durchläuft:
+
+icarSh → builtin → libc → Syscall → VFS → FAT16 → Stream → ATA-Treiber LBA → echte Sektoren. Das ist ein verdammt gutes Gefühl.
 
 # 🤝 Mitmachen
 
@@ -110,13 +115,25 @@ Für die Bequemen - In einem Befehl:
 ./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-# Fehlersuche mit GNU Debugger 
+# 🔧 Kernel-Debugging mit QEMU & GDB
 
-Das Skript startet QEMU mit Debugging-Unterstützung und lädt den GNU Debugger (GDB) mit vorkonfigurierten Einstellungen, was die Fehlersuche im Kernel erheblich erleichtert.
+Mit QEMU und GDB kannst du den Kernel auf Source-Level debuggen:
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
+```
+
+# Fehlersuche im Benutzermodus
+
+Auch im Usermode rocken QEMU & GDB – hier kannst du:
+
+```bash
+./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
+gdb -x ./.gdbinit ./bin/ICARIUS.BIN
+break *0x0
+file ./src/user/elf/icarsh.elf
+break execute_builtin
 ```
 
 # Benutzershell 'ICARSH.BIN' bauen

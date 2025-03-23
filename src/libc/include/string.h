@@ -11,5 +11,6 @@ void* memset(void* s, int c, size_t n);
 char* strncpy(char* dest, const char* src, size_t n);
 char* strchr(const char* str, int c);
 char* strtok(char* str, const char* delim);
+const char* strerror(int errnum);
 
 #endif

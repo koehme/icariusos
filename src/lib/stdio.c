@@ -9,12 +9,10 @@
 
 /* PUBLIC API */
 int printf(const char* fmt, ...);
+int vprintf(const char* fmt, va_list args);
 
-int printf(const char* fmt, ...)
+int vprintf(const char* fmt, va_list args)
 {
-	va_list args;
-	va_start(args, fmt);
-
 	while (*fmt != '\0') {
 		if (*fmt == '%') {
 			fmt++;
@@ -24,7 +22,7 @@ int printf(const char* fmt, ...)
 			} else {
 				switch (*fmt) {
 				case 'c': {
-					const char ch = va_arg(args, int32_t);
+					const char ch = va_arg(args, int);
 					vbe_draw_ch(&vbe_display, ch, VBE_COLOR_GREEN);
 					break;
 				};
@@ -34,16 +32,16 @@ int printf(const char* fmt, ...)
 					break;
 				};
 				case 'd': {
-					char buffer[1024] = {};
-					const int32_t num = va_arg(args, int32_t);
+					char buffer[64];
+					const int num = va_arg(args, int);
 					itoa(num, buffer, 10);
 					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
 					break;
 				};
 				case 'x': {
-					char buffer[1024] = {};
-					const uint32_t value = va_arg(args, uint32_t);
-					utoa(value, buffer, 16);
+					char buffer[64];
+					const unsigned int val = va_arg(args, unsigned int);
+					utoa(val, buffer, 16);
 					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
 					break;
 				};
@@ -54,9 +52,8 @@ int printf(const char* fmt, ...)
 					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);
 					break;
 				};
-				default: {
+				default:
 					break;
-				};
 				};
 			};
 		} else {
@@ -64,6 +61,14 @@ int printf(const char* fmt, ...)
 		};
 		fmt++;
 	};
+	return 0;
+};
+
+int printf(const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vprintf(fmt, args);
 	va_end(args);
 	return 0;
 };

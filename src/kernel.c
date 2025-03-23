@@ -22,7 +22,7 @@ extern tss_t tss;
 
 /* PUBLIC API */
 void kmain(const uint32_t magic, const uint32_t addr);
-void panic(const char* str);
+void panic(const char* fmt, ...) __attribute__((noreturn, format(printf, 1, 2)));
 void sleep(const uint32_t ms);
 void busy_wait(const uint64_t delay);
 
@@ -42,14 +42,20 @@ static void _test_vfs_read(const char file[]);
 static void _test_heap(const int32_t size);
 static void _test_page_dir_create(const uint32_t* pd);
 
-void panic(const char* str)
+void panic(const char* fmt, ...)
 {
-	printf(str);
+	va_list args;
+	va_start(args, fmt);
+	printf("\n");
+	printf("[KERNEL PANIC] ");
+	vprintf(fmt, args);
+	va_end(args);
+	printf("\nSystem HALTED\n");
+	asm volatile("cli; hlt");
 
-	while (true) {
+	while (1) {
 		;
 	};
-	return;
 };
 
 void sleep(const uint32_t ms)
@@ -230,7 +236,7 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 	if (used_percentage >= 100.0) {
 		panic("[CRITICAL] Kernel Memory > 16 MiB");
 	} else {
-		printf("[STATUS] Kernel Memory Usage: %f%%\n", used_percentage);
+		printf("[STATUS] Kernel Memory Usage: %f \n", used_percentage);
 	};
 	return;
 };

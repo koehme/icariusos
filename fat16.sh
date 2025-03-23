@@ -29,7 +29,8 @@ sudo cp ./iso/boot/grub/grub.cfg /mnt/boot/grub/grub.cfg
 sudo cp ./bin/ICARIUS.BIN /mnt/boot/ICARIUS.BIN
 # 🔥 3️⃣ Alle FAT16-Dateien und -Verzeichnisse kopieren
 sudo cp -r ./bin/BIN /mnt/
-sudo cp -r ./bin/DEV /mnt/  
+sudo cp -r ./bin/DEV /mnt/
+sudo cp -r ./bin/ETC /mnt/    
 sudo cp -r ./bin/TMP /mnt/  
 # 🔥 4️⃣ Sicherstellen, dass alles geschrieben wird
 sudo sync

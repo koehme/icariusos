@@ -1,4 +1,11 @@
-#include <syscall.h>
+#include "syscall.h"
+
+#define SYS_EXIT 1
+#define SYS_READ 3
+#define SYS_WRITE 4
+#define SYS_OPEN 5
+#define SYS_CLOSE 6
+#define SYS_GETDENTS 141
 
 static inline int syscall(int num, int arg1, int arg2, int arg3)
 {
@@ -7,12 +14,39 @@ static inline int syscall(int num, int arg1, int arg2, int arg3)
 	return ret;
 };
 
-void exit(int status) { syscall(1, status, 0, 0); };
 
-int read(int fd, void* buf, int count) { return syscall(3, fd, (int)buf, count); };
+int read(int fd, void* buf, int count)
+{
+	const int ret = syscall(SYS_READ, fd, (int)buf, count);
+	return ret;
+};
 
-int write(int fd, const void* buf, int count) { return syscall(4, fd, (int)buf, count); };
+int write(int fd, const void* buf, int count)
+{
+	const int ret = syscall(SYS_WRITE, fd, (int)buf, count);
+	return ret;
+};
 
-int open(const char* path, int flags) { return syscall(5, (int)path, flags, 0); };
+void exit(int status)
+{
+	const int ret = syscall(SYS_EXIT, status, 0, 0);
+	(void)ret;
+};
 
-int close(int fd) { return syscall(6, fd, 0, 0); }
+int close(int fd)
+{
+	const int ret = syscall(SYS_CLOSE, fd, 0, 0);
+	return ret;
+};
+
+int open(const char* path, int flags)
+{
+	const int ret = syscall(SYS_OPEN, (int)path, flags, 0);
+	return ret;
+};
+
+int getdents(int fd, struct dirent* buf, unsigned int count)
+{
+	const int ret = syscall(SYS_GETDENTS, fd, (int)buf, count);
+	return ret;
+};

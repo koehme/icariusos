@@ -1,3 +1,5 @@
+#include "stdlib.h"
+
 int atoi(const char* str)
 {
 	int res = 0;

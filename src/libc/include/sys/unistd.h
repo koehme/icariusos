@@ -1,7 +1,8 @@
-#ifndef SYSCALL_H
-#define SYSCALL_H
+#ifndef UNISTD_H
+#define UNISTD_H
 
-#include "dirent.h"
+#include <dirent.h>
+#include <sys/types.h>
 
 int write(int fd, const void* buf, int count);
 int read(int fd, void* buf, int count);

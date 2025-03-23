@@ -5,6 +5,7 @@
  */
 
 #include "syscall.h"
+#include "dirent.h"
 #include "errno.h"
 #include "fifo.h"
 #include "heap.h"
@@ -37,10 +38,61 @@ static const char* _get_name(const int32_t syscall_id)
 		return "SYS_WRITE";
 	case SYS_OPEN:
 		return "SYS_OPEN";
+	case SYS_CLOSE:
+		return "SYS_CLOSE";
+	case SYS_GETDENTS:
+		return "SYS_GETDENTS";
 	default:
 		return "UNKNOWN Syscall";
 	};
 	return 0x0;
+};
+
+int32_t _sys_getdents(interrupt_frame_t* frame)
+{
+	const int fd = frame->ebx;
+	struct dirent* user_buf = (struct dirent*)frame->ecx;
+	const unsigned int count = frame->edx;
+
+	if (fd < 1 || !user_buf || count < sizeof(struct dirent)) {
+		return -EINVAL;
+	};
+	if ((uintptr_t)user_buf >= KERNEL_VIRTUAL_START) {
+		return -EFAULT;
+	};
+	void* kernel_buf = kzalloc(count + 1);
+
+	if (!kernel_buf) {
+		return -ENOMEM;
+	};
+	task_restore_dir(curr_task);
+	memcpy(kernel_buf, user_buf, count);
+	page_restore_kernel_dir();
+
+	vfs_dirent_t ventry = {};
+
+	int32_t ret = vfs_readdir(fd, &ventry);
+
+	if (ret != 1) {
+		kfree(kernel_buf);
+		return 0;
+	};
+
+	struct dirent dentry = {
+	    .d_ino = 0,
+	    .d_off = 0,
+	    .d_reclen = sizeof(struct dirent),
+	    .d_type = (ventry.type == 1) ? DT_DIR : DT_REG,
+	};
+	strncpy(dentry.d_name, ventry.name, sizeof(dentry.d_name));
+	memcpy(kernel_buf, &dentry, sizeof(struct dirent));
+
+	task_restore_dir(curr_task);
+	memcpy(user_buf, kernel_buf, sizeof(struct dirent));
+	page_restore_kernel_dir();
+
+	kfree(kernel_buf);
+	return sizeof(struct dirent);
 };
 
 int32_t _sys_close(interrupt_frame_t* frame)
@@ -193,13 +245,16 @@ int32_t _sys_read(interrupt_frame_t* frame)
 
 static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 {
-	if (syscall_id < 0 || syscall_id >= MAX_SYSCALL || !syscalls[syscall_id]) {
-		printf("[ERROR] Invalid Syscall %s - [%d]\n", _get_name(syscall_id), syscall_id);
-		return;
+	if (syscall_id < 0 || syscall_id >= MAX_SYSCALL) {
+		panic("Syscall ID [%d] out of range!\n", (int)syscall_id);
 	};
-	syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
+
+	if (!syscalls[syscall_id]) {
+		panic("Syscall [%s] (%d) not registered!\n", _get_name(syscall_id), (int)syscall_id);
+	};
+	const syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
 	frame->eax = handler(frame);
-	// printf("[DEBUG] Syscall [%d] Returned [EAX]: 0x%x\n", syscall_id, result);
+	// printf("\n[DEBUG] Syscall [%d]\n", syscall_id);
 	// kernel_shell();
 	return;
 };
@@ -233,5 +288,6 @@ void syscall_init(void)
 	syscalls[SYS_READ] = (void*)_sys_read;
 	syscalls[SYS_OPEN] = (void*)_sys_open;
 	syscalls[SYS_CLOSE] = (void*)_sys_close;
+	syscalls[SYS_GETDENTS] = (void*)_sys_getdents;
 	return;
 };

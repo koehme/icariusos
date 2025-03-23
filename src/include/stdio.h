@@ -12,5 +12,6 @@
 #include <stddef.h>
 
 int printf(const char* format, ...);
+int vprintf(const char* fmt, va_list args);
 
 #endif

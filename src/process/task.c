@@ -75,6 +75,7 @@ static void _load_binary_into_task(const uint8_t* file)
 
 	uint8_t* buf = kzalloc(stat_buf.st_size);
 	const int32_t bytes_read = vfs_fread(buf, stat_buf.st_size, 1, fd);
+	/*
 	printf("[DEBUG] Read %d Bytes from %s\n", bytes_read, file);
 
 	for (size_t i = 0; i < stat_buf.st_size; i++) {
@@ -84,7 +85,7 @@ static void _load_binary_into_task(const uint8_t* file)
 		printf("0x%x%x ", high, low);
 	};
 	printf("\n");
-
+	*/
 	memcpy((void*)USER_CODE_START, (void*)buf, bytes_read);
 
 	if (memcmp((void*)USER_CODE_START, (void*)buf, bytes_read) == 0) {
