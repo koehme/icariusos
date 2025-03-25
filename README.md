@@ -4,74 +4,11 @@
 
 Minimalistischer i686 Kernel
 
-## 🎯 Warum icariusOS?
-
-icariusOS ist für mich ein Abenteuer – voller Fragen, Rätsel und Erfolgsmomente.
-Hier entsteht alles von Grund auf selbst. Jeder Schritt, jede Entscheidung formt das System weiter – und genau das macht es so spannend.
-
-Ich baue icariusOS nicht, um irgendein Linux-Konkurrent zu werden.
-Ich baue es, weil ich lernen will. Weil ich’s spannend finde. Weil ich’s kann. Und ich feiere jeden kleinen Fortschritt:
-
-- 🟢 Der erste Benutzerprozess.
-- 📦 Das erste korrekt gemappte Page Directory.
-- 🧵 Der erste Task-Switch.
-
-Und jetzt? 
-
-- ls listet zum ersten Mal ein echtes Verzeichnis im Usermode. Und ich war ernsthaft beeindruckt, als mir klar wurde, wie viele Schichten das durchläuft:
-
-icarSh → builtin → libc → Syscall → VFS → FAT16 → Stream → ATA-Treiber LBA → echte Sektoren. Das ist ein verdammt gutes Gefühl.
-
-# 🤝 Mitmachen
-
-Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
-
-1️⃣ Repo forken:
-
-Klick oben rechts auf Fork, um dein eigenes Repository zu erstellen.
-
-2️⃣ Projekt klonen:
-
-git clone https://github.com/dein-nutzername/icariusOS.git
-cd icariusOS
-
-3️⃣ Branch erstellen:
-
-git checkout -b feature/dein-feature
-
-4️⃣ Änderungen machen
-
-git add . &&
-git commit -m "Feature: Kurzbeschreibung der Änderung"
-
-5️⃣ Pushen & Pull Request erstellen:
-
-git push origin feature/dein-feature
-
-Danach kannst du auf GitHub einen Pull Request (PR) eröffnen. Ich schaue mir alle PRs an und gebe dir so schnell ich kann Feedback.
-
-## Commit-Richtlinien (aka die liebevollen Rahmenbedingungen)
-
-Sprache:
-Du darfst committen, wie du möchtest – Englisch ist empfohlen, weil’s für andere im Projekt (und dein Zukunfts-Ich) am verständlichsten ist.
-
-Inhalt:
-Bitte schreib nicht nur WAS du geändert hast, sondern auch WARUM.
-
-Stilfreiheit:
-Kein Format-Dogma 
-
-📌 Hinweis:
-
-Teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
-
-Viel Spaß beim Kernel Hacking! 😎🔥
-
 ## Abhängigkeiten
 
 Bevor du icariusOS baust, stelle sicher, dass du folgende Abhängigkeiten installiert hast:
 
-- **Ubuntu** – (LTS)-Version von Ubuntu 
+- **Ubuntu** – (LTS)-Version von Ubuntu entweder als virtuelle Maschine oder WSL
 - **Cross-Compiler** – Um Code zu erzeugen, der freistehend ist und ohne Standardbibliothek auskommt.
 
 ```bash
@@ -152,108 +89,59 @@ Die tree-Ausgabe wird direkt in die Zwischenablage kopiert, was eine schnelle We
 tree | xclip -selection clipboard
 ```
 
-# YOLO-DevOps-Pipeline 😎🔥
+# YOLO-DevOps-Pipeline 
+
+Was soll schon schiefgehen? :D
 
 ```bash
-git checkout feature/task && git pull origin feature/task && git add . && git commit -m "Refactoring" && \
-git checkout dev && git pull origin dev && git merge feature/task && git push origin dev && \
+git checkout feature && git pull origin feature && git add . && git commit -m "Refactoring" && \
+git checkout dev && git pull origin dev && git merge feature && git push origin dev && \
 git checkout main && git pull origin main && git merge dev && git push origin main && \
-git checkout feature/task
+git checkout feature
 ```
 
-# FAT16 Partition  
 
-Hier sind die relevanten Werte des FAT16-Dateisystems `./fat16.sh`, das in ICARIUS verwendet wird:
+# 🤝 Mitmachen
 
-- **Bootsektor** → Enthält wichtige Parameter (z. B. Reserved Sectors, FAT Size, Root Entry Count).  
-- **FAT-Tabelle** → Zeigt an, welche Cluster zusammengehören (Verkettung von Dateien).  
-- **Root Directory** → Speichert Dateinamen und Startcluster.  
-- **Datenbereich** → Hier liegen die eigentlichen Dateiinhalte.  
+Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
 
-✅ **Sektoren, Cluster, Offsets sind immer nach fester Logik aufgebaut.**  
-✅ **Die FAT ist einfach eine "Verkettungstabelle", die sagt, welcher Cluster nach welchem kommt.**  
-✅ **Wenn man das Partitionsoffset beachtet, kann man jede Datei direkt auslesen!**  
+1️⃣ Repo forken:
 
-## 📌 Bootsektor-Daten  
+Klick oben rechts auf Fork, um dein eigenes Repository zu erstellen.
 
-| Parameter           | Wert          | Erklärung |
-|---------------------|--------------|-----------------------------------------|
-| **Jump Code**      | `0xeb 0x3c 0x90` | Bootsektor-Sprungbefehl für den Code |
-| **OEM Name**       | `mkfs.fat`      | Name des Erstellers des Dateisystems |
-| **Bytes Per Sec**  | `512`          | Bytes pro Sektor (Standard: 512) |
-| **Sec Per Cluster**| `16`           | Anzahl der Sektoren pro Cluster |
-| **Reserved Sectors** | `1`          | Reservierte Sektoren für Bootsektor/FAT-Header |
-| **Number of FATs** | `2`            | Anzahl der FAT-Kopien (meistens 2) |
-| **Root Entry Count** | `512`        | Maximale Anzahl an Einträgen im Root-Verzeichnis |
-| **Total Sectors16** | `0`          | Falls 0 → Wert steht in *Total Sectors32* |
-| **Media Type**     | `0xf8`         | Medientyp (0xF8 = Festplatte) |
-| **FAT Size 16**    | `256`          | Anzahl der Sektoren pro FAT-Tabelle |
-| **Sectors Per Trk** | `63`         | Anzahl der Sektoren pro Spur (Track) |
-| **Number of Heads** | `32`         | Anzahl der Leseköpfe (z.B. für CHS-Adressierung) |
-| **Hidden Sectors** | `0`           | Versteckte Sektoren vor der Partition |
-| **Total Sectors32** | `1.046.493`  | Gesamtanzahl der Sektoren der Partition |
+2️⃣ Projekt klonen:
 
-| Parameter         | Wert (Hex)  | Wert (Dezimal) | Bedeutung |
-|------------------|------------|---------------|-----------|
-| **Sektorgröße**  | `0x200`     | `512`         | Standardgröße eines Sektors |
-| **Gesamtsektoren** | `0x100000` | `1.048.576` | Gesamtanzahl an Sektoren im Dateisystem |
-| **Kapazität**    | `0x80000`   | `524288 KiB`  | Größe der Partition |
-| **Root Dir Offset** | `0x42000`  | `270336`     | Offset zum Root Directory innerhalb der Partition |
-| **Root Dir Abs** | `0x140000`  | `1.310.720`   | Absoluter Offset des Root Directories auf der Festplatte |
-| **Root Dir Größe** | `0x4000`  | `16.384 Bytes` | Größe des Root Directory Bereichs (512 Einträge * 32 Bytes) |
-| **FAT Offset**  | `0x2000`    | `8192`        | Offset zur ersten FAT-Tabelle innerhalb der Partition |
-| **FAT Absolut** | `0x102000`  | `1.056.768`   | Absoluter Offset zur ersten FAT-Tabelle auf der Festplatte |
-| **FAT Größe** | `0x20000`    | `131.072 Bytes` | Größe der FAT-Tabelle in Bytes |
-| **Root Dir Sek** | `0x20`     | `32`          | Anzahl der belegten Sektoren für das Root Directory |
-| **1 Daten-Sektor** | `0x230`   | `560`         | Sektor, in dem der erste Datencluster beginnt |
-| **Daten-Sektoren** | `0xFF5D`  | `1.045.933`   | Anzahl der nutzbaren Daten-Sektoren |
+git clone https://github.com/dein-nutzername/icariusOS.git
+cd icariusOS
 
-## 📌 FAT16-Speicherlayout  
+3️⃣ Branch erstellen:
 
-| Offset   | Größe   | Sektoren | Berechnung (512B) | Name |
-|----------|--------|----------|-------------------|-----------------------------------------|
-| `0x00000` | `0x2000`  | `16` | `16 * 512` | Reserved Sectors (inkl. Bootsektor) |
-| `0x02000` | `0x20000` | `256` | `256 * 512` | 1st FAT |
-| `0x22000` | `0x20000` | `256` | `256 * 512` | 2nd FAT |
-| `0x42000` | `0x4000`  | `32` | `512 * 32` | Root Directory Area |
-| `0x46000` | `0x4000`  | `32` | `2 * 8192` | Data Area (Cluster 0: Boot Code, Cluster 1) |
-| `0x4A000` |||| Data Area (Files & Subdirectories) |
+git checkout -b feature/dein-feature
 
-**Gesamt: 560 Sektoren bis zum Datenbereich** 🚀
+4️⃣ Änderungen machen
 
-## 📌 Weitere Offsets  
+git add . &&
+git commit -m "Feature: Kurzbeschreibung der Änderung"
 
-| Bezeichnung | Hex-Wert | Dezimalwert | Bedeutung |
-|------------|---------|------------|------------|
-| **FAT-Bereich Offset** | `0x2000` | `8192` | Offset zur FAT (relativ zur Partition) |
-| **FAT-Bereich Absolut** | `0x102000` | `1056768` | Absoluter Speicherort der FAT auf der Festplatte |
-| **Root-Dir Offset** | `0x42000` | `270336` | Offset zum Root Directory (relativ zur Partition) |
-| **Root-Dir Absolut** | `0x142000` | `1310720` | Absoluter Speicherort des Root Directories |
-| **Erster Daten-Sektor** | `0x230` | `560` | Startsektor des ersten Datenclusters |
-| **Daten-Sektoren** | `0xFF5A` | `65370` | Gesamte Anzahl der nutzbaren Sektoren für Daten |
-| **Gesamtanzahl Cluster** | `0xFF5A` | `65370` | Anzahl der Cluster im Dateisystem |
+5️⃣ Pushen & Pull Request erstellen:
 
-## 📌 Beispiel: Cluster 770  
+git push origin feature/dein-feature
 
-Die **Adresse eines Clusters** im Datenbereich berechnet sich wie folgt:
+Danach kannst du auf GitHub einen Pull Request (PR) eröffnen. Ich schaue mir alle PRs an und gebe dir so schnell ich kann Feedback.
 
-Partition 0x100000
+## Commit-Richtlinien (aka die liebevollen Rahmenbedingungen)
 
-Datenbereich Offset = 560 × 512 = 0x46000
-0x46000 ist der Offset des ersten nutzbaren Clusters innerhalb der Partition.
+Sprache:
+Du darfst committen, wie du möchtest – Englisch ist empfohlen, weil’s für andere im Projekt (und dein Zukunfts-Ich) am verständlichsten ist.
 
-Cluster Offset = (Cluster - 2) * Bytes per Cluster
-(770−2)×8192=768×8192=0x600000
-0x600000 ist der relative Offset des Clusters im Datenbereich.
+Inhalt:
+Bitte schreib nicht nur WAS du geändert hast, sondern auch WARUM.
 
-Cluster 770 Absoluter Offset = Partition Offset + Datenbereich Offset + Cluster Offset
-                              = 0x100000 + 0x46000 + 0x600000
-                              = 0x742000
-                              
-# FAT16 Dateisystem prüfen
+Stilfreiheit:
+Kein Format-Dogma 
 
-Nachdem eine Datei erfolgreich im FAT16-Dateisystem `./fat16.sh` angelegt wurde, kann mit `hexdump` überprüft werden, ob der Eintrag tatsächlich im Root Directory geschrieben wurde.
+📌 Hinweis:
 
-```bash
-hexdump -C -s 0x742060 -n 512 ICARIUS.img
-```
+Teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
+
+Viel Spaß beim Kernel Hacking! 😎🔥

@@ -14,6 +14,51 @@
 #include "ata.h"
 #include "vfs.h"
 
+/*
+ * BOOT SECTOR DATA:
+ * -------------------------------------------------------------
+ * | Parameter          | Value       | Description             |
+ * |--------------------|-------------|--------------------------|
+ * | Jump Code          | 0xeb 0x3c…  | Boot sector entry        |
+ * | OEM Name           | mkfs.fat    | Created by               |
+ * | Bytes Per Sector   | 512         | Standard                 |
+ * | Sectors Per Cluster| 16          | Cluster size             |
+ * | Reserved Sectors   | 1           | Incl. boot sector        |
+ * | Number of FATs     | 2           | Usually 2 FAT copies     |
+ * | Root Entry Count   | 512         | Max root dir entries     |
+ * | Total Sectors16    | 0           | Use Total Sectors32      |
+ * | Media Type         | 0xf8        | Hard disk                |
+ * | FAT Size 16        | 256         | FAT sectors              |
+ * | Sectors Per Track  | 63          | CHS-related              |
+ * | Number of Heads    | 32          | CHS-related              |
+ * | Hidden Sectors     | 0           | Pre-partition sectors    |
+ * | Total Sectors32    | 1046493     | Total partition sectors  |
+ *
+ *  * OFFSETS & LAYOUT:
+ * -------------------------------------------------------------
+ * | Section       | Offset   | Size     | Description                  |
+ * |---------------|----------|----------|------------------------------|
+ * | Reserved      | 0x00000  | 0x2000   | Boot + reserved              |
+ * | 1st FAT       | 0x02000  | 0x20000  | FAT copy 1                   |
+ * | 2nd FAT       | 0x22000  | 0x20000  | FAT copy 2                   |
+ * | Root Dir      | 0x42000  | 0x4000   | 512 entries × 32 bytes       |
+ * | Data Area     | 0x46000+ | ...      | Starts at cluster 2          |
+ * -------------------------------------------------------------
+ *
+ *  * First data sector = 560
+ * Cluster N offset = (N - 2) * BytesPerCluster
+ *
+ * EXAMPLE: Cluster 770
+ * ----------------------------------------
+ * Cluster offset = (770 - 2) × 8192 = 0x600000
+ * Absolute offset = Partition + DataArea + ClusterOffset
+ *                 = 0x100000 + 0x46000 + 0x600000
+ *                 = 0x742000
+ *
+ * Verify file written at that offset:
+ *  hexdump -C -s 0x742060 -n 512 ICARIUS.img
+ */
+
 typedef struct fat16 {
 	resolve_fn resolve_cb;
 	open_fn open_cb;
