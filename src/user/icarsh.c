@@ -1,4 +1,5 @@
 #include "builtin.h"
+#include "history.h"
 #include "readline/readline.h"
 #include "stdio.h"
 #include "string.h"
@@ -9,13 +10,12 @@
 int main(int argc, char* argv[])
 {
 	while (1) {
-		const char* input = readline(PROMPT);
+		const char* line = readline(PROMPT);
 
-		if (!input) {
+		if (!line) {
 			continue;
 		};
-		execute_builtin(input);
-		write(1, "\n", 1);
+		execute_builtin(line);
 	};
 	return 0;
 };

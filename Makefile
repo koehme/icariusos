@@ -139,6 +139,8 @@ clean:
 icarsh:
 	# Kompiliere die libc
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/history.c -o ./src/libc/obj/history.o
+	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/kbd.c -o ./src/libc/obj/kbd.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdlib.c -o ./src/libc/obj/stdlib.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string.c -o ./src/libc/obj/string.o
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/readline.c -o ./src/libc/obj/readline.o
@@ -148,10 +150,10 @@ icarsh:
 	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string/strerror.c -o ./src/libc/obj/strerror.o
 
 	# Erstelle libc.a
-	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/strerror.o ./src/libc/obj/dirent.o ./src/libc/obj/errno.o ./src/libc/obj/stdlib.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
+	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/history.o ./src/libc/obj/kbd.o ./src/libc/obj/strerror.o ./src/libc/obj/dirent.o ./src/libc/obj/errno.o ./src/libc/obj/stdlib.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
 
 	# Kompiliere den Assembler-Wrapper für `main()`
-	nasm -f elf32 ./src/user/entry.asm -o ./src/user/obj/entry.o
+	$(ASSEMBLER) -f elf32 -g ./src/user/entry.asm -o ./src/user/obj/entry.o
 
 	# Kompiliere die Usershell
 	$(GCC) -I ./src/libc/include/ -I ./src/user/include/  $(FLAGS) -c ./src/user/icarsh.c -o ./src/user/obj/icarsh.o

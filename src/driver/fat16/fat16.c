@@ -664,8 +664,6 @@ fat16_dir_entry_t* fat16_get_root_dir_entry(ata_t* dev, pathnode_t* path, fat16_
 	};
 
 	if (!path || strcmp(path->identifier, "/") == 0) {
-		printf("[FAT16] Root Directory '/' detected. Start: %d, End: %d, Sectors: %d\n", first_root_dir_sector, last_root_dir_sector,
-		       last_root_dir_sector - first_root_dir_sector);
 		folder->start_sector = first_root_dir_sector;
 		folder->end_sector = last_root_dir_sector;
 		folder->total = fat16_header.bpb.root_ent_cnt;

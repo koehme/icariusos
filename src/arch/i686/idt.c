@@ -551,14 +551,15 @@ void irq1_handler(void)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t scancode = inb(PS2_DATA_PORT);
-		const char ascii = kbd_translate(scancode);
 
-		if (ascii) {
-			if (curr_task && curr_task->parent) {
-				fifo_enqueue(curr_task->parent->keyboard_buffer, ascii);
-			} else {
+		if (curr_task && curr_task->parent) {
+			fifo_enqueue(curr_task->parent->keyboard_buffer, scancode);
+		} else {
+			const char ascii = kbd_translate(scancode);
+
+			if (ascii) {
 				fifo_enqueue(&fifo_kbd, ascii);
-			}
+			};
 		};
 	};
 	_pic1_send_eoi();

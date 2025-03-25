@@ -1,6 +1,7 @@
 #include "builtin.h"
 #include "dirent.h"
 #include "errno.h"
+#include "history.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -8,6 +9,7 @@
 
 typedef void (*builtin_handler_t)(const char* args);
 static void _exit_builtin(const char* args);
+static void _history_builtin(const char* args);
 static void _echo_builtin(const char* args);
 static void _help_builtin(const char* args);
 static void _ls_builtin(const char* path);
@@ -15,6 +17,7 @@ static void _unknown_builtin(const char* args);
 void execute_builtin(const char* input);
 
 #define BUILTIN_COUNT (sizeof(builtins) / sizeof(builtin_t))
+#define MAX_INPUT_LEN 256
 
 typedef struct builtin {
 	const char* name;
@@ -22,7 +25,7 @@ typedef struct builtin {
 } builtin_t;
 
 builtin_t builtins[] = {
-    {"exit", _exit_builtin}, {"help", _help_builtin}, {"echo", _echo_builtin}, {"ls", _ls_builtin}, {0x0, 0x0},
+    {"exit", _exit_builtin}, {"help", _help_builtin}, {"echo", _echo_builtin}, {"ls", _ls_builtin}, {"history", _history_builtin}, {0x0, 0x0},
 };
 
 static void _exit_builtin(const char* args)
@@ -33,6 +36,12 @@ static void _exit_builtin(const char* args)
 		status = atoi(args);
 	};
 	exit(status);
+	return;
+};
+
+static void _history_builtin(const char* args)
+{
+	history_dump(&icarsh_history);
 	return;
 };
 
@@ -62,13 +71,12 @@ static void _echo_builtin(const char* args)
 
 static void _help_builtin(const char* args)
 {
-	printf("\n Welcome to the icariusOS Built-ins!\n");
-	printf("Here's what you can do:\n\n");
-	printf(" `exit`  – Peace out! Closes the shell.\n");
-	printf(" `ls`    – Take a sneaky peek into the file jungle.\n");
-	printf(" `echo`  – Say something. Literally just say it.\n");
-	printf(" `help`  – Shows this rad list again.\n");
-	printf("\nPro tip: Commands are case-sensitive. Don't yell unless you mean it.\n");
+	printf("----[ Help ]----\n");
+	printf("  `exit`          – Closes icarSH and drops you back to icariusOS ring0\n");
+	printf("  `ls`            – Lists files. You gotta pass the full root path like `ls A:/`\n");
+	printf("  `echo`          – Say something..\n");
+	printf("  `help`          – Shows this list again.\n");
+	printf("  `history`       – Dump your last commands.\n");
 	return;
 };
 
@@ -77,7 +85,8 @@ static void _ls_builtin(const char* path)
 	DIR* dir = opendir(path);
 
 	if (!dir) {
-		printf("ls: tried opening '%s'... but the universe said: %s\n", path, strerror(errno));
+		const char* shown_path = (path && strlen(path) > 0) ? path : "?";
+		printf("Opening %s %s\n", shown_path, strerror(errno));
 		return;
 	};
 	struct dirent* entry = {};
@@ -94,7 +103,11 @@ static void _ls_builtin(const char* path)
 			printf("%s\n", entry->d_name);
 		};
 	};
-	closedir(dir);
+	const int res = closedir(dir);
+
+	if (res == -1) {
+		printf("Couldn't close that dir – %s\n", strerror(errno));
+	};
 	return;
 };
 
@@ -103,14 +116,15 @@ static void _unknown_builtin(const char* args)
 	if (!args || !*args) {
 		args = "";
 	};
-	printf("\nUnknown command: '%s'\n", args);
+	printf("Unknown command: '%s'\n", args);
 	printf("Not sure what that means, but I'm just a shell.\n");
 	printf("Try 'help' to see what icariusOS do understand.\n");
+	return;
 };
 
 static builtin_handler_t _find_builtin(const char* cmd)
 {
-	for (int i = 0; builtins[i].name; i++) {
+	for (size_t i = 0; builtins[i].name; i++) {
 		if (strcmp(cmd, builtins[i].name) == 0)
 			return builtins[i].handler;
 	};
@@ -119,12 +133,22 @@ static builtin_handler_t _find_builtin(const char* cmd)
 
 void execute_builtin(const char* input)
 {
-	char buf[256];
+	char buf[MAX_INPUT_LEN];
+	const size_t len = strlen(input);
+
+	if (len >= sizeof(buf)) {
+		printf("Input exceeds max length (%d chars). Try something shorter.\n", sizeof(buf) - 1);
+		return;
+	};
 	strncpy(buf, input, sizeof(buf) - 1);
 	buf[sizeof(buf) - 1] = '\0';
 
 	const char* cmd = strtok(buf, " ");
 	const char* args = strtok(0x0, "");
+
+	if (!args) {
+		args = "";
+	};
 
 	if (!cmd) {
 		_unknown_builtin("");
