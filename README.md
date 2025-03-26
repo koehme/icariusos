@@ -100,7 +100,6 @@ git checkout main && git pull origin main && git merge dev && git push origin ma
 git checkout feature
 ```
 
-
 # 🤝 Mitmachen
 
 Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
