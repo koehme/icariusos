@@ -70,7 +70,6 @@ Auch im Usermode rocken QEMU & GDB – hier kannst du:
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 break *0x0
 file ./src/user/elf/icarsh.elf
-break execute_builtin
 ```
 
 # Benutzershell 'ICARSH.BIN' bauen

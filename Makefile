@@ -135,35 +135,37 @@ image: $(OBJECTS)
 
 clean:
 	rm -rf $(OBJ_DIR)/*.o
+	rm -rf ./src/user/obj/*.o
+	rm -rf ./src/user/libc/obj/*.o
 
 icarsh:
 	# Kompiliere die libc
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdio.c -o ./src/libc/obj/stdio.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/history.c -o ./src/libc/obj/history.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/kbd.c -o ./src/libc/obj/kbd.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/stdlib.c -o ./src/libc/obj/stdlib.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string.c -o ./src/libc/obj/string.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/readline.c -o ./src/libc/obj/readline.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/syscall.c -o ./src/libc/obj/syscall.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/errno.c -o ./src/libc/obj/errno.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/dirent.c -o ./src/libc/obj/dirent.o
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -c ./src/libc/string/strerror.c -o ./src/libc/obj/strerror.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/stdio.c -o ./src/user/libc/obj/stdio.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/history.c -o ./src/user/libc/obj/history.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/kbd.c -o ./src/user/libc/obj/kbd.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/stdlib.c -o ./src/user/libc/obj/stdlib.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/string.c -o ./src/user/libc/obj/string.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/readline.c -o ./src/user/libc/obj/readline.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/syscall.c -o ./src/user/libc/obj/syscall.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/errno.c -o ./src/user/libc/obj/errno.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/dirent.c -o ./src/user/libc/obj/dirent.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/string/strerror.c -o ./src/user/libc/obj/strerror.o
 
 	# Erstelle libc.a
-	$(AR) rcs ./src/libc/lib/libc.a ./src/libc/obj/stdio.o ./src/libc/obj/history.o ./src/libc/obj/kbd.o ./src/libc/obj/strerror.o ./src/libc/obj/dirent.o ./src/libc/obj/errno.o ./src/libc/obj/stdlib.o ./src/libc/obj/readline.o ./src/libc/obj/string.o ./src/libc/obj/syscall.o
+	$(AR) rcs ./src/user/libc/lib/libc.a ./src/user/libc/obj/stdio.o ./src/user/libc/obj/history.o ./src/user/libc/obj/kbd.o ./src/user/libc/obj/strerror.o ./src/user/libc/obj/dirent.o ./src/user/libc/obj/errno.o ./src/user/libc/obj/stdlib.o ./src/user/libc/obj/readline.o ./src/user/libc/obj/string.o ./src/user/libc/obj/syscall.o
 
 	# Kompiliere den Assembler-Wrapper für `main()`
-	$(ASSEMBLER) -f elf32 -g ./src/user/entry.asm -o ./src/user/obj/entry.o
+	$(ASSEMBLER) -f elf32 -g ./src/user/icarsh/entry.asm -o ./src/user/icarsh/obj/entry.o
 
 	# Kompiliere die Usershell
-	$(GCC) -I ./src/libc/include/ -I ./src/user/include/  $(FLAGS) -c ./src/user/icarsh.c -o ./src/user/obj/icarsh.o
-	$(GCC) -I ./src/libc/include/ -I ./src/user/include/ $(FLAGS) -c ./src/user/builtin.c -o ./src/user/obj/builtin.o
+	$(GCC) -I ./src/user/libc/include/ -I ./src/user/icarsh/include/  $(FLAGS) -c ./src/user/icarsh/icarsh.c -o ./src/user/icarsh/obj/icarsh.o
+	$(GCC) -I ./src/user/libc/include/ -I ./src/user/icarsh/include/ $(FLAGS) -c ./src/user/icarsh/builtin.c -o ./src/user/icarsh/obj/builtin.o
 
 	# Linke Usershell mit Assembler-Wrapper und libc.a
-	$(GCC) -I ./src/libc/include/ $(FLAGS) -T ./src/user/user.ld ./src/user/obj/entry.o ./src/user/obj/icarsh.o ./src/user/obj/builtin.o -o ./src/user/elf/icarsh.elf ./src/libc/lib/libc.a
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -T ./src/user/icarsh/user.ld ./src/user/icarsh/obj/entry.o ./src/user/icarsh/obj/icarsh.o ./src/user/icarsh/obj/builtin.o -o ./src/user/icarsh/elf/icarsh.elf ./src/user/libc/lib/libc.a
 
 	# Konvertiere ELF nach Flat Binary
-	$(OBJCOPY) -O binary ./src/user/elf/icarsh.elf ./src/user/bin/ICARSH.BIN
+	$(OBJCOPY) -O binary ./src/user/icarsh/elf/icarsh.elf ./src/user/icarsh/bin/ICARSH.BIN
 
 	# Kopiere Usershell ins OS-Dateisystem
-	cp ./src/user/bin/ICARSH.BIN ./bin/BIN/ICARSH.BIN
+	cp ./src/user/icarsh/bin/ICARSH.BIN ./bin/BIN/ICARSH.BIN
