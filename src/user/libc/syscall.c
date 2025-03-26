@@ -14,7 +14,6 @@ static inline int syscall(int num, int arg1, int arg2, int arg3)
 	return ret;
 };
 
-
 int read(int fd, void* buf, int count)
 {
 	const int ret = syscall(SYS_READ, fd, (int)buf, count);

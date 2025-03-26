@@ -3,6 +3,8 @@
 #include "sys/types.h"
 #include "syscall.h"
 
+FILE file_slots[MAX_OPEN_FILES] = {0};
+
 int puts(const char* s)
 {
 	if (!s) {
@@ -141,4 +143,82 @@ int printf(const char* restrict format, ...)
 		write(1, buf, len);
 	};
 	return len;
+};
+
+FILE* fopen(const char* pathname, const char* mode)
+{
+	int flags = -1;
+
+	if (strcmp(mode, "r") == 0) {
+		flags = 0;
+	} else if (strcmp(mode, "w") == 0) {
+		flags = 1;
+	} else {
+		return 0x0;
+	};
+	const int fd = open(pathname, flags);
+
+	if (fd < 0)
+		return 0x0;
+
+	for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
+		FILE* slot = &file_slots[i];
+
+		if (slot->fd == 0) {
+			slot->fd = fd;
+			slot->mode = flags;
+			slot->error = 0;
+			slot->eof = 0;
+			return slot;
+		};
+	};
+	close(fd);
+	return 0x0;
+};
+
+int fclose(FILE* stream)
+{
+	if (!stream || stream->fd <= 0) {
+		return -1;
+	};
+	const int res = close(stream->fd);
+	stream->fd = 0;
+	stream->mode = 0;
+	stream->error = 0;
+	stream->eof = 0;
+	return res;
+};
+
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+	if (!stream || stream->fd <= 0 || !ptr) {
+		return 0;
+	};
+	const size_t total_bytes = size * nmemb;
+	const int bytes_read = read(stream->fd, ptr, total_bytes);
+
+	if (bytes_read < 0) {
+		stream->error = 1;
+		return 0;
+	}
+
+	if ((size_t)bytes_read < total_bytes) {
+		stream->eof = 1;
+	};
+	return bytes_read / size;
+};
+
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+	if (!stream || stream->fd <= 0 || !ptr) {
+		return 0;
+	};
+	const size_t total_bytes = size * nmemb;
+	const int bytes_written = write(stream->fd, ptr, total_bytes);
+
+	if (bytes_written < 0) {
+		stream->error = 1;
+		return 0;
+	};
+	return bytes_written / size;
 };

@@ -56,7 +56,6 @@ static void _echo_builtin(const char* args)
 	buf[sizeof(buf) - 1] = '\0';
 
 	char* token = strtok(buf, " ");
-	printf("\n");
 
 	while (token) {
 		printf("%s", token);
@@ -66,6 +65,7 @@ static void _echo_builtin(const char* args)
 			printf(" ");
 		};
 	};
+	printf("\n");
 	return;
 };
 
@@ -77,6 +77,18 @@ static void _help_builtin(const char* args)
 	printf("  `echo`          – Say something..\n");
 	printf("  `help`          – Shows this list again.\n");
 	printf("  `history`       – Dump your last commands.\n");
+	return;
+};
+
+void builtin_cat(const char* path)
+{
+	FILE* f = fopen(path, "r");
+
+	if (!f) {
+		printf("Cannot open '%s'\n", path);
+		return;
+	};
+	fclose(f);
 	return;
 };
 
