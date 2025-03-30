@@ -4,6 +4,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-break *0x00000000
+break vfs_fread
 
 c

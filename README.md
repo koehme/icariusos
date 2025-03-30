@@ -1,96 +1,91 @@
 # icariusOS
 
-[![Lizenz: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Minimalistischer i686 Kernel
+A minimalist i686 kernel, handcrafted since early 2023, learning and complete control
 
-## Abhängigkeiten
+## 🧩 Dependencies
 
-Bevor du icariusOS baust, stelle sicher, dass du folgende Abhängigkeiten installiert hast:
+Before building icariusOS, make sure the following dependencies are installed
 
-- **Ubuntu** – (LTS)-Version von Ubuntu entweder als virtuelle Maschine oder WSL
-- **Cross-Compiler** – Um Code zu erzeugen, der freistehend ist und ohne Standardbibliothek auskommt.
+- **Ubuntu** – LTS version recommended (either on a VM or WSL)
+- **Cross-Compiler** – You’ll need a freestanding i686 toolchain
+
+To set it up, run
 
 ```bash
 ./i686.sh
 ```
+🚀 Getting Started
 
-# Starten
-
-Bevor du icariusOS startest, stelle sicher, dass das dazugehörige FAT16-Dateisystem generiert wurde, indem du die folgenden Befehle ausführst:
+Make sure the FAT16 file system is created before booting
 
 ```bash
-./build.sh
-./fat16.sh
+./build.sh && ./fat16.sh
 ```
+🛠️ Build & Run
 
-# icariusOS bauen
-
-Um den Kernel neu zu bauen und zu starten, verwende diesen Befehl:
+Rebuild the kernel and run it via QEMU
 
 ```bash
 ./build.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-# Aktualisieren
+🔁 Kernel Updates
 
-Falls du den Kernel aktualisieren möchtest, ersetze die ICARIUS.BIN-Datei im FAT16-Dateisystem mit:
+If you want to update the kernel binary inside the FAT16 image
 
 ```bash
-./swap.sh 
+./swap.sh
 ```
-
-Nach der Aktualisierung kannst du icariusOS mit dem neuen Kernel starten:
+Then boot up with the fresh kernel
 
 ```bash
 qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
-
-Für die Bequemen - In einem Befehl:
+Shortcut for lazy
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
+🧠 Kernel Debugging (QEMU + GDB)
 
-# 🔧 Kernel-Debugging mit QEMU & GDB
-
-Mit QEMU und GDB kannst du den Kernel auf Source-Level debuggen:
+To debug the kernel at source level
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
-# Fehlersuche im Benutzermodus
+🔍 Userspace Debugging
 
-Auch im Usermode rocken QEMU & GDB – hier kannst du:
+Debug the userspace too, with breakpoints and all the nerdy goodness
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 break *0x0
-file ./src/user/elf/icarsh.elf
+file ./src/user/icarsh/elf/icarsh.elf
 ```
+🐚 Build the Userspace Shell ICARSH.BIN
 
-# Benutzershell 'ICARSH.BIN' bauen
-
-Dieses Skript kompiliert die Benutzer-Shell und integriert sie direkt ins FAT16-Dateisystem, wodurch sie im OS ausführbar wird.
+This compiles the user shell and inserts it into the FAT16 image for execution
 
 ```bash
 make icarsh && ./fat16.sh
-``` 
+```
 
-# Verzeichnisstruktur ausgeben
+🌲 Print Directory Structure
 
-Die tree-Ausgabe wird direkt in die Zwischenablage kopiert, was eine schnelle Weiterverarbeitung oder Dokumentation der Projektstruktur ermöglicht.
+This command copies a visual tree of the project to your clipboard (Linux only)
 
 ```bash
 tree | xclip -selection clipboard
 ```
 
-# YOLO-DevOps-Pipeline 
+🤖 YOLO DevOps Pipeline
 
-Was soll schon schiefgehen? :D
+YOLO
 
 ```bash
 git checkout feature && git pull origin feature && git add . && git commit -m "Refactoring" && \
@@ -98,48 +93,3 @@ git checkout dev && git pull origin dev && git merge feature && git push origin 
 git checkout main && git pull origin main && git merge dev && git push origin main && \
 git checkout feature
 ```
-
-# 🤝 Mitmachen
-
-Falls du Lust hast, an icariusOS mitzuwirken, freue ich mich über jeden Pull Request! Egal, ob du Bugs fixt, Features hinzufügst oder den Code optimierst!
-
-1️⃣ Repo forken:
-
-Klick oben rechts auf Fork, um dein eigenes Repository zu erstellen.
-
-2️⃣ Projekt klonen:
-
-git clone https://github.com/dein-nutzername/icariusOS.git
-cd icariusOS
-
-3️⃣ Branch erstellen:
-
-git checkout -b feature/dein-feature
-
-4️⃣ Änderungen machen
-
-git add . &&
-git commit -m "Feature: Kurzbeschreibung der Änderung"
-
-5️⃣ Pushen & Pull Request erstellen:
-
-git push origin feature/dein-feature
-
-Danach kannst du auf GitHub einen Pull Request (PR) eröffnen. Ich schaue mir alle PRs an und gebe dir so schnell ich kann Feedback.
-
-## Commit-Richtlinien (aka die liebevollen Rahmenbedingungen)
-
-Sprache:
-Du darfst committen, wie du möchtest – Englisch ist empfohlen, weil’s für andere im Projekt (und dein Zukunfts-Ich) am verständlichsten ist.
-
-Inhalt:
-Bitte schreib nicht nur WAS du geändert hast, sondern auch WARUM.
-
-Stilfreiheit:
-Kein Format-Dogma 
-
-📌 Hinweis:
-
-Teste deine Änderungen in QEMU, bevor du den PR erstellst. Falls du Fragen hast, schreib einfach eine Issue oder kommentiere direkt im PR.
-
-Viel Spaß beim Kernel Hacking! 😎🔥

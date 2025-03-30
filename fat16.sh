@@ -38,4 +38,3 @@ ls -l /mnt/
 # 🔥 5️⃣ Partition unmounten und Loopback-Devices freigeben
 sudo umount /mnt
 sudo losetup -D
-echo "[INFO] FAT16-Dateisystem erfolgreich erstellt und Dateien kopiert!"

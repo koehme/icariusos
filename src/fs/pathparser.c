@@ -132,7 +132,7 @@ pathnode_t* _path_parser_parse_filename(pathparser_t* self, pathlexer_t* lexer, 
 	bytes += extlen;
 	// Null-terminate the string
 	curr_node->identifier[bytes] = '\0';
-	printf("[DEBUG] Parsed FAT16 Filename: %s\n", curr_node->identifier);
+	// printf("[DEBUG] Parsed FAT16 Filename: %s\n", curr_node->identifier);
 	curr_node->next = 0x0;
 	return curr_node;
 };

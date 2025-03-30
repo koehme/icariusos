@@ -29,7 +29,7 @@ char* readline(const char* prompt)
 	uint8_t scancode;
 
 	while (1) {
-		if (read(0, &scancode, 1) <= 0) {
+		if (read(0, &scancode, 1) < 0) {
 			return 0x0;
 		};
 		const key_event_t ev = translate_sc_into_event(scancode);

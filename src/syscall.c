@@ -11,6 +11,7 @@
 #include "heap.h"
 #include "icarius.h"
 #include "task.h"
+#include "unistd.h"
 
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
@@ -209,38 +210,65 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	const int32_t syscall_id = frame->eax;
 	const int32_t fd = frame->ebx;
 	const size_t count = frame->edx;
+	int32_t n_read = 0;
 	void* user_buf = (void*)frame->ecx;
 
-	if (fd != 0 || user_buf == 0x0 || count == 0)
+	if (user_buf == 0x0 || count == 0)
 		return -1;
 
 	asm_do_sti();
+
 	void* kernel_buf = kzalloc(count);
 
-	process_t* caller = curr_task->parent;
-
-	if (!caller)
+	if (!kernel_buf) {
 		return -1;
-
-	for (size_t i = 0; i < count; i++) {
-		while (fifo_is_empty(caller->keyboard_buffer)) {
-			//	asm volatile("hlt");
-		};
-
-		if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
-			kfree(kernel_buf);
-			return i;
-		};
 	};
 	((char*)kernel_buf)[count] = '\0';
 
+	process_t* caller = curr_task->parent;
+
+	if (!caller) {
+		kfree(kernel_buf);
+		return -1;
+	};
+
+	switch (fd) {
+	case FD_STDIN: {
+		for (size_t i = 0; i < count; i++) {
+			while (fifo_is_empty(caller->keyboard_buffer)) {
+				// asm volatile("hlt");
+				// busy-wait for stdin
+			};
+
+			if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
+				kfree(kernel_buf);
+				return i;
+			};
+		};
+		break;
+	};
+	case FD_STDOUT:
+	case FD_STDERR: {
+		// stdout und stderr are write-only
+		kfree(kernel_buf);
+		return -1;
+	};
+	default: {
+		n_read = vfs_fread(kernel_buf, count, 1, fd);
+
+		if (n_read < 0) {
+			n_read = -1;
+		};
+		break;
+	};
+	};
 	task_restore_dir(curr_task);
 	memcpy(user_buf, kernel_buf, count);
 
 	page_restore_kernel_dir();
 
 	kfree(kernel_buf);
-	return count;
+	return n_read;
 };
 
 static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)

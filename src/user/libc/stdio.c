@@ -3,7 +3,16 @@
 #include "sys/types.h"
 #include "syscall.h"
 
-FILE file_slots[MAX_OPEN_FILES] = {0};
+static FILE file_slots[MAX_OPEN_FILES] = {
+    [0] = {.fd = 0, .mode = FILE_MODE_READ, .error = 0, .eof = 0},  // stdin
+    [1] = {.fd = 1, .mode = FILE_MODE_WRITE, .error = 0, .eof = 0}, // stdout
+    [2] = {.fd = 2, .mode = FILE_MODE_WRITE, .error = 0, .eof = 0}, // stderr
+};
+
+FILE* stdin = &file_slots[0];
+FILE* stdout = &file_slots[1];
+FILE* stderr = &file_slots[2];
+
 
 int puts(const char* s)
 {
@@ -145,6 +154,22 @@ int printf(const char* restrict format, ...)
 	return len;
 };
 
+void file_dump(FILE* f)
+{
+	if (!f) {
+		printf("FILE*: 0x0 \n");
+		return;
+	};
+	printf("----[ FILE* Dump ]----\n");
+	printf("FD     : %d\n", f->fd);
+	printf("Mode   : %s\n", f->mode == 0 ? "READ" : "WRITE");
+	printf("Error  : %s\n", f->error ? "YES" : "NO");
+	printf("EOF    : %s\n", f->eof ? "YES" : "NO");
+	printf("Ptr    : 0x%x\n", (void*)f);
+	printf("-----------------------\n");
+	return;
+};
+
 FILE* fopen(const char* pathname, const char* mode)
 {
 	int flags = -1;
@@ -189,20 +214,26 @@ int fclose(FILE* stream)
 	return res;
 };
 
+int feof(FILE* stream)
+{
+	if (!stream)
+		return 0;
+	return stream->eof;
+};
+
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-	if (!stream || stream->fd <= 0 || !ptr) {
+	if (!stream || stream->fd < 0 || !ptr) {
 		return 0;
 	};
 	const size_t total_bytes = size * nmemb;
 	const int bytes_read = read(stream->fd, ptr, total_bytes);
 
-	if (bytes_read < 0) {
-		stream->error = 1;
+	if (bytes_read <= 0) {
+		stream->eof = 1;
 		return 0;
-	}
-
-	if ((size_t)bytes_read < total_bytes) {
+	};
+	if ((size_t)bytes_read <= total_bytes) {
 		stream->eof = 1;
 	};
 	return bytes_read / size;

@@ -6,6 +6,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "syscall.h"
+#include "unistd.h"
 
 typedef void (*builtin_handler_t)(const char* args);
 static void _exit_builtin(const char* args);
@@ -15,6 +16,7 @@ static void _help_builtin(const char* args);
 static void _ls_builtin(const char* path);
 static void _unknown_builtin(const char* args);
 void execute_builtin(const char* input);
+static void _cat_builtin(const char* path);
 
 #define BUILTIN_COUNT (sizeof(builtins) / sizeof(builtin_t))
 #define MAX_INPUT_LEN 256
@@ -25,7 +27,13 @@ typedef struct builtin {
 } builtin_t;
 
 builtin_t builtins[] = {
-    {"exit", _exit_builtin}, {"help", _help_builtin}, {"echo", _echo_builtin}, {"ls", _ls_builtin}, {"history", _history_builtin}, {0x0, 0x0},
+    {"exit", _exit_builtin},
+    {"help", _help_builtin},
+    {"echo", _echo_builtin},
+    {"ls", _ls_builtin},
+    {"history", _history_builtin},
+    {"cat", _cat_builtin},
+    {0x0, 0x0},
 };
 
 static void _exit_builtin(const char* args)
@@ -80,15 +88,25 @@ static void _help_builtin(const char* args)
 	return;
 };
 
-void builtin_cat(const char* path)
+static void _cat_builtin(const char* path)
 {
 	FILE* f = fopen(path, "r");
 
 	if (!f) {
 		printf("Cannot open '%s'\n", path);
 		return;
+	}
+	char buf[8192];
+
+	while (!feof(f)) {
+		const size_t nread = fread(buf, 1, sizeof(buf), f);
+
+		if (nread > 0) {
+			write(STDOUT_FILENO, buf, nread);
+		};
 	};
 	fclose(f);
+	printf("\n");
 	return;
 };
 
