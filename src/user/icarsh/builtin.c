@@ -80,9 +80,10 @@ static void _echo_builtin(const char* args)
 static void _help_builtin(const char* args)
 {
 	printf("----[ Help ]----\n");
-	printf("  `exit`          – Closes icarSH and drops you back to icariusOS ring0\n");
+	printf("  `exit`          – Closes icarSH and drops you back to icariusOS ring 0\n");
 	printf("  `ls`            – Lists files. You gotta pass the full root path like `ls A:/`\n");
 	printf("  `echo`          – Say something..\n");
+	printf("  `cat`           – Prints contents of a file: e.g. `cat A:/TMP/LOG.TXT`\n");
 	printf("  `help`          – Shows this list again.\n");
 	printf("  `history`       – Dump your last commands.\n");
 	return;

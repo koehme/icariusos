@@ -1,19 +1,21 @@
 /**
- * @file date.h
+ * @file rtc.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
-#ifndef DATE_H
-#define DATE_H
+#ifndef RTC_H
+#define RTC_H
 
 #include <stdint.h>
 
-const static char* months[12] = {
+#define TIMEZONE_FILE "A:/ETC/TIMEZONE"
+
+static const char* months[12] = {
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
 };
 
-const static char* days[7] = {
+static const char* days[7] = {
     "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 };
 
@@ -24,10 +26,13 @@ typedef struct date {
 	uint16_t year;
 } date_t;
 
-typedef struct {
+typedef struct time {
 	int32_t hour;
 	int32_t minute;
 	int32_t second;
 } time_t;
+
+void rtc_load_timezone(void);
+time_t rtc_now(void);
 
 #endif

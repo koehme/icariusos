@@ -6,8 +6,6 @@
 
 #include "kernel.h"
 
-#include "fat16.h"
-
 /* EXTERNAL API */
 extern vbe_t vbe_display;
 extern pfa_t pfa;
@@ -94,7 +92,8 @@ static void _render_spinner(const int32_t frames)
 static void _motd(void)
 {
 	const date_t date = cmos_date(&cmos);
-	const time_t time = cmos_time(&cmos);
+	time_t time = rtc_now();
+
 	printf(" _             _         _____ _____ \n");
 	printf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
 	printf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
@@ -361,6 +360,8 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	ata_t* ata_dev = ata_get("A");
 	ata_init(ata_dev);
 	ata_mount_fs(ata_dev);
+
+	rtc_load_timezone();
 
 	_remove_identity_mapping();
 	syscall_init();

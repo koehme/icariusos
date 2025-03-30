@@ -23,6 +23,7 @@ SOURCES_C = \
     ./src/driver/vbe.c \
     ./src/driver/pci.c \
     ./src/driver/mouse.c \
+    ./src/driver/rtc.c \
     ./src/driver/ps2.c \
     ./src/driver/fat16/fat16.c \
     ./src/fs/pathlexer.c \
