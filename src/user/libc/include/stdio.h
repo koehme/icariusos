@@ -5,7 +5,6 @@
 #include <stddef.h>
 
 #define EOF (-1)
-#define MAX_OPEN_FILES 8
 #define FILE_MODE_READ 0
 #define FILE_MODE_WRITE 1
 

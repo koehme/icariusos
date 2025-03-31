@@ -1,18 +1,21 @@
 #include "stdio.h"
+#include "errno.h"
+#include "fcntl.h"
+#include "stdlib.h"
 #include "string.h"
 #include "sys/types.h"
+#include "sys/unistd.h"
 #include "syscall.h"
 
-static FILE file_slots[MAX_OPEN_FILES] = {
-    [0] = {.fd = 0, .mode = FILE_MODE_READ, .error = 0, .eof = 0},  // stdin
-    [1] = {.fd = 1, .mode = FILE_MODE_WRITE, .error = 0, .eof = 0}, // stdout
-    [2] = {.fd = 2, .mode = FILE_MODE_WRITE, .error = 0, .eof = 0}, // stderr
+static FILE file_slots[3] = {
+    [0] = {.fd = STDIN_FILENO, .mode = O_RDONLY, .error = 0, .eof = 0},	 // stdin
+    [1] = {.fd = STDOUT_FILENO, .mode = O_WRONLY, .error = 0, .eof = 0}, // stdout
+    [2] = {.fd = STDERR_FILENO, .mode = O_WRONLY, .error = 0, .eof = 0}, // stderr
 };
 
 FILE* stdin = &file_slots[0];
 FILE* stdout = &file_slots[1];
 FILE* stderr = &file_slots[2];
-
 
 int puts(const char* s)
 {
@@ -23,13 +26,13 @@ int puts(const char* s)
 	ssize_t written;
 
 	if (len > 0) {
-		written = write(1, s, len);
+		written = write(STDOUT_FILENO, s, len);
 
 		if (written == -1 || (size_t)written != len) {
 			return -1;
 		};
 	};
-	written = write(1, "\n", 1);
+	written = write(STDOUT_FILENO, "\n", 1);
 
 	if (written == -1 || written != 1) {
 		return -1;
@@ -149,7 +152,7 @@ int printf(const char* restrict format, ...)
 	va_end(args);
 
 	if (len > 0) {
-		write(1, buf, len);
+		write(STDOUT_FILENO, buf, len);
 	};
 	return len;
 };
@@ -183,22 +186,21 @@ FILE* fopen(const char* pathname, const char* mode)
 	};
 	const int fd = open(pathname, flags);
 
-	if (fd < 0)
+	if (fd < 0) {
 		return 0x0;
-
-	for (size_t i = 0; i < MAX_OPEN_FILES; i++) {
-		FILE* slot = &file_slots[i];
-
-		if (slot->fd == 0) {
-			slot->fd = fd;
-			slot->mode = flags;
-			slot->error = 0;
-			slot->eof = 0;
-			return slot;
-		};
 	};
-	close(fd);
-	return 0x0;
+	FILE* file = malloc(sizeof(FILE));
+
+	if (!file) {
+		close(fd);
+		errno = ENOMEM;
+		return 0x0;
+	};
+	file->fd = fd;
+	file->mode = flags;
+	file->error = 0;
+	file->eof = 0;
+	return file;
 };
 
 int fclose(FILE* stream)

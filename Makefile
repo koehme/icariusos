@@ -142,6 +142,7 @@ clean:
 icarsh:
 	# Kompiliere die libc
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/stdio.c -o ./src/user/libc/obj/stdio.o
+	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/malloc/malloc.c -o ./src/user/libc/obj/malloc.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/history.c -o ./src/user/libc/obj/history.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/kbd.c -o ./src/user/libc/obj/kbd.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/stdlib.c -o ./src/user/libc/obj/stdlib.o
@@ -153,7 +154,7 @@ icarsh:
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/string/strerror.c -o ./src/user/libc/obj/strerror.o
 
 	# Erstelle libc.a
-	$(AR) rcs ./src/user/libc/lib/libc.a ./src/user/libc/obj/stdio.o ./src/user/libc/obj/history.o ./src/user/libc/obj/kbd.o ./src/user/libc/obj/strerror.o ./src/user/libc/obj/dirent.o ./src/user/libc/obj/errno.o ./src/user/libc/obj/stdlib.o ./src/user/libc/obj/readline.o ./src/user/libc/obj/string.o ./src/user/libc/obj/syscall.o
+	$(AR) rcs ./src/user/libc/lib/libc.a ./src/user/libc/obj/stdio.o ./src/user/libc/obj/malloc.o ./src/user/libc/obj/history.o ./src/user/libc/obj/kbd.o ./src/user/libc/obj/strerror.o ./src/user/libc/obj/dirent.o ./src/user/libc/obj/errno.o ./src/user/libc/obj/stdlib.o ./src/user/libc/obj/readline.o ./src/user/libc/obj/string.o ./src/user/libc/obj/syscall.o
 
 	# Kompiliere den Assembler-Wrapper für `main()`
 	$(ASSEMBLER) -f elf32 -g ./src/user/icarsh/entry.asm -o ./src/user/icarsh/obj/entry.o

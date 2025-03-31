@@ -56,7 +56,7 @@ static void _history_builtin(const char* args)
 static void _echo_builtin(const char* args)
 {
 	if (!args || strlen(args) == 0) {
-		write(1, "\n", 1);
+		write(STDOUT_FILENO, "\n", 1);
 		return;
 	};
 	char buf[256];
@@ -80,12 +80,12 @@ static void _echo_builtin(const char* args)
 static void _help_builtin(const char* args)
 {
 	printf("----[ Help ]----\n");
-	printf("  `exit`          – Closes icarSH and drops you back to icariusOS ring 0\n");
-	printf("  `ls`            – Lists files. You gotta pass the full root path like `ls A:/`\n");
-	printf("  `echo`          – Say something..\n");
-	printf("  `cat`           – Prints contents of a file: e.g. `cat A:/TMP/LOG.TXT`\n");
-	printf("  `help`          – Shows this list again.\n");
-	printf("  `history`       – Dump your last commands.\n");
+	printf("  `exit`          – CLOSES ICARSH AND DROPS YOU BACK TO ICARIUSOS RING 0\n");
+	printf("  `ls`            – LISTS FILES. YOU GOTTA PASS THE FULL ROOT PATH LIKE\n");
+	printf("  `echo`          – SAY SOMETHING\n");
+	printf("  `cat`           – PRINTS CONTENTS OF A FILE\n");
+	printf("  `help`          – SHOWS THIS LIST AGAIN\n");
+	printf("  `history`       – DUMP YOUR LAST COMMANDS\n");
 	return;
 };
 
@@ -147,9 +147,7 @@ static void _unknown_builtin(const char* args)
 	if (!args || !*args) {
 		args = "";
 	};
-	printf("Unknown command: '%s'\n", args);
-	printf("Not sure what that means, but I'm just a shell.\n");
-	printf("Try 'help' to see what icariusOS do understand.\n");
+	printf("Unknown '%s'\n", args);
 	return;
 };
 

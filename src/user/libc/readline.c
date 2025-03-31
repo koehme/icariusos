@@ -4,6 +4,7 @@
 #include "kbd.h"
 #include "stdio.h"
 #include "string.h"
+#include "sys/unistd.h"
 #include "syscall.h"
 
 #define BUFFER_SIZE 256
@@ -11,7 +12,7 @@
 static void _flush_line(int pos)
 {
 	while (pos > 0) {
-		write(1, "\b \b", 4);
+		write(STDOUT_FILENO, "\b \b", 3);
 		pos--;
 	};
 	return;
@@ -20,7 +21,7 @@ static void _flush_line(int pos)
 char* readline(const char* prompt)
 {
 	if (prompt) {
-		write(1, prompt, strlen(prompt));
+		write(STDOUT_FILENO, prompt, strlen(prompt));
 	};
 	size_t pos = 0;
 	static char buffer[BUFFER_SIZE];
@@ -29,7 +30,7 @@ char* readline(const char* prompt)
 	uint8_t scancode;
 
 	while (1) {
-		if (read(0, &scancode, 1) < 0) {
+		if (read(STDIN_FILENO, &scancode, 1) < 0) {
 			return 0x0;
 		};
 		const key_event_t ev = translate_sc_into_event(scancode);
@@ -39,7 +40,7 @@ char* readline(const char* prompt)
 		};
 		switch (ev.code) {
 		case KEY_ENTER: {
-			write(1, "\n", 1);
+			write(STDOUT_FILENO, "\n", 1);
 			buffer[pos] = '\0';
 			history_add(&icarsh_history, buffer);
 			return buffer;
@@ -47,7 +48,7 @@ char* readline(const char* prompt)
 		case KEY_BACKSPACE: {
 			if (pos > 0) {
 				pos--;
-				write(1, "\b \b", 3);
+				write(STDOUT_FILENO, "\b \b", 3);
 			};
 			break;
 		};
@@ -59,7 +60,7 @@ char* readline(const char* prompt)
 			};
 			strncpy(buffer, cmd, BUFFER_SIZE - 1);
 			pos = strlen(buffer);
-			write(1, cmd, HISTORY_LINE_MAX);
+			write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
 			break;
 		};
 		case KEY_DOWN: {
@@ -70,13 +71,13 @@ char* readline(const char* prompt)
 			};
 			strncpy(buffer, cmd, BUFFER_SIZE - 1);
 			pos = strlen(buffer);
-			write(1, cmd, HISTORY_LINE_MAX);
+			write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
 			break;
 		};
 		default: {
 			if (ev.ascii && pos < BUFFER_SIZE - 1) {
 				buffer[pos++] = ev.ascii;
-				write(1, &ev.ascii, 1);
+				write(STDOUT_FILENO, &ev.ascii, 1);
 			};
 			break;
 		};

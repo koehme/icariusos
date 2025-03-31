@@ -56,15 +56,6 @@ void process_list_dump(void)
 			};
 		};
 
-		printf("  Allocations:\n");
-		for (size_t i = 0; i < PROCESS_MAX_ALLOCATION; i++) {
-			const process_allocation_t allocation = process->allocations[i];
-
-			if (allocation.addr) {
-				printf("    - Alloc[%d]: Addr=0x%x, Size=%d Bytes\n", i, allocation.addr, allocation.size);
-			};
-		};
-
 		if (process->filetype == PROCESS_ELF && process->elf_file) {
 			printf("  ELF File:\n");
 			printf("    - Entry Point: 0x%x\n", process->elf_file->entry);

@@ -7,14 +7,13 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "fifo.h"
 #include "icarius.h"
-#include <fifo.h>
+#include "task.h"
 #include <stdint.h>
 
 struct task;
 typedef struct task task_t;
-
-#include <task.h>
 
 typedef enum process_filetype { PROCESS_ELF, PROCESS_BINARY } process_filetype_t;
 
@@ -33,28 +32,22 @@ typedef struct elf_file {
 	uint32_t sh_size;
 } elf_file_t;
 
-typedef struct process_allocation {
-	void* addr;
-	uint32_t size;
-} process_allocation_t;
-
 typedef struct process {
-	uint16_t pid;
-	char filename[PROCESS_MAX_FILENAME];
-	task_t* tasks[PROCESS_MAX_THREAD];
-	uint32_t* page_dir;
-	uint8_t task_count;
-	process_allocation_t allocations[PROCESS_MAX_ALLOCATION];
-	process_filetype_t filetype;
+	uint16_t pid;			     // Unique process ID
+	char filename[PROCESS_MAX_FILENAME]; // For debugging & tracking
+	task_t* tasks[PROCESS_MAX_THREAD];   // Thread table (one task = one thread)
+	uint32_t* page_dir;		     // Own page directory (address space)
+	uint8_t task_count;		     // Number of active threads
+	process_filetype_t filetype;	     // ELF or BIN (determines loader logic)
 	union {
-		void* ptr;
-		elf_file_t* elf_file;
+		void* ptr;	      // Generic pointer access
+		elf_file_t* elf_file; // Used if filetype == ELF
 	};
-	uint32_t size;
-	fifo_t* keyboard_buffer;
-	process_arguments_t arguments;
-	struct process* prev;
-	struct process* next;
+	uint32_t size;		       // Size of loaded file
+	fifo_t* keyboard_buffer;       // Keyboard input FIFO (per process)
+	process_arguments_t arguments; // Command-line arguments
+	struct process* prev;	       // Linked list (process chain)
+	struct process* next;	       // Linked list (process chain)
 } process_t;
 
 /**

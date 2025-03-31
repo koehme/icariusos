@@ -1,11 +1,8 @@
 #include "dirent.h"
 #include "errno.h"
+#include "stdlib.h"
 #include "string.h"
 #include "syscall.h"
-
-#define MAX_OPEN_DIRS 16
-
-static DIR dir_slots[MAX_OPEN_DIRS] = {[0 ... MAX_OPEN_DIRS - 1] = {.fd = -1}};
 
 extern int getdents(int fd, struct dirent* buf, unsigned int count);
 
@@ -17,18 +14,16 @@ DIR* opendir(const char* path)
 		errno = ENOENT;
 		return 0;
 	};
-	for (int i = 0; i < MAX_OPEN_DIRS; i++) {
-		DIR* dirp = &dir_slots[i];
+	DIR* dirp = malloc(sizeof(DIR));
 
-		if (dirp->fd == -1) {
-			dirp->fd = fd;
-			dirp->has_entry = 0;
-			return dirp;
-		};
+	if (!dirp) {
+		errno = ENOMEM;
+		close(fd);
+		return 0;
 	};
-	close(fd);
-	errno = EMFILE;
-	return 0;
+	dirp->fd = fd;
+	dirp->has_entry = 0;
+	return dirp;
 };
 
 struct dirent* readdir(DIR* dirp)

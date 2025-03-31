@@ -2,7 +2,35 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A minimalist i686 kernel, handcrafted since early 2023, learning and complete control
+icariusOS is a handcrafted 32-bit OS for i686, built from the ground up. With a clean kernel interface, full virtual memory support, userspace isolation and a custom shell, it’s designed to keep things minimal, easy and fun.
+
+## ✨ Features
+
+Paging & Virtual Memory
+* ✅ Higher-half kernel mapped at 0xC0000000
+* ✅ 4 MiB page support via Page Size Extension (PSE)
+* ✅ Isolated user/kernel space with CR3-based task switching
+
+Kernel Heap Allocator
+* ✅ Chunk-based dynamic heap with coalescing
+* ✅ Built-in stats & debug output for nerdy pleasure
+
+Userspace Allocator
+* ✅ malloc() and calloc()
+
+Multitasking
+* ❗ TODO: Preemptive Multitasking
+* ✅ Per-process page directory setup
+* ✅ Ring 3 usermode support via iret
+* ✅ Thread stack layout for up to 16 threads per process
+
+icarSH – the icarius Shell
+* ✅ Lightweight custom userspace shell
+* ✅ Built-in commands: ls, cat, echo, exit, history, help
+
+Timezone & RTC
+* ✅ CMOS clock readout for real-time freshness
+* ✅ Auto UTC offset via ETC/TIMEZONE config
 
 ## 🧩 Dependencies
 
