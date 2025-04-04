@@ -57,10 +57,11 @@ char* readline(const char* prompt)
 
 			if (cmd) {
 				_flush_line(pos);
+				strncpy(buffer, cmd, BUFFER_SIZE - 1);
+				pos = strlen(buffer);
+				write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
+				break;
 			};
-			strncpy(buffer, cmd, BUFFER_SIZE - 1);
-			pos = strlen(buffer);
-			write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
 			break;
 		};
 		case KEY_DOWN: {
@@ -68,10 +69,10 @@ char* readline(const char* prompt)
 
 			if (cmd) {
 				_flush_line(pos);
+				strncpy(buffer, cmd, BUFFER_SIZE - 1);
+				pos = strlen(buffer);
+				write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
 			};
-			strncpy(buffer, cmd, BUFFER_SIZE - 1);
-			pos = strlen(buffer);
-			write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
 			break;
 		};
 		default: {

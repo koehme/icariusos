@@ -3,7 +3,7 @@
 #include "string.h"
 #include <stdbool.h>
 
-history_t icarsh_history = {};
+history_t icarsh_history = {0};
 
 void history_add(history_t* self, const char* line)
 {

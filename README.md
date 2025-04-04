@@ -2,7 +2,12 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is a handcrafted 32-bit OS for i686, built from the ground up. With a clean kernel interface, full virtual memory support, userspace isolation and a custom shell, it’s designed to keep things minimal, easy and fun.
+icariusOS is a handcrafted 32-bit operating system for i686, started in fall 2022.
+I had built a few kernels before, but dropped those projects too early as other priorities took over.
+With icariusOS, I committed myself to stick with it — and built everything entirely from scratch.
+
+It began with a homemade bootloader, and now boots clean via GRUB.
+Crafted by an IT'ler with a deep love for bare-metal hacking.
 
 ## ✨ Features
 
@@ -17,6 +22,7 @@ Kernel Heap Allocator
 
 Userspace Allocator
 * ✅ malloc() and calloc()
+* Just a bump allocator for now
 
 Multitasking
 * ❗ TODO: Preemptive Multitasking

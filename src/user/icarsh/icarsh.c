@@ -2,6 +2,7 @@
 #include "history.h"
 #include "readline/readline.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "string.h"
 #include "syscall.h"
 
@@ -10,12 +11,12 @@
 int main(int argc, char* argv[])
 {
 	while (1) {
-		const char* line = readline(PROMPT);
+		char* line = readline(PROMPT);
 
-		if (!line) {
-			continue;
+		if (line) {
+			execute_builtin(line);
+			free(line);
 		};
-		execute_builtin(line);
 	};
 	return 0;
 };

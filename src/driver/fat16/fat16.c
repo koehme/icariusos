@@ -1155,6 +1155,10 @@ size_t fat16_read(ata_t* dev, void* descriptor, uint8_t* buffer, const size_t n_
 	stream_init(&data_stream, dev);
 	// Cast the vfs internal back to the concrete fat16 descriptor
 	fat16_fd_t* fat16_descriptor = descriptor;
+
+	if (fat16_descriptor->entry->type == FAT16_ENTRY_TYPE_FILE && fat16_descriptor->pos >= fat16_descriptor->entry->file->file_size) {
+		return 0;
+	};
 	// Maximum cluster size in bytes of a single FAT16 cluster
 	const uint16_t max_cluster_size_bytes = fat16_header.bpb.sec_per_clus * fat16_header.bpb.byts_per_sec;
 	// The given file descriptor holds a pointer to the root dir entry, which holds the fat16 start cluster number to read

@@ -60,5 +60,6 @@ int closedir(DIR* dirp)
 	};
 	dirp->fd = -1;
 	dirp->has_entry = 0;
+	free(dirp);
 	return 0;
 };

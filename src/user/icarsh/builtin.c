@@ -9,31 +9,36 @@
 #include "unistd.h"
 
 typedef void (*builtin_handler_t)(const char* args);
-static void _exit_builtin(const char* args);
-static void _history_builtin(const char* args);
-static void _echo_builtin(const char* args);
-static void _help_builtin(const char* args);
-static void _ls_builtin(const char* path);
-static void _unknown_builtin(const char* args);
-void execute_builtin(const char* input);
-static void _cat_builtin(const char* path);
 
-#define BUILTIN_COUNT (sizeof(builtins) / sizeof(builtin_t))
-#define MAX_INPUT_LEN 256
+static void _exit_builtin(const char* args);
+static void _help_builtin(const char* args);
+static void _echo_builtin(const char* args);
+static void _ls_builtin(const char* path);
+static void _history_builtin(const char* args);
+static void _cat_builtin(const char* path);
+static void _heapstat_builtin(const char* args);
+static void _unknown_builtin(const char* args);
+
+void execute_builtin(const char* input);
+
 
 typedef struct builtin {
 	const char* name;
 	builtin_handler_t handler;
 } builtin_t;
 
-builtin_t builtins[] = {
-    {"exit", _exit_builtin},
-    {"help", _help_builtin},
-    {"echo", _echo_builtin},
-    {"ls", _ls_builtin},
-    {"history", _history_builtin},
-    {"cat", _cat_builtin},
-    {0x0, 0x0},
+const static builtin_t builtins[] = {
+    {"exit", _exit_builtin},	   {"help", _help_builtin}, {"echo", _echo_builtin},	     {"ls", _ls_builtin},
+    {"history", _history_builtin}, {"cat", _cat_builtin},   {"heapstat", _heapstat_builtin}, {0x0, 0x0},
+};
+
+#define BUILTIN_COUNT (sizeof(builtins) / sizeof(builtin_t))
+#define ICARSH_INPUT_LIMIT 4096
+
+static void _heapstat_builtin(const char* args)
+{
+	heap_dump();
+	return;
 };
 
 static void _exit_builtin(const char* args)
@@ -55,13 +60,23 @@ static void _history_builtin(const char* args)
 
 static void _echo_builtin(const char* args)
 {
-	if (!args || strlen(args) == 0) {
+	const size_t len = strlen(args);
+
+	if (!args || len == 0) {
+		errno = EINVAL;
 		write(STDOUT_FILENO, "\n", 1);
 		return;
 	};
-	char buf[256];
-	strncpy(buf, args, sizeof(buf) - 1);
-	buf[sizeof(buf) - 1] = '\0';
+	char* buf = malloc(len);
+	printf(" --- 0x%x", buf);
+
+	if (!buf) {
+		errno = ENOMEM;
+		return;
+	};
+	memset(buf, 0, len);
+	strncpy(buf, args, len);
+	buf[len] = '\0';
 
 	char* token = strtok(buf, " ");
 
@@ -74,6 +89,7 @@ static void _echo_builtin(const char* args)
 		};
 	};
 	printf("\n");
+	free(buf);
 	return;
 };
 
@@ -86,6 +102,7 @@ static void _help_builtin(const char* args)
 	printf("  `cat`           – PRINTS CONTENTS OF A FILE\n");
 	printf("  `help`          – SHOWS THIS LIST AGAIN\n");
 	printf("  `history`       – DUMP YOUR LAST COMMANDS\n");
+	printf("  `heapstat`      – DUMP DYNAMIC MEMORY USAGE\n");
 	return;
 };
 
@@ -94,18 +111,23 @@ static void _cat_builtin(const char* path)
 	FILE* f = fopen(path, "r");
 
 	if (!f) {
-		printf("Cannot open '%s'\n", path);
+		errno = EINVAL;
+		printf("%s\n", strerror(errno));
 		return;
-	}
-	char buf[8192];
-
-	while (!feof(f)) {
-		const size_t nread = fread(buf, 1, sizeof(buf), f);
-
-		if (nread > 0) {
-			write(STDOUT_FILENO, buf, nread);
-		};
 	};
+	char* buf = malloc(8192);
+
+	if (!buf) {
+		errno = ENOMEM;
+		printf("[!] WHOA — OOM\n");
+		return;
+	};
+	size_t n_read = 0;
+
+	while ((n_read = fread(buf, 1, 8192, f)) > 0) {
+		write(STDOUT_FILENO, buf, n_read);
+	};
+	free(buf);
 	fclose(f);
 	printf("\n");
 	return;
@@ -116,8 +138,7 @@ static void _ls_builtin(const char* path)
 	DIR* dir = opendir(path);
 
 	if (!dir) {
-		const char* shown_path = (path && strlen(path) > 0) ? path : "?";
-		printf("Opening %s %s\n", shown_path, strerror(errno));
+		printf("%s\n", strerror(errno));
 		return;
 	};
 	struct dirent* entry = {};
@@ -126,18 +147,25 @@ static void _ls_builtin(const char* path)
 		if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
 			continue;
 		};
-		if (entry->d_type == DT_DIR) {
+		switch (entry->d_type) {
+		case DT_DIR: {
 			printf("/%s\n", entry->d_name);
-		} else if (entry->d_type == DT_REG) {
+			break;
+		};
+		case DT_REG: {
 			printf("%s\n", entry->d_name);
-		} else {
+			break;
+		};
+		default: {
 			printf("%s\n", entry->d_name);
+			break;
+		};
 		};
 	};
 	const int res = closedir(dir);
 
 	if (res == -1) {
-		printf("Couldn't close that dir – %s\n", strerror(errno));
+		printf("%s\n", strerror(errno));
 	};
 	return;
 };
@@ -147,7 +175,7 @@ static void _unknown_builtin(const char* args)
 	if (!args || !*args) {
 		args = "";
 	};
-	printf("Unknown '%s'\n", args);
+	printf("[!] WHOA — UNKNOWN\n", args);
 	return;
 };
 
@@ -162,28 +190,34 @@ static builtin_handler_t _find_builtin(const char* cmd)
 
 void execute_builtin(const char* input)
 {
-	char buf[MAX_INPUT_LEN];
 	const size_t len = strlen(input);
 
-	if (len >= sizeof(buf)) {
-		printf("Input exceeds max length (%d chars). Try something shorter.\n", sizeof(buf) - 1);
+	if (len >= ICARSH_INPUT_LIMIT) {
+		printf("[!] WHOA — INPUT TOO LONG. KEEP IT SHORT & SHARP\n");
 		return;
 	};
-	strncpy(buf, input, sizeof(buf) - 1);
-	buf[sizeof(buf) - 1] = '\0';
+	char* buf = malloc(len + 1);
+
+	if (!buf) {
+		printf("[!] WHOA — OOM\n");
+		return;
+	};
+	strncpy(buf, input, len);
+	buf[len] = '\0';
 
 	const char* cmd = strtok(buf, " ");
-	const char* args = strtok(0x0, "");
+	const char* args = strtok(NULL, "");
 
 	if (!args) {
 		args = "";
 	};
-
 	if (!cmd) {
 		_unknown_builtin("");
+		free(buf);
 		return;
 	};
-	const builtin_handler_t handler = _find_builtin(cmd);
-	handler(args);
+	const builtin_handler_t builtin = _find_builtin(cmd);
+	builtin(args);
+	free(buf);
 	return;
 };
