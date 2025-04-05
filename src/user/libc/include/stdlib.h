@@ -9,5 +9,6 @@ void* calloc(size_t nmemb, size_t size);
 void free(void* ptr);
 void* realloc(void* ptr, size_t size);
 void heap_dump(void);
+void dtoa(double n, char* res, int afterpoint);
 
 #endif

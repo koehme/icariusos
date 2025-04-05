@@ -28,5 +28,6 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
 int fclose(FILE* stream);
 void file_dump(FILE* f);
 int feof(FILE* stream);
+void itoa(int num, char* str, int base);
 
 #endif

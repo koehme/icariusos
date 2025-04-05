@@ -40,7 +40,7 @@ int puts(const char* s)
 	return 0;
 };
 
-static void itoa(int num, char* str, int base)
+void itoa(int num, char* str, int base)
 {
 	const char* digits = "0123456789abcdef";
 	char buffer[32];
@@ -119,6 +119,15 @@ int vsnprintf(char* buffer, size_t size, const char* format, va_list args)
 
 				if (pos < size - 1) {
 					buffer[pos++] = c;
+				};
+				break;
+			};
+			case 'f': {
+				double num = va_arg(args, double);
+				dtoa(num, temp, 6);
+
+				for (size_t j = 0; temp[j] != '\0' && pos < size - 1; j++) {
+					buffer[pos++] = temp[j];
 				};
 				break;
 			};
