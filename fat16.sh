@@ -32,6 +32,7 @@ sudo cp -r ./bin/BIN /mnt/
 sudo cp -r ./bin/DEV /mnt/
 sudo cp -r ./bin/ETC /mnt/    
 sudo cp -r ./bin/TMP /mnt/  
+sudo cp ./LICENSE /mnt/LICENSE.TXT
 # 🔥 4️⃣ Sicherstellen, dass alles geschrieben wird
 sudo sync
 ls -l /mnt/

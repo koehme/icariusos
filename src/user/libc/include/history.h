@@ -1,7 +1,7 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
-#define HISTORY_SIZE 16
+#define HISTORY_SIZE 256
 #define HISTORY_LINE_MAX 256
 
 typedef struct history {

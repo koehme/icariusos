@@ -21,7 +21,6 @@ static void _unknown_builtin(const char* args);
 
 void execute_builtin(const char* input);
 
-
 typedef struct builtin {
 	const char* name;
 	builtin_handler_t handler;
@@ -68,7 +67,6 @@ static void _echo_builtin(const char* args)
 		return;
 	};
 	char* buf = malloc(len);
-	printf(" --- 0x%x", buf);
 
 	if (!buf) {
 		errno = ENOMEM;

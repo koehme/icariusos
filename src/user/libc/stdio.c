@@ -6,6 +6,7 @@
 #include "sys/types.h"
 #include "sys/unistd.h"
 #include "syscall.h"
+#include <stdbool.h>
 
 static FILE file_slots[3] = {
     [0] = {.fd = STDIN_FILENO, .mode = O_RDONLY, .error = 0, .eof = 0},	 // stdin
@@ -78,19 +79,56 @@ void itoa(int num, char* str, int base)
 int vsnprintf(char* buffer, size_t size, const char* format, va_list args)
 {
 	size_t pos = 0;
-	char temp[32];
+	char temp[128];
 
 	for (size_t i = 0; format[i] != '\0' && pos < size - 1; i++) {
-		if (format[i] == '%' && format[i + 1] != '\0') {
+		if (format[i] == '%') {
+			if (format[i + 1] == '%') {
+				buffer[pos++] = '%';
+				i++;
+				continue;
+			};
 			i++;
+			bool zero_pad = false;
+			bool left_align = false;
+			int width = 0;
 
+			if (format[i] == '-') {
+				left_align = true;
+				i++;
+			};
+			// Parse optional '0' flag
+			if (format[i] == '0') {
+				zero_pad = true;
+				i++;
+			};
+			// Parse optional width (e.g. 2 in %2d or 08 in %08x)
+			while (format[i] >= '0' && format[i] <= '9') {
+				width = width * 10 + (format[i] - '0');
+				i++;
+			};
 			switch (format[i]) {
 			case 'd': {
 				int num = va_arg(args, int);
 				itoa(num, temp, 10);
 
+				const size_t len = strlen(temp);
+
+				if (!left_align && width > len) {
+					char pad_char = zero_pad ? '0' : ' ';
+
+					for (int pad = 0; pad < width - len && pos < size - 1; pad++) {
+						buffer[pos++] = pad_char;
+					};
+				};
+
 				for (size_t j = 0; temp[j] != '\0' && pos < size - 1; j++) {
 					buffer[pos++] = temp[j];
+				};
+				if (left_align && width > len) {
+					for (int pad = 0; pad < width - len && pos < size - 1; pad++) {
+						buffer[pos++] = ' ';
+					};
 				};
 				break;
 			};
@@ -98,6 +136,13 @@ int vsnprintf(char* buffer, size_t size, const char* format, va_list args)
 				int num = va_arg(args, int);
 				itoa(num, temp, 16);
 
+				const size_t len = strlen(temp);
+
+				if (zero_pad && width > len) {
+					for (int pad = 0; pad < width - len && pos < size - 1; pad++) {
+						buffer[pos++] = '0';
+					};
+				};
 				for (size_t j = 0; temp[j] != '\0' && pos < size - 1; j++) {
 					buffer[pos++] = temp[j];
 				};
@@ -106,11 +151,24 @@ int vsnprintf(char* buffer, size_t size, const char* format, va_list args)
 			case 's': {
 				char* str = va_arg(args, char*);
 
-				if (!str) {
+				if (!str)
 					str = "0x0";
+				const size_t len = strlen(str);
+
+				if (width > 0 && !left_align && width > len) {
+					for (int pad = 0; pad < width - len && pos < size - 1; pad++) {
+						buffer[pos++] = ' ';
+					};
 				};
+
 				for (size_t j = 0; str[j] != '\0' && pos < size - 1; j++) {
 					buffer[pos++] = str[j];
+				};
+
+				if (width > 0 && left_align && width > len) {
+					for (int pad = 0; pad < width - len && pos < size - 1; pad++) {
+						buffer[pos++] = ' ';
+					};
 				};
 				break;
 			};
@@ -222,6 +280,7 @@ int fclose(FILE* stream)
 	stream->mode = 0;
 	stream->error = 0;
 	stream->eof = 0;
+	free(stream);
 	return res;
 };
 

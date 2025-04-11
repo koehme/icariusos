@@ -13,6 +13,7 @@
 // Step 3: 21 & ~7 = 16      → binary:  0001 0000 (0x10) = aligned
 // ALIGN8(x) rounds up to the next multiple of 8
 #define ALIGN8(x) (((x) + 7) & ~7)
+#define IS_ALIGNED8(ptr) (((uintptr_t)(ptr) & 0x7) == 0)
 #define MIN_BLOCK_SIZE 32
 
 typedef struct heap_block {
@@ -33,62 +34,38 @@ static uint8_t* _heap_end = (uint8_t*)USER_HEAP_END;
 
 void heap_dump(void)
 {
-	printf("\n+--[ BLOCK LIST ]---------------------------------------------\n");
 	heap_block_t* block = heap_head;
 	size_t i = 0;
-	size_t total_user_bytes = 0;
 	size_t total_bytes = 0;
+	printf("\n+--[ HEAP LIST ]-----------------------------------------------\n");
 
 	while (block) {
-		void* block_addr = (void*)block;
-		void* prev_addr = (void*)block->prev;
-		void* next_addr = (void*)block->next;
 		const char* status = block->free ? "FREE" : "USED";
-
-		printf("[0x%x] ──┬─────────────────────────────────────────────\n", (uint32_t)(uintptr_t)block_addr);
-		printf("           │ Block      : %d\n", i++);
-		printf("           │ Size       : %d\n", (uint32_t)(block->size + sizeof(heap_block_t)));
-		printf("           │ User Size  : %d\n", (uint32_t)block->size);
-		printf("           │ Status     : %s\n", status);
-		printf("           │ Prev       : 0x%x\n", (uint32_t)(uintptr_t)prev_addr);
-		printf("           │ Next       : 0x%x\n", (uint32_t)(uintptr_t)next_addr);
-		printf("           └─────────────────────────────────────────────\n");
-
-		total_user_bytes += block->free ? 0 : block->size;
+		printf("0x%08x | %4d | %4s | 0x%08x | 0x%08x\n", (uint32_t)(uintptr_t)block, (int)(block->size + sizeof(heap_block_t)), status,
+		       (uint32_t)(uintptr_t)block->prev, (uint32_t)(uintptr_t)block->next);
 		total_bytes += block->size + sizeof(heap_block_t);
-
 		block = block->next;
+		i++;
 	};
-	printf("+------------------------------------------------------------\n");
-	printf("\n+--[ FREE LIST ]----------------------------------------------\n");
+	printf("\n+--[ FREE LIST ]-----------------------------------------------\n");
 	heap_block_t* free = free_list;
 	size_t j = 0;
 
 	while (free) {
-		void* block_addr = (void*)free;
-		void* prev_free = (void*)free->prev_free;
-		void* next_free = (void*)free->next_free;
-
-		printf("[0x%x] ──┬──────────── Free #%d\n", (uint32_t)(uintptr_t)block_addr, (int)j++);
-		printf("           │ Size       : %d\n", (int)(free->size + sizeof(heap_block_t)));
-		printf("           │ User Size  : %d\n", (int)free->size);
-		printf("           │ Prev_Free  : 0x%x\n", (uint32_t)(uintptr_t)prev_free);
-		printf("           │ Next_Free  : 0x%x\n", (uint32_t)(uintptr_t)next_free);
-		printf("           └─────────────────────────────\n");
-
+		const char* status = block->free ? "FREE" : "USED";
+		printf("0x%08x | %4d | %4s | 0x%08x | 0x%08x\n", (uint32_t)(uintptr_t)free, (int)(free->size + sizeof(heap_block_t)), status,
+		       (uint32_t)(uintptr_t)free->prev_free, (uint32_t)(uintptr_t)free->next_free);
 		free = free->next_free;
+		j++;
 	};
-	printf("+------------------------------------------------------------\n");
-
-	printf("\n+--[ HEAP SUMMARY ]-------------------------------------------\n");
+	printf("\n+--[ HEAP SUMMARY ]--------------------------------------------\n");
 	const size_t heap_used = (size_t)(_heap_curr - (uint8_t*)USER_HEAP_START);
 	const size_t heap_total = (size_t)(_heap_end - (uint8_t*)USER_HEAP_START);
 	const float percent = ((float)heap_used / heap_total) * 100.0f;
 	printf(" Total Blocks       : %d\n", i);
-	printf(" Total User Bytes   : %d\n", total_user_bytes);
 	printf(" Total Bytes        : %d\n", total_bytes);
-	printf(" Heap Capacity Used : %d / %d Bytes (%f Percent)\n", heap_used, heap_total, percent);
-	printf("+------------------------------------------------------------\n");
+	printf(" Heap Capacity Used : %d / %d Bytes (%f %%)\n", heap_used, heap_total, percent);
+	printf("+--------------------------------------------------------------\n");
 	return;
 };
 
@@ -124,13 +101,11 @@ void* realloc(void* ptr, size_t size)
 	return new_block;
 };
 
-void* malloc(size_t size)
+static heap_block_t* _find_best_fit_free_block(const size_t aligned_size)
 {
-	if (size == 0) {
-		errno = EINVAL;
+	if (aligned_size == 0) {
 		return NULL;
 	};
-	const size_t aligned_size = ALIGN8(size);
 	// Let us check if we can find a reusable block
 	heap_block_t* iter_block = free_list;
 	heap_block_t* best_fit_block = 0x0;
@@ -144,75 +119,95 @@ void* malloc(size_t size)
 		if (iter_block->size >= aligned_size && (!best_fit_block || (iter_block->size <= best_fit_block->size))) {
 			best_fit_block = iter_block;
 		};
+		// Anti cyclic protection
+		if (iter_block == iter_block->next_free) {
+			break;
+		};
 		iter_block = iter_block->next_free;
 	};
-	if (best_fit_block) {
-		// TODO: Implement block splitting if the block is larger than the minimum block size and append the remaining part to the free list
-		if (best_fit_block->size >= aligned_size + sizeof(heap_block_t) + MIN_BLOCK_SIZE) {
-			// Split the best_fit_block after aligned_size, example new_block = (best_fit_block + 1) + aligned_size is the starting point of the new
-			// block?
-			heap_block_t* new_block = (heap_block_t*)((uint8_t*)(best_fit_block + 1) + aligned_size);
+	return best_fit_block;
+};
 
-			if ((uint8_t*)new_block + sizeof(heap_block_t) > _heap_end) {
-				return NULL;
-			};
-			// Init new splitted block
-			new_block->free = 1;
-			new_block->size = best_fit_block->size - aligned_size - sizeof(heap_block_t);
-			// Update Free List Chaining at the head
-			new_block->next_free = free_list;
-			new_block->prev_free = NULL;
-			// Is the freelist NOT empty? append the old head to the new head :D
-			if (free_list) {
-				free_list->prev_free = new_block;
-			};
-			free_list = new_block;
-			// Update heap list
-			new_block->next = best_fit_block->next;
-			new_block->prev = best_fit_block;
-			// If the allocated block has a next block we must insert the "splitted" block into the chain best_fit_block --> new spliited block -->
-			// original next block
-			if (best_fit_block->next) {
-				best_fit_block->next->prev = new_block;
-			};
-			// If the best_fit block has no next block, we can safley add the splitted block :D
-			best_fit_block->next = new_block;
-			// Shrink old block
-			best_fit_block->size = aligned_size;
-		};
-		// TODO: Remove best_fit_block from free_list
-		heap_block_t* prev_block = best_fit_block->prev_free;
-		heap_block_t* next_block = best_fit_block->next_free;
+static void _split_block(heap_block_t* block, const size_t aligned_size)
+{
+	// Split the block after aligned_size, example new_block = (block + 1) + aligned_size is the starting point of the new
+	// block?
+	heap_block_t* new_block = (heap_block_t*)((uint8_t*)(block + 1) + aligned_size);
 
-		if (!prev_block) {
-			// No prev block? the next block is the new head
-			free_list = next_block;
-		} else {
-			prev_block->next_free = next_block;
-		};
-
-		if (next_block) {
-			next_block->prev_free = prev_block;
-		};
-		best_fit_block->next_free = NULL;
-		best_fit_block->prev_free = NULL;
-		best_fit_block->free = 0;
-		return (void*)(best_fit_block + 1);
+	if ((uint8_t*)new_block + sizeof(heap_block_t) > _heap_end) {
+		return;
 	};
+	// Init new splitted block
+	new_block->free = 1;
+	new_block->size = block->size - aligned_size - sizeof(heap_block_t);
+	// Update Free List Chaining at the head
+	new_block->next_free = free_list;
+	new_block->prev_free = NULL;
+	// Is the freelist NOT empty? append the old head to the new head :D
+	if (free_list) {
+		free_list->prev_free = new_block;
+	};
+	free_list = new_block;
+	// Update heap list
+	new_block->next = block->next;
+	new_block->prev = block;
+	// If the allocated block has a next block we must insert the "splitted" block into the chain block --> new spliited block -->
+	// original next block
+	if (block->next) {
+		block->next->prev = new_block;
+	};
+	// If the best_fit block has no next block, we can safley add the splitted block :D
+	block->next = new_block;
+	// Shrink old block
+	block->size = aligned_size;
+
+	if (!new_block->next) {
+		heap_tail = new_block;
+	};
+	return;
+};
+
+static void _remove_from_free_list(heap_block_t* block)
+{
+	if (!block) {
+		return;
+	};
+	heap_block_t* prev_block = block->prev_free;
+	heap_block_t* next_block = block->next_free;
+
+	if (!prev_block) {
+		// No prev block? the next block is the new head
+		free_list = next_block;
+	} else {
+		prev_block->next_free = next_block;
+	};
+
+	if (next_block) {
+		next_block->prev_free = prev_block;
+	};
+	block->next_free = NULL;
+	block->prev_free = NULL;
+	return;
+};
+
+void* _make_new_block(const size_t aligned_size)
+{
 	const size_t new_block_size = aligned_size + sizeof(heap_block_t);
 
 	if (_heap_curr + new_block_size >= _heap_end) {
 		errno = ENOMEM;
+		// TODO: Implement syscall to request more memory
 		return 0x0;
 	};
 	heap_block_t* new_block = (heap_block_t*)_heap_curr;
 	new_block->free = 0;
 	new_block->size = aligned_size;
 
+	new_block->next = NULL;
+	new_block->prev = heap_tail;
+
 	if (!heap_head) {
 		heap_head = heap_tail = new_block;
-		new_block->next = NULL;
-		new_block->prev = NULL;
 	} else {
 		heap_tail->next = new_block;
 		new_block->prev = heap_tail;
@@ -223,6 +218,27 @@ void* malloc(size_t size)
 
 	_heap_curr += new_block_size;
 	return (void*)(new_block + 1);
+};
+
+void* malloc(size_t size)
+{
+	if (size == 0) {
+		errno = EINVAL;
+		return NULL;
+	};
+	const size_t aligned_size = ALIGN8(size);
+	heap_block_t* best_fit_block = _find_best_fit_free_block(aligned_size);
+
+	if (best_fit_block) {
+		// Block splitting if the block is larger than the minimum block size and append the remaining part to the free list
+		if (best_fit_block->size >= aligned_size + sizeof(heap_block_t) + MIN_BLOCK_SIZE) {
+			_split_block(best_fit_block, aligned_size);
+		};
+		_remove_from_free_list(best_fit_block);
+		best_fit_block->free = 0;
+		return (void*)(best_fit_block + 1);
+	};
+	return _make_new_block(aligned_size);
 };
 
 void* calloc(size_t nmemb, size_t size)
@@ -251,16 +267,67 @@ void free(void* ptr)
 	if (!ptr) {
 		return;
 	};
-
 	heap_block_t* block = ((heap_block_t*)ptr) - 1;
 
 	if (block->size == 0 || (uintptr_t)block < USER_HEAP_START || (uintptr_t)block >= (uintptr_t)_heap_end) {
 		return;
 	};
-	if (block->free)
+	if (block->free) {
 		return;
+	};
 	block->free = 1;
+	// ===== Right merge =====
+	heap_block_t* next_block = block->next;
 
+	if (next_block && next_block->free) {
+		// Unlink next_block from free_list
+		if (next_block->prev_free) {
+			// Bridge over next_block (backward link)
+			next_block->prev_free->next_free = next_block->next_free;
+		};
+		if (next_block->next_free) {
+			// Bridge over next_block (forward link)
+			next_block->next_free->prev_free = next_block->prev_free;
+		};
+		if (free_list == next_block) {
+			// Update head if necessary
+			free_list = next_block->next_free;
+		};
+		// Merge next into block
+		block->size += next_block->size + sizeof(heap_block_t);
+		block->next = next_block->next;
+
+		if (next_block->next) {
+			next_block->next->prev = block;
+		};
+	};
+	// ===== Left merge =====
+	heap_block_t* prev_block = block->prev;
+
+	if (prev_block && prev_block->free) {
+		// Unlink prev_block from the free list
+		if (prev_block->prev_free) {
+			// Bridge over prev_block (backward link)
+			prev_block->prev_free->next_free = prev_block->next_free;
+		};
+		if (prev_block->next_free) {
+			// Bridge over prev_block (forward link)
+			prev_block->next_free->prev_free = prev_block->prev_free;
+		};
+		if (free_list == prev_block) {
+			// Update free list head if needed
+			free_list = prev_block->next_free;
+		};
+		// Merge block into prev
+		prev_block->size += block->size + sizeof(heap_block_t);
+		prev_block->next = block->next;
+
+		if (block->next) {
+			block->next->prev = prev_block;
+		};
+		block = prev_block; // New final merged block, which will be inserted
+	};
+	// Insert at the head
 	block->next_free = free_list;
 	block->prev_free = NULL;
 
@@ -268,6 +335,5 @@ void free(void* ptr)
 		free_list->prev_free = block;
 	};
 	free_list = block;
-	// TODO Coalescing
 	return;
 };
