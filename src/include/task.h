@@ -7,12 +7,21 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "icarius.h"
 #include "idt.h"
 #include "process.h"
+
 #include <stdint.h>
 
 struct process;
 typedef struct process process_t;
+
+typedef enum task_state {
+	TASK_READY = 0x0,      // schedulable task, i.e. waits to be picked up by the scheduler to be executed on the cpu
+	TASK_RUNNING = 0x1,    // is running on the cpu
+	TASK_BLOCKED = 0x2,    // waiting on an event i/o.. wait()?
+	TASK_TERMINATED = 0x3, // exited
+} task_state_t;
 
 typedef struct task_registers {
 	uint32_t edi;	 // Offset +0   | General-purpose register EDI
@@ -35,6 +44,8 @@ typedef struct task {
 	task_registers_t registers;
 	process_t* parent;
 } task_t;
+
+task_t* tasks[TASK_MAX];
 
 extern task_t* curr_task;
 

@@ -145,12 +145,21 @@ process_t* process_spawn(const char* filepath)
 		kfree(new_process);
 		return 0x0;
 	};
+	// Task is ready to run, mark as schedulable
+	// TODO task_set_state(task, TASK_READY);
+
+	// Maybe it is smarter to add the task to process_spawn and not to task_create, so that I have the possibility to know the state of the task and the
+	// scheduling behavior
+
+	// TODO: task_insert()
+
 	new_process->size = _process_get_filesize(new_process->filename);
 
 	new_process->tasks[new_process->task_count] = task;
 	new_process->task_count++;
 
 	_process_list_insert(new_process);
+
 	return new_process;
 };
 
