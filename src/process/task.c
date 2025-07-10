@@ -25,6 +25,8 @@ static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
+task_t* tasks[TASK_MAX] = {};
+
 void task_exit(task_t* self)
 {
 	if (!self) {

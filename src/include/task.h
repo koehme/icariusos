@@ -45,8 +45,7 @@ typedef struct task {
 	process_t* parent;
 } task_t;
 
-task_t* tasks[TASK_MAX];
-
+extern task_t* tasks[TASK_MAX];
 extern task_t* curr_task;
 
 extern void asm_enter_usermode(task_registers_t* regs);
