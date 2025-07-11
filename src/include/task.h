@@ -43,9 +43,9 @@ typedef struct task {
 	uint32_t stack_bottom;
 	task_registers_t registers;
 	process_t* parent;
+	task_state_t state;
 } task_t;
 
-extern task_t* tasks[TASK_MAX];
 extern task_t* curr_task;
 
 extern void asm_enter_usermode(task_registers_t* regs);

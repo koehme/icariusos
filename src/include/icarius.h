@@ -402,13 +402,18 @@
 #define SYS_GETDENTS 141 // int getdents(int fd, struct dirent* buf, unsigned int count);
 /*
 ====================================
-    Processes / Tasks
+    Processes
 ====================================
 */
 #define PROCESS_MAX_FILENAME 128
 #define PROCESS_MAX_THREAD 16
 #define PROCESS_MAX_ALLOCATION 16
-#define TASK_MAX 64
+/*
+====================================
+    Round Robin Algorithm
+====================================
+*/
+#define RR_MAX 256
 /*
 ====================================
     FAT16

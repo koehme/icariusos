@@ -25,8 +25,6 @@ static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
 
-task_t* tasks[TASK_MAX] = {};
-
 void task_exit(task_t* self)
 {
 	if (!self) {
@@ -144,6 +142,8 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
 	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23
+
+	task->state = TASK_READY;
 	return task;
 };
 

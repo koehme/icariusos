@@ -41,6 +41,8 @@ SOURCES_C = \
     ./src/process/tss.c \
     ./src/process/task.c \
     ./src/process/process.c \
+    ./src/process/scheduler/scheduler.c \
+    ./src/process/scheduler/rr.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
@@ -83,6 +85,9 @@ $(OBJ_DIR)/%.c.o: ./src/fs/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/driver/fat16/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/process/scheduler/%.c
 	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.c.o: ./src/driver/%.c
