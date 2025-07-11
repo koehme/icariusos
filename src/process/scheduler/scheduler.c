@@ -49,9 +49,10 @@ void scheduler_select(scheduler_t* self)
 void scheduler_tick(interrupt_frame_t* frame)
 {
 	if (!curr_scheduler || !curr_scheduler->yield_cb) {
-		printf("[ERROR] No Scheduler selected or no yield_cb exist\n");
+		printf("[ERROR] No Scheduler available or no yield_cb exist\n");
 		return;
 	};
+	// Bootstrap
 	if (!task_get_curr()) {
 		task_t* next = curr_scheduler->get_cb();
 
@@ -61,7 +62,10 @@ void scheduler_tick(interrupt_frame_t* frame)
 		};
 		return;
 	};
-	task_save(frame);
+
+	if (frame) {
+		task_save(frame);
+	};
 	curr_scheduler->yield_cb(frame);
 	return;
 };

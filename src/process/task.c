@@ -12,6 +12,8 @@
 extern pfa_t pfa;
 
 /* PUBLIC API */
+void task_block(task_t* self);
+void task_unblock(task_t* self);
 void task_exit(task_t* self);
 task_t* task_create(process_t* parent, const uint8_t* file);
 void task_dump(task_t* self);
@@ -24,6 +26,22 @@ task_t* curr_task = 0x0;
 static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
+
+void task_block(task_t* self)
+{
+	if (self) {
+		self->state = TASK_BLOCKED;
+	};
+	return;
+};
+
+void task_unblock(task_t* self)
+{
+	if (self && self->state == TASK_BLOCKED) {
+		self->state = TASK_READY;
+	};
+	return;
+};
 
 void task_exit(task_t* self)
 {

@@ -236,8 +236,8 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	case FD_STDIN: {
 		for (size_t i = 0; i < count; i++) {
 			while (fifo_is_empty(caller->keyboard_buffer)) {
-				// asm volatile("hlt");
-				// busy-wait for stdin
+				task_block(curr_task);
+				scheduler_tick(0x0); // Block curr task and pickup next task
 			};
 
 			if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {

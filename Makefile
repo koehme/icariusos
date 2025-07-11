@@ -43,6 +43,7 @@ SOURCES_C = \
     ./src/process/process.c \
     ./src/process/scheduler/scheduler.c \
     ./src/process/scheduler/rr.c \
+    ./src/process/idle.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \

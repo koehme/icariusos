@@ -103,8 +103,23 @@ static task_t* _rr_dequeue(void)
 	if (_count <= 0) {
 		return 0x0;
 	};
-	task_t* task = _rr_queue[_tail];
-	_tail = (_tail + 1) % RR_MAX;
-	_count--;
-	return task;
+
+	size_t remaining = _count;
+
+	while (remaining > 0) {
+		task_t* task = _rr_queue[_tail];
+
+		_tail = (_tail + 1) % RR_MAX;
+		_count--;
+		remaining--;
+
+		if (!task) {
+			continue;
+		};
+
+		if (task->state == TASK_READY) {
+			return task;
+		};
+	};
+	return 0x0;
 };
