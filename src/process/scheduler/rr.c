@@ -79,7 +79,13 @@ void rr_yield(interrupt_frame_t* frame)
 
 void rr_dump(void) { return; };
 
-task_t* rr_get(void) { return 0x0; };
+task_t* rr_get(void)
+{
+	if (_count <= 0) {
+		return 0x0;
+	};
+	return _rr_queue[_tail];
+};
 
 static void _rr_enqueue(task_t* task)
 {

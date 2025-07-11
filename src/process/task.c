@@ -46,7 +46,7 @@ void task_exit(task_t* self)
 task_t* task_get_curr(void)
 {
 	if (!curr_task) {
-		printf("[ERROR] No current Task are available!\n");
+		// printf("[ERROR] No current Task are available!\n");
 		return 0x0;
 	};
 	return curr_task;

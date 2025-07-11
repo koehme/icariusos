@@ -366,11 +366,18 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	_remove_identity_mapping();
 	syscall_init();
 
-	asm_do_sti();
 
+	/*
 	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
 	task_start(proc1->tasks[0]);
+	*/
 
-	kernel_shell();
+	scheduler_t* scheduler = scheduler_create(SCHED_ROUND_ROBIN);
+	scheduler_select(scheduler);
+	process_t* proc1 = process_spawn("A:/BIN/ICARSH.BIN");
+	scheduler->add_cb(proc1->tasks[0]);
+
+	asm_do_sti();
+	// kernel_shell();
 	return;
 };

@@ -44,6 +44,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "process.h"
 #include "ps2.h"
 #include "rtc.h"
+#include "scheduler.h"
 #include "stream.h"
 #include "string.h"
 #include "syscall.h"

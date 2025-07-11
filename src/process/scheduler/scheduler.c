@@ -52,6 +52,15 @@ void scheduler_tick(interrupt_frame_t* frame)
 		printf("[ERROR] No Scheduler selected or no yield_cb exist\n");
 		return;
 	};
+	if (!task_get_curr()) {
+		task_t* next = curr_scheduler->get_cb();
+
+		if (next) {
+			next->state = TASK_RUNNING;
+			task_start(next);
+		};
+		return;
+	};
 	task_save(frame);
 	curr_scheduler->yield_cb(frame);
 	return;

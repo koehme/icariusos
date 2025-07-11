@@ -16,6 +16,7 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "ps2.h"
+#include "scheduler.h"
 #include "string.h"
 
 /* EXTERNAL API */
@@ -53,7 +54,7 @@ void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs);
 void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
 void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
 
-void irq0_handler(void);
+void irq0_handler(interrupt_frame_t* regs);
 void irq1_handler(void);
 void irq12_handler(void);
 void isr_default_handler(interrupt_frame_t* regs);
@@ -539,10 +540,11 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	return;
 };
 
-void irq0_handler(void)
+void irq0_handler(interrupt_frame_t* regs)
 {
 	// printf("%d\n", timer.ticks);
 	timer.ticks++;
+	scheduler_tick(regs);
 	_pic1_send_eoi();
 	return;
 };

@@ -165,8 +165,12 @@ asm_isr14_wrapper:
     
 asm_irq0_timer:
     cli                           ; Disable interrupts to prevent nested interrupts
-    pushad                        
+    pushad                 
+
+    push esp                      ; interrupt_frame_t       
     call irq0_handler          
+    
+    add esp, 4                    ; Clean up pushed esp
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
