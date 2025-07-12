@@ -556,7 +556,18 @@ void irq1_handler(void)
 
 		if (curr_task && curr_task->parent) {
 			fifo_enqueue(curr_task->parent->keyboard_buffer, scancode);
+
+			for (int i = 0; i < PROCESS_MAX_THREAD; i++) {
+				task_t* task = curr_task->parent->tasks[i];
+
+				if (task && task->state == TASK_BLOCKED) {
+					task_unblock(task);
+					const scheduler_t* curr_scheduler = scheduler_get();
+					curr_scheduler->add_cb(task); // Put the task back in the rr queue
+				};
+			};
 		} else {
+			// Kernel Shell fallback
 			const char ascii = kbd_translate(scancode);
 
 			if (ascii) {

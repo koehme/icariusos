@@ -44,6 +44,7 @@ typedef struct task {
 	task_registers_t registers;
 	process_t* parent;
 	task_state_t state;
+	bool started;
 } task_t;
 
 extern task_t* curr_task;
@@ -61,5 +62,6 @@ void task_dump(task_t* self);
 void task_save(interrupt_frame_t* frame);
 void task_restore_dir(task_t* self);
 void task_start(task_t* task);
+void task_switch(task_t* next);
 
 #endif

@@ -20,6 +20,7 @@ void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
 task_t* task_get_curr(void);
 void task_start(task_t* task);
+void task_switch(task_t* next);
 task_t* curr_task = 0x0;
 
 /* INTERNAL API */
@@ -119,10 +120,22 @@ void task_start(task_t* task)
 {
 	if (!task)
 		return;
+	task->started = true;
 	printf("[TASK] Starting Task 0x%x\n", task);
 	curr_task = task;
 	task_restore_dir(task);
 	asm_enter_usermode(&task->registers);
+	return;
+};
+
+void task_switch(task_t* next)
+{
+	curr_task = next;
+	next->state = TASK_RUNNING;
+	asm_restore_user_segment();
+	task_restore_dir(next);
+
+	asm_enter_usermode(&next->registers);
 	return;
 };
 

@@ -6,6 +6,7 @@
 
 #include "rr.h"
 #include "errno.h"
+#include "idle.h"
 #include "string.h"
 
 /* PUBLIC API */
@@ -53,29 +54,40 @@ void rr_add(task_t* task)
 
 void rr_yield(interrupt_frame_t* frame)
 {
-	if (!frame) {
+	// 1. Sicherstellen, dass es überhaupt einen aktiven Task gibt
+	if (!curr_task) {
 		return;
-	};
-	// 1) Should save the actual task
-	task_t* curr = task_get_curr();
+	}
 
-	if (!curr) {
-		return;
-	};
-	curr->state = TASK_READY;
-	// 2) put the actual task in the queue back
-	_rr_enqueue(curr);
-	// 3) pickup the next ready task from the queue
+	// 2. Wenn der Aufruf aus einem Interrupt kommt (z. B. Timer), sichern wir den CPU-Zustand
+	if (frame) {
+		task_save(frame);
+	}
+
+	// 3. Wenn der aktuelle Task noch regulär läuft (nicht BLOCKED oder TERMINATED),
+	//    dann markieren wir ihn als READY und reihen ihn wieder in die Scheduler-Queue ein.
+	if (curr_task->state == TASK_RUNNING) {
+		curr_task->state = TASK_READY;
+		_rr_enqueue(curr_task); // ➜ Task ist wieder READY, wird später erneut geplant
+	}
+
+	// 4. Wähle den nächsten READY-Task aus der Warteschlange
 	task_t* next = _rr_dequeue();
 
 	if (!next) {
 		return;
-	};
-	next->state = TASK_RUNNING;
-	// 4) activate the new task
-	task_start(next);
-	return;
-};
+	}
+
+	curr_task = next; // globales `curr_task` aktualisieren
+
+	// 5. Unterscheiden: neuer Task oder bereits laufender
+	if (!next->started) {
+		next->started = true;
+		task_start(next); // ➜ Erststart: springt zu entry point
+	} else {
+		task_switch(next); // ➜ Wiederaufnahme: springt zu gespeichertem EIP
+	}
+}
 
 void rr_dump(void) { return; };
 
