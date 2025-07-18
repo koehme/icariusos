@@ -166,7 +166,9 @@ asm_isr14_wrapper:
 asm_irq0_timer:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        
+    push esp
     call irq0_handler          
+    add esp, 4
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt
@@ -174,7 +176,9 @@ asm_irq0_timer:
 asm_irq1_keyboard:
     cli                           ; Disable interrupts to prevent nested interrupts
     pushad                        
-    call irq1_handler             
+    push esp
+    call irq1_handler            
+    add esp, 4 
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
     iret                          ; Return from interrupt

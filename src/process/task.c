@@ -18,12 +18,31 @@ void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
 task_t* task_get_curr(void);
 void task_start(task_t* task);
+void task_set_block(task_t* self);
+void task_set_unblock(task_t* self);
+void task_switch(task_t* next);
 task_t* curr_task = 0x0;
 
 /* INTERNAL API */
 static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
+
+void task_set_block(task_t* self)
+{
+	if (self) {
+		self->state = TASK_STATE_BLOCK;
+	};
+	return;
+};
+
+void task_set_unblock(task_t* self)
+{
+	if (self && self->state == TASK_STATE_BLOCK) {
+		self->state = TASK_STATE_READY;
+	};
+	return;
+};
 
 void task_exit(task_t* self)
 {
@@ -50,6 +69,20 @@ task_t* task_get_curr(void)
 		return 0x0;
 	};
 	return curr_task;
+};
+
+void task_switch(task_t* next)
+{
+	if (!next)
+		return;
+	next->state = TASK_STATE_RUN;
+	curr_task = next;
+
+	if (next->parent->page_dir) {
+		task_restore_dir(next);
+	};
+	asm_enter_task(&next->registers);
+	return;
 };
 
 static task_t* _init_task(process_t* parent)
@@ -104,8 +137,38 @@ void task_start(task_t* task)
 	printf("[TASK] Starting Task 0x%x\n", task);
 	curr_task = task;
 	task_restore_dir(task);
-	asm_enter_usermode(&task->registers);
+	asm_enter_task(&task->registers);
 	return;
+};
+
+task_t* task_kcreate(process_t* parent, void (*entry)())
+{
+	if (parent->task_count >= PROCESS_MAX_THREAD) {
+		printf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
+		return 0x0;
+	};
+	task_t* task = _init_task(parent);
+
+	if (!task) {
+		return 0x0;
+	};
+	task->registers.eip = (uintptr_t)entry;
+	task->registers.eflags = 0x202;
+
+	void* stack = kzalloc(4096);
+
+	if (!stack) {
+		kfree(task);
+		return 0x0;
+	};
+	task->stack_top = (uintptr_t)stack + 4096;
+	task->stack_bottom = (uintptr_t)stack;
+
+	task->registers.esp = task->registers.ebp = task->stack_top;
+	task->registers.cs = 0x08;
+	task->registers.ss = 0x10;
+
+	return task;
 };
 
 task_t* task_create(process_t* parent, const uint8_t* file)

@@ -408,6 +408,7 @@
 #define PROCESS_MAX_FILENAME 128
 #define PROCESS_MAX_THREAD 16
 #define PROCESS_MAX_ALLOCATION 16
+#define RR_MAX 8
 /*
 ====================================
     FAT16

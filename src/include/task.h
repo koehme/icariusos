@@ -14,6 +14,19 @@
 struct process;
 typedef struct process process_t;
 
+typedef enum task_state {
+	TASK_STATE_READY = 0x0,	    // schedulable task, i.e. waits to be picked up by the scheduler to be executed on the cpu
+	TASK_STATE_RUN = 0x1,	    // is running on the cpu
+	TASK_STATE_BLOCK = 0x2,	    // waiting on an event i/o.. wait()?
+	TASK_STATE_TERMINATE = 0x3, // exited
+} task_state_t;
+
+typedef enum wait_reason {
+	WAIT_NONE,
+	WAIT_KEYBOARD,
+	WAIT_NOUSE,
+} wait_reason_t;
+
 typedef struct task_registers {
 	uint32_t edi;	 // Offset +0   | General-purpose register EDI
 	uint32_t esi;	 // Offset +4   | General-purpose register ESI
@@ -34,20 +47,27 @@ typedef struct task {
 	uint32_t stack_bottom;
 	task_registers_t registers;
 	process_t* parent;
+	task_state_t state;
+	wait_reason_t waiting_on;
 } task_t;
 
 extern task_t* curr_task;
 
-extern void asm_enter_usermode(task_registers_t* regs);
+extern void asm_enter_task(task_registers_t* regs);
 extern void asm_restore_kernel_segment(void);
 extern void asm_restore_user_segment(void);
 
 void task_exit(task_t* self);
 task_t* task_create(process_t* parent, const uint8_t* file);
+task_t* task_kcreate(process_t* parent, void (*entry)());
+process_t* process_kspawn(void (*entry)(), const char* name);
 task_t* task_get_curr(void);
 void task_dump(task_t* self);
 void task_save(interrupt_frame_t* frame);
 void task_restore_dir(task_t* self);
 void task_start(task_t* task);
+void task_set_block(task_t* self);
+void task_set_unblock(task_t* self);
+void task_switch(task_t* next);
 
 #endif

@@ -15,6 +15,7 @@ extern pfa_t pfa;
 process_t* curr_process = 0x0;
 process_t* processes = 0x0;
 process_t* process_spawn(const char* filepath);
+process_t* process_kspawn(void (*entry)(), const char* name);
 void process_list_dump(void);
 void process_exit(process_t* self);
 
@@ -152,6 +153,34 @@ process_t* process_spawn(const char* filepath)
 
 	_process_list_insert(new_process);
 	return new_process;
+};
+
+process_t* process_kspawn(void (*entry)(), const char* name)
+{
+	process_t* proc = kzalloc(sizeof(process_t));
+
+	if (!proc) {
+		errno = -ENOMEM;
+		return 0x0;
+	};
+	proc->pid = next_pid++;
+	strncpy(proc->filename, name, sizeof(proc->filename) - 1);
+	proc->filetype = PROCESS_BINARY;
+	proc->keyboard_buffer = 0x0;
+
+	proc->page_dir = 0x0;
+
+	task_t* task = task_kcreate(proc, entry);
+
+	if (!task) {
+		kfree(proc);
+		return NULL;
+	};
+
+	proc->tasks[proc->task_count++] = task;
+
+	_process_list_insert(proc);
+	return proc;
 };
 
 void process_exit(process_t* self)

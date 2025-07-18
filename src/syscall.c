@@ -216,8 +216,6 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	if (user_buf == 0x0 || count == 0)
 		return -1;
 
-	asm_do_sti();
-
 	void* kernel_buf = kzalloc(count);
 
 	if (!kernel_buf) {
@@ -235,15 +233,19 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	switch (fd) {
 	case FD_STDIN: {
 		for (size_t i = 0; i < count; i++) {
-			while (fifo_is_empty(caller->keyboard_buffer)) {
-				// asm volatile("hlt");
-				// busy-wait for stdin
+			if (fifo_is_empty(caller->keyboard_buffer)) {
+				task_set_block(curr_task);
+				curr_task->waiting_on = WAIT_KEYBOARD;
+				printf("[READ] Task %d (%s) is now BLOCKED → Reason: 0x%x\n", curr_task->parent->pid, curr_task->parent->filename,
+				       curr_task->waiting_on);
+				scheduler_schedule(frame);
 			};
 
 			if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
 				kfree(kernel_buf);
 				return i;
 			};
+			printf("[READ] Task PID: %d Kernel Buffer: %c\n", curr_task->parent->pid, ((char*)kernel_buf)[i]);
 		};
 		break;
 	};
