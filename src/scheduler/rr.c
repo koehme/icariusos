@@ -64,12 +64,9 @@ void rr_yield(interrupt_frame_t* frame)
 		_rr_enqueue(curr_task);
 	};
 	task_t* next = _rr_dequeue();
-	printf("[SCHEDULER] Yield: Task from PID %d ('%s') -> Task from PID %d ('%s')\n", curr_task->parent->pid, curr_task->parent->filename,
+	/* printf("[SCHEDULER] Yield: Task from PID %d ('%s') -> Task from PID %d ('%s')\n", curr_task->parent->pid, curr_task->parent->filename,
 	       next->parent->pid, next->parent->filename);
-	// If no page directory exists, it is a kernel task (e.g. idle task)
-	if (!next->parent->page_dir) {
-		printf("[RR] No READY Tasks found – Entering Idle Task\n");
-	};
+	*/
 	task_switch(next);
 	return;
 };

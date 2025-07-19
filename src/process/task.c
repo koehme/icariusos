@@ -76,7 +76,9 @@ void task_switch(task_t* next)
 	if (!next)
 		return;
 	next->state = TASK_STATE_RUN;
+
 	curr_task = next;
+	curr_process = curr_task->parent;
 
 	if (next->parent->page_dir) {
 		task_restore_dir(next);

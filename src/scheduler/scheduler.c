@@ -38,32 +38,20 @@ void scheduler_select(scheduler_t* self)
 {
 	if (!self) {
 		errno = EINVAL;
-		printf("[SCHEDULER] Invalid Scheduler Pointer passed\n");
+		// printf("[SCHEDULER] Invalid Scheduler Pointer passed\n");
 		return;
 	};
 	curr_scheduler = self;
-	printf("[SCHEDULER] SCHEDULER Activated: %s\n", self->name);
+	// printf("[SCHEDULER] SCHEDULER Activated: %s\n", self->name);
 	return;
 };
 
 void scheduler_schedule(interrupt_frame_t* frame)
 {
 	if (!curr_scheduler || !curr_scheduler->yield_cb) {
-		printf("[SCHEDULER] No Scheduler available or NO Yield Callback exist\n");
+		// printf("[SCHEDULER] No Scheduler available or NO Yield Callback exist\n");
 		return;
 	};
-	/*
-	if (!curr_task) {
-		// Bootstrap first task if ICARSH.BIN never run before
-		task_t* bootstrap = *curr_process->tasks;
-
-		if (!bootstrap) {
-			printf("[SCHEDULER] No Task to START\n");
-			return;
-		};
-		task_start(bootstrap);
-	};
-	*/
 	curr_scheduler->yield_cb(frame);
 	return;
 };
