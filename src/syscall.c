@@ -12,7 +12,7 @@
 #include "icarius.h"
 #include "task.h"
 #include "unistd.h"
-#include "wait.h"
+#include "wq.h"
 
 extern fifo_t fifo_kbd;
 extern fifo_t fifo_mouse;
@@ -238,16 +238,16 @@ int32_t _sys_read(interrupt_frame_t* frame)
 				task_set_block(caller->tasks[0]);
 				caller->tasks[0]->waiting_on = WAIT_KEYBOARD;
 				// Add waiting task to wait queue
-				wait_push(caller->tasks[0]);
-				printf("[READ] Task %d (%s) is now BLOCKED → Reason: 0x%x\n", caller->pid, caller->filename, caller->tasks[0]->waiting_on);
-				// scheduler_schedule(frame);
+				wq_push(caller->tasks[0]);
+				// printf("[READ] Task %d (%s) is now BLOCKED → Reason: 0x%x\n", caller->pid, caller->filename, caller->tasks[0]->waiting_on);
+				break; // If the fifo is empty break
 			};
 
 			if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
 				kfree(kernel_buf);
 				return i;
 			};
-			printf("[READ] Task PID: %d Kernel Buffer: %c\n", curr_task->parent->pid, ((char*)kernel_buf)[i]);
+			// printf("[READ] Task PID: %d Kernel Buffer: %c\n", curr_task->parent->pid, ((char*)kernel_buf)[i]);
 		};
 		break;
 	};

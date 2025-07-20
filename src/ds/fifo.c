@@ -42,6 +42,18 @@ void fifo_init(fifo_t* self)
 	return;
 };
 
+void fifo_dump(fifo_t* self)
+{
+	printf("[FIFO] Used=%d Head=%d Tail=%d\n", self->count, self->head, self->tail);
+
+	for (uint8_t i = 0; i < self->count; ++i) {
+		uint8_t idx = (self->tail + i) % FIFO_BUFFER_SIZE;
+		const char c = self->buffer[idx];
+		printf("  [%d] = '%c' (0x%x)\n", idx, (c >= 32 && c <= 126) ? c : '.', c);
+	};
+	return;
+};
+
 bool fifo_enqueue(fifo_t* self, const uint8_t data)
 {
 	if (!self || _is_full(self)) {

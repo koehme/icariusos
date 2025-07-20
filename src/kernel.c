@@ -374,6 +374,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	curr_process = idle_proc;
 
 	process_t* icarsh = process_spawn("A:/BIN/ICARSH.BIN");
+
+	if (!icarsh) {
+		panic("Failed to initialize ICARSH");
+	};
+	tty_set_foreground(icarsh);
 	scheduler->add_cb(icarsh->tasks[0]);
 
 	asm_do_sti();

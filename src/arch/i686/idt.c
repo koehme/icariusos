@@ -19,6 +19,7 @@
 #include "rr.h"
 #include "scheduler.h"
 #include "string.h"
+#include "wq.h"
 
 /* EXTERNAL API */
 extern process_t* curr_process;
@@ -546,11 +547,32 @@ void irq0_handler(interrupt_frame_t* regs)
 	// printf("%d\n", timer.ticks);
 	timer.ticks++;
 	_pic1_send_eoi();
+
 	scheduler_schedule(regs);
 	return;
 };
 
 void irq1_handler(interrupt_frame_t* regs)
+{
+	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
+		const uint8_t scancode = inb(PS2_DATA_PORT);
+		const uint8_t code = scancode & 0x7F;
+		const bool release = scancode & 0x80;
+
+		// printf("[IRQ1] Scancode=0x%x %s\n", scancode, release ? "(Release)" : "(Press)");
+		process_t* fg_proc = tty_get_foreground();
+
+		if (fg_proc && fg_proc->keyboard_buffer) {
+			fifo_enqueue(fg_proc->keyboard_buffer, scancode);
+			// fifo_dump(fg_proc->keyboard_buffer);
+		};
+		wq_wakeup(WAIT_KEYBOARD);
+	};
+	_pic1_send_eoi();
+	return;
+};
+
+void ____irq1_handler(interrupt_frame_t* regs)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t scancode = inb(PS2_DATA_PORT);
@@ -573,7 +595,6 @@ void irq1_handler(interrupt_frame_t* regs)
 				*/
 				fifo_enqueue(task->parent->keyboard_buffer, scancode);
 
-				task->waiting_on = WAIT_NONE;
 				task_set_unblock(task);
 				rr_add(task);
 				task_found = 1;
@@ -588,7 +609,7 @@ void irq1_handler(interrupt_frame_t* regs)
 	};
 	_pic1_send_eoi();
 	return;
-}
+};
 
 void irq12_handler(void)
 {

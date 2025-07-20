@@ -21,6 +21,7 @@ typedef struct fifo {
 } fifo_t;
 
 void fifo_init(fifo_t* self);
+void fifo_dump(fifo_t* self);
 bool fifo_enqueue(fifo_t* self, const uint8_t data);
 bool fifo_dequeue(fifo_t* self, uint8_t* data);
 bool fifo_is_empty(const fifo_t* self);

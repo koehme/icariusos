@@ -39,6 +39,7 @@ void task_set_block(task_t* self)
 void task_set_unblock(task_t* self)
 {
 	if (self && self->state == TASK_STATE_BLOCK) {
+		self->waiting_on = WAIT_NONE;
 		self->state = TASK_STATE_READY;
 	};
 	return;

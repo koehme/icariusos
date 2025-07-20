@@ -52,6 +52,7 @@ extern char _kernel_start[], _kernel_end[];
 #include "task.h"
 #include "timer.h"
 #include "tss.h"
+#include "tty.h"
 #include "vbe.h"
 #include "vfs.h"
 #include "vga.h"

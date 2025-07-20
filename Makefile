@@ -42,9 +42,10 @@ SOURCES_C = \
     ./src/process/task.c \
     ./src/process/process.c \
     ./src/process/idle.c \
+    ./src/process/tty.c \
     ./src/scheduler/scheduler.c \
     ./src/scheduler/rr.c \
-    ./src/scheduler/wait.c \
+    ./src/scheduler/wq.c \
     ./src/lib/stdlib.c \
     ./src/lib/stdio.c \
     ./src/lib/math.c \
