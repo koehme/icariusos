@@ -99,8 +99,8 @@ tree | xclip -selection clipboard
 ## 🤖 YOLO DevOps Pipeline
 
 ```bash
-git checkout feature && git pull origin feature && git add . && git commit -m "Refactoring" && \
-git checkout dev && git pull origin dev && git merge feature && git push origin dev && \
+git checkout scheduler && git pull origin scheduler && git add . && git commit -m "Refactoring" && \
+git checkout dev && git pull origin dev && git merge scheduler && git push origin dev && \
 git checkout main && git pull origin main && git merge dev && git push origin main && \
 git checkout feature
 ```
