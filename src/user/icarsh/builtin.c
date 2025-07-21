@@ -42,12 +42,15 @@ static void _heapstat_builtin(const char* args)
 
 static void _exit_builtin(const char* args)
 {
+	/*
 	int status = 0;
 
 	if (args && strlen(args) > 0) {
 		status = atoi(args);
 	};
 	exit(status);
+	*/
+	printf("[!] TODO Cleanup Task Shell and Reboot ICARSH.BIN :)\n");
 	return;
 };
 
@@ -94,7 +97,7 @@ static void _echo_builtin(const char* args)
 static void _help_builtin(const char* args)
 {
 	printf("----[ Help ]----\n");
-	printf("  `exit`          – CLOSES ICARSH AND DROPS YOU BACK TO ICARIUSOS RING 0\n");
+	printf("  `exit`          – TODO\n");
 	printf("  `ls`            – LISTS FILES. YOU GOTTA PASS THE FULL ROOT PATH LIKE\n");
 	printf("  `echo`          – SAY SOMETHING\n");
 	printf("  `cat`           – PRINTS CONTENTS OF A FILE\n");

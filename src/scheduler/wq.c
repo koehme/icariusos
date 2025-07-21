@@ -48,7 +48,6 @@ void wq_push(task_t* task)
 		errno = EINVAL;
 		return;
 	};
-	// printf("[WAIT] Pushing TASK PID %d ('%s') to Wait Queue. Reason: %d\n", task->parent->pid, task->parent->filename, task->waiting_on);
 	_wq_enqueue(task);
 	return;
 };

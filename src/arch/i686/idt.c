@@ -556,15 +556,10 @@ void irq1_handler(interrupt_frame_t* regs)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t scancode = inb(PS2_DATA_PORT);
-		const uint8_t code = scancode & 0x7F;
-		const bool release = scancode & 0x80;
-
-		// printf("[IRQ1] Scancode=0x%x %s\n", scancode, release ? "(Release)" : "(Press)");
 		process_t* fg_proc = tty_get_foreground();
 
 		if (fg_proc && fg_proc->keyboard_buffer) {
 			fifo_enqueue(fg_proc->keyboard_buffer, scancode);
-			// fifo_dump(fg_proc->keyboard_buffer);
 		};
 		wq_wakeup(WAIT_KEYBOARD);
 	};

@@ -2,98 +2,80 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is a handcrafted 32-bit operating system for i686, started in fall 2022.
-I had built a few kernels before, but dropped those projects too early as other priorities took over.
-With icariusOS, I committed myself to stick with it — and built everything entirely from scratch.
+## Why?
 
-It began with a homemade bootloader, and now boots clean via GRUB.
-Crafted by an IT'ler with a deep love for bare-metal hacking.
+Born in November 2022, icariusOS is my personal deep dive into the fascinating world of operating system internals. Built entirely from scratch, it's not just a project—it’s a commitment.
+
+I've written kernels before, but life had other plans—until now. With icariusOS, I promised myself I'd see it through to the end. Is there even an end to operating systems? It started as a homemade bootloader and has evolved into a clean GRUB-booting OS that runs flawlessly on real 32-bit hardware.
+
+Crafted with love by an IT professional deeply passionate about bare-metal hacking. Paging, syscalls, context switching, interrupt handlers, memory allocators—you name it, I've built it. icariusOS is my way of truly understanding operating systems—not just reading about them, but actually making it happen.
+
+This is OS development done the right way—by getting your hands dirty. 🛠️✨
 
 ## ✨ Features
 
-Paging & Virtual Memory
-* ✅ Higher-half kernel mapped at 0xC0000000
-* ✅ 4 MiB page support via Page Size Extension (PSE)
-* ✅ Isolated user/kernel space with CR3-based task switching
+🔧 ARCHITECTURE & MEMORY
+✅ HIGHER-HALF KERNEL: Mapping at 0xC0000000 – KEEP IT SAFE!
+✅ MEGA PAGES: 4 MiB Paging via Page Size Extension (PSE) 🔥
+✅ MEMORY ISOLATION: User and Kernel FULLY SEPARATED using CR3 Task Switching
+✅ RING 3 TASKS: Each Task has its own Page Directory—TOTAL CONTROL!
 
-Kernel Heap Allocator
-* ✅ Chunk-based dynamic heap with coalescing
-* ✅ Built-in stats & debug output for nerdy pleasure
+🧠 TASKING & SCHEDULING
+✅ ROUND-ROBIN POWER: Custom Task Queue for FAIRNESS & SPEED :)
+✅ PREEMPTIVE MULTITASKING: Scheduler fires AUTOMATICALLY via IRQ0 → scheduler_schedule()
+✅ SYSCALL MAGIC: User Requests via int 0x80—CLEAN & FAST!
+✅ STACK POWERHOUSE: Supports up to 16 THREADS per Userspace Task—GO WILD!
 
-Userspace Allocator
-* ✅ malloc() and calloc()
-* Just a bump allocator for now
+📦 MEMORY MANAGEMENT
+✅ SMART KERNEL HEAP: Chunking, Coalescing, & Detailed Stats
+✅ REAL USERSPACE ALLOCATOR: Dynamic malloc() & calloc() (NO MORE Bump Allocator!)
+✅ PAGE FAULT HANDLER: Precision Diagnostics—FIND & FIX ISSUES QUICKLY + STACKDUMP!
 
-Multitasking
-* ❗ TODO: Preemptive Multitasking
-* ✅ Per-process page directory setup
-* ✅ Ring 3 usermode support via iret
-* ✅ Thread stack layout for up to 16 threads per process
+🖥️ USERSPACE SUPPORT
+✅ FULL USERSPACE ISOLATION: 4 MiB for CODE, BSS, HEAP, STACK—EVERY PROCESS ITS OWN KINGDOM 🏰
+✅ icarSH: YOUR USERSHELL—Minimal, Sleek, Built-in Commands:
+ls, cat, echo, exit, help, history
+✅ DYNAMIC USER HEAP: Best-Fit Allocator—Memory managed
 
-icarSH – the icarius Shell
-* ✅ Lightweight custom userspace shell
-* ✅ Built-in commands: ls, cat, echo, exit, history, help
+## 🧩 DEPENDENCIES
 
-Timezone & RTC
-* ✅ CMOS clock readout for real-time freshness
-* ✅ Auto UTC offset via ETC/TIMEZONE config
+Before you dive into building icariusOS - Double-Check you've got:
 
-## 🧩 Dependencies
-
-Before building icariusOS, make sure the following dependencies are installed
-
-- **Ubuntu** – LTS version recommended (either on a VM or WSL)
-- **Cross-Compiler** – You’ll need a freestanding i686 toolchain
-
-To set it up, run
+✅ UBUNTU or WINDOWS via WSL – Latest LTS Recommended
+✅ CROSS-COMPILER – You'll need a freestanding i686 toolchain:
 
 ```bash
 ./i686.sh
 ```
-🚀 Getting Started
 
-Make sure the FAT16 file system is created before booting
+## 🚀 GETTING STARTED
 
 ```bash
 ./build.sh && ./fat16.sh
-```
-🛠️ Build & Run
 
-Rebuild the kernel and run it via QEMU
+```
+## 🛠️ BUILD & RUN
 
 ```bash
 ./build.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-🔁 Kernel Updates
+## 🔁 KERNEL UPDATE
 
-If you want to update the kernel binary inside the FAT16 image
-
-```bash
-./swap.sh
-```
-Then boot up with the fresh kernel
-
-```bash
-qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
-```
-Shortcut for lazy
+Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD.
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
-🧠 Kernel Debugging (QEMU + GDB)
 
-To debug the kernel at source level
+## 🧠 Kernel Debugging (QEMU + GDB)
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
-🔍 Userspace Debugging
-
-Debug the userspace too, with breakpoints and all the nerdy goodness
+## 🔍 Userspace Debugging
 
 ```bash
 ./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
@@ -101,25 +83,20 @@ gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 break *0x0
 file ./src/user/icarsh/elf/icarsh.elf
 ```
-🐚 Build the Userspace Shell ICARSH.BIN
 
-This compiles the user shell and inserts it into the FAT16 image for execution
+## 🐚 Build the Userspace Shell ICARSH.BIN
 
 ```bash
 make icarsh && ./fat16.sh
 ```
 
-🌲 Print Directory Structure
-
-This command copies a visual tree of the project to your clipboard (Linux only)
+## 🌲 Dir Structure
 
 ```bash
 tree | xclip -selection clipboard
 ```
 
-🤖 YOLO DevOps Pipeline
-
-YOLO
+## 🤖 YOLO DevOps Pipeline
 
 ```bash
 git checkout feature && git pull origin feature && git add . && git commit -m "Refactoring" && \

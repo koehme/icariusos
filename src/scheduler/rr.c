@@ -64,9 +64,6 @@ void rr_yield(interrupt_frame_t* frame)
 		_rr_enqueue(curr_task);
 	};
 	task_t* next = _rr_dequeue();
-	/* printf("[SCHEDULER] Yield: Task from PID %d ('%s') -> Task from PID %d ('%s')\n", curr_task->parent->pid, curr_task->parent->filename,
-	       next->parent->pid, next->parent->filename);
-	*/
 	task_switch(next);
 	return;
 };

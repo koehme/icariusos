@@ -11,12 +11,7 @@
 int main(int argc, char* argv[])
 {
 	while (1) {
-		char* line = readline(PROMPT);
-
-		if (line) {
-			execute_builtin(line);
-			free(line);
-		};
+		execute_builtin(readline(PROMPT));
 	};
 	return 0;
 };

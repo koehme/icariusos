@@ -31,7 +31,7 @@ char* readline(const char* prompt)
 
 	while (1) {
 		if (read(STDIN_FILENO, &scancode, 1) < 0) {
-			return 0x0;
+			return NULL;
 		};
 		const key_event_t ev = translate_sc_into_event(scancode);
 
@@ -72,6 +72,7 @@ char* readline(const char* prompt)
 				strncpy(buffer, cmd, BUFFER_SIZE - 1);
 				pos = strlen(buffer);
 				write(STDOUT_FILENO, cmd, HISTORY_LINE_MAX);
+				break;
 			};
 			break;
 		};
@@ -84,5 +85,5 @@ char* readline(const char* prompt)
 		};
 		};
 	};
-	return 0x0;
+	return NULL;
 };
