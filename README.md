@@ -39,10 +39,8 @@ This is OS development done the right way—by getting your hands dirty. 🛠️
 
 ## 🧩 DEPENDENCIES
 
-Before you dive into building icariusOS - Double-Check you've got:
-
-✅ UBUNTU or WINDOWS via WSL – Latest LTS Recommended
-✅ CROSS-COMPILER – You'll need a freestanding i686 toolchain:
+- ✅ UBUNTU or WINDOWS via WSL – Latest LTS Recommended
+- ✅ CROSS-COMPILER – You'll need a freestanding i686 toolchain:
 
 ```bash
 ./i686.sh
@@ -99,8 +97,6 @@ tree | xclip -selection clipboard
 ## 🤖 YOLO DevOps Pipeline
 
 ```bash
-git checkout scheduler && git pull origin scheduler && git add . && git commit -m "Refactoring" && \
 git checkout dev && git pull origin dev && git merge scheduler && git push origin dev && \
-git checkout main && git pull origin main && git merge dev && git push origin main && \
-git checkout feature
+git checkout main && git pull origin main && git merge dev && git push origin main 
 ```
