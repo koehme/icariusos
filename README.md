@@ -14,28 +14,28 @@ This is OS development done the right way—by getting your hands dirty. 🛠️
 
 ## ✨ Features
 
-🔧 ARCHITECTURE & MEMORY
-✅ HIGHER-HALF KERNEL: Mapping at 0xC0000000 – KEEP IT SAFE!
-✅ MEGA PAGES: 4 MiB Paging via Page Size Extension (PSE) 🔥
-✅ MEMORY ISOLATION: User and Kernel FULLY SEPARATED using CR3 Task Switching
-✅ RING 3 TASKS: Each Task has its own Page Directory—TOTAL CONTROL!
+### 🔧 Architecture & Memory
+- ✅ **HIGHER-HALF KERNEL**: Mapping at `0xC0000000`
+- ✅ **MEGA PAGES**: 4 MiB Paging via **Page Size Extension (PSE)** 🔥
+- ✅ **MEMORY ISOLATION**: User and Kernel **FULLY SEPARATED** using **CR3 Task Switching**
+- ✅ **RING 3 TASKS**: Each Task has its **own Page Directory**
 
-🧠 TASKING & SCHEDULING
-✅ ROUND-ROBIN POWER: Custom Task Queue for FAIRNESS & SPEED :)
-✅ PREEMPTIVE MULTITASKING: Scheduler fires AUTOMATICALLY via IRQ0 → scheduler_schedule()
-✅ SYSCALL MAGIC: User Requests via int 0x80—CLEAN & FAST!
-✅ STACK POWERHOUSE: Supports up to 16 THREADS per Userspace Task—GO WILD!
+### 🧠 Tasking & Scheduling
+- ✅ **ROUND-ROBIN POWER**: Custom Task Queue 
+- ✅ **PREEMPTIVE MULTITASKING**: Scheduler fires **AUTOMATICALLY** via `IRQ0 → scheduler_schedule()`
+- ✅ **SYSCALL MAGIC**: User Requests via `int 0x80`
+- ✅ **STACK POWERHOUSE**: Supports up to **16 THREADS per Userspace Task** 
 
-📦 MEMORY MANAGEMENT
-✅ SMART KERNEL HEAP: Chunking, Coalescing, & Detailed Stats
-✅ REAL USERSPACE ALLOCATOR: Dynamic malloc() & calloc() (NO MORE Bump Allocator!)
-✅ PAGE FAULT HANDLER: Precision Diagnostics—FIND & FIX ISSUES QUICKLY + STACKDUMP!
+### 📦 Memory Management
+- ✅ **SMART KERNEL HEAP**: Chunking, Coalescing & **Detailed Stats**
+- ✅ **REAL USERSPACE ALLOCATOR**: Dynamic `malloc()` & `calloc()` (**NO MORE Bump Allocator!**)
+- ✅ **PAGE FAULT HANDLER**: Diagnostics – **FIND & FIX ISSUES QUICKLY** + **STACKDUMP!**
 
-🖥️ USERSPACE SUPPORT
-✅ FULL USERSPACE ISOLATION: 4 MiB for CODE, BSS, HEAP, STACK—EVERY PROCESS ITS OWN KINGDOM 🏰
-✅ icarSH: YOUR USERSHELL—Minimal, Sleek, Built-in Commands:
-ls, cat, echo, exit, help, history
-✅ DYNAMIC USER HEAP: Best-Fit Allocator—Memory managed
+### 🖥️ Userspace Support
+- ✅ **FULL USERSPACE ISOLATION**: 4 MiB for **CODE**, **BSS**, **HEAP**, **STACK** 
+- ✅ **icarSH**:  
+  `ls`, `cat`, `echo`, `exit`, `help`, `history`
+- ✅ **DYNAMIC USER HEAP**: Best-Fit Allocator – **Memory managed RIGHT**
 
 ## 🧩 DEPENDENCIES
 
