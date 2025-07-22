@@ -1,5 +1,5 @@
 ICARIUS.BIN
-ICARIUS.img
+*.img
 iso/boot/ICARIUS.BIN
 *.o
 make_commit.sh

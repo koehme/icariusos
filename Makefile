@@ -1,6 +1,5 @@
 INCLUDES = -I./src/include
-FLAGS = -std=gnu99 -g -ffreestanding -falign-jumps -falign-functions -falign-labels \
-        -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions \
+FLAGS = -std=gnu99 -g -ffreestanding -fomit-frame-pointer \
         -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label \
         -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 ASSEMBLER = nasm
@@ -148,7 +147,6 @@ clean:
 	rm -rf ./src/user/libc/obj/*.o
 
 icarsh:
-	# Kompiliere die libc
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/stdio.c -o ./src/user/libc/obj/stdio.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/malloc/malloc.c -o ./src/user/libc/obj/malloc.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/history.c -o ./src/user/libc/obj/history.o
@@ -160,22 +158,10 @@ icarsh:
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/errno.c -o ./src/user/libc/obj/errno.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/dirent.c -o ./src/user/libc/obj/dirent.o
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -c ./src/user/libc/string/strerror.c -o ./src/user/libc/obj/strerror.o
-
-	# Erstelle libc.a
 	$(AR) rcs ./src/user/libc/lib/libc.a ./src/user/libc/obj/stdio.o ./src/user/libc/obj/malloc.o ./src/user/libc/obj/history.o ./src/user/libc/obj/kbd.o ./src/user/libc/obj/strerror.o ./src/user/libc/obj/dirent.o ./src/user/libc/obj/errno.o ./src/user/libc/obj/stdlib.o ./src/user/libc/obj/readline.o ./src/user/libc/obj/string.o ./src/user/libc/obj/syscall.o
-
-	# Kompiliere den Assembler-Wrapper für `main()`
 	$(ASSEMBLER) -f elf32 -g ./src/user/icarsh/entry.asm -o ./src/user/icarsh/obj/entry.o
-
-	# Kompiliere die Usershell
 	$(GCC) -I ./src/user/libc/include/ -I ./src/user/icarsh/include/  $(FLAGS) -c ./src/user/icarsh/icarsh.c -o ./src/user/icarsh/obj/icarsh.o
 	$(GCC) -I ./src/user/libc/include/ -I ./src/user/icarsh/include/ $(FLAGS) -c ./src/user/icarsh/builtin.c -o ./src/user/icarsh/obj/builtin.o
-
-	# Linke Usershell mit Assembler-Wrapper und libc.a
 	$(GCC) -I ./src/user/libc/include/ $(FLAGS) -T ./src/user/icarsh/user.ld ./src/user/icarsh/obj/entry.o ./src/user/icarsh/obj/icarsh.o ./src/user/icarsh/obj/builtin.o -o ./src/user/icarsh/elf/icarsh.elf ./src/user/libc/lib/libc.a
-
-	# Konvertiere ELF nach Flat Binary
 	$(OBJCOPY) -O binary ./src/user/icarsh/elf/icarsh.elf ./src/user/icarsh/bin/ICARSH.BIN
-
-	# Kopiere Usershell ins OS-Dateisystem
 	cp ./src/user/icarsh/bin/ICARSH.BIN ./bin/BIN/ICARSH.BIN

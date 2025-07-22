@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./build.sh
+./scripts/build/build.sh
 KERNEL_PATH="./bin/ICARIUS.BIN"
 
 LOOP1=$(sudo losetup -f)

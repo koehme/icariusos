@@ -2,15 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Why?
+icariusOS is a HAND-BUILT x86 KERNEL from SCRATCH — NO SHORTCUTS.
+Started in 2022 — Now with INTERRUPTS, VFS, FAT16 FS, PAGING, SYSCALLS a SCHEDULER and much MORE! 👾
+Pure BARE-METAL Hacking. READY TO DIVE IN? WANNA GET YOUR HANDS DIRTY? CONTRIBUTE AND LET’S BUILD TOGETHER!
 
-Born in November 2022, icariusOS is my personal deep dive into the fascinating world of operating system internals. Built entirely from scratch, it's not just a project—it’s a commitment.
-
-I've written kernels before, but life had other plans—until now. With icariusOS, I promised myself I'd see it through to the end. Is there even an end to operating systems? It started as a homemade bootloader and has evolved into a clean GRUB-booting OS that runs flawlessly on real 32-bit hardware.
-
-Crafted with love by an IT professional deeply passionate about bare-metal hacking. Paging, syscalls, context switching, interrupt handlers, memory allocators—you name it, I've built it. icariusOS is my way of truly understanding operating systems—not just reading about them, but actually making it happen.
-
-This is OS development done the right way—by getting your hands dirty. 🛠️✨
+![Boot Demo](assets/icariusOS.gif)
 
 ## ✨ Features
 
@@ -40,22 +36,22 @@ This is OS development done the right way—by getting your hands dirty. 🛠️
 ## 🧩 DEPENDENCIES
 
 - ✅ UBUNTU or WINDOWS via WSL – Latest LTS Recommended
-- ✅ CROSS-COMPILER – You'll need a freestanding i686 toolchain:
+- ✅ CROSS-COMPILER – You'll need a Freestanding i686 Toolchain:
+
+- ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE ROOT DIR (`./`)  
 
 ```bash
-./i686.sh
+./scripts/build/i686.sh
 ```
 
-## 🚀 GETTING STARTED
-
-```bash
-./build.sh && ./fat16.sh
-
-```
 ## 🛠️ BUILD & RUN
 
 ```bash
-./build.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
+make icarsh && ./scripts/build/build.sh && ./scripts/build/fat16.sh
+```
+
+```bash
+qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
 ## 🔁 KERNEL UPDATE
@@ -63,40 +59,27 @@ This is OS development done the right way—by getting your hands dirty. 🛠️
 Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD.
 
 ```bash
-./swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
+./scripts/tools/swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
 ## 🧠 Kernel Debugging (QEMU + GDB)
 
 ```bash
-./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
+./scripts/tools/swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
 ## 🔍 Userspace Debugging
 
 ```bash
-./swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
+./scripts/tools/swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 break *0x0
 file ./src/user/icarsh/elf/icarsh.elf
 ```
 
-## 🐚 Build the Userspace Shell ICARSH.BIN
-
-```bash
-make icarsh && ./fat16.sh
-```
-
-## 🌲 Dir Structure
+## 🌲 Dir 
 
 ```bash
 tree | xclip -selection clipboard
-```
-
-## 🤖 YOLO DevOps Pipeline
-
-```bash
-git checkout dev && git pull origin dev && git merge scheduler && git push origin dev && \
-git checkout main && git pull origin main && git merge dev && git push origin main 
 ```
