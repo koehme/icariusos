@@ -2,11 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is a HAND-BUILT x86 KERNEL from SCRATCH — NO SHORTCUTS.
-Started in 2022 — Now with INTERRUPTS, VFS, FAT16 FS, PAGING, SYSCALLS a SCHEDULER and much MORE! 👾
-Pure BARE-METAL Hacking. READY TO DIVE IN? WANNA GET YOUR HANDS DIRTY? CONTRIBUTE AND LET’S BUILD TOGETHER!
+I’m making my own x86 kernel to learn more about how operating systems work. I don’t want to make a big new Linux or anything like that. I just think it’s really cool to build my own OS from scratch – step by step – and learn a lot along the way.
 
-  <img src="assets/icariusOS.gif" alt="Boot Demo" width="500" heigt="auto"/>
+<img src="assets/icariusOS.gif" alt="Boot Demo" width="500" heigt="auto"/>
 
 ## ✨ Features
 
@@ -25,13 +23,13 @@ Pure BARE-METAL Hacking. READY TO DIVE IN? WANNA GET YOUR HANDS DIRTY? CONTRIBUT
 ### 📦 Memory Management
 - ✅ **SMART KERNEL HEAP**: Chunking, Coalescing & **Detailed Stats**
 - ✅ **REAL USERSPACE ALLOCATOR**: Dynamic `malloc()` & `calloc()` (**NO MORE Bump Allocator!**)
-- ✅ **PAGE FAULT HANDLER**: Diagnostics – **FIND & FIX ISSUES QUICKLY** + **STACKDUMP!**
+- ✅ **PAGE FAULT HANDLER**: Diagnostics and Register Dumps
 
 ### 🖥️ Userspace Support
 - ✅ **FULL USERSPACE ISOLATION**: 4 MiB for **CODE**, **BSS**, **HEAP**, **STACK** 
 - ✅ **icarSH**:  
   `ls`, `cat`, `echo`, `exit`, `help`, `history`
-- ✅ **DYNAMIC USER HEAP**: Best-Fit Allocator – **Memory managed RIGHT**
+- ✅ **DYNAMIC USER HEAP**: Best-Fit Allocator
 
 ## 🧩 DEPENDENCIES
 
