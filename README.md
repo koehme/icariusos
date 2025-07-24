@@ -2,7 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-I’m making my own x86 kernel to learn more about how operating systems work. I don’t want to make a big new Linux or anything like that. I just think it’s really cool to build my own OS from scratch – step by step – and learn a lot along the way.
+icariusOS is my personal, experimental x86 KERNEL. I'm building it to better understand how an OS works.
+
+I'm NOT trying to create the next big Linux or anything like that – this is all about the FUN and CHALLENGE of building my own OS from SCRATCH, step by step. It's a learning project, and I’m enjoying EVERY BIT of it.
 
 <img src="assets/icariusOS.gif" alt="Boot Demo" width="500" heigt="auto"/>
 
