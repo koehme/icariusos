@@ -6,7 +6,7 @@ icariusOS is a HAND-BUILT x86 KERNEL from SCRATCH — NO SHORTCUTS.
 Started in 2022 — Now with INTERRUPTS, VFS, FAT16 FS, PAGING, SYSCALLS a SCHEDULER and much MORE! 👾
 Pure BARE-METAL Hacking. READY TO DIVE IN? WANNA GET YOUR HANDS DIRTY? CONTRIBUTE AND LET’S BUILD TOGETHER!
 
-![Boot Demo](assets/icariusOS.gif)
+  <img src="assets/icariusOS.gif" alt="Boot Demo" width="500" heigt="auto"/>
 
 ## ✨ Features
 
