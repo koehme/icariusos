@@ -6,7 +6,7 @@ icariusOS is my personal, experimental x86 KERNEL. I'm building it to better und
 
 I'm NOT trying to create the next big Linux or anything like that – this is all about the FUN and CHALLENGE of building my own OS from SCRATCH, step by step. It's a learning project, and I’m enjoying EVERY BIT of it.
 
-<img src="assets/icariusOS.gif" alt="Boot Demo" width="500" heigt="auto"/>
+![Boot Demo](assets/icariusOS.gif)
 
 ## ✨ Features
 
