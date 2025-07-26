@@ -2,9 +2,15 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is my personal, experimental x86 KERNEL. I'm building it to better understand how an OS works.
+icariusOS is my personal, experimental x86 kernel. I am building this operating system to better understand how an OS really works – from the ground up. It is a big challenge, because I have full control over the whole system – and that makes it very exciting!
 
-I'm NOT trying to create the next big Linux or anything like that – this is all about the FUN and CHALLENGE of building my own OS from SCRATCH, step by step. It's a learning project, and I’m enjoying EVERY BIT of it.
+Think about it: drawing to the framebuffer, managing memory, building a file system – doing all of this in your own kernel is not easy. In 32-bit mode, things are more detailed and maybe a bit old-school. You must work with limited memory and smaller resources – but that makes it even more interesting for me.
+
+Why did I choose 32-bit instead of 64-bit? It was a practical decision. For 32-bit kernels, there are many more tutorials, documentation and example projects. That makes learning easier and helps me understand faster.
+
+Of course, I know that a hobby kernel will never compete with Linux or Windows – one lifetime is not enough for that 😉. But that’s not my goal anyway.
+
+I don’t want to create the next big Linux. This is about fun, challenge and learning. I am building my own operating system from scratch, step by step – and I enjoy writing every single line of code.
 
 ![Boot Demo](assets/icariusOS.gif)
 
