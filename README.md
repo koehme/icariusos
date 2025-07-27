@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is a modular, x86-compatible toy kernel written in C and Assembly.
+icariusOS is a modular, x86-compatible kernel written in C and Assembly.
 
 ![Boot Demo](assets/icariusOS.gif)
 
