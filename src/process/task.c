@@ -7,17 +7,19 @@
 #include "task.h"
 #include "errno.h"
 #include "icarius.h"
+#include "page.h"
 #include "string.h"
 
 extern pfa_t pfa;
 
 /* PUBLIC API */
+void task_block_on(task_t* self, const wait_reason_t reason);
 void task_exit(task_t* self);
 task_t* task_create(process_t* parent, const uint8_t* file);
 void task_dump(task_t* self);
 int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame);
+void task_set_curr(task_t* self);
 task_t* task_get_curr(void);
-void task_start(task_t* task);
 void task_set_block(task_t* self);
 void task_set_unblock(task_t* self);
 void task_switch(task_t* next);
@@ -27,6 +29,15 @@ task_t* curr_task = 0x0;
 static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
+
+void task_block_on(task_t* self, const wait_reason_t reason)
+{
+	if (!self) {
+		return;
+	};
+	self->waiting_on = reason;
+	return;
+};
 
 void task_set_block(task_t* self)
 {
@@ -63,10 +74,20 @@ void task_exit(task_t* self)
 	return;
 };
 
+void task_set_curr(task_t* self)
+{
+	if (!self) {
+		errno = EINVAL;
+		return;
+	};
+	curr_task = self;
+	return;
+};
+
 task_t* task_get_curr(void)
 {
 	if (!curr_task) {
-		printf("[ERROR] No current Task are available!\n");
+		errno = ESRCH;
 		return 0x0;
 	};
 	return curr_task;
@@ -74,16 +95,27 @@ task_t* task_get_curr(void)
 
 void task_switch(task_t* next)
 {
-	if (!next)
+	if (!next) {
 		return;
+	};
 	next->state = TASK_STATE_RUN;
 
-	curr_task = next;
-	curr_process = curr_task->parent;
+	task_set_curr(next);
+	process_set_curr(curr_task->parent);
 
 	if (next->parent->page_dir) {
 		task_restore_dir(next);
 	};
+	/*
+	const char* str = (next->parent->filetype == PROCESS_KERNEL_THREAD) ? "[KTHREAD]" : "[UTHREAD]";
+
+	printf("%s Switching to Task '%s' (PID %d)\n", str, next->parent->filename, next->parent->pid);
+	size_t delay = 500000000;
+
+	while (delay--) {
+		;
+	};
+	*/
 	asm_enter_task(&next->registers);
 	return;
 };
@@ -97,9 +129,7 @@ static task_t* _init_task(process_t* parent)
 		return 0x0;
 	};
 	memset(task, 0x0, sizeof(task_t));
-
 	task->parent = parent;
-
 	return task;
 };
 
@@ -133,17 +163,6 @@ static void _load_binary_into_task(const uint8_t* file)
 	return;
 };
 
-void task_start(task_t* task)
-{
-	if (!task)
-		return;
-	printf("[TASK] Starting Task 0x%x\n", task);
-	curr_task = task;
-	task_restore_dir(task);
-	asm_enter_task(&task->registers);
-	return;
-};
-
 task_t* task_kcreate(process_t* parent, void (*entry)())
 {
 	if (parent->task_count >= PROCESS_MAX_THREAD) {
@@ -168,9 +187,9 @@ task_t* task_kcreate(process_t* parent, void (*entry)())
 	task->stack_bottom = (uintptr_t)stack;
 
 	task->registers.esp = task->registers.ebp = task->stack_top;
-	task->registers.cs = 0x08;
-	task->registers.ss = 0x10;
-
+	task->registers.cs = GDT_KERNEL_CODE_SEGMENT;
+	task->registers.ss = GDT_KERNEL_DATA_SEGMENT;
+	printf("[KERNEL TASK] Stack: 0x%x - 0x%x (ESP = 0x%x)\n", task->stack_bottom, task->stack_top, task->registers.esp);
 	return task;
 };
 
@@ -203,7 +222,7 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 	page_restore_kernel_dir();
 
 	task->registers.eip = USER_CODE_START;
-	task->registers.eflags = 0x200;
+	task->registers.eflags = EFLAGS_IF;
 	task->registers.esp = task->registers.ebp = task->stack_top;
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
@@ -251,7 +270,6 @@ void task_save(interrupt_frame_t* frame)
 		printf("[ERROR] No current Task to SAVE!\n");
 		return;
 	};
-	// printf("[TASK] Saving Task State for 0x%x\n", task);
 	task->registers.edi = frame->edi;
 	task->registers.esi = frame->esi;
 	task->registers.ebp = frame->ebp;
@@ -265,7 +283,6 @@ void task_save(interrupt_frame_t* frame)
 	task->registers.eflags = frame->eflags;
 	task->registers.esp = frame->esp;
 	task->registers.ss = frame->ss;
-	// task_dump(task);
 	return;
 };
 

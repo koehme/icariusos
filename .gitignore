@@ -1,5 +1,10 @@
 ICARIUS.BIN
+ICARSH.BIN
+icarsh.elf
 *.img
-iso/boot/ICARIUS.BIN
+*.BIN
+*.bin
+*.elf
 *.o
-make_commit.sh
+*.a
+iso/boot/ICARIUS.BIN

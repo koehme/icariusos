@@ -5,25 +5,48 @@
  */
 
 #include "process.h"
+#include "errno.h"
 #include "stdlib.h"
 #include "string.h"
 #include "task.h"
 
 extern pfa_t pfa;
+extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
-process_t* curr_process = 0x0;
-process_t* processes = 0x0;
+void process_set_curr(process_t* self);
+process_t* process_get_curr(void);
 process_t* process_spawn(const char* filepath);
 process_t* process_kspawn(void (*entry)(), const char* name);
 void process_list_dump(void);
 void process_exit(process_t* self);
 
 /* INTERNAL API */
+process_t* curr_process = 0x0;
+process_t* processes = 0x0;
 static uint16_t next_pid = 1;
 static process_t* _process_alloc(const char* filepath);
 static void _process_list_insert(process_t* new_process);
 static uint32_t _process_get_filesize(const char* filename);
+
+void process_set_curr(process_t* self)
+{
+	if (!self) {
+		errno = EINVAL;
+		return;
+	}
+	curr_process = self;
+	return;
+};
+
+process_t* process_get_curr(void)
+{
+	if (!curr_process) {
+		errno = ESRCH;
+		return 0x0;
+	};
+	return curr_process;
+};
 
 void process_list_dump(void)
 {
@@ -165,27 +188,30 @@ process_t* process_kspawn(void (*entry)(), const char* name)
 	};
 	proc->pid = next_pid++;
 	strncpy(proc->filename, name, sizeof(proc->filename) - 1);
-	proc->filetype = PROCESS_BINARY;
+	proc->filetype = PROCESS_KERNEL_THREAD;
 	proc->keyboard_buffer = 0x0;
 
-	proc->page_dir = 0x0;
+	proc->page_dir = kernel_directory;
 
+	if (proc->task_count >= PROCESS_MAX_THREAD) {
+		kfree(proc);
+		errno = -E2BIG;
+		return 0x0;
+	};
 	task_t* task = task_kcreate(proc, entry);
 
 	if (!task) {
+		errno = -ENOMEM;
 		kfree(proc);
-		return NULL;
+		return 0x0;
 	};
-
 	proc->tasks[proc->task_count++] = task;
-
 	_process_list_insert(proc);
 	return proc;
 };
 
 void process_exit(process_t* self)
 {
-	printf("[DEBUG] Process PID [%d] exited. Page_Dir 0x%x  Cleaning up...\n", self->pid, self->page_dir);
 	uint32_t* dir = self->page_dir;
 
 	if (self->prev) {
@@ -210,14 +236,12 @@ void process_exit(process_t* self)
 			page_unmap_dir(dir, virt_addr);
 			const uint32_t frame = phys_addr / PAGE_SIZE;
 			pfa_clear(&pfa, frame);
-			printf("[DEBUG] Freeing Page: Virt=0x%x, Phys=0x%x at Frame %d\n", virt_addr, phys_addr, frame);
 		};
 	};
 	const uint32_t phys_addr = (uint32_t)v2p((void*)self->page_dir);
 	const uint32_t frame = phys_addr / PAGE_SIZE;
 	page_unmap_dir(page_get_dir(), (uint32_t)self->page_dir);
 	pfa_clear(&pfa, frame);
-	printf("[DEBUG] Freeing Page Directory: Virt=0x%x, Phys=0x%x at Frame %d\n", self->page_dir, phys_addr, frame);
 
 	kfree(self->keyboard_buffer);
 	kfree(self);

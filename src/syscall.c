@@ -111,19 +111,18 @@ int32_t _sys_close(interrupt_frame_t* frame)
 int32_t _sys_exit(interrupt_frame_t* frame)
 {
 	const int32_t status = frame->ebx;
-	printf("\n[INFO] Usermode Task EXITED with 0x%x! Back to Kernel-Land (Ring 0)\n", status);
 
-	task_t* task = curr_task;
-	process_t* parent_process = task->parent;
+	task_t* task = task_get_curr();
+	process_t* parent = task->parent;
 
 	task_exit(task);
 
-	if (parent_process->task_count == 0) {
-		printf("[INFO] Process PID [%d] exit. Starting Kernel Shell..\n", parent_process->pid);
-		curr_task = 0x0;
-		process_exit(parent_process);
+	if (parent->task_count == 0) {
+		process_exit(parent);
 	};
-	kernel_shell();
+	task->state = TASK_STATE_TERMINATE;
+	scheduler_schedule(frame);
+	__builtin_unreachable();
 	return status;
 };
 
@@ -206,17 +205,25 @@ size_t _sys_write(interrupt_frame_t* frame)
 	return count;
 };
 
+/**
+ * @brief Handles the `read` syscall (int 0x80) for user processes.
+ *
+ * Blocks the task if reading from FD_STDIN and the keyboard buffer is empty.
+ * Ensures kernel/user memory isolation by copying data through an internal kernel buffer.
+ * Prevents invalid memory access by validating user buffer and allocation results.
+ * Resumes the kernel's page directory after user-specific VFS operations.
+ * Only FD_STDIN and valid file descriptors are supported; STDOUT/STDERR are rejected.
+ */
 int32_t _sys_read(interrupt_frame_t* frame)
 {
-	const int32_t syscall_id = frame->eax;
 	const int32_t fd = frame->ebx;
 	const size_t count = frame->edx;
 	int32_t n_read = 0;
 	void* user_buf = (void*)frame->ecx;
 
-	if (user_buf == 0x0 || count == 0)
+	if (!user_buf || !count) {
 		return -1;
-
+	};
 	void* kernel_buf = kzalloc(count);
 
 	if (!kernel_buf) {
@@ -235,25 +242,22 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	case FD_STDIN: {
 		for (size_t i = 0; i < count; i++) {
 			if (fifo_is_empty(caller->keyboard_buffer)) {
-				task_set_block(caller->tasks[0]);
-				caller->tasks[0]->waiting_on = WAIT_KEYBOARD;
-				// Add waiting task to wait queue
-				wq_push(caller->tasks[0]);
-				// printf("[READ] Task %d (%s) is now BLOCKED → Reason: 0x%x\n", caller->pid, caller->filename, caller->tasks[0]->waiting_on);
-				break; // If the fifo is empty break
+				task_t* task = caller->tasks[0];
+				task_set_block(task);
+				task_block_on(task, WAIT_KEYBOARD);
+				wq_push(task);
+				break;
 			};
 
 			if (!fifo_dequeue(caller->keyboard_buffer, (uint8_t*)kernel_buf + i)) {
 				kfree(kernel_buf);
 				return i;
 			};
-			// printf("[READ] Task PID: %d Kernel Buffer: %c\n", curr_task->parent->pid, ((char*)kernel_buf)[i]);
 		};
 		break;
 	};
 	case FD_STDOUT:
 	case FD_STDERR: {
-		// stdout und stderr are write-only
 		kfree(kernel_buf);
 		return -1;
 	};

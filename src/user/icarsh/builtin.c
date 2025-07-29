@@ -42,14 +42,12 @@ static void _heapstat_builtin(const char* args)
 
 static void _exit_builtin(const char* args)
 {
-	/*
 	int status = 0;
 
 	if (args && strlen(args) > 0) {
 		status = atoi(args);
 	};
 	exit(status);
-	*/
 	printf("[!] TODO Cleanup Task Shell and Reboot ICARSH.BIN :)\n");
 	return;
 };

@@ -57,15 +57,16 @@ extern void asm_enter_task(task_registers_t* regs);
 extern void asm_restore_kernel_segment(void);
 extern void asm_restore_user_segment(void);
 
+void task_block_on(task_t* self, const wait_reason_t reason);
 void task_exit(task_t* self);
 task_t* task_create(process_t* parent, const uint8_t* file);
 task_t* task_kcreate(process_t* parent, void (*entry)());
 process_t* process_kspawn(void (*entry)(), const char* name);
 task_t* task_get_curr(void);
+void task_set_curr(task_t* self);
 void task_dump(task_t* self);
 void task_save(interrupt_frame_t* frame);
 void task_restore_dir(task_t* self);
-void task_start(task_t* task);
 void task_set_block(task_t* self);
 void task_set_unblock(task_t* self);
 void task_switch(task_t* next);

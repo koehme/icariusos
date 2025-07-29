@@ -368,10 +368,11 @@ void kmain(const uint32_t magic, const uint32_t addr)
 
 	scheduler_t* scheduler = scheduler_create(SCHED_ROUND_ROBIN);
 	scheduler_select(scheduler);
-	process_t* idle_proc = process_kspawn(kidle, "IDLE");
+
+	process_t* idle_proc = process_kspawn(kidle, "KIDLE");
 	scheduler->add_cb(idle_proc->tasks[0]);
 
-	curr_process = idle_proc;
+	process_set_curr(idle_proc);
 
 	process_t* icarsh = process_spawn("A:/BIN/ICARSH.BIN");
 
@@ -382,7 +383,5 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	scheduler->add_cb(icarsh->tasks[0]);
 
 	asm_do_sti();
-
-	// kernel_shell();
 	return;
 };

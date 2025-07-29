@@ -15,7 +15,7 @@
 struct task;
 typedef struct task task_t;
 
-typedef enum process_filetype { PROCESS_ELF, PROCESS_BINARY } process_filetype_t;
+typedef enum process_filetype { PROCESS_ELF, PROCESS_BINARY, PROCESS_KERNEL_THREAD } process_filetype_t;
 
 typedef struct process_arguments {
 	int argc;
@@ -80,6 +80,8 @@ typedef struct process {
  */
 extern process_t* curr_process;
 
+void process_set_curr(process_t* self);
+process_t* process_get_curr(void);
 process_t* process_spawn(const char* filepath);
 void process_list_dump(void);
 void process_exit(process_t* self);
