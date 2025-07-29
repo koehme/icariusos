@@ -372,6 +372,9 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	process_t* idle_proc = process_kspawn(kidle, "KIDLE");
 	scheduler->add_cb(idle_proc->tasks[0]);
 
+	if (!idle_proc) {
+		panic("Failed to initialize KIDLE");
+	};
 	process_set_curr(idle_proc);
 
 	process_t* icarsh = process_spawn("A:/BIN/ICARSH.BIN");

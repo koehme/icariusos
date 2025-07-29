@@ -25,7 +25,7 @@ void process_exit(process_t* self);
 process_t* curr_process = 0x0;
 process_t* processes = 0x0;
 static uint16_t next_pid = 1;
-static process_t* _process_alloc(const char* filepath);
+static process_t* _process_alloc(const char* filepath, const process_filetype_t filetype);
 static void _process_list_insert(process_t* new_process);
 static uint32_t _process_get_filesize(const char* filename);
 
@@ -100,7 +100,7 @@ void process_list_dump(void)
 	return;
 };
 
-static process_t* _process_alloc(const char* filepath)
+static process_t* _process_alloc(const char* filepath, const process_filetype_t filetype)
 {
 	process_t* new_process = kzalloc(sizeof(process_t));
 
@@ -110,7 +110,7 @@ static process_t* _process_alloc(const char* filepath)
 	memset(new_process, 0, sizeof(process_t));
 	new_process->pid = next_pid++;
 	strncpy(new_process->filename, filepath, sizeof(new_process->filename) - 1);
-	new_process->filetype = PROCESS_BINARY;
+	new_process->filetype = filetype;
 	new_process->keyboard_buffer = kzalloc(sizeof(fifo_t));
 	fifo_init(new_process->keyboard_buffer);
 	return new_process;
@@ -152,7 +152,7 @@ static uint32_t _process_get_filesize(const char* filename)
 
 process_t* process_spawn(const char* filepath)
 {
-	process_t* new_process = _process_alloc(filepath);
+	process_t* new_process = _process_alloc(filepath, PROCESS_BINARY);
 
 	if (!new_process) {
 		errno = -ENOMEM;
@@ -180,17 +180,12 @@ process_t* process_spawn(const char* filepath)
 
 process_t* process_kspawn(void (*entry)(), const char* name)
 {
-	process_t* proc = kzalloc(sizeof(process_t));
+	process_t* proc = _process_alloc(name, PROCESS_KERNEL_THREAD);
 
 	if (!proc) {
 		errno = -ENOMEM;
 		return 0x0;
 	};
-	proc->pid = next_pid++;
-	strncpy(proc->filename, name, sizeof(proc->filename) - 1);
-	proc->filetype = PROCESS_KERNEL_THREAD;
-	proc->keyboard_buffer = 0x0;
-
 	proc->page_dir = kernel_directory;
 
 	if (proc->task_count >= PROCESS_MAX_THREAD) {

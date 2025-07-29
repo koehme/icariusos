@@ -177,14 +177,11 @@ task_t* task_kcreate(process_t* parent, void (*entry)())
 	task->registers.eip = (uintptr_t)entry;
 	task->registers.eflags = 0x202;
 
-	void* stack = kzalloc(4096);
+	const uint32_t stack_top = KTHREAD_STACK_TOP;
+	const uint32_t stack_bottom = KTHREAD_STACK_BOTTOM;
 
-	if (!stack) {
-		kfree(task);
-		return 0x0;
-	};
-	task->stack_top = (uintptr_t)stack + 4096;
-	task->stack_bottom = (uintptr_t)stack;
+	task->stack_top = stack_top;
+	task->stack_bottom = stack_bottom;
 
 	task->registers.esp = task->registers.ebp = task->stack_top;
 	task->registers.cs = GDT_KERNEL_CODE_SEGMENT;

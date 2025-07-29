@@ -412,6 +412,18 @@
 #define WAIT_MAX 8
 /*
 ====================================
+    Kernel Tasks (Threads)
+====================================
+*/
+#define KTHREAD_STACK_SIZE 0x40000					 // 256 KiB
+#define KTHREAD_STACK_END 0xC2FFFFFF					 // TOP
+#define KTHREAD_STACK_START (KTHREAD_STACK_END - KTHREAD_STACK_SIZE + 1) // 0xC2FFFFFF - 0x40000 + 1 = 0xC2FFC000
+
+#define KTHREAD_STACK_TOP KTHREAD_STACK_END
+#define KTHREAD_STACK_BOTTOM KTHREAD_STACK_START
+
+/*
+====================================
     CPU
 ====================================
 */
