@@ -7,4 +7,5 @@ icarsh.elf
 *.elf
 *.o
 *.a
+*.su
 iso/boot/ICARIUS.BIN

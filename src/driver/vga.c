@@ -2,6 +2,7 @@
  * @file vga.c
  * @author Kevin Oehme
  * @copyright MIT
+ * @deprecated
  */
 
 #include <stdbool.h>

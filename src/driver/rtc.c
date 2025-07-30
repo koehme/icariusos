@@ -10,6 +10,15 @@
 #include "vfs.h"
 #include <stdbool.h>
 
+/* PUBLIC API */
+void rtc_load_timezone(void);
+time_t rtc_now(void);
+
+/* INTERNAL API */
+static inline bool _is_last_sunday(int day, int weekday);
+static bool _is_summer_de(date_t* date);
+static int _resolve_timezone_offset(const char* name);
+
 static int timezone_offset = 0;
 
 typedef struct timezone_entry {
@@ -23,9 +32,9 @@ static timezone_entry_t timezones[] = {
     {"America/New_York", -4},
 };
 
-static inline bool is_last_sunday(int day, int weekday) { return (day + (7 - weekday)) > 31; }
+static inline bool _is_last_sunday(int day, int weekday) { return (day + (7 - weekday)) > 31; }
 
-static bool is_summer_time_de(date_t* date)
+static bool _is_summer_de(date_t* date)
 {
 	if (date->month < 3 || date->month > 10)
 		return false;
@@ -33,7 +42,7 @@ static bool is_summer_time_de(date_t* date)
 	if (date->month > 3 && date->month < 10)
 		return true;
 
-	const bool is_last = is_last_sunday(date->day, date->weekday);
+	const bool is_last = _is_last_sunday(date->day, date->weekday);
 
 	if (date->month == 3)
 		return is_last && cmos_time(&cmos).hour >= 2;
@@ -43,11 +52,11 @@ static bool is_summer_time_de(date_t* date)
 	return false;
 };
 
-static int resolve_timezone_offset(const char* name)
+static int _resolve_timezone_offset(const char* name)
 {
 	if (strcmp(name, "Europe/Berlin") == 0) {
 		date_t date = cmos_date(&cmos);
-		return is_summer_time_de(&date) ? 2 : 1;
+		return _is_summer_de(&date) ? 2 : 1;
 	};
 
 	for (size_t i = 0; i < sizeof(timezones) / sizeof(timezone_entry_t); i++) {
@@ -81,7 +90,7 @@ void rtc_load_timezone(void)
 			break;
 		};
 	};
-	timezone_offset = resolve_timezone_offset(buf);
+	timezone_offset = _resolve_timezone_offset(buf);
 
 	if (timezone_offset >= 0)
 		printf("[RTC] Loaded Timezone: '%s' -> UTC +%d\n", buf, timezone_offset);

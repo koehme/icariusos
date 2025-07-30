@@ -53,15 +53,17 @@ void rr_add(task_t* task)
 
 void rr_yield(interrupt_frame_t* frame)
 {
-	if (!curr_task) {
-		curr_task = curr_process->tasks[0];
-	} else if (curr_task && frame) {
+	task_t* curr = task_get_curr();
+
+	if (!curr) {
+		task_set_curr(process_get_curr()->tasks[0]);
+	} else if (curr && frame) {
 		task_save(frame);
 	};
 
-	if (curr_task->state == TASK_STATE_RUN) {
-		curr_task->state = TASK_STATE_READY;
-		_rr_enqueue(curr_task);
+	if (curr->state == TASK_STATE_RUN) {
+		curr->state = TASK_STATE_READY;
+		_rr_enqueue(curr);
 	};
 	task_t* next = _rr_dequeue();
 	task_switch(next);

@@ -1,14 +1,15 @@
-#include "page.h"
-#include <stdio.h>
-#include <task.h>
+#include "idt.h"
+#include "stdio.h"
 
 void kidle(void)
 {
 	while (1) {
+		/*
 		asm_do_cli();
 		printf("x");
 		asm_do_sti();
-		asm volatile("sti; hlt");
+		*/
+		asm volatile("hlt");
 	};
 	return;
 };

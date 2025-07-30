@@ -9,9 +9,16 @@
 #include "heap.h"
 #include "rr.h"
 
-static scheduler_t* curr_scheduler = 0x0;
+/* PUBLIC API */
+scheduler_t* scheduler_get(void);
+scheduler_t* scheduler_create(const scheduler_type_t type);
+void scheduler_select(scheduler_t* self);
+void scheduler_schedule(interrupt_frame_t* frame);
 
-scheduler_t* scheduler_get(void) { return curr_scheduler; };
+/* INTERNAL API */
+static scheduler_t* _curr_scheduler = 0x0;
+
+scheduler_t* scheduler_get(void) { return _curr_scheduler; };
 
 scheduler_t* scheduler_create(const scheduler_type_t type)
 {
@@ -41,17 +48,17 @@ void scheduler_select(scheduler_t* self)
 		printf("[SCHEDULER] Invalid Scheduler Pointer\n");
 		return;
 	};
-	curr_scheduler = self;
+	_curr_scheduler = self;
 	printf("[SCHEDULER] SCHEDULER Activated: %s\n", self->name);
 	return;
 };
 
 void scheduler_schedule(interrupt_frame_t* frame)
 {
-	if (!curr_scheduler || !curr_scheduler->yield_cb) {
+	if (!_curr_scheduler || !_curr_scheduler->yield_cb) {
 		printf("[SCHEDULER] No SCHEDULER. No Yield. No Service.\n");
 		return;
 	};
-	curr_scheduler->yield_cb(frame);
+	_curr_scheduler->yield_cb(frame);
 	return;
 };

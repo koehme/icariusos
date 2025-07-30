@@ -78,7 +78,6 @@ typedef struct process {
  * Stack_Top = USER_STACK_END - (Thread_ID * 0x40000)
  * Stack_Bottom = Stack_Top - (0x40000 - 0x1)
  */
-extern process_t* curr_process;
 
 void process_set_curr(process_t* self);
 process_t* process_get_curr(void);

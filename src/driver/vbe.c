@@ -21,6 +21,7 @@ vbe_t vbe_display = {
 };
 
 /* PUBLIC API */
+void vbe_clear(vbe_t* self, const vbe_color_t color);
 void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
 void vbe_draw_hline(vbe_t* self, const uint32_t y, const vbe_color_t color);
 void vbe_draw_ch(vbe_t* self, char ch, const vbe_color_t color);
@@ -59,6 +60,22 @@ static void vbe_put_pixel_at(vbe_t* self, const uint32_t x, const uint32_t y, co
 	const uint32_t pixel_offset = calculate_pixel_offset(x, y, self->pitch, bytes_per_pixel);
 	const uint8_t* pixel_address = (uint8_t*)self->addr + pixel_offset;
 	*((uint32_t*)pixel_address) = color;
+	return;
+};
+
+void vbe_clear(vbe_t* self, const vbe_color_t color)
+{
+	if (!self || !self->addr) {
+		return;
+	};
+
+	for (uint32_t y = 0; y < self->height; y++) {
+		for (uint32_t x = 0; x < self->width; x++) {
+			vbe_put_pixel_at(self, x, y, color);
+		};
+	};
+	self->cursor_x = 0;
+	self->cursor_y = 0;
 	return;
 };
 

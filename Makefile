@@ -1,5 +1,5 @@
 INCLUDES = -I./src/include
-FLAGS = -std=gnu99 -g -ffreestanding -fomit-frame-pointer \
+FLAGS = -g -ffreestanding -fomit-frame-pointer \
         -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label \
         -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 ASSEMBLER = nasm

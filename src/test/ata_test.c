@@ -1,3 +1,9 @@
+/**
+ * @file ata_test.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include "ata_test.h"
 
 void test_ata_write(ata_t* dev)

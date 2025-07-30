@@ -51,8 +51,6 @@ typedef struct task {
 	wait_reason_t waiting_on;
 } task_t;
 
-extern task_t* curr_task;
-
 extern void asm_enter_task(task_registers_t* regs);
 extern void asm_restore_kernel_segment(void);
 extern void asm_restore_user_segment(void);

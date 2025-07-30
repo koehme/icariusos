@@ -67,7 +67,7 @@ int32_t _sys_getdents(interrupt_frame_t* frame)
 	if (!kernel_buf) {
 		return -ENOMEM;
 	};
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	memcpy(kernel_buf, user_buf, count);
 	page_restore_kernel_dir();
 
@@ -89,7 +89,7 @@ int32_t _sys_getdents(interrupt_frame_t* frame)
 	strncpy(dentry.d_name, ventry.name, sizeof(dentry.d_name));
 	memcpy(kernel_buf, &dentry, sizeof(struct dirent));
 
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	memcpy(user_buf, kernel_buf, sizeof(struct dirent));
 	page_restore_kernel_dir();
 
@@ -128,7 +128,7 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 
 int32_t _sys_open(interrupt_frame_t* frame)
 {
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	const char* user_buf = (const char*)frame->ebx;
 	const size_t count = strlen(user_buf);
 
@@ -142,7 +142,7 @@ int32_t _sys_open(interrupt_frame_t* frame)
 	if (!kernel_buf) {
 		return -ENOMEM;
 	};
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	strncpy(kernel_buf, user_buf, count);
 
 	((uint8_t*)kernel_buf)[count] = '\0';
@@ -183,7 +183,7 @@ size_t _sys_write(interrupt_frame_t* frame)
 	if (!kernel_buf) {
 		return -ENOMEM;
 	};
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	void* user_buf = (void*)frame->ecx;
 
 	memcpy(kernel_buf, user_buf, count);
@@ -231,7 +231,7 @@ int32_t _sys_read(interrupt_frame_t* frame)
 	};
 	((char*)kernel_buf)[count] = '\0';
 
-	process_t* caller = curr_task->parent;
+	process_t* caller = task_get_curr()->parent;
 
 	if (!caller) {
 		kfree(kernel_buf);
@@ -270,7 +270,7 @@ int32_t _sys_read(interrupt_frame_t* frame)
 		break;
 	};
 	};
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	memcpy(user_buf, kernel_buf, count);
 
 	page_restore_kernel_dir();
@@ -309,7 +309,7 @@ void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 
 	_run_syscall(syscall_id, frame);
 
-	task_restore_dir(curr_task);
+	task_restore_dir(task_get_curr());
 	asm_restore_user_segment();
 	return;
 };

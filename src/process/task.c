@@ -23,12 +23,12 @@ task_t* task_get_curr(void);
 void task_set_block(task_t* self);
 void task_set_unblock(task_t* self);
 void task_switch(task_t* next);
-task_t* curr_task = 0x0;
 
 /* INTERNAL API */
 static task_t* _init_task(process_t* parent);
 void task_restore_dir(task_t* self);
 static void _load_binary_into_task(const uint8_t* file);
+static task_t* curr_task = 0x0;
 
 void task_block_on(task_t* self, const wait_reason_t reason)
 {
@@ -172,18 +172,22 @@ task_t* task_kcreate(process_t* parent, void (*entry)())
 	task_t* task = _init_task(parent);
 
 	if (!task) {
+		errno = -ENOMEM;
 		return 0x0;
 	};
+	void* stack = kzalloc(KERNEL_STACK_SIZE); // 32 KiB
+
+	if (!stack) {
+		errno = -ENOMEM;
+		return 0x0;
+	};
+	task->stack_top = (uintptr_t)stack + KERNEL_STACK_SIZE - 1;
+	task->stack_bottom = (uintptr_t)stack;
+
 	task->registers.eip = (uintptr_t)entry;
-	task->registers.eflags = 0x202;
-
-	const uint32_t stack_top = KTHREAD_STACK_TOP;
-	const uint32_t stack_bottom = KTHREAD_STACK_BOTTOM;
-
-	task->stack_top = stack_top;
-	task->stack_bottom = stack_bottom;
-
+	task->registers.eflags = (EFLAGS_IF | EFLAGS_MBS);
 	task->registers.esp = task->registers.ebp = task->stack_top;
+
 	task->registers.cs = GDT_KERNEL_CODE_SEGMENT;
 	task->registers.ss = GDT_KERNEL_DATA_SEGMENT;
 	printf("[KERNEL TASK] Stack: 0x%x - 0x%x (ESP = 0x%x)\n", task->stack_bottom, task->stack_top, task->registers.esp);
@@ -219,7 +223,7 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 	page_restore_kernel_dir();
 
 	task->registers.eip = USER_CODE_START;
-	task->registers.eflags = EFLAGS_IF;
+	task->registers.eflags = (EFLAGS_IF | EFLAGS_MBS);
 	task->registers.esp = task->registers.ebp = task->stack_top;
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B

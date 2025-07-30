@@ -34,7 +34,7 @@ void process_set_curr(process_t* self)
 	if (!self) {
 		errno = EINVAL;
 		return;
-	}
+	};
 	curr_process = self;
 	return;
 };
@@ -118,9 +118,9 @@ static process_t* _process_alloc(const char* filepath, const process_filetype_t 
 
 static void _process_list_insert(process_t* new_process)
 {
-	if (!curr_process) {
+	if (!process_get_curr()) {
 		new_process->prev = new_process->next = 0x0;
-		curr_process = new_process;
+		process_set_curr(new_process);
 	} else {
 		new_process->next = processes;
 		new_process->prev = 0x0;
@@ -152,30 +152,37 @@ static uint32_t _process_get_filesize(const char* filename)
 
 process_t* process_spawn(const char* filepath)
 {
-	process_t* new_process = _process_alloc(filepath, PROCESS_BINARY);
+	process_t* proc = _process_alloc(filepath, PROCESS_BINARY);
 
-	if (!new_process) {
+	if (!proc) {
 		errno = -ENOMEM;
 		return 0x0;
 	};
-	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
-	new_process->page_dir = page_create_dir(flags);
-	page_map_between(new_process->page_dir, USER_CODE_START, USER_BSS_END, flags);
-	page_map_between(new_process->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
 
-	task_t* task = task_create(new_process, (uint8_t*)new_process->filename);
-
-	if (!task) {
-		kfree(new_process);
+	if (proc->task_count >= PROCESS_MAX_THREAD) {
+		kfree(proc);
+		errno = -E2BIG;
 		return 0x0;
 	};
-	new_process->size = _process_get_filesize(new_process->filename);
+	const uint32_t flags = (PAGE_PS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER);
+	proc->page_dir = page_create_dir(flags);
+	page_map_between(proc->page_dir, USER_CODE_START, USER_BSS_END, flags);
+	page_map_between(proc->page_dir, USER_HEAP_START, USER_HEAP_END, flags);
 
-	new_process->tasks[new_process->task_count] = task;
-	new_process->task_count++;
+	task_t* task = task_create(proc, (uint8_t*)proc->filename);
 
-	_process_list_insert(new_process);
-	return new_process;
+	if (!task) {
+		errno = -ENOMEM;
+		kfree(proc);
+		return 0x0;
+	};
+	proc->size = _process_get_filesize(proc->filename);
+
+	proc->tasks[proc->task_count] = task;
+	proc->task_count++;
+
+	_process_list_insert(proc);
+	return proc;
 };
 
 process_t* process_kspawn(void (*entry)(), const char* name)
@@ -220,13 +227,13 @@ void process_exit(process_t* self)
 		processes = self->next;
 	};
 
-	if (curr_process == self) {
+	if (process_get_curr() == self) {
 		curr_process = 0x0;
 	};
 
 	for (uint32_t i = 0; i < 768; i++) {
 		if (dir[i] & PAGE_PRESENT) {
-			const uint32_t virt_addr = i * 0x400000;
+			const uint32_t virt_addr = i * PAGE_SIZE;
 			const uint32_t phys_addr = page_get_phys_addr(dir, virt_addr);
 			page_unmap_dir(dir, virt_addr);
 			const uint32_t frame = phys_addr / PAGE_SIZE;

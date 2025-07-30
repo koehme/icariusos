@@ -22,7 +22,6 @@
 #include "wq.h"
 
 /* EXTERNAL API */
-extern process_t* curr_process;
 extern ata_t ata_dev;
 extern timer_t timer;
 extern kbd_t kbd;
@@ -563,45 +562,6 @@ void irq1_handler(interrupt_frame_t* regs)
 			fifo_enqueue(fg_proc->keyboard_buffer, scancode);
 		};
 		wq_wakeup(WAIT_KEYBOARD);
-	};
-	_pic1_send_eoi();
-	return;
-};
-
-void ____irq1_handler(interrupt_frame_t* regs)
-{
-	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
-		const uint8_t scancode = inb(PS2_DATA_PORT);
-		// printf("[IRQ1] Scancode 0x%x received -> Scanning for Blocked Tasks...\n", scancode);
-		size_t task_found = 0;
-
-		for (size_t i = 0; i < curr_process->task_count; ++i) {
-			task_t* task = curr_process->tasks[i];
-
-			if (!task) {
-				// printf("[IRQ1] Task %d is 0x0\n", i);
-				continue;
-			};
-			// printf("[IRQ1] Task %d: PID=%d, State=%d, Parent Process=0x%x\n", i, task->parent->pid, task->state, (void*)task->parent);
-
-			if (task && task->state == TASK_STATE_BLOCK && task->waiting_on == WAIT_KEYBOARD) {
-				/*
-				printf("[IRQ1] → Unblocking Task %d (%s) with Scancode 0x%x and Wait Reason 0x%x\n", task->parent->pid,
-				   task->parent->filename, scancode, task->waiting_on);
-				*/
-				fifo_enqueue(task->parent->keyboard_buffer, scancode);
-
-				task_set_unblock(task);
-				rr_add(task);
-				task_found = 1;
-
-				break;
-			};
-		};
-
-		if (!task_found) {
-			// printf("[IRQ1] No TASK is Waiting for IRQ1\n");
-		};
 	};
 	_pic1_send_eoi();
 	return;

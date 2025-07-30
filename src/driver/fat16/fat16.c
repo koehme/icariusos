@@ -11,6 +11,7 @@
 #include "stream.h"
 #include "string.h"
 
+/* PUBLIC API */
 fat16_time_t fat16_get_curr_time(void);
 uint16_t fat16_get_next_cluster(stream_t* fat_stream, const uint32_t partition_offset, const uint16_t curr_cluster);
 void fat16_dump_fat_entry(ata_t* dev, uint16_t cluster);
@@ -48,7 +49,6 @@ void fat16_dump_fat_table(ata_t* dev);
 void fat16_dump_root_dir_entry_at(ata_t* dev, const int32_t i);
 fat16_dir_entry_t* fat16_get_node_from_path_in_cluster_chain(ata_t* dev, const uint16_t start_cluster, const uint8_t* fat16_filename,
 							     fat16_folder_t* fat16_folder, fat16_dir_entry_t* fat16_dir_entry);
-bool _is_valid_fat16_header(const fat16_internal_header_t* header);
 int32_t fat16_resolve(ata_t* dev);
 fat16_node_t* fat16_get_node_from_path(ata_t* dev, pathnode_t* path);
 void* fat16_open(ata_t* dev, pathnode_t* path, uint8_t mode);
@@ -59,6 +59,8 @@ int32_t fat16_stat(ata_t* dev, void* internal, vstat_t* vstat);
 int32_t fat16_seek(void* internal, const uint32_t offset, const uint8_t origin);
 size_t fat16_write(ata_t* dev, void* internal, const uint8_t* buffer, size_t n_bytes, size_t n_blocks);
 int32_t fat16_readdir(ata_t* dev, void* internal, vfs_dirent_t* dir, uint32_t dir_offset);
+/* INTERNAL API */
+bool _is_valid_fat16_header(const fat16_internal_header_t* header);
 
 fs_t fat16 = {
     .resolve_cb = 0x0,

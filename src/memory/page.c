@@ -9,7 +9,6 @@
 
 #include "page.h"
 
-
 /* EXTERNAL API */
 extern pfa_t pfa;
 extern uint32_t kernel_directory[1024];
@@ -40,7 +39,7 @@ void page_dump_dir(uint32_t* dir)
 
 	for (uint32_t i = 0; i < 1024; i++) {
 		if (dir[i] & PAGE_PRESENT) {
-			const uint32_t virt_addr = i * 0x400000;
+			const uint32_t virt_addr = i * PAGE_SIZE;
 			const uint32_t phys_addr = dir[i] & 0xFFC00000; // 4 MiB Page Mask
 			const uint32_t flags = dir[i] & 0xFFF;
 

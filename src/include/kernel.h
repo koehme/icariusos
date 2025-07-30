@@ -42,7 +42,6 @@ extern char _kernel_start[], _kernel_end[];
 #include "pci.h"
 #include "pfa.h"
 #include "pic.h"
-#include "process.h"
 #include "ps2.h"
 #include "rtc.h"
 #include "scheduler.h"
@@ -62,6 +61,5 @@ void panic(const char* fmt, ...) __attribute__((noreturn, format(printf, 1, 2)))
 void sleep(const uint32_t ms);
 void busy_wait(const uint64_t delay);
 void kmain(const uint32_t magic, const uint32_t addr);
-void kernel_shell(void);
 
 #endif

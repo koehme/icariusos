@@ -166,6 +166,7 @@ typedef enum vbe_color {
 
 extern vbe_t vbe_display;
 
+void vbe_clear(vbe_t* self, const vbe_color_t color);
 void vbe_init(vbe_t* self, const void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp);
 void vbe_draw_hline(vbe_t* self, const uint32_t y, const vbe_color_t color);
 void vbe_draw_string(vbe_t* self, const char* str, const vbe_color_t color);
