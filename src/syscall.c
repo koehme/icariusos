@@ -192,14 +192,14 @@ size_t _sys_write(interrupt_frame_t* frame)
 	page_restore_kernel_dir();
 
 	if (fd == FD_STDOUT || fd == FD_STDERR) {
-		printf("%s", (uint8_t*)kernel_buf);
+		kprintf("%s", (uint8_t*)kernel_buf);
 		kfree(kernel_buf);
 		return count;
 	};
 	const size_t written = vfs_fwrite(kernel_buf, count, 1, fd);
 
 	if (written < 0) {
-		printf("[ERROR] Failed to write to file FD: %d\n", fd);
+		kprintf("[ERROR] Failed to write to file FD: %d\n", fd);
 	};
 	kfree(kernel_buf);
 	return count;
@@ -290,16 +290,16 @@ static void _run_syscall(const int32_t syscall_id, interrupt_frame_t* frame)
 	};
 	const syscall_handler_t handler = (syscall_handler_t)syscalls[syscall_id];
 	frame->eax = handler(frame);
-	// printf("\n[DEBUG] Syscall [%d]\n", syscall_id);
+	// kprintf("\n[DEBUG] Syscall [%d]\n", syscall_id);
 	// kernel_shell();
 	return;
 };
 
 void syscall_dispatch(const int32_t syscall_id, interrupt_frame_t* frame)
 {
-	// printf("=====================================\n");
-	// printf("  Syscall Dispatcher: %s  - [%d]\n", _get_name(syscall_id), syscall_id);
-	// printf("=====================================\n");
+	// kprintf("=====================================\n");
+	// kprintf("  Syscall Dispatcher: %s  - [%d]\n", _get_name(syscall_id), syscall_id);
+	// kprintf("=====================================\n");
 
 	// idt_dump_interrupt_frame(frame);
 	page_restore_kernel_dir();

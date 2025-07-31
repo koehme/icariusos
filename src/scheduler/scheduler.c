@@ -45,18 +45,18 @@ void scheduler_select(scheduler_t* self)
 {
 	if (!self) {
 		errno = EINVAL;
-		printf("[SCHEDULER] Invalid Scheduler Pointer\n");
+		kprintf("[SCHEDULER] Invalid Scheduler Pointer\n");
 		return;
 	};
 	_curr_scheduler = self;
-	printf("[SCHEDULER] SCHEDULER Activated: %s\n", self->name);
+	kprintf("[SCHEDULER] SCHEDULER Activated: %s\n", self->name);
 	return;
 };
 
 void scheduler_schedule(interrupt_frame_t* frame)
 {
 	if (!_curr_scheduler || !_curr_scheduler->yield_cb) {
-		printf("[SCHEDULER] No SCHEDULER. No Yield. No Service.\n");
+		kprintf("[SCHEDULER] No SCHEDULER. No Yield. No Service.\n");
 		return;
 	};
 	_curr_scheduler->yield_cb(frame);

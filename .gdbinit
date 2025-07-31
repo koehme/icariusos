@@ -1,12 +1,13 @@
 target remote :1234
+
 layout split
 focus cmd
+
+set architecture i386
 set print pretty on
 set disassembly-flavor intel
 
+b syscall_dispatch
 add-symbol-file ./src/user/icarsh/elf/icarsh.elf 0x00000000
-
-break kidle
-break isr_14_handler
 
 c

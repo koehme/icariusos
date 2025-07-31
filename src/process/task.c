@@ -58,11 +58,12 @@ void task_set_unblock(task_t* self)
 
 void task_exit(task_t* self)
 {
-	if (!self) {
+	if (!self || !self->parent) {
 		return;
 	};
 	process_t* parent = self->parent;
-	printf("[TASK] Task 0x%x exited. Remaining Tasks: %d\n", self, parent->task_count - 1);
+	self->parent->task_count--;
+	kprintf("[INFO] Task 0x%x exited. Remaining Tasks %d for Process '%s'\n", (void*)self, parent->task_count, parent->filename);
 
 	for (size_t i = 0; i < PROCESS_MAX_THREAD; i++) {
 		if (parent->tasks[i] == self) {
@@ -70,7 +71,6 @@ void task_exit(task_t* self)
 			break;
 		};
 	};
-	self->parent->task_count--;
 	return;
 };
 
@@ -109,7 +109,7 @@ void task_switch(task_t* next)
 	/*
 	const char* str = (next->parent->filetype == PROCESS_KERNEL_THREAD) ? "[KTHREAD]" : "[UTHREAD]";
 
-	printf("%s Switching to Task '%s' (PID %d)\n", str, next->parent->filename, next->parent->pid);
+	kprintf("%s Switching to Task '%s' (PID %d)\n", str, next->parent->filename, next->parent->pid);
 	size_t delay = 500000000;
 
 	while (delay--) {
@@ -142,22 +142,22 @@ static void _load_binary_into_task(const uint8_t* file)
 	uint8_t* buf = kzalloc(stat_buf.st_size);
 	const int32_t bytes_read = vfs_fread(buf, stat_buf.st_size, 1, fd);
 	/*
-	printf("[DEBUG] Read %d Bytes from %s\n", bytes_read, file);
+	kprintf("[DEBUG] Read %d Bytes from %s\n", bytes_read, file);
 
 	for (size_t i = 0; i < stat_buf.st_size; i++) {
 		const uint8_t byte = buf[i];
 		const uint8_t high = (byte >> 4) & 0x0F;
 		const uint8_t low = byte & 0x0F;
-		printf("0x%x%x ", high, low);
+		kprintf("0x%x%x ", high, low);
 	};
-	printf("\n");
+	kprintf("\n");
 	*/
 	memcpy((void*)USER_CODE_START, (void*)buf, bytes_read);
 
 	if (memcmp((void*)USER_CODE_START, (void*)buf, bytes_read) == 0) {
-		printf("[SUCCESS] Usercode copied to Userspace at 0x%x\n", USER_CODE_START);
+		kprintf("[SUCCESS] Usercode copied to Userspace at 0x%x\n", USER_CODE_START);
 	} else {
-		printf("[ERROR] Usercode copy failed.\n");
+		kprintf("[ERROR] Usercode copy failed.\n");
 	};
 	kfree(buf);
 	return;
@@ -166,7 +166,7 @@ static void _load_binary_into_task(const uint8_t* file)
 task_t* task_kcreate(process_t* parent, void (*entry)())
 {
 	if (parent->task_count >= PROCESS_MAX_THREAD) {
-		printf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
+		kprintf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
 		return 0x0;
 	};
 	task_t* task = _init_task(parent);
@@ -190,14 +190,14 @@ task_t* task_kcreate(process_t* parent, void (*entry)())
 
 	task->registers.cs = GDT_KERNEL_CODE_SEGMENT;
 	task->registers.ss = GDT_KERNEL_DATA_SEGMENT;
-	printf("[KERNEL TASK] Stack: 0x%x - 0x%x (ESP = 0x%x)\n", task->stack_bottom, task->stack_top, task->registers.esp);
+	kprintf("[KERNEL TASK] Stack: 0x%x - 0x%x (ESP = 0x%x)\n", task->stack_bottom, task->stack_top, task->registers.esp);
 	return task;
 };
 
 task_t* task_create(process_t* parent, const uint8_t* file)
 {
 	if (parent->task_count >= PROCESS_MAX_THREAD) {
-		printf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
+		kprintf("[ERROR] Max. Threads %d reached\n", PROCESS_MAX_THREAD);
 		return 0x0;
 	};
 	task_t* task = _init_task(parent);
@@ -207,7 +207,7 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 	};
 
 	if (!parent || !parent->page_dir) {
-		printf("[ERROR] Invalid Process or has no valid Page Directory!\n");
+		kprintf("[ERROR] Invalid Process or has no valid Page Directory!\n");
 		return 0x0;
 	};
 	const uint32_t offset = parent->task_count * (USER_STACK_SIZE / PROCESS_MAX_THREAD); // 256 KiB per Stack
@@ -234,32 +234,32 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 void task_dump(task_t* self)
 {
 	if (!self) {
-		printf("[ERROR] Invalid Task Pointer!\n");
+		kprintf("[ERROR] Invalid Task Pointer!\n");
 		return;
 	};
-	printf("\n");
-	printf("====================================\n");
-	printf("          TASK STATE DUMP           \n");
-	printf("====================================\n");
+	kprintf("\n");
+	kprintf("====================================\n");
+	kprintf("          TASK STATE DUMP           \n");
+	kprintf("====================================\n");
 
-	printf("Task Page Directory: 0x%x\n", v2p(self->parent->page_dir));
-	printf("EIP  (Instruction Pointer) : 0x%x\n", self->registers.eip);
-	printf("ESP  (Stack Pointer)       : 0x%x\n", self->registers.esp);
-	printf("EBP  (Base Pointer)        : 0x%x\n", self->registers.ebp);
-	printf("EFLAGS                     : 0x%x\n", self->registers.eflags);
-	printf("CS   (Code Segment)        : 0x%x\n", self->registers.cs);
-	printf("SS   (Stack Segment)       : 0x%x\n", self->registers.ss);
+	kprintf("Task Page Directory: 0x%x\n", v2p(self->parent->page_dir));
+	kprintf("EIP  (Instruction Pointer) : 0x%x\n", self->registers.eip);
+	kprintf("ESP  (Stack Pointer)       : 0x%x\n", self->registers.esp);
+	kprintf("EBP  (Base Pointer)        : 0x%x\n", self->registers.ebp);
+	kprintf("EFLAGS                     : 0x%x\n", self->registers.eflags);
+	kprintf("CS   (Code Segment)        : 0x%x\n", self->registers.cs);
+	kprintf("SS   (Stack Segment)       : 0x%x\n", self->registers.ss);
 
-	printf("------------------------------------\n");
-	printf("General Purpose Registers:\n");
-	printf("EAX  : 0x%x\n", self->registers.eax);
-	printf("EBX  : 0x%x\n", self->registers.ebx);
-	printf("ECX  : 0x%x\n", self->registers.ecx);
-	printf("EDX  : 0x%x\n", self->registers.edx);
-	printf("ESI  : 0x%x\n", self->registers.esi);
-	printf("EDI  : 0x%x\n", self->registers.edi);
+	kprintf("------------------------------------\n");
+	kprintf("General Purpose Registers:\n");
+	kprintf("EAX  : 0x%x\n", self->registers.eax);
+	kprintf("EBX  : 0x%x\n", self->registers.ebx);
+	kprintf("ECX  : 0x%x\n", self->registers.ecx);
+	kprintf("EDX  : 0x%x\n", self->registers.edx);
+	kprintf("ESI  : 0x%x\n", self->registers.esi);
+	kprintf("EDI  : 0x%x\n", self->registers.edi);
 
-	printf("====================================\n");
+	kprintf("====================================\n");
 	return;
 };
 
@@ -268,7 +268,7 @@ void task_save(interrupt_frame_t* frame)
 	task_t* task = task_get_curr();
 
 	if (!task) {
-		printf("[ERROR] No current Task to SAVE!\n");
+		kprintf("[ERROR] No current Task to SAVE!\n");
 		return;
 	};
 	task->registers.edi = frame->edi;
@@ -292,7 +292,7 @@ int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
 	const uint32_t* stack = (uint32_t*)frame->esp;
 
 	if ((uintptr_t)stack[i] < KERNEL_VIRTUAL_START) {
-		printf("[SECURITY] Invalid Task Stack Access\n");
+		kprintf("[SECURITY] Invalid Task Stack Access\n");
 		return -EINVAL;
 	};
 	return stack[i];
@@ -301,11 +301,11 @@ int32_t task_get_stack_arg_at(int32_t i, interrupt_frame_t* frame)
 void task_restore_dir(task_t* self)
 {
 	if (!self || !self->parent->page_dir) {
-		printf("[ERROR] task_set_directory: Invalid task or missing page directory!\n");
+		kprintf("[ERROR] task_set_directory: Invalid task or missing page directory!\n");
 		return;
 	};
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)self->parent->page_dir));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
-	// printf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
+	// kprintf("[DEBUG] Switching to Task Page Directory at 0x%x\n", (void*)phys_addr);
 	return;
 };

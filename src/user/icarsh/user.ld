@@ -1,3 +1,5 @@
+ENTRY(_icarsh)
+
 SECTIONS {
     . = 0x00000000;
     

@@ -43,11 +43,11 @@ void panic(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	printf("\n");
-	printf("[KERNEL PANIC] ");
-	vprintf(fmt, args);
+	kprintf("\n");
+	kprintf("[KERNEL PANIC] ");
+	vkprintf(fmt, args);
 	va_end(args);
-	printf("\nSystem HALTED\n");
+	kprintf("\nSystem HALTED\n");
 	asm volatile("cli; hlt");
 
 	while (1) {
@@ -80,20 +80,20 @@ static void _motd(void)
 	const date_t date = cmos_date(&cmos);
 	time_t time = rtc_now();
 
-	printf(" _             _         _____ _____ \n");
-	printf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
-	printf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
-	printf("|_|___|__,|_| |_|___|___|_____|_____|\n");
-	printf("\nicariusOS is running on an i686 CPU.\n");
-	printf("Booted at %s, %d %s %d at ", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
-	printf("%d:%d:%d\n", time.hour, time.minute, time.second);
+	kprintf(" _             _         _____ _____ \n");
+	kprintf("|_|___ ___ ___|_|_ _ ___|     |   __|\n");
+	kprintf("| |  _| .'|  _| | | |_ -|  |  |__   |\n");
+	kprintf("|_|___|__,|_| |_|___|___|_____|_____|\n");
+	kprintf("\nicariusOS is running on an i686 CPU.\n");
+	kprintf("Booted at %s, %d %s %d at ", days[date.weekday - 1], date.day, months[date.month - 1], date.year);
+	kprintf("%d:%d:%d\n", time.hour, time.minute, time.second);
 	return;
 };
 
 static void _check_multiboot2_magic(const uint32_t magic)
 {
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-		printf("[INFO] Invalid Magic Number: 0x%x\n", magic);
+		kprintf("[INFO] Invalid Magic Number: 0x%x\n", magic);
 		return;
 	};
 	return;
@@ -102,7 +102,7 @@ static void _check_multiboot2_magic(const uint32_t magic)
 static void _check_multiboot2_alignment(const uint32_t addr)
 {
 	if (addr & 7) {
-		printf("[INFO] Unaligned Mbi: 0x%x\n", addr);
+		kprintf("[INFO] Unaligned Mbi: 0x%x\n", addr);
 		return;
 	};
 	return;
@@ -221,16 +221,16 @@ static void _check_kernel_size(const uint32_t max_kernel_size)
 	if (used_percentage >= 100.0) {
 		panic("[CRITICAL] Kernel Memory > 16 MiB");
 	} else {
-		printf("[STATUS] Kernel Memory Usage: %f \n", used_percentage);
+		kprintf("[STATUS] Kernel Memory Usage: %f \n", used_percentage);
 	};
 	return;
 };
 
 static void _remove_identity_mapping(void)
 {
-	printf("[INFO] Removing Identity Mapping...\n");
+	kprintf("[INFO] Removing Identity Mapping...\n");
 	page_unmap_between(page_get_dir(), 0x00000000, 0x00400000);
-	printf("[SUCCESS] Identity Mapping removed!\n");
+	kprintf("[SUCCESS] Identity Mapping removed!\n");
 	return;
 };
 

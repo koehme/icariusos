@@ -28,14 +28,14 @@ uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr);
 void page_dump_dir(uint32_t* dir)
 {
 	if (!dir) {
-		printf("[ERROR] Invalid Page Directory!\n");
+		kprintf("[ERROR] Invalid Page Directory!\n");
 		return;
 	};
-	printf("\n");
-	printf("====================================\n");
-	printf("          PAGE DIR STATISTICS       \n");
-	printf("====================================\n");
-	printf("Physical Address: 0x%x\n", v2p(dir));
+	kprintf("\n");
+	kprintf("====================================\n");
+	kprintf("          PAGE DIR STATISTICS       \n");
+	kprintf("====================================\n");
+	kprintf("Physical Address: 0x%x\n", v2p(dir));
 
 	for (uint32_t i = 0; i < 1024; i++) {
 		if (dir[i] & PAGE_PRESENT) {
@@ -43,11 +43,11 @@ void page_dump_dir(uint32_t* dir)
 			const uint32_t phys_addr = dir[i] & 0xFFC00000; // 4 MiB Page Mask
 			const uint32_t flags = dir[i] & 0xFFF;
 
-			printf("%d  | 0x%x | 0x%x | 0x%x  | %s %s %s %s\n", i, virt_addr, phys_addr, flags, (flags & PAGE_PRESENT) ? "P" : "-",
-			       (flags & PAGE_WRITABLE) ? "W" : "-", (flags & PAGE_USER) ? "U" : "K", (flags & PAGE_PS) ? "4M" : "4K");
+			kprintf("%d  | 0x%x | 0x%x | 0x%x  | %s %s %s %s\n", i, virt_addr, phys_addr, flags, (flags & PAGE_PRESENT) ? "P" : "-",
+				(flags & PAGE_WRITABLE) ? "W" : "-", (flags & PAGE_USER) ? "U" : "K", (flags & PAGE_PS) ? "4M" : "4K");
 		};
 	};
-	printf("====================================\n");
+	kprintf("====================================\n");
 	return;
 };
 
@@ -60,7 +60,7 @@ uint32_t* page_create_dir(uint32_t flags)
 	};
 
 	if (phys_addr & 0x3FFFFF) {
-		printf("[ERROR] Page Directory phys_addr (0x%x) is not 4 MiB aligned!\n", phys_addr);
+		kprintf("[ERROR] Page Directory phys_addr (0x%x) is not 4 MiB aligned!\n", phys_addr);
 		return 0x0;
 	};
 	const uint32_t virt_addr = (uint32_t)p2v((uint32_t)phys_addr);
@@ -132,14 +132,14 @@ void page_restore_kernel_dir(void)
 {
 	const uint32_t phys_addr = (uint32_t)(v2p((void*)kernel_directory));
 	asm volatile("mov %0, %%cr3" : : "r"(phys_addr));
-	// printf("[DEBUG] Switched to Kernel Page Directory at Phys: 0x%x\n", phys_addr);
+	// kprintf("[DEBUG] Switched to Kernel Page Directory at Phys: 0x%x\n", phys_addr);
 	return;
 };
 
 void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, uint32_t flags)
 {
 	if (!dir) {
-		printf("[ERROR] Invalid Page Directory!\n");
+		kprintf("[ERROR] Invalid Page Directory!\n");
 		return;
 	};
 	virt_start_addr &= 0xFFFFF000;
@@ -149,20 +149,20 @@ void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end
 		const uint32_t frame = pfa_alloc();
 
 		if (!frame) {
-			printf("[ERROR] Page Frame Allocator exhausted!\n");
+			kprintf("[ERROR] Page Frame Allocator exhausted!\n");
 			return;
 		};
 		page_map_dir(dir, virt_curr_addr, frame, flags);
-		printf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x at Frame: %d (Flags: 0x%x)\n", virt_curr_addr, frame, frame / PAGE_SIZE, flags);
+		kprintf("[DEBUG] Mapped Virtual: 0x%x -> Physical: 0x%x at Frame: %d (Flags: 0x%x)\n", virt_curr_addr, frame, frame / PAGE_SIZE, flags);
 	};
-	// printf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
+	// kprintf("Mapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };
 
 void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr)
 {
 	if (!dir) {
-		printf("[ERROR] Invalid Page Directory!\n");
+		kprintf("[ERROR] Invalid Page Directory!\n");
 		return;
 	};
 	virt_start_addr &= 0xFFFFF000;
@@ -174,9 +174,9 @@ void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_e
 			page_unmap_dir(dir, virt_curr_addr);
 			const uint64_t frame = phys_addr / PAGE_SIZE;
 			pfa_clear(&pfa, frame);
-			printf("[DEBUG] Unmapped Virtual: 0x%x\n", virt_curr_addr);
+			kprintf("[DEBUG] Unmapped Virtual: 0x%x\n", virt_curr_addr);
 		};
 	};
-	printf("Unmapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
+	kprintf("Unmapped Virtual Memory: 0x%x - 0x%x\n", virt_start_addr, virt_end_addr);
 	return;
 };

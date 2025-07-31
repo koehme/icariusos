@@ -50,53 +50,53 @@ process_t* process_get_curr(void)
 
 void process_list_dump(void)
 {
-	printf("\n====================================\n");
-	printf("         PROCESS LIST DUMP          \n");
-	printf("====================================\n");
+	kprintf("\n====================================\n");
+	kprintf("         PROCESS LIST DUMP          \n");
+	kprintf("====================================\n");
 
 	process_t* process = processes;
 
 	if (!process) {
-		printf("[INFO] No Processes are currently running\n");
+		kprintf("[INFO] No Processes are currently running\n");
 		return;
 	};
 
 	do {
-		printf("PID: %d \n", process->pid);
-		printf("  Addr: 0x%x \n", process);
-		printf("  Name: %s\n", process->filename);
-		printf("  Tasks: %d | File Type: %s\n", process->task_count, process->filetype == PROCESS_ELF ? "ELF" : "BINARY");
-		printf("  Filesize: %d Bytes\n", process->size);
-		printf("  Page Directory: 0x%x\n", process->page_dir);
-		printf("  Keyboard Buffer: 0x%x\n", process->keyboard_buffer);
-		printf("  Prev: 0x%x | Next: 0x%x\n", process->prev, process->next);
+		kprintf("PID: %d \n", process->pid);
+		kprintf("  Addr: 0x%x \n", process);
+		kprintf("  Name: %s\n", process->filename);
+		kprintf("  Tasks: %d | File Type: %s\n", process->task_count, process->filetype == PROCESS_ELF ? "ELF" : "BINARY");
+		kprintf("  Filesize: %d Bytes\n", process->size);
+		kprintf("  Page Directory: 0x%x\n", process->page_dir);
+		kprintf("  Keyboard Buffer: 0x%x\n", process->keyboard_buffer);
+		kprintf("  Prev: 0x%x | Next: 0x%x\n", process->prev, process->next);
 
-		printf("  Task List:\n");
+		kprintf("  Task List:\n");
 		for (size_t i = 0; i < PROCESS_MAX_THREAD; i++) {
 			const task_t* task = process->tasks[i];
 
 			if (task) {
-				printf("    - Task[%d]: 0x%x (Stack: 0x%x - 0x%x)\n", i, task, task->stack_top, task->stack_bottom);
+				kprintf("    - Task[%d]: 0x%x (Stack: 0x%x - 0x%x)\n", i, task, task->stack_top, task->stack_bottom);
 			};
 		};
 
 		if (process->filetype == PROCESS_ELF && process->elf_file) {
-			printf("  ELF File:\n");
-			printf("    - Entry Point: 0x%x\n", process->elf_file->entry);
-			printf("    - PH Offset: 0x%x | PH Num: %d | PH Size: %d\n", process->elf_file->ph_offset, process->elf_file->ph_num,
-			       process->elf_file->ph_size);
-			printf("    - SH Offset: 0x%x | SH Num: %d | SH Size: %d\n", process->elf_file->sh_offset, process->elf_file->sh_num,
-			       process->elf_file->sh_size);
+			kprintf("  ELF File:\n");
+			kprintf("    - Entry Point: 0x%x\n", process->elf_file->entry);
+			kprintf("    - PH Offset: 0x%x | PH Num: %d | PH Size: %d\n", process->elf_file->ph_offset, process->elf_file->ph_num,
+				process->elf_file->ph_size);
+			kprintf("    - SH Offset: 0x%x | SH Num: %d | SH Size: %d\n", process->elf_file->sh_offset, process->elf_file->sh_num,
+				process->elf_file->sh_size);
 		};
 
-		printf("  Arguments (argc=%d):\n", process->arguments.argc);
+		kprintf("  Arguments (argc=%d):\n", process->arguments.argc);
 		for (size_t i = 0; i < process->arguments.argc; i++) {
-			printf("    - argv[%d]: %s\n", i, process->arguments.argv[i]);
+			kprintf("    - argv[%d]: %s\n", i, process->arguments.argv[i]);
 		};
-		printf("------------------------------------\n");
+		kprintf("------------------------------------\n");
 		process = process->next;
 	} while (process && process != processes);
-	printf("====================================\n");
+	kprintf("====================================\n");
 	return;
 };
 

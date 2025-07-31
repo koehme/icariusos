@@ -59,11 +59,11 @@ void mouse_handler(void* dev, const uint8_t data)
 		};
 
 		if (_match_mask(self, LEFT_BUTTON_MASK)) {
-			printf("Left Btn\n");
+			kprintf("Left Btn\n");
 		} else if (_match_mask(self, RIGHT_BUTTON_MASK)) {
-			printf("Right Btn\n");
+			kprintf("Right Btn\n");
 		} else if (_match_mask(self, MIDDLE_BUTTON_MASK)) {
-			printf("Mid Btn\n");
+			kprintf("Mid Btn\n");
 		};
 		self->cycle++;
 		break;
@@ -78,7 +78,7 @@ void mouse_handler(void* dev, const uint8_t data)
 
 		if (!_match_mask(self, Y_AXIS_OVERFLOW_MASK) || !_match_mask(self, X_AXIS_OVERFLOW_MASK)) {
 			_update_coordinates(self);
-			printf("(%d,%d)\n", self->x, self->y);
+			kprintf("(%d,%d)\n", self->x, self->y);
 		};
 		self->cycle = 0;
 		break;

@@ -64,22 +64,22 @@ static void _populate_dev(pci_dev_t* dev, const uint32_t bus, const uint32_t dev
 
 static void _dump_dev(const pci_dev_t* dev)
 {
-	printf("\n=============================================\n");
-	printf(" Bus: %d\tDevice: %d\tFunction: %d\n", dev->bus, dev->device, dev->function);
-	printf("---------------------------------------------\n");
-	printf(" Vendor ID       : 0x%x\n", dev->vendor_id);
-	printf(" Device ID       : 0x%x\n", dev->device_id);
-	printf(" Class Code      : 0x%x\n", dev->class_code);
-	printf(" Command         : 0x%x\n", dev->command);
-	printf(" Status          : 0x%x\n", dev->status);
-	printf(" Revision ID     : 0x%x\n", dev->revision_id);
-	printf(" Prog IF         : 0x%x\n", dev->prog_if);
-	printf(" Subclass        : 0x%x\n", dev->subclass);
-	printf(" Cache Line Size : 0x%x\n", dev->cache_line_size);
-	printf(" Latency Timer   : 0x%x\n", dev->latency_timer);
-	printf(" Header Type     : 0x%x\n", dev->header_type);
-	printf(" BIST            : 0x%x\n", dev->bist);
-	printf("=============================================\n");
+	kprintf("\n=============================================\n");
+	kprintf(" Bus: %d\tDevice: %d\tFunction: %d\n", dev->bus, dev->device, dev->function);
+	kprintf("---------------------------------------------\n");
+	kprintf(" Vendor ID       : 0x%x\n", dev->vendor_id);
+	kprintf(" Device ID       : 0x%x\n", dev->device_id);
+	kprintf(" Class Code      : 0x%x\n", dev->class_code);
+	kprintf(" Command         : 0x%x\n", dev->command);
+	kprintf(" Status          : 0x%x\n", dev->status);
+	kprintf(" Revision ID     : 0x%x\n", dev->revision_id);
+	kprintf(" Prog IF         : 0x%x\n", dev->prog_if);
+	kprintf(" Subclass        : 0x%x\n", dev->subclass);
+	kprintf(" Cache Line Size : 0x%x\n", dev->cache_line_size);
+	kprintf(" Latency Timer   : 0x%x\n", dev->latency_timer);
+	kprintf(" Header Type     : 0x%x\n", dev->header_type);
+	kprintf(" BIST            : 0x%x\n", dev->bist);
+	kprintf("=============================================\n");
 	return;
 };
 

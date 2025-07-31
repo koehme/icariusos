@@ -47,8 +47,8 @@ static void _exit_builtin(const char* args)
 	if (args && strlen(args) > 0) {
 		status = atoi(args);
 	};
-	// exit(status);
-	printf("[!] TODO Cleanup Task Shell and Reboot ICARSH.BIN :)\n");
+	exit(status);
+	__builtin_unreachable();
 	return;
 };
 

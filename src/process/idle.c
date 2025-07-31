@@ -3,10 +3,10 @@
 
 void kidle(void)
 {
-	while (1) {
+	for (;;) {
 		/*
 		asm_do_cli();
-		printf("x");
+		kprintf("x");
 		asm_do_sti();
 		*/
 		asm volatile("hlt");

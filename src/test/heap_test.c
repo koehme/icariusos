@@ -9,22 +9,22 @@
 
 void test_heap(const int32_t size)
 {
-	printf("\n");
-	printf("############################\n");
-	printf("##       HEAP TEST        ##\n");
-	printf("##------------------------##\n");
+	kprintf("\n");
+	kprintf("############################\n");
+	kprintf("##       HEAP TEST        ##\n");
+	kprintf("##------------------------##\n");
 
 	void* ptr = kzalloc(size);
 	if (!ptr) {
-		printf("## [ERROR] Failed to Allocate %d Bytes.\n", size);
-		printf("############################\n");
+		kprintf("## [ERROR] Failed to Allocate %d Bytes.\n", size);
+		kprintf("############################\n");
 		return;
 	};
-	printf("##    ALLOCATED MEMORY    ##\n");
-	printf("##   USER:  0x%x    ##\n", ptr);
+	kprintf("##    ALLOCATED MEMORY    ##\n");
+	kprintf("##   USER:  0x%x    ##\n", ptr);
 	void* block_ptr = (void*)((uint8_t*)ptr - sizeof(heap_block_t));
-	printf("##   BLOCK: 0x%x    ##\n", (uint32_t)block_ptr);
+	kprintf("##   BLOCK: 0x%x    ##\n", (uint32_t)block_ptr);
 	kfree(ptr);
-	printf("############################\n");
+	kprintf("############################\n");
 	return;
 };

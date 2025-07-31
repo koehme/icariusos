@@ -12,17 +12,17 @@ void vnode_dump(const vstat_t* self, const char name[]);
 
 void vnode_dump(const vstat_t* self, const char name[])
 {
-	printf("==========================\n");
-	printf("=   %s \n", name);
-	printf("==========================\n");
-	printf("st_dev: %d\n", self->st_dev);
-	printf("st_mode: %d\n", self->st_mode);
-	printf("st_size: %d\n", self->st_size);
-	printf("st_blksize: %d\n", self->st_blksize);
-	printf("st_blocks: %d\n", self->st_blocks);
-	printf("st_atime: 0x%x\n", self->st_atime);
-	printf("st_mtime: 0x%x\n", self->st_mtime);
-	printf("st_ctime: 0x%x\n", self->st_ctime);
-	printf("==========================\n");
+	kprintf("==========================\n");
+	kprintf("=   %s \n", name);
+	kprintf("==========================\n");
+	kprintf("st_dev: %d\n", self->st_dev);
+	kprintf("st_mode: %d\n", self->st_mode);
+	kprintf("st_size: %d\n", self->st_size);
+	kprintf("st_blksize: %d\n", self->st_blksize);
+	kprintf("st_blocks: %d\n", self->st_blocks);
+	kprintf("st_atime: 0x%x\n", self->st_atime);
+	kprintf("st_mtime: 0x%x\n", self->st_mtime);
+	kprintf("st_ctime: 0x%x\n", self->st_ctime);
+	kprintf("==========================\n");
 	return;
 };

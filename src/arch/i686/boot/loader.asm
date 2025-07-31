@@ -10,28 +10,29 @@ section .multiboot
 align 8
 
 header_start:
-    dd 0xe85250d6              
-    dd 0                        
-    dd header_end - header_start
-    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start)) 
-    dd 5                           
-    dd 20                            
-    dd 800                             
-    dd 600                             
-    dd 32                           
+    dd 0xe85250d6 ; Magic               
+    dd 0 ; Architecture = 0 (i386)                        
+    dd header_end - header_start ; Header length
+    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start)) ; Checksum
+    dd 5 ; Tag: Framebuffer                            
+    dd 20 ; Tag size                            
+    dd 800 ; X                             
+    dd 600; Y                             
+    dd 32; Bits per pixel                           
 header_end:
 
 section .bss
 stack_bottom:
-    resb 16384 * 8
+    resb 16384 * 8 ; We need a valid stack before jumping to kmain 
 stack_top:
 
 section .data
 ALIGN 4096
 kernel_directory:
-    DD 0x00000083 ; First Page Table Entry (0x00000000 - 0x003FFFFF)
+    DD 0x00000083 ; Identity Mapping - First Page Table Entry (0x00000000 - 0x003FFFFF)
     TIMES 768-1 DD 0
     ; Kernel Mapping: Mapping from 0xC0000000 - 0xC2FFFFFF (48 MiB)
+    ; 0x83 = Present | RW | PageSize (4 MiB)
     DD 0x00000083 ; Entry 768 (0xC0000000 - 0xC03FFFFF) mapped to 0x00000000 - 0x003FFFFF
     DD 0x00400083 ; Entry 769 (0xC0400000 - 0xC07FFFFF) mapped to 0x00400000 - 0x007FFFFF
     DD 0x00800083 ; Entry 770 (0xC0800000 - 0xC0BFFFFF) mapped to 0x00800000 - 0x00BFFFFF
@@ -46,7 +47,6 @@ kernel_directory:
     DD 0x02C00083 ; Entry 779 (0xC2C00000 - 0xC2FFFFFF) mapped to 0x02C00000 - 0x02FFFFFF
 
     TIMES 128-12 DD 0
-
     ; Framebuffer Mapping at 0xFD000000 -> 800*600*(32/8) / 1048576 | 1 MiB = 1048576
     DD 0xFD000083 ; Entry 896 (0xE0000000 - 0xE03FFFFF) mapped to 0xFD000000 - 0xFD3FFFFF
 

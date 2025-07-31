@@ -53,7 +53,7 @@ void* kmalloc(size_t size)
 	ptr = _malloc(&heap, size);
 
 	if (!ptr) {
-		printf("[ERROR] Memory Allocation failed for Size: %d\n", size);
+		kprintf("[ERROR] Memory Allocation failed for Size: %d\n", size);
 		return 0x0;
 	};
 	return ptr;
@@ -65,7 +65,7 @@ void* kzalloc(size_t size)
 	ptr = _malloc(&heap, size);
 
 	if (!ptr) {
-		printf("[ERROR] Memory Allocation failed for Size: %d\n", size);
+		kprintf("[ERROR] Memory Allocation failed for Size: %d\n", size);
 		return 0x0;
 	};
 	memset(ptr, 0x0, size);
@@ -132,7 +132,7 @@ static void _heap_grow(heap_t* self)
 	};
 	page_map(self->next_addr, phys_addr, PAGE_PS | PAGE_WRITABLE | PAGE_PRESENT);
 	const uint32_t frame = phys_addr / PAGE_SIZE;
-	printf("[DEBUG] Heap is growing eating Frame %d\n", frame);
+	kprintf("[DEBUG] Heap is growing eating Frame %d\n", frame);
 	const size_t chunks = PAGE_SIZE / KERNEL_HEAP_CHUNK_SIZE;
 	size_t virt_addr = self->next_addr;
 
@@ -241,58 +241,58 @@ void heap_dump(const heap_t* self)
 	size_t allocation_count = 0;
 	const size_t total_heap_size = (self->end_addr - self->start_addr) + 1;
 
-	printf("\n====================================\n");
-	printf("           KERNEL HEAP DUMP         \n");
-	printf("====================================\n");
-	printf("Heap Start Address:       0x%x\n", self->start_addr);
-	printf("Heap Last Block Address:  0x%x\n", self->last_block);
-	printf("Heap Start Address:       0x%x\n", self->start_addr);
-	printf("Heap End Address:         0x%x\n", self->end_addr);
-	printf("Heap Next Free Address:   0x%x\n", self->next_addr);
+	kprintf("\n====================================\n");
+	kprintf("           KERNEL HEAP DUMP         \n");
+	kprintf("====================================\n");
+	kprintf("Heap Start Address:       0x%x\n", self->start_addr);
+	kprintf("Heap Last Block Address:  0x%x\n", self->last_block);
+	kprintf("Heap Start Address:       0x%x\n", self->start_addr);
+	kprintf("Heap End Address:         0x%x\n", self->end_addr);
+	kprintf("Heap Next Free Address:   0x%x\n", self->next_addr);
 
 	while (curr) {
 		if (!curr->is_free && curr->chunk_span > 0) {
 			const size_t allocation_size = curr->chunk_span * 4096;
 			total_used_memory += allocation_size;
 			allocation_count++;
-			printf("\n------------------------------------\n");
-			printf("Allocation #%d\n", allocation_count);
-			printf("Allocation Size:          %d Bytes\n", allocation_size);
-			printf("Chunks Spanned:           %d\n", curr->chunk_span);
-			printf("Previous Block Address:   0x%x\n", curr->prev);
-			printf("Block Address:       	    0x%x\n", curr);
-			printf("Next Block Address:       0x%x\n", curr->next);
-			printf("------------------------------------\n");
+			kprintf("\n------------------------------------\n");
+			kprintf("Allocation #%d\n", allocation_count);
+			kprintf("Allocation Size:          %d Bytes\n", allocation_size);
+			kprintf("Chunks Spanned:           %d\n", curr->chunk_span);
+			kprintf("Previous Block Address:   0x%x\n", curr->prev);
+			kprintf("Block Address:       	    0x%x\n", curr);
+			kprintf("Next Block Address:       0x%x\n", curr->next);
+			kprintf("------------------------------------\n");
 		};
 		curr = curr->next;
 	};
 	const double usage_percentage = ((double)total_used_memory / total_heap_size) * 100;
-	printf("\n\n====================================\n");
-	printf("           KERNEL HEAP SUMMARY              \n");
-	printf("====================================\n");
-	printf("Total Used Allocations:   %d\n", allocation_count);
-	printf("Total Used Memory:        %d Bytes\n", total_used_memory);
-	printf("Kernel Heap Usage:        %f%%\n", usage_percentage);
-	printf("Total Kernel Heap Size:   %d Bytes\n", total_heap_size);
-	printf("Heap Free Chunks:         %d\n", self->free_chunks);
-	printf("Heap Used Chunks:         %d\n", self->used_chunks);
-	printf("====================================\n");
+	kprintf("\n\n====================================\n");
+	kprintf("           KERNEL HEAP SUMMARY              \n");
+	kprintf("====================================\n");
+	kprintf("Total Used Allocations:   %d\n", allocation_count);
+	kprintf("Total Used Memory:        %d Bytes\n", total_used_memory);
+	kprintf("Kernel Heap Usage:        %f%%\n", usage_percentage);
+	kprintf("Total Kernel Heap Size:   %d Bytes\n", total_heap_size);
+	kprintf("Heap Free Chunks:         %d\n", self->free_chunks);
+	kprintf("Heap Used Chunks:         %d\n", self->used_chunks);
+	kprintf("====================================\n");
 	return;
 };
 
 void heap_trace(const heap_t* self)
 {
 	heap_block_t* curr = (heap_block_t*)self->start_addr;
-	printf("\n\n====================================\n");
-	printf("           KERNEL HEAP TRACE              \n");
-	printf("====================================\n");
+	kprintf("\n\n====================================\n");
+	kprintf("           KERNEL HEAP TRACE              \n");
+	kprintf("====================================\n");
 
 	while (curr) {
-		printf("<- 0x%x | 0x%x | -> 0x%x | %d] \n", curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
-		       curr->next ? (unsigned int)curr->next : 0, curr->chunk_span * 4096);
+		kprintf("<- 0x%x | 0x%x | -> 0x%x | %d] \n", curr->prev ? (unsigned int)curr->prev : 0, (unsigned int)curr,
+			curr->next ? (unsigned int)curr->next : 0, curr->chunk_span * 4096);
 		curr = curr->next;
 		busy_wait(50000);
 	};
-	printf("==========================\n");
+	kprintf("==========================\n");
 	return;
 };

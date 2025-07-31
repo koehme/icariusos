@@ -50,12 +50,12 @@ letter      -> ( 'A' - 'Z' )
 
 static void _path_parser_handle_syntax_error(pathparser_t* self, const char* message)
 {
-	printf("Syntax Error occurred! ");
+	kprintf("Syntax Error occurred! ");
 
 	if (self->prev.type == PT_END) {
-		printf("at the end.\n");
+		kprintf("at the end.\n");
 	} else {
-		printf(message);
+		kprintf(message);
 	};
 	self->has_error = true;
 	return;
@@ -132,7 +132,7 @@ pathnode_t* _path_parser_parse_filename(pathparser_t* self, pathlexer_t* lexer, 
 	bytes += extlen;
 	// Null-terminate the string
 	curr_node->identifier[bytes] = '\0';
-	// printf("[DEBUG] Parsed FAT16 Filename: %s\n", curr_node->identifier);
+	// kprintf("[DEBUG] Parsed FAT16 Filename: %s\n", curr_node->identifier);
 	curr_node->next = 0x0;
 	return curr_node;
 };

@@ -80,12 +80,12 @@ static void _send_identify_req(const uint8_t target_drive)
 
 static void _dump_ata(ata_t* self, const int32_t delay)
 {
-	printf("[INFO] ATA\n");
-	printf("Sector Size: %d\n", self->sector_size);
-	printf("Total Sectors: %d\n", self->total_sectors);
-	printf("Capacity: %d KiB\n", self->capacity / 1024);
-	printf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
-	printf("Capacity: %f GiB\n", ((double)self->capacity) / 1024 / 1024 / 1024);
+	kprintf("[INFO] ATA\n");
+	kprintf("Sector Size: %d\n", self->sector_size);
+	kprintf("Total Sectors: %d\n", self->total_sectors);
+	kprintf("Capacity: %d KiB\n", self->capacity / 1024);
+	kprintf("Capacity: %d MiB\n", (self->capacity / 1024) / 1024);
+	kprintf("Capacity: %f GiB\n", ((double)self->capacity) / 1024 / 1024 / 1024);
 	busy_wait(delay);
 	return;
 };
@@ -233,7 +233,7 @@ static int32_t _read_pio48(ata_t* self, const uint64_t lba, const uint16_t secto
 			};
 
 			if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF)) {
-				printf("[CRITICAL] ATA Read Error on LBA %d\n", lba);
+				kprintf("[CRITICAL] ATA Read Error on LBA %d\n", lba);
 				return -EIO;
 			};
 		};
@@ -262,7 +262,7 @@ static int32_t _read_pio28(ata_t* self, const uint32_t lba, const uint8_t sector
 			};
 
 			if ((status & ATA_STATUS_ERR) || (status & ATA_STATUS_DF)) {
-				printf("[CRITICAL] ATA Read Error on LBA %u\n", lba);
+				kprintf("[CRITICAL] ATA Read Error on LBA %u\n", lba);
 				return -EIO;
 			};
 		};

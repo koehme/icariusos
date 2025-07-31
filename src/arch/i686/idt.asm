@@ -13,7 +13,6 @@ extern irq0_handler
 extern irq1_handler
 extern irq12_handler
 
-
 extern isr_default_handler
 extern isr_error_handler
 
@@ -76,7 +75,7 @@ asm_isr0_wrapper:
     add esp, 8      
     popad         
     sti
-    iret
+    iretd
 
 asm_isr1_wrapper:
     cli
@@ -87,7 +86,7 @@ asm_isr1_wrapper:
     add esp, 8      
     popad         
     sti
-    iret
+    iretd
 
 asm_isr2_wrapper:
     cli
@@ -98,7 +97,7 @@ asm_isr2_wrapper:
     add esp, 8      
     popad         
     sti
-    iret
+    iretd
 
 asm_isr6_wrapper:
     cli
@@ -109,7 +108,7 @@ asm_isr6_wrapper:
     add esp, 8
     popad
     sti
-    iret
+    iretd
 
 asm_isr8_wrapper:
     cli
@@ -121,7 +120,7 @@ asm_isr8_wrapper:
     add esp, 8
     popad
     sti
-    iret
+    iretd
 
 asm_isr12_wrapper:
     cli
@@ -133,7 +132,7 @@ asm_isr12_wrapper:
     add esp, 8
     popad
     sti
-    iret
+    iretd
 
 asm_isr13_wrapper:
     cli
@@ -146,7 +145,7 @@ asm_isr13_wrapper:
     add esp, 8      
     popad         
     sti
-    iret
+    iretd
 
 asm_isr14_wrapper:
     cli                        
@@ -161,7 +160,7 @@ asm_isr14_wrapper:
     add esp, 16
     popad                        
     sti                       
-    iret                      
+    iretd                      
     
 asm_irq0_timer:
     cli                           ; Disable interrupts to prevent nested interrupts
@@ -171,7 +170,7 @@ asm_irq0_timer:
     add esp, 4
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
-    iret                          ; Return from interrupt
+    iretd                          ; Return from interrupt
 
 asm_irq1_keyboard:
     cli                           ; Disable interrupts to prevent nested interrupts
@@ -181,7 +180,7 @@ asm_irq1_keyboard:
     add esp, 4 
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
-    iret                          ; Return from interrupt
+    iretd                          ; Return from interrupt
 
 asm_irq12_mouse:
     cli                           ; Disable interrupts to prevent nested interrupts
@@ -189,7 +188,7 @@ asm_irq12_mouse:
     call irq12_handler         
     popad                         ; Restore the saved state
     sti                           ; Enable interrupts
-    iret                          ; Return from interrupt
+    iretd                          ; Return from interrupt
 
 asm_interrupt_default:
     cli                           ; Disable interrupts to prevent nested exceptions
@@ -244,4 +243,4 @@ asm_interrupt_default:
     pop eax
 
     sti                           ; Re-enable interrupts
-    iret                          ; Return from interrupt
+    iretd                          ; Return from interrupt

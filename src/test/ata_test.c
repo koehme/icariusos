@@ -22,10 +22,10 @@ void test_ata_write(ata_t* dev)
 		const uint8_t byte = write_buffer[i];
 		const uint8_t high = (byte >> 4) & 0x0F;
 		const uint8_t low = byte & 0x0F;
-		printf("0x%x%x ", high, low);
+		kprintf("0x%x%x ", high, low);
 	};
-	printf("\n");
-	printf("[KERNEL] Writing Test Data to Sector %d...\n", test_sector);
+	kprintf("\n");
+	kprintf("[KERNEL] Writing Test Data to Sector %d...\n", test_sector);
 	int32_t res = ata_write(dev, test_sector, 1, write_buffer);
 
 	outb(ATA_COMMAND_PORT, 0xE7);
@@ -35,7 +35,7 @@ void test_ata_write(ata_t* dev)
 	if (res < 0) {
 		return;
 	};
-	printf("[KERNEL] Reading Back from Sector %d...\n", test_sector);
+	kprintf("[KERNEL] Reading Back from Sector %d...\n", test_sector);
 	res = ata_read(dev, test_sector, 1);
 
 	if (res < 0) {
@@ -48,14 +48,14 @@ void test_ata_write(ata_t* dev)
 		const uint8_t byte = read_buffer[i];
 		const uint8_t high = (byte >> 4) & 0x0F;
 		const uint8_t low = byte & 0x0F;
-		printf("0x%x%x ", high, low);
+		kprintf("0x%x%x ", high, low);
 	};
-	printf("\n");
+	kprintf("\n");
 
 	if (memcmp(read_buffer, test_data, strlen(test_data)) == 0) {
-		printf("[KERNEL] SUCCESS: ata_write()!\n");
+		kprintf("[KERNEL] SUCCESS: ata_write()!\n");
 	} else {
-		printf("[KERNEL] ERROR: ata_write()!\n");
+		kprintf("[KERNEL] ERROR: ata_write()!\n");
 	};
 	busy_wait(500000);
 	return;

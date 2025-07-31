@@ -1,8 +1,8 @@
-global _start     
+global _icarsh    
 extern main       
 
 section .text
-_start:
+_icarsh:
     xor ebp, ebp
     xor eax, eax
     xor ebx, ebx

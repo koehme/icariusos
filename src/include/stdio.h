@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-int printf(const char* format, ...);
-int vprintf(const char* fmt, va_list args);
+int kprintf(const char* format, ...);
+int vkprintf(const char* fmt, va_list args);
 
 #endif

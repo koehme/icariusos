@@ -64,7 +64,7 @@ bool pfa_test(const pfa_t* self, const uint64_t frame)
 void pfa_dump(const pfa_t* self, const bool verbose)
 {
 	if (!self) {
-		printf("Invalid PFA Pointer!\n");
+		kprintf("Invalid PFA Pointer!\n");
 		return;
 	};
 	const size_t frames_per_block = sizeof(self->frames_bitmap[0]) * 8;
@@ -72,11 +72,11 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 	size_t used = 0;
 	size_t free = 0;
 
-	printf("\n");
-	printf("====================================\n");
-	printf("          PFA STATISTICS            \n");
-	printf("====================================\n");
-	printf("Total Frames: 			%d\n", total_frames);
+	kprintf("\n");
+	kprintf("====================================\n");
+	kprintf("          PFA STATISTICS            \n");
+	kprintf("====================================\n");
+	kprintf("Total Frames: 			%d\n", total_frames);
 
 	for (size_t block_index = 0; block_index < BITMAP_SIZE; block_index++) {
 		const uint64_t frame_block = self->frames_bitmap[block_index];
@@ -84,7 +84,7 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 		const size_t frame_end_index = frame_start_index + frames_per_block - 1;
 
 		if (verbose) {
-			printf("Frames %d - %d: ", frame_start_index, frame_end_index);
+			kprintf("Frames %d - %d: ", frame_start_index, frame_end_index);
 		};
 
 		for (size_t frame = 0; frame < frames_per_block; frame++) {
@@ -92,19 +92,19 @@ void pfa_dump(const pfa_t* self, const bool verbose)
 			is_used ? used++ : free++;
 
 			if (verbose) {
-				printf(is_used ? "U" : "F");
+				kprintf(is_used ? "U" : "F");
 			};
 		};
 
 		if (verbose) {
-			printf("\n");
+			kprintf("\n");
 		};
 	};
-	printf("Used Frames:   		%f (%f%%)\n", (double)used, (100.0 * used) / total_frames);
-	printf("Free Frames:   		%f (%f%%)\n", (double)free, (100.0 * free) / total_frames);
-	printf("Memory In-Use: 		%f KiB\n", (double)(used * PAGE_SIZE) / 1024);
-	printf("Free Memory:   		%f KiB\n", (double)(free * PAGE_SIZE) / 1024);
-	printf("====================================\n");
+	kprintf("Used Frames:   		%f (%f%%)\n", (double)used, (100.0 * used) / total_frames);
+	kprintf("Free Frames:   		%f (%f%%)\n", (double)free, (100.0 * free) / total_frames);
+	kprintf("Memory In-Use: 		%f KiB\n", (double)(used * PAGE_SIZE) / 1024);
+	kprintf("Free Memory:   		%f KiB\n", (double)(free * PAGE_SIZE) / 1024);
+	kprintf("====================================\n");
 	return;
 };
 

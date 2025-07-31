@@ -73,7 +73,7 @@ void rtc_load_timezone(void)
 	const int32_t fd = vfs_fopen("A:/ETC/TIMEZONE", "r");
 
 	if (!fd) {
-		printf("[RTC] Defaulting to UTC +0\n");
+		kprintf("[RTC] Defaulting to UTC +0\n");
 		return;
 	};
 	char buf[32] = {0};
@@ -81,7 +81,7 @@ void rtc_load_timezone(void)
 	vfs_fclose(fd);
 
 	if (n_bytes <= 0) {
-		printf("[RTC] Defaulting to UTC +0\n");
+		kprintf("[RTC] Defaulting to UTC +0\n");
 		return;
 	};
 	for (int i = 0; i < n_bytes; i++) {
@@ -93,9 +93,9 @@ void rtc_load_timezone(void)
 	timezone_offset = _resolve_timezone_offset(buf);
 
 	if (timezone_offset >= 0)
-		printf("[RTC] Loaded Timezone: '%s' -> UTC +%d\n", buf, timezone_offset);
+		kprintf("[RTC] Loaded Timezone: '%s' -> UTC +%d\n", buf, timezone_offset);
 	else
-		printf("[RTC] Loaded Timezone: '%s' -> UTC %d\n", buf, timezone_offset);
+		kprintf("[RTC] Loaded Timezone: '%s' -> UTC %d\n", buf, timezone_offset);
 	return;
 };
 

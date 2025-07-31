@@ -8,10 +8,10 @@
 #include "stdlib.h"
 
 /* PUBLIC API */
-int printf(const char* fmt, ...);
-int vprintf(const char* fmt, va_list args);
+int kprintf(const char* fmt, ...);
+int vkprintf(const char* fmt, va_list args);
 
-int vprintf(const char* fmt, va_list args)
+int vkprintf(const char* fmt, va_list args)
 {
 	while (*fmt != '\0') {
 		if (*fmt == '%') {
@@ -64,11 +64,11 @@ int vprintf(const char* fmt, va_list args)
 	return 0;
 };
 
-int printf(const char* fmt, ...)
+int kprintf(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vprintf(fmt, args);
+	vkprintf(fmt, args);
 	va_end(args);
 	return 0;
 };

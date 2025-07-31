@@ -2,7 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-icariusOS is a modular, x86-compatible kernel written in C and Assembly.
+🪶 icariusOS
+A monolithic, lightweight, x86-compatible operating system kernel — built from scratch in C and Assembly. 
 
 ![Boot Demo](assets/icariusOS.gif)
 
@@ -33,9 +34,8 @@ icariusOS is a modular, x86-compatible kernel written in C and Assembly.
 
 ## 🧩 DEPENDENCIES
 
-- ✅ UBUNTU or WINDOWS via WSL – Latest LTS Recommended
-- ✅ CROSS-COMPILER – You'll need a Freestanding i686 Toolchain:
-
+- ✅ UBUNTU or WINDOWS via WSL
+- ✅ CROSS-COMPILER
 - ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE ROOT DIR (`./`)  
 
 ```bash
