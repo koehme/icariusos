@@ -1,3 +1,5 @@
+BITS 32
+
 global outb
 global outw
 global outl

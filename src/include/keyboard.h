@@ -16,7 +16,7 @@
 typedef struct kbd {
 } kbd_t;
 
-void kbd_init();
+void kbd_init(kbd_t* self);
 uint8_t kbd_translate(const uint8_t scancode);
 
 #endif

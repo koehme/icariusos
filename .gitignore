@@ -1,6 +1,3 @@
-ICARIUS.BIN
-ICARSH.BIN
-icarsh.elf
 *.img
 *.BIN
 *.bin
@@ -8,4 +5,8 @@ icarsh.elf
 *.o
 *.a
 *.su
+
 iso/boot/ICARIUS.BIN
+
+!bin/
+!bin/**

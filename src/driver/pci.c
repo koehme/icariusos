@@ -1,3 +1,9 @@
+/**
+ * @file pci.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

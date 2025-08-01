@@ -1,57 +1,37 @@
 #!/bin/bash
 
-sudo apt update -y
-sudo apt upgrade -y
+set -e
 
-sudo apt install dosfstools -y
-sudo apt install nasm -y
-sudo apt install grub-pc -y
-sudo apt install gdb -y
-sudo apt install qemu -y
-sudo apt install qemu-system-x86 -y
-sudo apt install build-essential -y
-sudo apt install bison -y
-sudo apt install flex -y
-sudo apt install libgmp3-dev -y
-sudo apt install libmpc-dev -y
-sudo apt install libmpfr-dev -y
-sudo apt install texinfo -y
-sudo apt install curl -y
-sudo apt install xorriso -y
-sudo apt install mtools -y
-sudo apt install fdisk -y
-
-export PREFIX="/usr/local/i686-elf-gcc"
+export PREFIX="$HOME/opt/cross"
 export TARGET=i686-elf
 export PATH="$PREFIX/bin:$PATH"
 
-mkdir /tmp/src
-cd /tmp/src
+mkdir -p ~/build
+cd ~/build
 
-curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.gz
+curl -O https://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.gz
 tar xf binutils-2.44.tar.gz
-mkdir binutils-build
+mkdir -p binutils-build
 cd binutils-build
-../binutils-2.44/configure --target=$TARGET --enable-interwork --enable-multilib --disable-nls --disable-werror --prefix=$PREFIX 2>&1 | tee configure.log
-sudo make all install 2>&1 | tee make.log
+../binutils-2.44/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --disable-werror
+make -j$(nproc)
+make install
+cd ..
 
-sudo rm -rf /tmp/src
-mkdir /tmp/src
-
-cd /tmp/src
 curl -O https://ftp.gnu.org/gnu/gcc/gcc-15.1.0/gcc-15.1.0.tar.gz
 tar xf gcc-15.1.0.tar.gz
-mkdir gcc-build
+cd gcc-15.1.0
+./contrib/download_prerequisites 
+cd ..
+
+mkdir -p gcc-build
 cd gcc-build
-../gcc-15.1.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --disable-libssp --enable-language=c,c++ --without-headers
-sudo make all-gcc
-sudo make all-target-libgcc
-sudo make install-gcc
-sudo make install-target-libgcc
+../gcc-15.1.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers
+make -j$(nproc) all-gcc
+make -j$(nproc) all-target-libgcc
+make install-gcc
+make install-target-libgcc
 
-export PATH="$PATH:/usr/local/i686-elf-gcc/bin"
-
-ls /usr/local/i686-elf-gcc/bin
-
-sudo chown $USER:$USER /usr/local/i686-elf-gcc/bin/*
-echo 'export PATH="$PATH:/usr/local/i686-elf-gcc/bin"' >> ~/.bashrc
+if ! grep -q "$PREFIX/bin" ~/.bashrc; then
+  echo 'export PATH="$PATH:'"$PREFIX"'/bin"' >> ~/.bashrc
+fi

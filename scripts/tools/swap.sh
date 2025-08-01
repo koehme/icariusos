@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ! -f ./bin/ICARIUS.BIN ]]; then
+  echo "❌ RUN FROM PROJECT ROOT DIR!"
+  exit 1
+fi
+
 ./scripts/build/build.sh
 KERNEL_PATH="./bin/ICARIUS.BIN"
 

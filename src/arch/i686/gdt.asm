@@ -1,3 +1,5 @@
+BITS 32
+
 global asm_gdt_flush
 
 asm_gdt_flush:

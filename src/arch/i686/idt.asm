@@ -1,3 +1,5 @@
+BITS 32
+
 extern syscall_dispatch
 
 extern isr_0_handler

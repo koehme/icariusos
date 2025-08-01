@@ -1,4 +1,4 @@
-[BITS 32]
+BITS 32
 global asm_enter_task
 global asm_restore_kernel_segment
 global asm_restore_user_segment

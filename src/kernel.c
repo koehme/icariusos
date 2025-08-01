@@ -286,7 +286,7 @@ void kmain(const uint32_t magic, const uint32_t addr)
 	mouse_init(&mouse);
 	timer_init(&timer, 100);
 
-	// pci_enumerate_bus();
+	pci_enumerate_bus();
 
 	vfs_init();
 	ata_t* ata_dev = ata_get("A");

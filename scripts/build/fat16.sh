@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if [[ "$EUID" -ne 0 ]]; then
+  echo "❌ RUN AS SUDO ROOT!"
+  exit 1
+fi
+
+if [[ ! -f ./bin/ICARIUS.BIN ]]; then
+  echo "❌ RUN FROM PROJECT ROOT DIR!"
+  exit 1
+fi
+
 dd if=/dev/zero of=ICARIUS.img bs=512 count=1048576
 
 sfdisk ICARIUS.img << EOF

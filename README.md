@@ -1,9 +1,14 @@
 # icariusOS
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+A 🗿 yet 🪶 **x86 Kernel**
 
-🪶 icariusOS
-A monolithic, lightweight, x86-compatible operating system kernel — built from scratch in C and Assembly. 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![Status](https://img.shields.io/badge/status-in_development-yellow)
+![Architecture](https://img.shields.io/badge/arch-x86-blue)
+![Language](https://img.shields.io/badge/language-C%20%26%20Assembly-blueviolet)
+![Last Commit](https://img.shields.io/github/last-commit/koehme/icariusos)
+
+> Minimal. Monolithic. Handcrafted
 
 ![Boot Demo](assets/icariusOS.gif)
 
@@ -34,25 +39,22 @@ A monolithic, lightweight, x86-compatible operating system kernel — built from
 
 ## 🧩 DEPENDENCIES
 
-- ✅ UBUNTU or WINDOWS via WSL
+- ✅ DEBIAN or WINDOWS via WSL
 - ✅ CROSS-COMPILER
-- ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE ROOT DIR (`./`)  
+- ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE PROJECT ROOT DIR  
 
 ```bash
+sudo ./scripts/build/dependencies.sh
 ./scripts/build/i686.sh
 ```
 
-## 🛠️ BUILD & RUN
+## 🛠️ BUILD
 
 ```bash
-make icarsh && ./scripts/build/build.sh && ./scripts/build/fat16.sh
+make icarsh && ./scripts/build/build.sh && sudo ./scripts/build/fat16.sh
 ```
 
-```bash
-qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
-```
-
-## 🔁 KERNEL UPDATE
+## 🔁 KERNEL UPDATE && RUN
 
 Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD.
 
