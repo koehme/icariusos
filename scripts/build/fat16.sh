@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [[ "$EUID" -ne 0 ]]; then
-  echo "❌ RUN AS SUDO ROOT!"
-  exit 1
-fi
-
 if [[ ! -f ./bin/ICARIUS.BIN ]]; then
   echo "❌ RUN FROM PROJECT ROOT DIR!"
   exit 1

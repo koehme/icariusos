@@ -6,6 +6,7 @@
 *.a
 *.su
 
+bin/ICARIUS.BIN
 iso/boot/ICARIUS.BIN
 
 !bin/
