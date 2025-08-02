@@ -37,16 +37,18 @@ A 🗿 yet 🪶 **x86 Kernel**
   `ls`, `cat`, `echo`, `exit`, `help`, `history`
 - ✅ **USER HEAP SUPPORT**: Best-Fit Allocator
 
-## 🧩 DEPENDENCIES
+## 🧩 INSTALL DEPENDENCIES
 
 - ✅ DEBIAN or WINDOWS via WSL
-- ✅ CROSS-COMPILER
-- ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE PROJECT ROOT DIR  
-
+- ✅ Emulator
 ```bash
 sudo ./scripts/build/dependencies.sh
+```
+- ✅ CROSS-COMPILER
+```bash
 ./scripts/build/i686.sh
 ```
+- ⚠️ NOTE: ALWAYS RUN SCRIPTS FROM THE PROJECT ROOT DIR  
 
 ## 🛠️ BUILD
 
@@ -54,22 +56,22 @@ sudo ./scripts/build/dependencies.sh
 make icarsh && ./scripts/build/build.sh && sudo ./scripts/build/fat16.sh
 ```
 
-## 🔁 KERNEL UPDATE && RUN
+## 🔁 SWAP AND RUN
 
-Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD.
+Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD and RUN IT.
 
 ```bash
 ./scripts/tools/swap.sh && qemu-system-i386 -m 4G -drive format=raw,file=./ICARIUS.img
 ```
 
-## 🧠 Kernel Debugging (QEMU + GDB)
+## 🧠 KERNEL DEBUG
 
 ```bash
 ./scripts/tools/swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
 gdb -x ./.gdbinit ./bin/ICARIUS.BIN
 ```
 
-## 🔍 Userspace Debugging
+## 🔍 USERSPACE DEBUG
 
 ```bash
 ./scripts/tools/swap.sh && qemu-system-i386 -m 4G -s -S ./ICARIUS.img
@@ -78,7 +80,7 @@ break *0x0
 file ./src/user/icarsh/elf/icarsh.elf
 ```
 
-## 🌲 Dir 
+## 🌲 PROJECT DIR
 
 ```bash
 tree | xclip -selection clipboard

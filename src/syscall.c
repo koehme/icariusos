@@ -115,12 +115,25 @@ int32_t _sys_exit(interrupt_frame_t* frame)
 	task_t* task = task_get_curr();
 	process_t* parent = task->parent;
 
+	char buf[128];
+	strncpy(buf, parent->filename, sizeof(parent->filename));
+
 	task_exit(task);
 
 	if (parent->task_count == 0) {
 		process_exit(parent);
 	};
 	task->state = TASK_STATE_TERMINATE;
+	// Respawn SHELL :)
+	if (strcmp(buf, "A:/BIN/ICARSH.BIN") == 0) {
+		process_t* icarsh = process_spawn("A:/BIN/ICARSH.BIN");
+
+		if (!icarsh) {
+			panic("Failed to restart ICARSH");
+		};
+		tty_set_foreground(icarsh);
+		scheduler_get()->add_cb(icarsh->tasks[0]);
+	};
 	scheduler_schedule(frame);
 	__builtin_unreachable();
 	return status;
