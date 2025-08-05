@@ -1,4 +1,8 @@
 ```text
+
+STACK ADDRESSES (SUCH AS ESP0 FOR TSS OR PER-TASK STACKS) ARE MANUALLY ALIGNED TO 4-BYTE BOUNDARIES USING A BITMASK OPERATION (E.G., ESP0 & ~0b00000011). 
+THIS ENSURES COMPATIBILITY WITH IRET, CONSISTENT STACK BEHAVIOR AND PREVENTS SUBTLE BUGS DURING PRIVILEGE-LEVEL TRANSITIONS (RING 3 → RING 0 VIA TSS).
+
 ########################################################
 ## Memory Layout Formula                              ##
 ########################################################

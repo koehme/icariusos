@@ -29,33 +29,25 @@ typedef struct idtr {
 } __attribute__((packed)) idtr_t;
 
 typedef struct interrupt_frame {
-	uint32_t edi;
-	uint32_t esi;
-	uint32_t ebp;
-	uint32_t reserved;
-	uint32_t ebx;
-	uint32_t edx;
-	uint32_t ecx;
-	uint32_t eax;
-	uint32_t eip;
-	uint32_t cs;
-	uint32_t eflags;
-	uint32_t esp;
-	uint32_t ss;
+	uint32_t edi, esi, ebp, reserved, ebx, edx, ecx, eax; // General-purpose registers (pushed by `pushad`; `reserved` is original ESP, ignored on `popad`)
+	uint32_t eip, cs, eflags, esp, ss;		      // CPU-pushed on interrupt; esp/ss only if Ring 3 → Ring 0
 } __attribute__((packed)) interrupt_frame_t;
 
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
-void idt_dump_interrupt_frame(const interrupt_frame_t* regs);
+void idt_dump_interrupt_frame(const interrupt_frame_t* frame);
 
-void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
-void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
-void irq0_handler(interrupt_frame_t* regs);
-void irq1_handler(interrupt_frame_t* regs);
+void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_6_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_8_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_12_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_13_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_14_handler(const uint32_t fault_addr, const uint32_t error_code, interrupt_frame_t* frame);
+void irq0_handler(interrupt_frame_t* frame);
+void irq1_handler(interrupt_frame_t* frame);
 void irq12_handler(void);
-void isr_default_handler(interrupt_frame_t* regs);
+void isr_default_handler(interrupt_frame_t* frame);
 
 #endif

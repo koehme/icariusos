@@ -52,7 +52,7 @@ asm_do_cli:
     ret
 
 asm_idt_loader:
-    push ebp              ; Save old base pointer
+    push dword ebp        ; Save old base pointer
     mov ebp, esp          ; Use the current stack pointer 'asm_idt_loader' as new base pointer for the caller frame (return address +4, argument 1 = +8, argument n = +4)
     mov ebx, [ebp+8]      ; Access the argument 1 - idtr_t *ptr
     lidt [ebx]            ; Load interrupt descriptor table register 
@@ -61,8 +61,8 @@ asm_idt_loader:
 
 asm_syscall:
     pushad      
-    push esp
-    push eax
+    push dword esp
+    push dword eax
     call syscall_dispatch
     add esp, 8
     popad
@@ -71,7 +71,7 @@ asm_syscall:
 asm_isr0_wrapper:
     cli
     pushad        
-    push esp       
+    push dword esp       
     push dword 0x0    
     call isr_0_handler
     add esp, 8      
@@ -82,7 +82,7 @@ asm_isr0_wrapper:
 asm_isr1_wrapper:
     cli
     pushad         
-    push esp        
+    push dword esp        
     push dword 0x1
     call isr_1_handler
     add esp, 8      
@@ -93,7 +93,7 @@ asm_isr1_wrapper:
 asm_isr2_wrapper:
     cli
     pushad         
-    push esp        
+    push dword esp        
     push dword 0x2
     call isr_2_handler
     add esp, 8      
@@ -104,7 +104,7 @@ asm_isr2_wrapper:
 asm_isr6_wrapper:
     cli
     pushad
-    push esp
+    push dword esp
     push dword 0x6
     call isr_6_handler
     add esp, 8
@@ -115,9 +115,9 @@ asm_isr6_wrapper:
 asm_isr8_wrapper:
     cli
     pushad
-    push esp
-    mov eax, [esp + 36] ; Get error code
-    push eax
+    push dword esp
+    mov eax, [esp + 36]     ; Get error code
+    push dword eax
     call isr_8_handler
     add esp, 8
     popad
@@ -127,9 +127,9 @@ asm_isr8_wrapper:
 asm_isr12_wrapper:
     cli
     pushad
-    push esp
-    mov eax, [esp + 36] ; Get error code
-    push eax
+    push dword esp
+    mov eax, [esp + 36]     ; Get error code
+    push dword eax
     call isr_12_handler
     add esp, 8
     popad
@@ -139,10 +139,10 @@ asm_isr12_wrapper:
 asm_isr13_wrapper:
     cli
     pushad         
-    push esp        
+    push dword esp        
     mov eax, [esp + 36]
-    push eax
-    ; void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs)
+    push dword eax
+    ; void isr_13_handler(const uint32_t error_code, interrupt_frame_t* frame)
     call isr_13_handler
     add esp, 8      
     popad         
@@ -150,99 +150,57 @@ asm_isr13_wrapper:
     iretd
 
 asm_isr14_wrapper:
-    cli                        
-    pushad ; Push EAX, ECX, EDX, EBX, original ESP, EBP, ESI, and EDI (ecx at +4,+8,+12,+16,+20,+24,+28 .. )             
-    push esp    ; interrupt_frame_t
-    mov eax, [esp + 36] ; Errorcode at +36
-    push eax
-    mov eax, cr2  
-    push eax
-    ; void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
-    call isr_14_handler         
-    add esp, 16
-    popad                        
-    sti                       
-    iretd                      
+    cli                             ; Disable interrupts to prevent reentrancy
+    pushad                          ; Save general-purpose registers: EAX, ECX, EDX, EBX, ESP (as placeholder), EBP, ESI, EDI
+    push dword esp                  ; Pass current stack pointer as interrupt_frame_t* to handler
+    mov eax, [esp + 36]             ; Retrieve CPU-pushed error code from stack (after pushad + push esp)
+    push dword eax                  ; Push error code as second argument
+    mov eax, cr2                    ; Read faulting virtual address from CR2
+    push dword eax                  ; Push faulting address as first argument
+    ; void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* frame)
+    call isr_14_handler             
+    add esp, 12                     ; Clean up pushed arguments: fault_addr, error_code, frame pointer
+    popad                           ; Restore general-purpose registers
+    add esp, 4                      ; Discard CPU-pushed error code (which wasn’t included in pushad)
+    sti                             ; Re-enable interrupts
+    iretd                           ; Return from interrupt (restores CS, EIP, EFLAGS, [optional ESP, SS])            
     
 asm_irq0_timer:
-    cli                           ; Disable interrupts to prevent nested interrupts
+    cli                             ; Disable interrupts to prevent nested interrupts
     pushad                        
-    push esp
+    push dword esp
     call irq0_handler          
     add esp, 4
-    popad                         ; Restore the saved state
-    sti                           ; Enable interrupts
-    iretd                          ; Return from interrupt
+    popad                           ; Restore the saved state
+    sti                             ; Enable interrupts
+    iretd                           ; Return from interrupt
 
 asm_irq1_keyboard:
-    cli                           ; Disable interrupts to prevent nested interrupts
+    cli                             ; Disable interrupts to prevent nested interrupts
     pushad                        
-    push esp
+    push dword esp
     call irq1_handler            
     add esp, 4 
-    popad                         ; Restore the saved state
-    sti                           ; Enable interrupts
-    iretd                          ; Return from interrupt
+    popad                           ; Restore the saved state
+    sti                             ; Enable interrupts
+    iretd                           ; Return from interrupt
 
 asm_irq12_mouse:
-    cli                           ; Disable interrupts to prevent nested interrupts
+    cli                             ; Disable interrupts to prevent nested interrupts
     pushad                        
     call irq12_handler         
-    popad                         ; Restore the saved state
-    sti                           ; Enable interrupts
-    iretd                          ; Return from interrupt
+    popad                           ; Restore the saved state
+    sti                             ; Enable interrupts
+    iretd                           ; Return from interrupt
 
 asm_interrupt_default:
-    cli                           ; Disable interrupts to prevent nested exceptions
-
-    push eax                      ; Save EAX
-    push ecx                      ; Save ECX
-    push edx                      ; Save EDX
-    push ebx                      ; Save EBX
-
-    mov eax, esp
-    add eax, 16                   ; Adjust ESP for previous stack frame
-
-    push eax                      ; Save original ESP before modifications
-    push ebp                      ; Save EBP
-    push esi                      ; Save ESI
-    push edi                      ; Save EDI
-
-    ; Save segment registers
-    push ds
-    push es
-    push fs
-    push gs
-
-    ; Load kernel data segment (0x10) into all segment registers
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    ; Pass pointer to saved register state to the C handler
-    mov eax, esp
-    push eax
-    call isr_default_handler      
-
-    add esp, 4                    ; Clean up function argument
-
-    ; Restore segment registers
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    ; Restore general-purpose registers (equivalent to popad)
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4                    ; Skip original ESP (not restored)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-
-    sti                           ; Re-enable interrupts
-    iretd                          ; Return from interrupt
+    cli
+    pushad                          ; Save general-purpose registers
+    push dword esp                  ; Pass frame pointer
+    push dword 0xDEAD               ; Dummy interrupt number 
+    ; void isr_default_handler(interrupt_frame_t* frame);
+    call isr_default_handler
+    add esp, 8                      ; Clean up arguments
+    popad                           ; Restore registers
+    sti
+    iretd

@@ -45,20 +45,19 @@ extern void asm_isr14_wrapper(void);
 /* PUBLIC API */
 void idt_init(void);
 void idt_set(const int32_t isr_num, void* isr, const uint8_t attributes);
-void idt_dump_interrupt_frame(const interrupt_frame_t* regs);
-void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs);
-void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs);
-void isr_8_handler(uint32_t error_code, interrupt_frame_t* regs);
-void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs);
-void isr_13_handler(const uint32_t error_code, interrupt_frame_t* regs);
-void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs);
+void idt_dump_interrupt_frame(const interrupt_frame_t* frame);
+void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_6_handler(const uint32_t isr_num, interrupt_frame_t* frame);
+void isr_8_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_12_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_13_handler(const uint32_t error_code, interrupt_frame_t* frame);
+void isr_14_handler(const uint32_t fault_addr, const uint32_t error_code, interrupt_frame_t* frame);
 
-void irq0_handler(interrupt_frame_t* regs);
-void irq1_handler(interrupt_frame_t* regs);
+void irq0_handler(interrupt_frame_t* frame);
+void irq1_handler(interrupt_frame_t* frame);
 void irq12_handler(void);
-void isr_default_handler(interrupt_frame_t* regs);
+void isr_default_handler(interrupt_frame_t* frame);
 
 /* INTERNAL API */
 static void _pic1_send_eoi(void);
@@ -201,57 +200,34 @@ static void _pic2_send_eoi(void)
 	return;
 };
 
-void idt_dump_interrupt_frame(const interrupt_frame_t* regs)
+void idt_dump_interrupt_frame(const interrupt_frame_t* frame)
 {
 	kprintf("\n");
 	kprintf("==========================\n");
 	kprintf("=   Register Dump		  \n");
 	kprintf("==========================\n");
-	kprintf("EAX     0x%x\n", regs->eax);
-	kprintf("ECX     0x%x\n", regs->ecx);
-	kprintf("EDX     0x%x\n", regs->edx);
-	kprintf("EBX     0x%x\n", regs->ebx);
-	kprintf("ESP     0x%x\n", regs->esp);
-	kprintf("EBP     0x%x\n", regs->ebp);
-	kprintf("ESI     0x%x\n", regs->esi);
-	kprintf("EDI     0x%x\n", regs->edi);
-	kprintf("EIP     0x%x\n", regs->eip);
-	kprintf("CS      0x%x\n", regs->cs);
-	kprintf("EFLAGS  0x%x\n", regs->eflags);
-
-	if (regs->ss) {
-		kprintf("\n");
-		const uint32_t* stack = (uint32_t*)regs->esp;
-		kprintf("==========================\n");
-		kprintf("= Stack Dump (ESP)\n");
-		kprintf("==========================\n");
-
-		for (int32_t i = 3; i >= 1; i--) {
-			const void* addr = stack + i;
-			const uint32_t offset = i * 4;
-			offset >= 10 ? kprintf("ESP+%d", offset) : kprintf("ESP+%d ", offset);
-			kprintf(" (void*) 0x%x ", addr);
-			kprintf("[0x%x]\n", stack[i]);
-		};
-		for (int32_t i = 0; i < 3; i++) {
-			const void* addr = stack - i;
-			const uint32_t offset = i * 4;
-			offset >= 10 ? kprintf("ESP-%d", offset) : kprintf("ESP-%d ", offset);
-			kprintf(" (void*) 0x%x ", addr);
-			kprintf("[0x%x]\n", stack[-i]);
-		};
-	};
+	kprintf("EAX     0x%x\n", frame->eax);
+	kprintf("ECX     0x%x\n", frame->ecx);
+	kprintf("EDX     0x%x\n", frame->edx);
+	kprintf("EBX     0x%x\n", frame->ebx);
+	kprintf("ESP     0x%x\n", frame->esp);
+	kprintf("EBP     0x%x\n", frame->ebp);
+	kprintf("ESI     0x%x\n", frame->esi);
+	kprintf("EDI     0x%x\n", frame->edi);
+	kprintf("EIP     0x%x\n", frame->eip);
+	kprintf("CS      0x%x\n", frame->cs);
+	kprintf("EFLAGS  0x%x\n", frame->eflags);
 	return;
 };
 
-void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
+void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Division by Zero (#DE) Exception\n");
 	kprintf("----------------------------------------------------\n");
-	switch (regs->cs) {
+	switch (frame->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		idt_dump_interrupt_frame(regs);
+		idt_dump_interrupt_frame(frame);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -260,7 +236,7 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		kprintf(" - Unknown GDT Code Segment 0x%s detected.\n", regs->cs);
+		kprintf(" - Unknown GDT Code Segment 0x%s detected.\n", frame->cs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -268,14 +244,14 @@ void isr_0_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
+void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Debug Exception (#DB)\n");
 	kprintf("----------------------------------------------------\n");
-	switch (regs->cs) {
+	switch (frame->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		idt_dump_interrupt_frame(regs);
+		idt_dump_interrupt_frame(frame);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -283,7 +259,7 @@ void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", frame->cs);
 		panic(interrupt_messages[isr_num]);
 		break;
 	};
@@ -310,14 +286,14 @@ void isr_1_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
+void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Non-Maskable Interrupt (NMI) Exception\n");
 	kprintf("----------------------------------------------------\n");
-	switch (regs->cs) {
+	switch (frame->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		idt_dump_interrupt_frame(regs);
+		idt_dump_interrupt_frame(frame);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -325,7 +301,7 @@ void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", frame->cs);
 		panic(interrupt_messages[isr_num]);
 		break;
 	};
@@ -345,15 +321,15 @@ void isr_2_handler(const uint32_t isr_num, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs)
+void isr_6_handler(const uint32_t isr_num, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Invalid Opcode (#UD) Exception\n");
 	kprintf("----------------------------------------------------\n");
 
-	switch (regs->cs) {
+	switch (frame->cs) {
 	case GDT_KERNEL_CODE_SEGMENT: {
-		idt_dump_interrupt_frame(regs);
+		idt_dump_interrupt_frame(frame);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -362,7 +338,7 @@ void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs)
 		break;
 	};
 	default: {
-		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", regs->cs);
+		kprintf(" - Unknown GDT Code Segment 0x%x detected.\n", frame->cs);
 		panic(interrupt_messages[isr_num]);
 		return;
 	};
@@ -370,27 +346,27 @@ void isr_6_handler(uint32_t isr_num, interrupt_frame_t* regs)
 	return;
 };
 
-void isr_8_handler(uint32_t error_code, interrupt_frame_t* regs)
+void isr_8_handler(const uint32_t error_code, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Double Fault (#DF) Exception\n");
 	kprintf("----------------------------------------------------\n");
 	kprintf(" - Error Code: 0x%x\n", error_code);
-	kprintf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
-	kprintf(" - Code Segment (CS): 0x%x\n", regs->cs);
-	idt_dump_interrupt_frame(regs);
+	kprintf(" - Faulting Address (EIP): 0x%x\n", frame->eip);
+	kprintf(" - Code Segment (CS): 0x%x\n", frame->cs);
+	idt_dump_interrupt_frame(frame);
 	panic(interrupt_messages[0x8]);
 	return;
 };
 
-void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs)
+void isr_12_handler(const uint32_t error_code, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Stack-Segment Fault (#SS) Exception\n");
 	kprintf("----------------------------------------------------\n");
 	kprintf(" - Error Code: 0x%x\n", error_code);
-	kprintf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
-	kprintf(" - Code Segment (CS): 0x%x\n", regs->cs);
+	kprintf(" - Faulting Address (EIP): 0x%x\n", frame->eip);
+	kprintf(" - Code Segment (CS): 0x%x\n", frame->cs);
 
 	if (error_code & 1) {
 		kprintf(" - Protection Violation (Memory Access Violation)\n");
@@ -403,19 +379,19 @@ void isr_12_handler(uint32_t error_code, interrupt_frame_t* regs)
 	} else {
 		kprintf(" - Fault occurred in KERNEL MODE (Ring 0)\n");
 	};
-	idt_dump_interrupt_frame(regs);
+	idt_dump_interrupt_frame(frame);
 	panic(interrupt_messages[0xC]);
 	return;
 };
 
-void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
+void isr_13_handler(const uint32_t error_code, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] General Protection Fault (#GP) Exception\n");
 	kprintf("----------------------------------------------------\n");
 	kprintf(" - Error Code: 0x%x\n", error_code);
-	kprintf(" - Faulting Address (EIP): 0x%x\n", regs->eip);
-	kprintf(" - Code Segment (CS): 0x%x\n", regs->cs);
+	kprintf(" - Faulting Address (EIP): 0x%x\n", frame->eip);
+	kprintf(" - Code Segment (CS): 0x%x\n", frame->cs);
 
 	if (error_code & 1) {
 		kprintf(" - Protection Violation (Memory Access Violation)\n");
@@ -460,22 +436,23 @@ void isr_13_handler(uint32_t error_code, interrupt_frame_t* regs)
 		kprintf(" - Exception was caused by Software or invalid Segment\n");
 	};
 	kprintf("----------------------------------------------------\n");
-	idt_dump_interrupt_frame(regs);
-	panic(interrupt_messages[0xD]);
+	idt_dump_interrupt_frame(frame);
+
+	// panic(interrupt_messages[0xD]);
 	return;
 };
 
-void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t* regs)
+void isr_14_handler(const uint32_t fault_addr, const uint32_t error_code, interrupt_frame_t* frame)
 {
 	kprintf("\n----------------------------------------------------\n");
 	kprintf("[ERROR] Page Fault (#PF) Exception\n");
 	kprintf("----------------------------------------------------\n");
-	const int32_t present = error_code & 0b1;		  // Page Present
-	const int32_t write = error_code & 0b10;		  // Write Access
-	const int32_t user_mode = error_code & 0b100;		  // User-/Supervisor-Modus
-	const int32_t reserved = error_code & 0b1000;		  // Reserved Bits Overwritten
-	const int32_t instruction_fetch = error_code & 0b10000;	  // Instruction Fetch
-	const int32_t pk_flag = error_code & 0b100000;		  // PK flag (bit 5)
+	const int32_t present = error_code & PAGE_PRESENT;	  // Page Present
+	const int32_t write = error_code & PAGE_WRITABLE;	  // Write Access
+	const int32_t user_mode = error_code & PAGE_USER;	  // User-/Supervisor-Modus
+	const int32_t reserved = error_code & PAGE_PWT;		  // Reserved Bits Overwritten
+	const int32_t instruction_fetch = error_code & PAGE_PCD;  // Instruction Fetch
+	const int32_t pk_flag = error_code & PAGE_ACCESSED;	  // PK flag (bit 5)
 	const int32_t sgx_flag = error_code & 0b1000000000000000; // SGX flag (bit 15)
 	kprintf("[INFO] Page Fault occured\n");
 
@@ -512,12 +489,19 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	if (sgx_flag) {
 		kprintf(" - SGX-Specific Access Control Violation (SGX flag)\n");
 	};
+
+	if ((frame->cs & 0x3) == 3) {
+		kprintf("[CONTEXT] Fault occurred in USER LAND RING 3.\n");
+		kprintf("[SECURITY] Usermode attempted Kernel Write at 0x%x. Killing Process.\n", fault_addr);
+		panic("[CRITICAL] System Halted!");
+	} else {
+		kprintf("[CONTEXT] Fault occurred in KERNEL Mode RING 0.\n");
+	};
+	/*
 	uint32_t* target_dir = (user_mode) ? task_get_curr()->parent->page_dir : kernel_directory;
 
 	kprintf("[DEBUG] Current Page Directory: 0x%x\n", (v2p((uint32_t)target_dir)));
-	idt_dump_interrupt_frame(regs);
-
-	// kprintf("[WARNING] Unmapped Address Access Attempt Detected at: 0x%x\n", (uint32_t)fault_addr);
+	idt_dump_interrupt_frame(frame);
 
 	// Align fault address to 4 MiB boundary by clearing lower 22 bits
 	const uint32_t aligned_fault_addr = fault_addr & 0xFFC00000;
@@ -538,21 +522,20 @@ void isr_14_handler(uint32_t fault_addr, uint32_t error_code, interrupt_frame_t*
 	};
 	page_map_dir(target_dir, aligned_fault_addr, phys_addr, page_flags);
 	kprintf("[INFO] Mapped Virtual Address 0x%x to Physical Address 0x%x\n", aligned_fault_addr, phys_addr);
-	busy_wait(5000000);
+	*/
 	return;
 };
 
-void irq0_handler(interrupt_frame_t* regs)
+void irq0_handler(interrupt_frame_t* frame)
 {
-	// kprintf("%d\n", timer.ticks);
 	timer.ticks++;
 	_pic1_send_eoi();
 
-	scheduler_schedule(regs);
+	scheduler_schedule(frame);
 	return;
 };
 
-void irq1_handler(interrupt_frame_t* regs)
+void irq1_handler(interrupt_frame_t* frame)
 {
 	if (ps2_wait(PS2_BUFFER_OUTPUT) == 0) {
 		const uint8_t scancode = inb(PS2_DATA_PORT);
@@ -577,7 +560,7 @@ void irq12_handler(void)
 	return;
 };
 
-void isr_default_handler(interrupt_frame_t* regs)
+void isr_default_handler(interrupt_frame_t* frame)
 {
 	_pic1_send_eoi();
 	return;

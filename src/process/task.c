@@ -211,7 +211,7 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 		return 0x0;
 	};
 	const uint32_t offset = parent->task_count * (USER_STACK_SIZE / PROCESS_MAX_THREAD); // 256 KiB per Stack
-	const uint32_t stack_top = USER_STACK_END - offset;
+	const uint32_t stack_top = (USER_STACK_END - offset);
 	const uint32_t stack_bottom = stack_top - (USER_STACK_SIZE / PROCESS_MAX_THREAD) + 1;
 	task->stack_top = stack_top;
 	task->stack_bottom = stack_bottom;
@@ -224,7 +224,7 @@ task_t* task_create(process_t* parent, const uint8_t* file)
 
 	task->registers.eip = USER_CODE_START;
 	task->registers.eflags = (EFLAGS_IF | EFLAGS_MBS);
-	task->registers.esp = task->registers.ebp = task->stack_top;
+	task->registers.esp = task->registers.ebp = (task->stack_top & ~STACK_ALIGN_MASK_4);
 
 	task->registers.cs = GDT_USER_CODE_SEGMENT | 3; // 0x1B
 	task->registers.ss = GDT_USER_DATA_SEGMENT | 3; // 0x23

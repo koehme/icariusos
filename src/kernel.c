@@ -43,7 +43,7 @@ void panic(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	kprintf("\n");
+	// kprintf("\n");
 	kprintf("[KERNEL PANIC] ");
 	vkprintf(fmt, args);
 	va_end(args);

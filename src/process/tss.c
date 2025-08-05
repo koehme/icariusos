@@ -48,7 +48,7 @@ void tss_init(tss_t* self, uint32_t esp0, uint16_t ss0)
 	// Ensure the TSS is initially zero'd
 	memset(self, 0, sizeof(tss_t));
 	// Set the kernel stack pointer
-	self->esp0 = esp0;
+	self->esp0 = esp0 & ~STACK_ALIGN_MASK_4;
 	// Set the kernel stack segment
 	self->ss0 = ss0;
 	self->iopb = sizeof(tss_t);

@@ -4,17 +4,17 @@ global asm_restore_kernel_segment
 global asm_restore_user_segment
 
 ; ------------------------------------------------
-; void asm_enter_task(task_registers_t* regs)
+; void asm_enter_task(task_registers_t* frame)
 ; restores the task's registers and performs an IRETD to switching tasks
 asm_enter_task:
     mov ebp, esp
-    mov ebx, [ebp + 4]    ; Load pointer to regs into EBX (regs = &task->registers)
+    mov ebx, [ebp + 4]    ; Load pointer to frame into EBX (frame = &task->registers)
 
     ; Push stack setup (for IRETD)
     push dword [ebx + 44] ; Push SS (Stack Segment)
     push dword [ebx + 40] ; Push ESP (Stack Pointer)
 
-    mov eax, [ebx + 36]   ; Load EFLAGS from regs->eflags
+    mov eax, [ebx + 36]   ; Load EFLAGS from frame->eflags
     or eax, 0x200         ; Set Interrupt Flag (IF) to enable interrupts
     push eax              ; Push modified EFLAGS
 
@@ -29,14 +29,14 @@ asm_enter_task:
     mov gs, ax
 
     ; Restore general-purpose registers
-    push dword [ebp + 4]  ; Push pointer to regs onto the stack
+    push dword [ebp + 4]  ; Push pointer to frame onto the stack
     call asm_task_restore_register
     add esp, 4            ; Clean up the stack after function call
 
     iretd                 ; Perform an interrupt return to switch to next task
 
 ; ------------------------------------------------
-; void asm_task_restore_register(task_registers_t* regs)
+; void asm_task_restore_register(task_registers_t* frame)
 ; restores all general-purpose registers from a saved task context.
 asm_task_restore_register:
     push ebp

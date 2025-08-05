@@ -18,6 +18,7 @@ static void _history_builtin(const char* args);
 static void _cat_builtin(const char* path);
 static void _heapstat_builtin(const char* args);
 static void _unknown_builtin(const char* args);
+static void _pf_builtin(const char* args);
 
 void execute_builtin(const char* input);
 
@@ -27,8 +28,8 @@ typedef struct builtin {
 } builtin_t;
 
 const static builtin_t builtins[] = {
-    {"exit", _exit_builtin},	   {"help", _help_builtin}, {"echo", _echo_builtin},	     {"ls", _ls_builtin},
-    {"history", _history_builtin}, {"cat", _cat_builtin},   {"heapstat", _heapstat_builtin}, {0x0, 0x0},
+    {"exit", _exit_builtin}, {"help", _help_builtin},	      {"echo", _echo_builtin}, {"ls", _ls_builtin}, {"history", _history_builtin},
+    {"cat", _cat_builtin},   {"heapstat", _heapstat_builtin}, {"pf", _pf_builtin},     {0x0, 0x0},
 };
 
 #define BUILTIN_COUNT (sizeof(builtins) / sizeof(builtin_t))
@@ -55,6 +56,14 @@ static void _exit_builtin(const char* args)
 static void _history_builtin(const char* args)
 {
 	history_dump(&icarsh_history);
+	return;
+};
+
+static void _pf_builtin(const char* args)
+{
+	char* ptr = (char*)(uintptr_t)0xC0000001;
+	ptr[0] = 'P';
+	ptr[1] = 'F';
 	return;
 };
 

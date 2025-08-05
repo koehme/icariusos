@@ -143,6 +143,7 @@
     Kernel Stack
 ====================================
 */
+#define STACK_ALIGN_MASK_4 0b00000011
 #define KERNEL_STACK_SIZE 0x8000				       // 32 KiB
 #define KERNEL_STACK_BOTTOM (KERNEL_HEAP_MAX + 1)		       // 0xC2C00000
 #define KERNEL_STACK_TOP (KERNEL_STACK_BOTTOM + KERNEL_STACK_SIZE - 1) // 0xC2C07FFF

@@ -40,7 +40,7 @@ typedef struct task_registers {
 	uint32_t eflags; // Offset +36  | EFLAGS Register (Interrupts, System Flags)
 	uint32_t esp;	 // Offset +40  | Stack Pointer (Usermode ESP)
 	uint32_t ss;	 // Offset +44  | Stack Segment (Usermode SS)
-} task_registers_t;
+} __attribute__((packed)) task_registers_t;
 
 typedef struct task {
 	uint32_t stack_top;
@@ -51,7 +51,7 @@ typedef struct task {
 	wait_reason_t waiting_on;
 } task_t;
 
-extern void asm_enter_task(task_registers_t* regs);
+extern void asm_enter_task(task_registers_t* frame);
 extern void asm_restore_kernel_segment(void);
 extern void asm_restore_user_segment(void);
 
