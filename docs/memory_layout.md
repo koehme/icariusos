@@ -1,8 +1,8 @@
+> ⚠️ **Warning**  
+> STACK ADDRESSES (SUCH AS ESP0 FOR TSS OR PER-TASK STACKS) ARE MANUALLY ALIGNED TO 4-BYTE BOUNDARIES USING A BITMASK OPERATION (E.G., ESP0 & ~0b00000011).
+> THIS ENSURES COMPATIBILITY WITH IRET, CONSISTENT STACK BEHAVIOR AND PREVENTS SUBTLE BUGS DURING PRIVILEGE-LEVEL TRANSITIONS (RING 3 → RING 0 VIA TSS).
+
 ```text
-
-STACK ADDRESSES (SUCH AS ESP0 FOR TSS OR PER-TASK STACKS) ARE MANUALLY ALIGNED TO 4-BYTE BOUNDARIES USING A BITMASK OPERATION (E.G., ESP0 & ~0b00000011). 
-THIS ENSURES COMPATIBILITY WITH IRET, CONSISTENT STACK BEHAVIOR AND PREVENTS SUBTLE BUGS DURING PRIVILEGE-LEVEL TRANSITIONS (RING 3 → RING 0 VIA TSS).
-
 ########################################################
 ## Memory Layout Formula                              ##
 ########################################################
@@ -34,7 +34,7 @@ Example: Entry Index 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
 
 ########################################################
-            Stage 2: Active Virtual Memory Layout 
+            Stage 2: Active Virtual Memory Layout
 ########################################################
 
 | 0x00000000  - 0x003FFFFF  | Unmapped                  | Freed after Identity Mapping               | Entry 0 => Cleared   |
@@ -77,7 +77,7 @@ Example: Entry Index 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 |                             |
 |     Stack Bottom (ESP End)  |
 |                             |
-+-----------------------------+  0xC2C07FFF  ← KERNEL_STACK_TOP (TSS.esp0)
++-----------------------------+  0xC2C07FFF & ~0x3 = 0xC2C07FFC  ← KERNEL_STACK_TOP (TSS.esp0)
 +-----------------------------+  0xC2C08000  ← RESERVED_STACK_START
 |                             |
 |     Reserved Stack Space    |
@@ -88,7 +88,7 @@ Example: Entry Index 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 
 ```text
 ############################################################
-            User Thread Stack Allocation (within a 4 MiB Page)     
+            User Thread Stack Allocation (within a 4 MiB Page)
 ############################################################
 
 Each task stack has a size of 256 KiB (0x40000) and grows downwards.
@@ -114,7 +114,7 @@ USER_STACK_END (0xBFFFFFFF)
 USER_STACK_START (0xBFC00000)
 
 ############################################################
-            Stack Address Calculation                              
+            Stack Address Calculation
 ############################################################
 
 Stack_Top    = USER_STACK_END   - (Thread_ID * 0x40000)

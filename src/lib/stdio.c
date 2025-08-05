@@ -46,7 +46,7 @@ int vkprintf(const char* fmt, va_list args)
 					break;
 				};
 				case 'f': {
-					char buffer[1024] = {};
+					char buffer[64] = {};
 					double num = va_arg(args, double);
 					dtoa(num, buffer, 6);
 					vbe_draw_string(&vbe_display, buffer, VBE_COLOR_GREEN);

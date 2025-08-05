@@ -14,18 +14,19 @@ extern pfa_t pfa;
 extern uint32_t kernel_directory[1024];
 
 /* PUBLIC API */
-void page_dump_dir(uint32_t* dir);
-uint32_t* page_create_dir(uint32_t flags);
-void page_set_dir(uint32_t* self);
+void page_dump_dir(const uint32_t* dir);
+uint32_t* page_create_dir(const uint32_t flags);
+void page_set_dir(const uint32_t* self);
 uint32_t* page_get_dir(void);
-void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
-void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags);
-void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, uint32_t flags);
+void page_map(const uint32_t virt_addr, const uint32_t phys_addr, const uint32_t flags);
+void page_map_dir(uint32_t* dir, const uint32_t virt_addr, const uint32_t phys_addr, const uint32_t flags);
+void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, const uint32_t flags);
 void page_unmap_dir(uint32_t* dir, const uint32_t virt_addr);
-void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr);
+void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, const uint32_t virt_end_addr);
 uint32_t page_get_phys_addr(uint32_t* dir, const uint32_t virt_addr);
+void page_restore_kernel_dir(void);
 
-void page_dump_dir(uint32_t* dir)
+void page_dump_dir(const uint32_t* dir)
 {
 	if (!dir) {
 		kprintf("[ERROR] Invalid Page Directory!\n");
@@ -51,7 +52,7 @@ void page_dump_dir(uint32_t* dir)
 	return;
 };
 
-uint32_t* page_create_dir(uint32_t flags)
+uint32_t* page_create_dir(const uint32_t flags)
 {
 	uint64_t phys_addr = pfa_alloc();
 
@@ -80,7 +81,7 @@ uint32_t* page_create_dir(uint32_t flags)
 	return dir;
 };
 
-void page_set_dir(uint32_t* self)
+void page_set_dir(const uint32_t* self)
 {
 	asm volatile("mov %0, %%cr3" : : "r"(self));
 	return;
@@ -93,7 +94,7 @@ uint32_t* page_get_dir(void)
 	return (uint32_t*)cr3;
 };
 
-void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
+void page_map(const uint32_t virt_addr, const uint32_t phys_addr, const uint32_t flags)
 {
 	const uint32_t pd_index = virt_addr >> 22;
 	uint32_t* dir = page_get_dir();
@@ -102,7 +103,7 @@ void page_map(uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
 	return;
 };
 
-void page_map_dir(uint32_t* dir, uint32_t virt_addr, uint32_t phys_addr, uint32_t flags)
+void page_map_dir(uint32_t* dir, const uint32_t virt_addr, const uint32_t phys_addr, const uint32_t flags)
 {
 	const uint32_t pd_index = virt_addr >> 22;
 	dir[pd_index] = (phys_addr & 0xFFC00000) | (flags & 0xFFF);
@@ -136,7 +137,7 @@ void page_restore_kernel_dir(void)
 	return;
 };
 
-void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, uint32_t flags)
+void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr, const uint32_t flags)
 {
 	if (!dir) {
 		kprintf("[ERROR] Invalid Page Directory!\n");
@@ -159,7 +160,7 @@ void page_map_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end
 	return;
 };
 
-void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, uint32_t virt_end_addr)
+void page_unmap_between(uint32_t* dir, uint32_t virt_start_addr, const uint32_t virt_end_addr)
 {
 	if (!dir) {
 		kprintf("[ERROR] Invalid Page Directory!\n");
