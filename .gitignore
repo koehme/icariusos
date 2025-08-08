@@ -11,3 +11,5 @@ iso/boot/ICARIUS.BIN
 
 !bin/
 !bin/**
+
+limine/*

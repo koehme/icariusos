@@ -46,15 +46,16 @@ Example: Entry Index 897 * 4194304 = 0xE0400000 - 0xE07FFFFF
 | `0xC0400000 - 0xC07FFFFF` | `0x00400000 - 0x007FFFFF` | Kernel Memory (->   4 MiB)                 | Entry 769            |
 | `0xC0800000 - 0xC0BFFFFF` | `0x00800000 - 0x00BFFFFF` | Kernel Memory (->   4 MiB)                 | Entry 770            |
 | `0xC0C00000 - 0xC0FFFFFF` | `0x00C00000 - 0x00FFFFFF` | Kernel Memory (->   4 MiB)                 | Entry 771            |
-| `0xC1000000 - 0xC13FFFFF` | `0x01000000 - 0x013FFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 772            |
-| `0xC1400000 - 0xC17FFFFF` | `0x01400000 - 0x017FFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 773            |
-| `0xC1800000 - 0xC1BFFFFF` | `0x01800000 - 0x01BFFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 774            |
-| `0xC1C00000 - 0xC1FFFFFF` | `0x01C00000 - 0x01FFFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 775            |
-| `0xC2000000 - 0xC23FFFFF` | `0x02000000 - 0x023FFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 776            |
-| `0xC2400000 - 0xC27FFFFF` | `0x02400000 - 0x027FFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 777            |
-| `0xC2800000 - 0xC2BFFFFF` | `0x02800000 - 0x02BFFFFF` | Kernel Heap	(->   4 MiB)                 | Entry 778            |
+| `0xC1000000 - 0xC13FFFFF` | `0x01000000 - 0x013FFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 772            |
+| `0xC1400000 - 0xC17FFFFF` | `0x01400000 - 0x017FFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 773            |
+| `0xC1800000 - 0xC1BFFFFF` | `0x01800000 - 0x01BFFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 774            |
+| `0xC1C00000 - 0xC1FFFFFF` | `0x01C00000 - 0x01FFFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 775            |
+| `0xC2000000 - 0xC23FFFFF` | `0x02000000 - 0x023FFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 776            |
+| `0xC2400000 - 0xC27FFFFF` | `0x02400000 - 0x027FFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 777            |
+| `0xC2800000 - 0xC2BFFFFF` | `0x02800000 - 0x02BFFFFF` | Kernel Heap	(->   4 MiB)                   | Entry 778            |
 | `0xC2C00000 - 0xC2FFFFFF` | `0x02C00000 - 0x02FFFFFF` | Kernel Stack                               | Entry 779            |
 | `0xE0000000 - 0xE03FFFFF` | `0xFD000000 - 0xFD3FFFFF` | VBE Framebuffer                            | Entry 896            |
+| `0xE0400000 - 0xE07FFFFF` | `0xFD400000 - 0xFD7FFFFF` | VBE Backbuffer                             | Entry 897            |
 | **Unmapped Addresses**    | -                         | Dynamic Allocation by PageFault Handler    | N/A                  |
 |---------------------------|---------------------------|--------------------------------------------|----------------------|
 ```

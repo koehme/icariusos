@@ -1,0 +1,193 @@
+INCLUDES = -I./src/x86/include
+FLAGS = -g -ffreestanding -fomit-frame-pointer \
+        -Wno-unused-function -Wno-unused-variable -fno-builtin -Werror -Wno-unused-label \
+        -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
+ASSEMBLER = nasm
+GCC = i686-elf-gcc
+OBJCOPY = i686-elf-objcopy
+AR = i686-elf-ar
+
+OBJ_DIR = ./obj/x86
+
+SOURCES_C = \
+    ./src/x86/kernel.c \
+    ./src/x86/syscall.c \
+    ./src/x86/errno.c \
+    ./src/x86/driver/ata.c \
+    ./src/x86/driver/cmos.c \
+    ./src/x86/driver/cursor.c \
+    ./src/x86/driver/keyboard.c \
+    ./src/x86/driver/timer.c \
+    ./src/x86/driver/vga.c \
+    ./src/x86/driver/vbe.c \
+    ./src/x86/driver/pci.c \
+    ./src/x86/driver/mouse.c \
+    ./src/x86/driver/rtc.c \
+    ./src/x86/driver/ps2.c \
+    ./src/x86/driver/fat16/fat16.c \
+    ./src/x86/fs/pathlexer.c \
+    ./src/x86/fs/pathparser.c \
+    ./src/x86/fs/stream.c \
+    ./src/x86/fs/vfs.c \
+    ./src/x86/fs/vnode.c \
+    ./src/arch/x86/idt.c \
+    ./src/arch/x86/gdt.c \
+    ./src/arch/x86/pic.c \
+    ./src/arch/x86/sync/spinlock.c \
+    ./src/x86/memory/heap.c \
+    ./src/x86/memory/page.c \
+    ./src/x86/memory/pfa.c \
+    ./src/x86/ds/fifo.c \
+    ./src/x86/process/tss.c \
+    ./src/x86/process/task.c \
+    ./src/x86/process/process.c \
+    ./src/x86/process/idle.c \
+    ./src/x86/process/tty.c \
+    ./src/x86/scheduler/scheduler.c \
+    ./src/x86/scheduler/rr.c \
+    ./src/x86/scheduler/wq.c \
+    ./src/x86/lib/stdlib.c \
+    ./src/x86/lib/stdio.c \
+    ./src/x86/lib/math.c \
+    ./src/x86/lib/string.c \
+    ./src/x86/lib/ctype.c \
+    ./src/x86/test/ata_test.c \
+    ./src/x86/test/heap_test.c \
+    ./src/x86/test/isr_test.c \
+    ./src/x86/test/page_test.c \
+    ./src/x86/test/vfs_test.c \
+
+SOURCES_ASM = \
+    ./src/arch/x86/gdt.asm \
+    ./src/arch/x86/boot/loader.asm \
+    ./src/arch/x86/idt.asm \
+    ./src/arch/x86/io.asm \
+    ./src/arch/x86/sync/spinlock.asm \
+    ./src/x86/process/task.asm \
+
+define obj_c
+$(OBJ_DIR)/$(notdir $(1:.c=.c.o))
+endef
+
+define obj_asm
+$(OBJ_DIR)/$(notdir $(1:.asm=.asm.o))
+endef
+
+OBJECTS_C = $(foreach src,$(SOURCES_C),$(call obj_c,$(src)))
+OBJECTS_ASM = $(foreach src,$(SOURCES_ASM),$(call obj_asm,$(src)))
+OBJECTS = $(OBJECTS_C) $(OBJECTS_ASM)
+
+all: $(OBJECTS) image
+
+$(OBJ_DIR)/%.c.o: ./src/x86/lib/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/test/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+    
+$(OBJ_DIR)/%.c.o: ./src/x86/fs/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/driver/fat16/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/driver/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/process/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/scheduler/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/ds/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.c.o: ./src/x86/memory/%.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/kernel.c.o: ./src/x86/kernel.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/idt.c.o: ./src/arch/x86/idt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/spinlock.c.o: ./src/arch/x86/sync/spinlock.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/syscall.c.o: ./src/x86/syscall.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/errno.c.o: ./src/x86/errno.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/gdt.c.o: ./src/arch/x86/gdt.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/pic.c.o: ./src/arch/x86/pic.c
+	$(GCC) $(INCLUDES) $(FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/loader.asm.o: ./src/arch/x86/boot/loader.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/gdt.asm.o: ./src/arch/x86/gdt.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/idt.asm.o: ./src/arch/x86/idt.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/io.asm.o: ./src/arch/x86/io.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/task.asm.o: ./src/x86/process/task.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+$(OBJ_DIR)/spinlock.asm.o: ./src/arch/x86/sync/spinlock.asm
+	$(ASSEMBLER) -f elf32 -g $< -o $@
+
+image: $(OBJECTS)
+	i686-elf-ld --no-warn-rwx-segments -n -T ./linker.ld $(OBJECTS) -o ./bin/x86/ICARIUS.BIN
+	cp ./bin/x86/ICARIUS.BIN ./iso/grub/boot/ICARIUS.BIN
+
+clean:
+	rm -rf $(OBJ_DIR)/*.o
+	rm -rf ./src/x86/user/obj/*.o
+	rm -rf ./src/x86/user/libc/obj/*.o
+
+icarsh:
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/stdio.c -o ./src/x86/user/libc/obj/stdio.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/malloc/malloc.c -o ./src/x86/user/libc/obj/malloc.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/history.c -o ./src/x86/user/libc/obj/history.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/kbd.c -o ./src/x86/user/libc/obj/kbd.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/stdlib.c -o ./src/x86/user/libc/obj/stdlib.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/string.c -o ./src/x86/user/libc/obj/string.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/readline.c -o ./src/x86/user/libc/obj/readline.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/syscall.c -o ./src/x86/user/libc/obj/syscall.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/errno.c -o ./src/x86/user/libc/obj/errno.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/dirent.c -o ./src/x86/user/libc/obj/dirent.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -c ./src/x86/user/libc/string/strerror.c -o ./src/x86/user/libc/obj/strerror.o
+
+	$(AR) rcs ./src/x86/user/libc/lib/libc.a \
+		./src/x86/user/libc/obj/stdio.o \
+		./src/x86/user/libc/obj/malloc.o \
+		./src/x86/user/libc/obj/history.o \
+		./src/x86/user/libc/obj/kbd.o \
+		./src/x86/user/libc/obj/strerror.o \
+		./src/x86/user/libc/obj/dirent.o \
+		./src/x86/user/libc/obj/errno.o \
+		./src/x86/user/libc/obj/stdlib.o \
+		./src/x86/user/libc/obj/readline.o \
+		./src/x86/user/libc/obj/string.o \
+		./src/x86/user/libc/obj/syscall.o
+
+	$(ASSEMBLER) -f elf32 -g ./src/x86/user/icarsh/entry.asm -o ./src/x86/user/icarsh/obj/entry.o
+	$(GCC) -I ./src/x86/user/libc/include/ -I ./src/x86/user/icarsh/include/ $(FLAGS) -c ./src/x86/user/icarsh/icarsh.c -o ./src/x86/user/icarsh/obj/icarsh.o
+	$(GCC) -I ./src/x86/user/libc/include/ -I ./src/x86/user/icarsh/include/ $(FLAGS) -c ./src/x86/user/icarsh/builtin.c -o ./src/x86/user/icarsh/obj/builtin.o
+	$(GCC) -I ./src/x86/user/libc/include/ $(FLAGS) -T ./src/x86/user/icarsh/user.ld \
+		./src/x86/user/icarsh/obj/entry.o \
+		./src/x86/user/icarsh/obj/icarsh.o \
+		./src/x86/user/icarsh/obj/builtin.o \
+		-o ./src/x86/user/icarsh/elf/icarsh.elf ./src/x86/user/libc/lib/libc.a
+
+	$(OBJCOPY) -O binary ./src/x86/user/icarsh/elf/icarsh.elf ./src/x86/user/icarsh/bin/ICARSH.BIN
+	cp ./src/x86/user/icarsh/bin/ICARSH.BIN ./bin/x86/BIN/ICARSH.BIN

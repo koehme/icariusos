@@ -1,0 +1,27 @@
+CC = x86_64-elf-gcc
+CFLAGS = -ffreestanding -m64 -g -O0 -Wall -Wextra -std=gnu11 -fno-pic -nostdlib -fno-stack-protector -mcmodel=kernel -I ./src/x86_64/include
+
+SRCDIR := src/x86_64
+OBJDIR := obj/x86_64
+BINDIR := bin/x86_64
+LINKER := linker64.ld
+
+SRCS := $(shell find $(SRCDIR) -name '*.c')
+OBJS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
+
+KERNEL := $(BINDIR)/ICARIUS.elf
+
+all: $(KERNEL)
+
+$(KERNEL): $(OBJS)
+	mkdir -p $(dir $@)
+	$(CC) -T $(LINKER) -nostdlib -o $@ $^
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJDIR) $(KERNEL)
+
+.PHONY: all clean
