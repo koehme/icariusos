@@ -20,6 +20,7 @@ noreturn void panic(void)
 	fb_clear(RED);
 
 	for (;;) {
-		halt();
+		asm_halt();
 	};
+	__builtin_unreachable();
 };

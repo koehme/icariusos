@@ -173,7 +173,7 @@ typedef struct fb_color_format {
 } fb_color_format_t;
 
 typedef struct fb {
-	uint32_t* frontbuffer;	  // Points to the actual framebuffer in video memory (what is visible on screen)
+	uint32_t* frontbuffer;	  // Points to the actual framebuffer in video memory mmio-mapped (what is visible on screen)
 	uint32_t* backbuffer;	  // Optional off-screen buffer for double buffering
 	uint32_t width;		  // Horizontal resolution in pixels
 	uint32_t height;	  // Vertical resolution in pixels
@@ -181,7 +181,10 @@ typedef struct fb {
 	uint32_t bpp;		  // Bits per pixel (e.g., 32 for 0xAARRGGBB)
 	size_t buffer_size;	  // Total size of one framebuffer in bytes (height * pitch)
 	fb_color_format_t format; // Describes how to assemble a pixel from RGBA components
+	uint32_t cursor_x;
+	uint32_t cursor_y;
 } fb_t;
 
 void fb_setup(void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp, const fb_color_format_t format);
 void fb_clear(const uint32_t color);
+void fb_draw_string(const char* str, const uint32_t color);

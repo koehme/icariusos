@@ -21,13 +21,17 @@ void kmain(void);
 void halt(void);
 
 /* INTERNAL API */
-static void _init_limine(void);
 static volatile struct limine_framebuffer_request fb_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0,
 };
+static void _init_limine(void);
 
-void halt(void) { __asm__ volatile("hlt"); };
+void asm_halt(void)
+{
+	__asm__ volatile("hlt");
+	return;
+};
 
 static void _init_limine(void)
 {
@@ -56,7 +60,10 @@ static void _init_limine(void)
 	    .a_size = 0,
 	};
 	fb_setup(fb->address, fb->width, fb->height, fb->pitch, fb->bpp, format);
-	fb_clear(GREEN);
+	fb_clear(BLACK);
+
+	fb_draw_string("Hello from icariusOS in x64\n", GREEN);
+
 	return;
 };
 
@@ -64,7 +71,8 @@ void kmain(void)
 {
 	_init_limine();
 
-	for (;;)
-		halt();
+	for (;;) {
+		asm_halt();
+	};
 	return;
 };

@@ -7,4 +7,4 @@
 #pragma once
 
 void kmain(void);
-void halt(void);
+void asm_halt(void);
