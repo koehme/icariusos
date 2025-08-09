@@ -6,6 +6,6 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-b fb_draw_ch
+b kmain
 
 c

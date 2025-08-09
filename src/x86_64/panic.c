@@ -5,7 +5,7 @@
  */
 
 #include "panic.h"
-#include "fb.h"
+#include "font.h"
 #include "kernel.h"
 
 /* EXTERNAL API */
@@ -17,8 +17,6 @@ noreturn void panic(void);
 
 noreturn void panic(void)
 {
-	fb_clear(RED);
-
 	for (;;) {
 		asm_halt();
 	};

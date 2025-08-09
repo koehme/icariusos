@@ -13,6 +13,7 @@
 /* EXTERNAL API */
 
 /* PUBLIC API */
+size_t strlen(const char* str);
 int32_t strcmp(const char* str1, const char* str2);
 char* strncpy(char* dest, const char* src, size_t n);
 size_t strlen(const char* str);
@@ -29,6 +30,15 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num);
 
 /* INTERNAL API */
 
+size_t strlen(const char* str)
+{
+	const char* s = str;
+
+	while (*s) {
+		s++;
+	};
+	return (size_t)(s - str);
+};
 int32_t strcmp(const char* str1, const char* str2)
 {
 	while (*str1 && (*str1 == *str2)) {
@@ -52,15 +62,6 @@ char* strncpy(char* dest, const char* src, size_t n)
 };
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
-
-size_t strlen(const char* str)
-{
-	size_t length = 0;
-	while (str[length] != '\0') {
-		length++;
-	}
-	return length;
-};
 
 char* sptr(char* str, const char c)
 {

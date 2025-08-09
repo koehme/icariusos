@@ -1,5 +1,5 @@
 CC = x86_64-elf-gcc
-CFLAGS = -ffreestanding -m64 -g -O0 -Wall -Wextra -std=gnu11 -fno-pic -nostdlib -fno-stack-protector -mcmodel=kernel -I ./src/x86_64/include
+CFLAGS = -ffreestanding -m64 -g -O0 -Wall -Wextra -std=gnu23 -fno-pic -nostdlib -fno-stack-protector -mcmodel=kernel -I ./src/x86_64/include
 
 SRCDIR := src/x86_64
 OBJDIR := obj/x86_64

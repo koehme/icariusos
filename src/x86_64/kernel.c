@@ -10,8 +10,11 @@
 
 #include "errno.h"
 #include "fb.h"
+#include "font.h"
 #include "kernel.h"
 #include "panic.h"
+#include "renderer.h"
+#include "tty.h"
 
 /* EXTERNAL API */
 extern int errno;
@@ -61,15 +64,21 @@ static void _init_limine(void)
 	};
 	fb_setup(fb->address, fb->width, fb->height, fb->pitch, fb->bpp, format);
 	fb_clear(BLACK);
-
-	fb_draw_string("Hello from icariusOS in x64\n", GREEN);
-
 	return;
 };
 
 void kmain(void)
 {
 	_init_limine();
+	fb_t* fb = fb_get();
+	renderer_t renderer;
+	renderer_setup(&renderer, fb->width, fb->height, WHITE, BLACK, true);
+
+	tty_t tty;
+	tty_init(&tty, &renderer);
+
+	for (size_t i = 0; i < 45000; i++)
+		tty_puts(&tty, "Hello World");
 
 	for (;;) {
 		asm_halt();
