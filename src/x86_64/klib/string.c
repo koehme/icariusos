@@ -11,6 +11,7 @@
 #include "string.h"
 
 /* EXTERNAL API */
+// -
 
 /* PUBLIC API */
 size_t strlen(const char* str);
@@ -29,6 +30,7 @@ void* memcpy(void* dest, const void* src, size_t n);
 int memcmp(const void* ptr1, const void* ptr2, size_t num);
 
 /* INTERNAL API */
+// -
 
 size_t strlen(const char* str)
 {

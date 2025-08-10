@@ -18,6 +18,7 @@
 
 /* EXTERNAL API */
 extern int errno;
+extern fb_t fb;
 
 /* PUBLIC API */
 void kmain(void);
@@ -52,7 +53,7 @@ static void _init_limine(void)
 		panic();
 		return;
 	};
-	const fb_color_format_t format = {
+	const fb_color_format_t fmt = {
 	    .r_shift = fb->red_mask_shift,
 	    .g_shift = fb->green_mask_shift,
 	    .b_shift = fb->blue_mask_shift,
@@ -62,23 +63,25 @@ static void _init_limine(void)
 	    .b_size = fb->blue_mask_size,
 	    .a_size = 0,
 	};
-	fb_setup(fb->address, fb->width, fb->height, fb->pitch, fb->bpp, format);
-	fb_clear(BLACK);
+	fb_setup(fb->address, fb->width, fb->height, fb->pitch, fb->bpp, fmt);
 	return;
 };
 
 void kmain(void)
 {
 	_init_limine();
-	fb_t* fb = fb_get();
+
+	font_t font;
+	font_setup(&font, 8, 8, default_glyph);
+
 	renderer_t renderer;
-	renderer_setup(&renderer, fb->width, fb->height, WHITE, BLACK, true);
+	renderer_setup(&renderer, &font, fb.width, fb.height, GREEN, BLACK, true);
 
 	tty_t tty;
 	tty_init(&tty, &renderer);
 
-	for (size_t i = 0; i < 45000; i++)
-		tty_puts(&tty, "Hello World");
+	for (size_t i = 0; i < 800000000; i++)
+		tty_puts(&tty, "Hello from icariusOS x64\n");
 
 	for (;;) {
 		asm_halt();

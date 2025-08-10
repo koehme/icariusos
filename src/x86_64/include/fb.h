@@ -39,4 +39,3 @@ void fb_setup(void* addr, const uint32_t width, const uint32_t height, const uin
 void fb_clear(const uint32_t color);
 void fb_scroll(const uint32_t bg);
 void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
-fb_t* fb_get(void);

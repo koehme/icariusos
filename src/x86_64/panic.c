@@ -9,11 +9,13 @@
 #include "kernel.h"
 
 /* EXTERNAL API */
+// -
 
 /* PUBLIC API */
 noreturn void panic(void);
 
 /* INTERNAL API */
+// -
 
 noreturn void panic(void)
 {

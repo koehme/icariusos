@@ -10,22 +10,18 @@
 #include "fb.h"
 #include "string.h"
 
-static fb_t fb = {};
-
 /* EXTERNAL API */
 extern int errno;
 
 /* PUBLIC API */
-fb_t* fb_get(void);
 void fb_setup(void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp, const fb_color_format_t format);
 void fb_clear(const uint32_t color);
 void fb_scroll(const uint32_t bg);
 void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
+fb_t fb;
 
 /* INTERNAL API */
-// --
-
-fb_t* fb_get(void) { return &fb; };
+// -
 
 void fb_setup(void* addr, const uint32_t width, const uint32_t height, const uint32_t pitch, const uint32_t bpp, const fb_color_format_t format)
 {
@@ -76,14 +72,14 @@ void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color)
 
 void fb_scroll(const uint32_t bg)
 {
-	const uint32_t scroll_bytes = FONT_HEIGHT * fb.pitch;
+	const uint32_t scroll_bytes = 8 * fb.pitch;
 	uint8_t* src = (uint8_t*)fb.frontbuffer + scroll_bytes;
 	uint8_t* dest = (uint8_t*)fb.frontbuffer;
-	const uint32_t total_bytes = (fb.height - FONT_HEIGHT) * fb.pitch;
+	const uint32_t total_bytes = (fb.height - 8) * fb.pitch;
 
 	memmove(dest, src, total_bytes);
 
-	for (uint32_t y = fb.height - FONT_HEIGHT; y < fb.height; y++) {
+	for (uint32_t y = fb.height - 8; y < fb.height; y++) {
 		for (uint32_t x = 0; x < fb.width; x++) {
 			fb_put_pixel_at(x, y, bg);
 		};

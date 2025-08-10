@@ -1,10 +1,21 @@
+/**
+ * @file font.c
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
+
 #include "font.h"
 #include "errno.h"
 #include <stddef.h>
 
+/* EXTERNAL API */
 extern int errno;
 
-const uint8_t default_glyph[ASCII][FONT_WIDTH] = {
+/* PUBLIC API */
+void font_setup(font_t* font, const uint32_t width, const uint32_t height, const uint8_t (*glyphs)[8]);
+const uint8_t* font_get_glyph(const font_t* font, const char ch);
+bool font_get_pixel_at(const font_t* font, const char ch, const uint8_t pixel_x, const uint8_t pixel_y);
+const uint8_t default_glyph[128][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0002
@@ -134,11 +145,17 @@ const uint8_t default_glyph[ASCII][FONT_WIDTH] = {
     {0x6E, 0x3B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+007E (~)
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+007F
 };
+font_t font;
 
-font_t default_font = {
-    .width = FONT_WIDTH,
-    .height = FONT_HEIGHT,
-    .glyphs = default_glyph,
+/* INTERNAL API */
+// -
+
+void font_setup(font_t* font, const uint32_t width, const uint32_t height, const uint8_t (*glyphs)[8])
+{
+	font->width = width;
+	font->height = height;
+	font->glyphs = glyphs;
+	return;
 };
 
 const uint8_t* font_get_glyph(const font_t* font, const char ch)
