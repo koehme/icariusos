@@ -18,7 +18,7 @@
 
 /* EXTERNAL API */
 extern int errno;
-extern fb_t fb;
+extern fb_t g_fb;
 
 /* PUBLIC API */
 void kmain(void);
@@ -53,17 +53,25 @@ static void _init_limine(void)
 		panic();
 		return;
 	};
-	const fb_color_format_t fmt = {
-	    .r_shift = fb->red_mask_shift,
-	    .g_shift = fb->green_mask_shift,
-	    .b_shift = fb->blue_mask_shift,
-	    .a_shift = 0,
-	    .r_size = fb->red_mask_size,
-	    .g_size = fb->green_mask_size,
-	    .b_size = fb->blue_mask_size,
-	    .a_size = 0,
+	const fb_info_t info = {
+	    .vaddr = fb->address,
+	    .width = fb->width,
+	    .height = fb->height,
+	    .pitch = fb->pitch,
+	    .bpp = fb->bpp,
+	    .fmt =
+		{
+		    .r_shift = fb->red_mask_shift,
+		    .g_shift = fb->green_mask_shift,
+		    .b_shift = fb->blue_mask_shift,
+		    .a_shift = 0,
+		    .r_size = fb->red_mask_size,
+		    .g_size = fb->green_mask_size,
+		    .b_size = fb->blue_mask_size,
+		    .a_size = 0,
+		},
 	};
-	fb_setup(fb->address, fb->width, fb->height, fb->pitch, fb->bpp, fmt);
+	fb_setup(&info);
 	return;
 };
 
@@ -75,7 +83,10 @@ void kmain(void)
 	font_setup(&font, 8, 8, default_glyph);
 
 	renderer_t renderer;
-	renderer_setup(&renderer, &font, fb.width, fb.height, GREEN, BLACK, true);
+	renderer_setup(&renderer, &font, g_fb.info.width, g_fb.info.height, true);
+
+	renderer_set_fg_rgba(&renderer, &g_fb.info, 0x00, 0xAC, 0x00, 0xFF);
+	renderer_set_bg_rgba(&renderer, &g_fb.info, 0x00, 0x00, 0x00, 0x00);
 
 	tty_t tty;
 	tty_init(&tty, &renderer);

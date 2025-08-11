@@ -4,15 +4,6 @@
 
 #pragma once
 
-enum {
-	BLACK = 0x00000000,
-	RED = 0x00FF0000,
-	GREEN = 0x0000FF00,
-	BLUE = 0x000000FF,
-	WHITE = 0xFFFFFFFF,
-	YELLOW = 0xFFFFFF00,
-};
-
 typedef struct font {
 	uint32_t width;
 	uint32_t height;

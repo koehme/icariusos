@@ -82,7 +82,7 @@ static void _backspace(tty_t* tty)
 		renderer_set_cursor(tty->renderer, tty->renderer->screen_w - tty->renderer->font->width, tty->renderer->cursor_y - tty->renderer->font->height);
 	};
 	// Erase the previous character by clearing its pixels
-	renderer_draw_ch(tty->renderer, BLACK);
+	renderer_draw_ch(tty->renderer, ' ');
 	return;
 };
 
