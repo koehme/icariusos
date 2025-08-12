@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include "font.h"
 #include "renderer.h"
+#include "string.h"
+
 #include <stddef.h>
 
 typedef struct {

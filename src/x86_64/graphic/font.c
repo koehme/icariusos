@@ -5,8 +5,6 @@
  */
 
 #include "font.h"
-#include "errno.h"
-#include <stddef.h>
 
 /* EXTERNAL API */
 extern int errno;
@@ -160,29 +158,18 @@ void font_setup(font_t* font, const uint32_t width, const uint32_t height, const
 
 const uint8_t* font_get_glyph(const font_t* font, const char ch)
 {
-	if (!font) {
-		errno = EINVAL;
+	if ((uint8_t)ch >= 128)
 		return NULL;
-	};
-	const uint8_t c = (uint8_t)ch;
-
-	if (c >= 128) {
-		errno = EINVAL;
-		return NULL;
-	};
-	return font->glyphs[c];
+	return font->glyphs[(uint8_t)ch];
 };
 
 bool font_get_pixel_at(const font_t* font, const char ch, const uint8_t pixel_x, const uint8_t pixel_y)
 {
-	if (!font) {
-		errno = EINVAL;
+	if (!font)
 		return false;
-	};
-	if (pixel_x >= font->width || pixel_y >= font->height) {
-		errno = EINVAL;
+
+	if (pixel_x >= font->width || pixel_y >= font->height)
 		return false;
-	};
 	// Take the pixel row, move the desired pixel all the way to the right and check whether it is a 1
 	const uint8_t pixel_row = font_get_glyph(font, ch)[pixel_y];
 	return (pixel_row >> pixel_x) & 1u;

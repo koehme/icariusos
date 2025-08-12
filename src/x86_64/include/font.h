@@ -1,8 +1,16 @@
-#include "icarius.h"
-#include <stdbool.h>
-#include <stdint.h>
+/**
+ * @file font.h
+ * @author Kevin Oehme
+ * @copyright MIT
+ */
 
 #pragma once
+
+#include "icarius.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 typedef struct font {
 	uint32_t width;

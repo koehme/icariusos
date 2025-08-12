@@ -6,9 +6,7 @@
 
 #include "renderer.h"
 
-
 /* EXTERNAL API */
-extern int errno;
 extern fb_t g_fb;
 
 /* PUBLIC API */
@@ -28,9 +26,8 @@ void renderer_draw_text(renderer_t* renderer, const char* text);
 
 static inline void _put(renderer_t* renderer, const uint32_t x, const uint32_t y, const uint32_t color)
 {
-	if (x >= renderer->screen_w || y >= renderer->screen_h) {
+	if (x >= renderer->screen_w || y >= renderer->screen_h)
 		return;
-	};
 	fb_put_pixel_at(x, y, color);
 	return;
 };
@@ -60,7 +57,6 @@ void renderer_set_bg_rgba(renderer_t* renderer, fb_info_t* info, const uint8_t r
 void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t y)
 {
 	if (!renderer) {
-		errno = EINVAL;
 		return;
 	};
 	renderer->cursor_x = x;
@@ -71,7 +67,6 @@ void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t 
 void renderer_set_color(renderer_t* renderer, const uint32_t fg, const uint32_t bg)
 {
 	if (!renderer) {
-		errno = EINVAL;
 		return;
 	};
 	renderer->fg = fg;
@@ -84,7 +79,6 @@ font_t* renderer_get_font(const renderer_t* renderer) { return renderer->font; }
 void renderer_set_font(renderer_t* renderer, font_t* font)
 {
 	if (!font || !renderer) {
-		errno = EINVAL;
 		return;
 	};
 	renderer->font = font;
@@ -96,7 +90,6 @@ void renderer_draw_ch(renderer_t* renderer, const char ch)
 	unsigned char u = (unsigned char)ch;
 
 	if (u < 32 || u >= 128) {
-		errno = EINVAL;
 		return;
 	};
 

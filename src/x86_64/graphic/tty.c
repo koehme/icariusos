@@ -5,11 +5,6 @@
  */
 
 #include "tty.h"
-#include "font.h"
-#include "renderer.h"
-#include "string.h"
-
-#include <stddef.h>
 
 /* EXTERNAL API */
 // -
@@ -67,9 +62,8 @@ static void _newline(tty_t* tty)
 {
 	renderer_set_cursor(tty->renderer, 0, tty->renderer->cursor_y + tty->renderer->font->height);
 
-	if (tty->renderer->cursor_y + tty->renderer->font->height > tty->renderer->screen_h) {
+	if (tty->renderer->cursor_y + tty->renderer->font->height > tty->renderer->screen_h)
 		renderer_scroll(tty->renderer);
-	};
 	return;
 };
 

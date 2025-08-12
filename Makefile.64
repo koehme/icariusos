@@ -1,25 +1,43 @@
-CC = x86_64-elf-gcc
-CFLAGS = -ffreestanding -m64 -g -O0 -Wall -Wextra -std=gnu23 -fno-pic -nostdlib -fno-stack-protector -mcmodel=kernel -I ./src/x86_64/include
+CC        = x86_64-elf-gcc
+AS        = nasm
 
-SRCDIR := src/x86_64
-OBJDIR := obj/x86_64
-BINDIR := bin/x86_64
-LINKER := linker64.ld
+CFLAGS    = -ffreestanding -m64 -g -O0 \
+            -Wall -Wextra -std=gnu23 \
+            -fno-pic -fno-pie -fno-stack-protector \
+            -mno-red-zone -mcmodel=kernel \
+            -I ./src/x86_64/include
 
-SRCS := $(shell find $(SRCDIR) -name '*.c')
-OBJS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
+NASMFLAGS = -f elf64 -g -F dwarf 
 
-KERNEL := $(BINDIR)/ICARIUS.elf
+LDFLAGS   = -nostdlib -T linker64.ld -Wl,--build-id=none -Wl,--gc-sections
+
+SRCDIR_C  = src/x86_64
+SRCDIR_S  = src/arch/x86_64
+OBJDIR    = obj/x86_64
+BINDIR    = bin/x86_64
+
+KERNEL    = $(BINDIR)/ICARIUS.elf
+
+CSRCS     = $(shell find $(SRCDIR_C) -type f -name '*.c')
+ASMSRCS   = $(shell find $(SRCDIR_S) -type f -name '*.asm')
+
+COBJS     = $(patsubst $(SRCDIR_C)/%.c, $(OBJDIR)/%.o, $(CSRCS))
+ASMOBJS   = $(patsubst $(SRCDIR_S)/%.asm, $(OBJDIR)/%.o, $(ASMSRCS))
+OBJS      = $(COBJS) $(ASMOBJS)
 
 all: $(KERNEL)
 
 $(KERNEL): $(OBJS)
-	mkdir -p $(dir $@)
-	$(CC) -T $(LINKER) -nostdlib -o $@ $^
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) -o $@ $^
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	mkdir -p $(dir $@)
+$(OBJDIR)/%.o: $(SRCDIR_C)/%.c
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR_S)/%.asm
+	@mkdir -p $(dir $@)
+	$(AS) $(NASMFLAGS) $< -o $@
 
 clean:
 	rm -rf $(OBJDIR) $(KERNEL)

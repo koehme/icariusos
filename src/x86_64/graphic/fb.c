@@ -4,20 +4,16 @@
  * @copyright MIT
  */
 
-#include <stdbool.h>
-
-#include "errno.h"
 #include "fb.h"
-#include "string.h"
 
 /* EXTERNAL API */
-extern int errno;
+// -
 
 /* PUBLIC API */
 void fb_setup(const fb_info_t* info);
-void fb_clear(const uint32_t color);
+kresult_t fb_clear(const uint32_t color);
+kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
 void fb_scroll(const uint32_t color, const uint32_t rows);
-void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
 uint32_t fb_pack_rgba(const fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
 fb_t g_fb;
 
@@ -32,37 +28,37 @@ void fb_setup(const fb_info_t* info)
 	return;
 };
 
-void fb_clear(const uint32_t color)
+kresult_t fb_clear(const uint32_t color)
 {
-	if (!g_fb.frontbuffer) {
-		errno = ENODEV;
-		return;
-	};
+	if (!g_fb.frontbuffer)
+		return kres_err(-K_ENODEV, "NO Frontbuffer");
+
+	if (g_fb.info.bpp != 32)
+		return kres_err(-K_EINVAL, "Only 32 Bpp is supported");
 
 	for (uint32_t y = 0; y < g_fb.info.height; y++) {
 		uint32_t* row = (uint32_t*)(((uint8_t*)g_fb.frontbuffer) + y * g_fb.info.pitch);
 
-		for (uint32_t x = 0; x < g_fb.info.width; x++) {
+		for (uint32_t x = 0; x < g_fb.info.width; x++)
 			row[x] = color;
-		};
 	};
-	return;
+	return kres_ok(NULL);
 };
 
-void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color)
+kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color)
 {
-	if (!g_fb.frontbuffer) {
-		errno = ENODEV;
-		return;
-	};
-	// Check if the coordinates are within the display's resolution boundaries
-	if (x >= g_fb.info.width || y >= g_fb.info.height) {
-		errno = EINVAL;
-		return;
-	};
+	if (!g_fb.frontbuffer)
+		return kres_err(-K_ENODEV, "NO Frontbuffer");
+
+	if (g_fb.info.bpp != 32)
+		return kres_err(-K_EINVAL, "Only 32 Bpp is supported");
+
+	if (x >= g_fb.info.width || y >= g_fb.info.height)
+		return kres_err(-K_EINVAL, "Display limits exceeded");
+
 	uint32_t* row = (uint32_t*)(((uint8_t*)g_fb.frontbuffer) + y * g_fb.info.pitch);
 	row[x] = color;
-	return;
+	return kres_ok(NULL);
 };
 
 void fb_scroll(const uint32_t color, const uint32_t rows)
@@ -74,11 +70,9 @@ void fb_scroll(const uint32_t color, const uint32_t rows)
 
 	memmove(dest, src, total_bytes);
 
-	for (uint32_t y = g_fb.info.height - rows; y < g_fb.info.height; y++) {
-		for (uint32_t x = 0; x < g_fb.info.width; x++) {
+	for (uint32_t y = g_fb.info.height - rows; y < g_fb.info.height; y++)
+		for (uint32_t x = 0; x < g_fb.info.width; x++)
 			fb_put_pixel_at(x, y, color);
-		};
-	};
 	return;
 };
 

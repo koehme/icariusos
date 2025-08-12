@@ -5,11 +5,9 @@
  */
 
 #include "panic.h"
-#include "font.h"
-#include "kernel.h"
 
 /* EXTERNAL API */
-// -
+extern void asm_hlt(void);
 
 /* PUBLIC API */
 noreturn void panic(void);
@@ -20,7 +18,7 @@ noreturn void panic(void);
 noreturn void panic(void)
 {
 	for (;;) {
-		asm_halt();
+		asm_hlt();
 	};
 	__builtin_unreachable();
 };

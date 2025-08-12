@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#include "errno.h"
+#include <stdint.h>
 
 size_t strlen(const char* str);
 int32_t strcmp(const char* str1, const char* str2);

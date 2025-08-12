@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "errno.h"
 #include "fb.h"
 #include "font.h"
+#include "kerr.h"
 
 #include <stdbool.h>
 #include <stdint.h>

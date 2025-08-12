@@ -7,6 +7,10 @@
 #pragma once
 
 #include "icarius.h"
+#include "kerr.h"
+#include "string.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -29,7 +33,7 @@ typedef struct fb {
 } fb_t;
 
 void fb_setup(const fb_info_t* info);
-void fb_clear(const uint32_t color);
-void fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
+kresult_t fb_clear(const uint32_t color);
+kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
 void fb_scroll(const uint32_t color, const uint32_t rows);
 uint32_t fb_pack_rgba(const fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);

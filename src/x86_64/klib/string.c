@@ -4,10 +4,6 @@
  * @copyright MIT
  */
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
-
 #include "string.h"
 
 /* EXTERNAL API */
@@ -36,9 +32,8 @@ size_t strlen(const char* str)
 {
 	const char* s = str;
 
-	while (*s) {
+	while (*s)
 		s++;
-	};
 	return (size_t)(s - str);
 };
 int32_t strcmp(const char* str1, const char* str2)
@@ -54,12 +49,11 @@ char* strncpy(char* dest, const char* src, size_t n)
 {
 	size_t i;
 
-	for (i = 0; i < n && src[i] != '\0'; i++) {
+	for (i = 0; i < n && src[i] != '\0'; i++)
 		dest[i] = src[i];
-	};
-	for (; i < n; i++) {
+
+	for (; i < n; i++)
 		dest[i] = '\0';
-	};
 	return dest;
 };
 
@@ -68,9 +62,8 @@ bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <=
 char* sptr(char* str, const char c)
 {
 	while (*str != '\0') {
-		if (*str == c) {
+		if (*str == c)
 			return str;
-		};
 		str++;
 	}
 	return 0x0;
@@ -95,9 +88,8 @@ char* scat(char* dest, const char* src)
 {
 	char* concatenated = dest;
 
-	while (*dest != '\0') {
+	while (*dest != '\0')
 		dest++;
-	};
 
 	while (*src != '\0') {
 		*dest = *src;
@@ -113,9 +105,8 @@ void* memset(void* ptr, int value, size_t num)
 	// Cast ptr to unsigned char pointer for byte-wise operations
 	unsigned char* p = (unsigned char*)ptr;
 	// Set each byte to the specified value
-	for (size_t i = 0; i < num; i++) {
+	for (size_t i = 0; i < num; i++)
 		p[i] = (unsigned char)value;
-	};
 	return ptr;
 };
 
@@ -123,9 +114,8 @@ void* memset16(void* ptr, uint16_t value, size_t num)
 {
 	uint16_t* p = (uint16_t*)ptr;
 
-	for (size_t i = 0; i < num; i++) {
+	for (size_t i = 0; i < num; i++)
 		p[i] = value;
-	};
 	return ptr;
 };
 
@@ -134,18 +124,15 @@ void* memmove(void* dest, const void* src, size_t count)
 	unsigned char* d = (unsigned char*)dest;
 	const unsigned char* s = (const unsigned char*)src;
 
-	if (d == s || count == 0) {
+	if (d == s || count == 0)
 		return dest;
-	};
 
 	if (d < s) {
-		for (size_t i = 0; i < count; i++) {
+		for (size_t i = 0; i < count; i++)
 			d[i] = s[i];
-		};
 	} else {
-		for (size_t i = count; i != 0; i--) {
+		for (size_t i = count; i != 0; i--)
 			d[i - 1] = s[i - 1];
-		};
 	};
 	return dest;
 };
