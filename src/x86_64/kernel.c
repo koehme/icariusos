@@ -14,14 +14,8 @@ void kmain(void);
 
 void kmain(void)
 {
-	if (!asm_sse_setup()) {
-		panic();
-	};
-	kresult_t r = _init_limine();
+	bootstrap_setup();
 
-	if (r.code != K_OK) {
-		panic();
-	};
 	font_t font = {};
 	font_setup(&font, 8, 8, default_glyph);
 
@@ -33,9 +27,9 @@ void kmain(void)
 
 	tty_t tty = {};
 	tty_init(&tty, &renderer);
+	tty_set_active(&tty);
 
-	for (size_t i = 0; i < 800000000; i++)
-		tty_puts(&tty, "Hello from icariusOS x64\n");
+	pfa_dump();
 
 	for (;;)
 		asm_hlt();

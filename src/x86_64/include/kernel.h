@@ -9,13 +9,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "bootstrap.h"
 #include "fb.h"
 #include "font.h"
-#include "hal.h"
-#include "init.h"
-#include "kerr.h"
+#include "kres.h"
 #include "panic.h"
+#include "pfa.h"
 #include "renderer.h"
+#include "stdio.h"
 #include "tty.h"
 
 void kmain(void);

@@ -23,7 +23,9 @@ asm_sse_setup:
     ; --- Reset x87 FPU state to default (control/status registers, tags)
     fninit
 
-    mov  eax, 1
+    xor eax, eax        ; K_OK = 0
+    xor edx, edx        ; msg = NULL
+
     leave
     ret
 
@@ -60,7 +62,8 @@ asm_sse_setup:
     ret
 
 .no_sse:
-    xor  eax, eax
+    mov eax, -95        ; -K_EOPNOTSUPP
+    xor edx, edx        ; NULL
     leave
     ret
 

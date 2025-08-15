@@ -11,8 +11,8 @@ extern fb_t g_fb;
 
 /* PUBLIC API */
 void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w, const uint32_t screen_h, const bool bg_transparent);
-void renderer_set_fg_rgba(renderer_t* renderer, fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-void renderer_set_bg_rgba(renderer_t* renderer, fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
+void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
+void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
 void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t y);
 void renderer_set_color(renderer_t* renderer, const uint32_t fg, const uint32_t bg);
 font_t* renderer_get_font(const renderer_t* renderer);
@@ -42,13 +42,13 @@ void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w,
 	return;
 };
 
-void renderer_set_fg_rgba(renderer_t* renderer, fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
 	renderer->fg = fb_pack_rgba(info, r, g, b, a);
 	return;
 };
 
-void renderer_set_bg_rgba(renderer_t* renderer, fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
 	renderer->bg = fb_pack_rgba(info, r, g, b, a);
 	return;

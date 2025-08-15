@@ -14,12 +14,15 @@ void tty_init(tty_t* tty, renderer_t* renderer);
 void tty_set_tabwidth(tty_t* tty, const size_t tab_width);
 void tty_putc(tty_t* tty, const char ch);
 void tty_puts(tty_t* tty, const char* text);
+void tty_set_active(tty_t* tty);
+tty_t* tty_get_active(void);
 
 /* INTERNAL API */
 static void _carriage_return(tty_t* tty);
 static void _tab(tty_t* tty);
 static void _newline(tty_t* tty);
 static void _backspace(tty_t* tty);
+static tty_t* active_tty = NULL;
 
 void tty_init(tty_t* tty, renderer_t* renderer)
 {
@@ -121,3 +124,11 @@ void tty_puts(tty_t* tty, const char* text)
 	};
 	return;
 };
+
+void tty_set_active(tty_t* tty)
+{
+	active_tty = tty;
+	return;
+};
+
+tty_t* tty_get_active(void) { return active_tty; }

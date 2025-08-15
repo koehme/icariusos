@@ -6,6 +6,10 @@ focus cmd
 set print pretty on
 set disassembly-flavor intel
 
-b kmain
+set output-radix 16
+
+b init_limine_mm
+b init_limine_mm:126
+b pfa_mark_range
 
 c

@@ -10,31 +10,31 @@
 // -
 
 /* PUBLIC API */
-void fb_setup(const fb_info_t* info);
+void fb_setup(const fb_boot_adapter_t* info);
 kresult_t fb_clear(const uint32_t color);
 kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
 void fb_scroll(const uint32_t color, const uint32_t rows);
-uint32_t fb_pack_rgba(const fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
+uint32_t fb_pack_rgba(const fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
 fb_t g_fb;
 
 /* INTERNAL API */
 // -
 
-void fb_setup(const fb_info_t* info)
+void fb_setup(const fb_boot_adapter_t* info)
 {
 	g_fb.frontbuffer = (uint32_t*)info->vaddr;
 	g_fb.backbuffer = NULL;
-	memcpy(&g_fb.info, info, sizeof(fb_info_t));
+	memcpy(&g_fb.info, info, sizeof(g_fb.info));
 	return;
 };
 
 kresult_t fb_clear(const uint32_t color)
 {
 	if (!g_fb.frontbuffer)
-		return kres_err(-K_ENODEV, "NO Frontbuffer");
+		return kresult_err(-K_ENODEV, "NO Frontbuffer");
 
 	if (g_fb.info.bpp != 32)
-		return kres_err(-K_EINVAL, "Only 32 Bpp is supported");
+		return kresult_err(-K_EINVAL, "Only 32 Bpp is supported");
 
 	for (uint32_t y = 0; y < g_fb.info.height; y++) {
 		uint32_t* row = (uint32_t*)(((uint8_t*)g_fb.frontbuffer) + y * g_fb.info.pitch);
@@ -42,23 +42,23 @@ kresult_t fb_clear(const uint32_t color)
 		for (uint32_t x = 0; x < g_fb.info.width; x++)
 			row[x] = color;
 	};
-	return kres_ok(NULL);
+	return kresult_ok(NULL);
 };
 
 kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color)
 {
 	if (!g_fb.frontbuffer)
-		return kres_err(-K_ENODEV, "NO Frontbuffer");
+		return kresult_err(-K_ENODEV, "NO Frontbuffer");
 
 	if (g_fb.info.bpp != 32)
-		return kres_err(-K_EINVAL, "Only 32 Bpp is supported");
+		return kresult_err(-K_EINVAL, "Only 32 Bpp is supported");
 
 	if (x >= g_fb.info.width || y >= g_fb.info.height)
-		return kres_err(-K_EINVAL, "Display limits exceeded");
+		return kresult_err(-K_EINVAL, "Display limits exceeded");
 
 	uint32_t* row = (uint32_t*)(((uint8_t*)g_fb.frontbuffer) + y * g_fb.info.pitch);
 	row[x] = color;
-	return kres_ok(NULL);
+	return kresult_ok(NULL);
 };
 
 void fb_scroll(const uint32_t color, const uint32_t rows)
@@ -76,7 +76,7 @@ void fb_scroll(const uint32_t color, const uint32_t rows)
 	return;
 };
 
-uint32_t fb_pack_rgba(const fb_info_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+uint32_t fb_pack_rgba(const fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
 {
 	const uint32_t native_r = (((uint32_t)r) << info->fmt.r_shift);
 	const uint32_t native_g = (((uint32_t)g) << info->fmt.g_shift);

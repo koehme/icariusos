@@ -7,8 +7,10 @@
 #pragma once
 
 #include "fb.h"
-#include "kerr.h"
+#include "hal.h"
+#include "kres.h"
 #include "limine.h"
 #include "panic.h"
+#include "pfa.h"
 
-kresult_t _init_limine(void);
+void bootstrap_setup(void);

@@ -1,12 +1,12 @@
 /**
- * @file kerr.h
+ * @file kres.h
  * @author Kevin Oehme
  * @copyright MIT
  */
 
 #pragma once
 
-typedef enum kerr {
+typedef enum kstatus {
 	K_OK = 0,
 	// STANDARD ERRORS
 	K_EPERM = 1,
@@ -139,5 +139,5 @@ typedef struct kresult {
 	const char* msg;
 } kresult_t;
 
-kresult_t kres_ok(const char* msg);
-kresult_t kres_err(kstatus_t c, const char* msg);
+kresult_t kresult_ok(const char* msg);
+kresult_t kresult_err(kstatus_t c, const char* msg);

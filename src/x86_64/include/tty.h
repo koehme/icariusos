@@ -21,3 +21,5 @@ void tty_init(tty_t* tty, renderer_t* renderer);
 void tty_putc(tty_t* tty, const char ch);
 void tty_puts(tty_t* tty, const char* text);
 void tty_set_tabwidth(tty_t* tty, const size_t tab_width);
+void tty_set_active(tty_t* tty);
+tty_t* tty_get_active(void);

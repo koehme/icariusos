@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "kres.h"
+
 #include <stdbool.h>
 
-extern bool asm_sse_setup(void);
+extern kresult_t asm_sse_setup(void);
 extern void asm_hlt(void);
