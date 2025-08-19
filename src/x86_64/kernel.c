@@ -16,20 +16,23 @@ void kmain(void)
 {
 	bootstrap_setup();
 
-	font_t font = {};
+	font_t font;
 	font_setup(&font, 8, 8, default_glyph);
 
-	renderer_t renderer = {};
+	renderer_t renderer;
 	renderer_setup(&renderer, &font, g_fb.info.width, g_fb.info.height, true);
 
 	renderer_set_fg_rgba(&renderer, &g_fb.info, 0x00, 0xAC, 0x00, 0xFF);
 	renderer_set_bg_rgba(&renderer, &g_fb.info, 0x00, 0x00, 0x00, 0x00);
 
-	tty_t tty = {};
+	tty_t tty;
 	tty_init(&tty, &renderer);
 	tty_set_active(&tty);
 
-	pfa_dump();
+	pfa_dump(false);
+
+	uintptr_t p1 = pfa_alloc();
+	kprintf("%p\n", p1);
 
 	for (;;)
 		asm_hlt();

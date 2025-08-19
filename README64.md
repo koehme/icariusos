@@ -51,6 +51,8 @@ Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD and RUN IT.
 
 ```bash
 ./scripts/build/x86_64/swap64.sh && qemu-system-x86_64 -cpu qemu64,+ssse3 -drive file=ICARIUS64.img,format=raw -drive if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd -drive if=pflash,format=raw,unit=1,readonly=on,file=/usr/share/OVMF/OVMF_VARS_4M.fd
+
+./scripts/build/x86_64/swap64.sh && qemu-system-x86_64 -cpu qemu64,+ssse3 -m 128M -drive file=ICARIUS64.img,format=raw -drive if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd -drive if=pflash,format=raw,unit=1,readonly=on,file=/usr/share/OVMF/OVMF_VARS_4M.fd
 ```
 
 ## 🔁 SWAP AND RUN AS BIOS
@@ -65,6 +67,9 @@ Replace the Kernel Binary in your FAT16 Disk Image with a new BUILD and RUN IT.
 
 ```bash
 qemu-system-x86_64 -cpu qemu64,+ssse3 -m 2048M -monitor stdio -drive file=ICARIUS64.img,format=raw -drive if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd -drive if=pflash,format=raw,unit=1,readonly=on,file=/usr/share/OVMF/OVMF_VARS_4M.fd -s -S
+
+qemu-system-x86_64 -m 2048M -monitor stdio -drive file=ICARIUS64.img,format=raw -drive if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd -drive if=pflash,format=raw,unit=1,readonly=on,file=/usr/share/OVMF/OVMF_VARS_4M.fd -s -S
+
 gdb -x ./.gdbinit64 ./bin/x86_64/ICARIUS.elf
 ```
 

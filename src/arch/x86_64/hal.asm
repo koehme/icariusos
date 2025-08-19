@@ -2,14 +2,23 @@ BITS 64
 
 global asm_sse_setup
 global asm_hlt
+global asm_busy_wait
 
 section .text
-; Intel System Programming Guide, Part 1 => 10.6 INITIALIZING SSE/SSE2/SSE3/SSSE3 EXTENSIONS
-; Enables SSE/SSE2 safely.
-;   Return 
-;   EAX = 1  -> SSE available & enabled
-;   EAX = 0  -> SSE not available (or not enabled)
-; Calling convention: System V AMD64 (C-compatible)
+
+;/**
+; * @brief Safely enables SSE/SSE2/SSE3/SSSE3 instruction set support
+; *
+; * Intel® 64 and IA-32 Architectures Software Developer’s Manual, Vol. 1
+; * Section 10.6: Initializing SSE/SSE2/SSE3/SSSE3 Extensions
+; *
+; * @return EAX
+; *   - 0x0            : SSE available and enabled
+; *   - -K_EOPNOTSUPP  : SSE not available or could not be enabled
+; *
+; * @note
+; * Calling convention: System V AMD64 (C-compatible)
+; */
 asm_sse_setup:
     ; --- Prolog
     push rbp
@@ -23,29 +32,32 @@ asm_sse_setup:
     ; --- Reset x87 FPU state to default (control/status registers, tags)
     fninit
 
-    xor eax, eax        ; K_OK = 0
-    xor edx, edx        ; msg = NULL
+    xor rax, rax        ; K_OK = 0
+    xor rdx, rdx        ; msg = NULL
 
     leave
     ret
 
 .check_sse_feature_set:
-    mov  eax, 1         
+    push rbx             ; callee-saved
+
+    mov  rax, 1         
     cpuid
 
-    test edx, 1 << 19    ; CLFLUSH
+    test rdx, 1 << 19    ; CLFLUSH
     jz   .no_sse
-    test edx, 1 << 24    ; FXSAVE/FXRSTOR
+    test rdx, 1 << 24    ; FXSAVE/FXRSTOR
     jz   .no_sse
-    test edx, 1 << 25    ; SSE
+    test rdx, 1 << 25    ; SSE
     jz   .no_sse
-    test edx, 1 << 26    ; SSE2
+    test rdx, 1 << 26    ; SSE2
     jz   .no_sse
-    test ecx, 1 << 0     ; SSE3
+    test rcx, 1 << 0     ; SSE3
     jz   .no_sse
-    test ecx, 1 << 9     ; SSSE3
+    test rcx, 1 << 9     ; SSSE3
     jz   .no_sse
 
+    pop rbx
     ret
 
 .enable_fpu_sse_context:
@@ -62,11 +74,22 @@ asm_sse_setup:
     ret
 
 .no_sse:
-    mov eax, -95        ; -K_EOPNOTSUPP
-    xor edx, edx        ; NULL
+    mov rax, -95        ; -K_EOPNOTSUPP
+    xor rdx, rdx        ; NULL
+
+    pop rbx
     leave
     ret
 
 asm_hlt:
     hlt
     jmp asm_hlt
+
+asm_busy_wait:
+    test    rdi, rdi
+    jz      .done
+.loop:
+    dec     rdi
+    jnz     .loop
+.done:
+    ret

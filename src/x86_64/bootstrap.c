@@ -15,24 +15,21 @@ void bootstrap_setup(void);
 
 /* INTERNAL API */
 typedef kresult_t (*bootstrap_fn_t)(void);
+kresult_t _bootstrap_sse(void);
 kresult_t _bootstrap_fb(void);
 kresult_t _bootstrap_mm(void);
 
-typedef struct bootstrap_step {
-	bootstrap_fn_t fn;
-} bootstrap_step_t;
-
-static const bootstrap_step_t steps[] = {
-    {asm_sse_setup},
-    {_bootstrap_fb},
-    {_bootstrap_mm},
+static bootstrap_fn_t _bootstrap_handlers[] = {
+    _bootstrap_fb,
+    _bootstrap_mm,
+    _bootstrap_sse,
 };
 
 void bootstrap_setup(void)
 {
-	for (size_t i = 0; i < sizeof(steps) / sizeof(steps[0]); i++) {
-		const bootstrap_step_t curr_step = steps[i];
-		const kresult_t res = curr_step.fn();
+	for (size_t i = 0; i < sizeof(_bootstrap_handlers) / sizeof(_bootstrap_handlers[0]); i++) {
+		const bootstrap_fn_t handler = _bootstrap_handlers[i];
+		const kresult_t res = handler();
 
 		if (res.code != K_OK)
 			panic();
@@ -58,6 +55,8 @@ __attribute__((used, section(".limine_requests"))) static volatile struct limine
     .revision = 0,
 };
 __attribute__((used, section(".limine_requests_end"))) static volatile LIMINE_REQUESTS_END_MARKER;
+
+kresult_t _bootstrap_sse(void) { return asm_sse_setup(); };
 
 kresult_t _bootstrap_fb(void)
 {
@@ -101,7 +100,7 @@ kresult_t _bootstrap_mm(void)
 	if (!hhdm)
 		return kresult_err(-K_ENODEV, "No higher half direct map response");
 
-	// Determine maximum physical address. We use only the useable
+	// Determine maximum physical address
 	struct limine_memmap_entry** entries = mm->entries;
 	uintptr_t max_phys_addr = 0;
 
@@ -121,9 +120,9 @@ kresult_t _bootstrap_mm(void)
 			break;
 		};
 	};
-	const uintptr_t max_phys_addr_al = ALIGN_UP(max_phys_addr, PAGE_SIZE); // Addr => 0x7FEF4000 (@ 2 GB Ram)
-	const size_t pmm_frames = max_phys_addr_al / PAGE_SIZE;		       // Frames => 0x7FEF4 / 524020
-	const size_t pmm_bytes = (pmm_frames + (8 - 1)) / 8;		       // Create a separate byte to make the last frame usable
+	const uintptr_t max_phys_addr_al = ALIGN_UP(max_phys_addr, PAGE_SIZE);
+	const size_t pmm_frames = max_phys_addr_al / PAGE_SIZE;
+	const size_t pmm_bytes = (pmm_frames + (8 - 1)) / 8;
 
 	// Search for the smallest amount of memory to store the bitmap himself
 	const uint64_t pmm_bytes_al = ALIGN_UP(pmm_bytes, PAGE_SIZE);
@@ -158,7 +157,7 @@ kresult_t _bootstrap_mm(void)
 	const uint8_t* pmm_bitmap = (uint8_t*)(hhdm->offset + bitmap_phys_addr);
 	memset((uint8_t*)pmm_bitmap, FRAME_USED, pmm_bytes_al);
 
-	pfa_init(
+	const kresult_t res = pfa_init(
 	    &(pmm_boot_adapter_t){
 		.bitmap_size = pmm_bytes_al,
 		.hhdm_offset = hhdm->offset,
@@ -166,6 +165,9 @@ kresult_t _bootstrap_mm(void)
 		.total_frames = pmm_frames,
 	    },
 	    pmm_bitmap);
+
+	if (res.code != K_OK)
+		return kresult_err(-K_ENOMEM, "Pfa allocation failed");
 
 	// Mark USABLE/BOOTLOADER_RECLAIMABLE as FRAME_FREE
 	for (size_t i = 0; i < mm->entry_count; i++) {
@@ -190,7 +192,9 @@ kresult_t _bootstrap_mm(void)
 		default:
 		};
 	};
+	// Mark first 4096 Byte Frame as FRAME_USED
+	pfa_mark(0x0, 0x1000, FRAME_USED);
 	// Mark Bitmap as FRAME_USED
-	pfa_mark(bitmap_phys_addr, pmm_bytes_al, false);
+	pfa_mark(bitmap_phys_addr, pmm_bytes_al, FRAME_USED);
 	return kresult_ok(NULL);
 };

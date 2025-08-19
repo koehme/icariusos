@@ -1,14 +1,12 @@
 {
-    "files.associations": {
-        "stdlib.h": "c",
-        "compare": "cpp",
-        "cstdint": "cpp",
-        "stdio.h": "c"
-    },
+    "files.associations": {},
     "C_Cpp.errorSquiggles": "disabled",
     "github.copilot.editor.enableAutoCompletions": false,
     "editor.fontFamily": "monospace",
     "editor.fontSize": 18,
     "terminal.integrated.fontSize": 16,
-    "editor.fontLigatures": false
+    "editor.fontLigatures": false,
+    "[plaintext]": {
+        "editor.formatOnSave": false
+    }
 }

@@ -6,10 +6,14 @@
 
 #pragma once
 
+#include "hal.h"
 #include "icarius.h"
 #include "kres.h"
+#include "stdio.h"
+#include "string.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct pmm_boot_adapter {
@@ -29,7 +33,10 @@ typedef struct pfa {
 	uint8_t* bitmap_addr; // Virtual start address of the PMM bitmap itself
 } pfa_t;
 
-void pfa_init(const pmm_boot_adapter_t* info, const uint8_t* bitmap_addr);
+kresult_t pfa_init(const pmm_boot_adapter_t* info, const uint8_t* bitmap_addr);
 pfa_t* pfa_get(void);
 kresult_t pfa_mark(const uint64_t base, const uint64_t length, const pfa_state_t state);
-kresult_t pfa_dump(void);
+kresult_t pfa_dump(const bool verbose);
+uintptr_t pfa_alloc(void);
+kresult_t pfa_dealloc(const size_t frame);
+kresult_t pfa_dump_used_frames(void);

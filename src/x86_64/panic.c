@@ -17,8 +17,7 @@ noreturn void panic(void);
 
 noreturn void panic(void)
 {
-	for (;;) {
+	for (;;)
 		asm_hlt();
-	};
 	__builtin_unreachable();
 };
