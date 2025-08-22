@@ -9,20 +9,25 @@
 #include "stdlib.h"
 #include "string.h"
 #include "tty.h"
+#include <stdarg.h>
 
 /* EXTERNAL API */
 // -
 
 /* PUBLIC API */
-usize kprintf(const char* fmt, ...);
-static int _vkprintf(tty_t* tty, const char* fmt, va_list args);
+usize kprintf(const ch* fmt, ...);
+static usize vkprintf(const ch* fmt, va_list args);
 
 /* INTERNAL API */
 // -
 
-static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
+static usize vkprintf(const ch* fmt, va_list args)
 {
-	int count = 0;
+	usize count = 0;
+	tty_t* tty = tty_get_active();
+
+	if (!tty)
+		return count;
 
 	for (; *fmt; ++fmt) {
 		if (*fmt != '%') {
@@ -31,7 +36,7 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 			continue;
 		};
 		// Parse minimal: %, [l|ll|z] [specifier]
-		bool long_mod = false, longlong_mod = false, size_mod = false;
+		b8 long_mod = false, longlong_mod = false, size_mod = false;
 		++fmt;
 
 		while (*fmt == 'l' || *fmt == 'z') {
@@ -57,7 +62,7 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 			break;
 		};
 		case 's': {
-			const char* str = va_arg(args, const char*);
+			const ch* str = va_arg(args, const ch*);
 
 			if (!str)
 				str = "";
@@ -68,34 +73,34 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 		};
 		case 'd':
 		case 'i': {
-			char buf[64];
+			ch buf[64];
 			s64 val;
 
 			if (longlong_mod) {
-				val = (s64)va_arg(args, long long); // %lld
+				val = (s64)va_arg(args, s64ll); // %lld
 			} else if (long_mod) {
-				val = (s64)va_arg(args, long); // %ld
+				val = (s64)va_arg(args, s64); // %ld
 			} else if (size_mod) {
-				val = (s64)va_arg(args, ssize_t); // %zd
+				val = (s64)va_arg(args, ssize); // %zd
 			} else {
-				val = (s64)va_arg(args, int); // %d
+				val = (s64)va_arg(args, s32); // %d
 			};
 			count += itoa(val, 10, false, buf);
 			tty_puts(tty, buf);
 			break;
 		};
 		case 'u': {
-			char buf[64];
+			ch buf[64];
 			s64 val;
 
 			if (longlong_mod) {
-				val = va_arg(args, unsigned long long);
+				val = va_arg(args, u64ull);
 			} else if (long_mod) {
-				val = va_arg(args, unsigned long);
+				val = va_arg(args, u64);
 			} else if (size_mod) {
 				val = (u64)va_arg(args, usize);
 			} else {
-				val = va_arg(args, unsigned int);
+				val = va_arg(args, s32);
 			};
 			count += utoa(val, 10, false, buf);
 			tty_puts(tty, buf);
@@ -103,18 +108,18 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 		};
 		case 'x':
 		case 'X': {
-			char buf[64];
-			const bool upper = (*fmt == 'X');
+			ch buf[64];
+			const b8 upper = (*fmt == 'X');
 			u64 val;
 
 			if (longlong_mod) {
-				val = va_arg(args, unsigned long long);
+				val = va_arg(args, u64ull);
 			} else if (long_mod) {
-				val = va_arg(args, unsigned long);
+				val = va_arg(args, u64);
 			} else if (size_mod) {
 				val = (u64)va_arg(args, usize);
 			} else {
-				val = va_arg(args, unsigned int);
+				val = va_arg(args, s32);
 			};
 			count += itoa(val, 16, upper, buf);
 			tty_puts(tty, buf);
@@ -122,11 +127,11 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 		};
 		case 'p':
 		case 'P': {
-			char buf[64];
-			const bool upper = (*fmt == 'P');
+			ch buf[64];
+			const b8 upper = (*fmt == 'P');
 
 			void* ptr = va_arg(args, void*);
-			const u64 val = (u64)(uintptr_t)ptr;
+			const u64 val = (u64)(uptr)ptr;
 
 			tty_puts(tty, "0x");
 			count += 2;
@@ -149,16 +154,14 @@ static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 	return count;
 };
 
-usize kprintf(const char* fmt, ...)
+usize kprintf(const ch* fmt, ...)
 {
-	tty_t* tty = tty_get_active();
-
-	if (!fmt || !tty)
+	if (!fmt)
 		return 0;
 
 	va_list args;
 	va_start(args, fmt);
-	const usize n = _vkprintf(tty, fmt, args);
+	const usize n = vkprintf(fmt, args);
 	va_end(args);
 
 	return n;

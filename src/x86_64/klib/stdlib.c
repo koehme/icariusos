@@ -12,13 +12,13 @@
 // -
 
 /* PUBLIC API */
-usize itoa(s64 value, const int base, const bool upper, char* buf);
-usize utoa(u64 value, const int base, const bool upper, char* buf);
+usize itoa(s64 value, const s32 base, const b8 upper, ch* buf);
+usize utoa(u64 value, const s32 base, const b8 upper, ch* buf);
 
 /* INTERNAL API */
 // -
 
-usize itoa(s64 value, const int base, const bool upper, char* buf)
+usize itoa(s64 value, const s32 base, const b8 upper, ch* buf)
 {
 	if (base < 2 || base > 16) {
 		buf[0] = '0';
@@ -34,7 +34,7 @@ usize itoa(s64 value, const int base, const bool upper, char* buf)
 	return utoa((u64)value, base, upper, buf);
 };
 
-usize utoa(u64 value, const int base, const bool upper, char* buf)
+usize utoa(u64 value, const s32 base, const b8 upper, ch* buf)
 {
 	if (base < 2 || base > 16) {
 		buf[0] = '0';
@@ -42,11 +42,11 @@ usize utoa(u64 value, const int base, const bool upper, char* buf)
 		return 0;
 	};
 	usize count = 0;
-	static const char lower_case[] = "0123456789abcdef";
-	static const char upper_case[] = "0123456789ABCDEF";
-	const char* template = upper ? upper_case : lower_case;
+	static const ch lower_case[] = "0123456789abcdef";
+	static const ch upper_case[] = "0123456789ABCDEF";
+	const ch* template = upper ? upper_case : lower_case;
 
-	char tmp[65]; // max. 64 digits (binary) + '\0'
+	ch tmp[65]; // max. 64 digits (binary) + '\0'
 	usize i = 0;
 
 	if (value == 0) {

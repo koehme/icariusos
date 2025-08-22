@@ -6,4 +6,6 @@
 
 #pragma once
 
-double pow(double x, double y);
+#include "types.h"
+
+f64 pow(f64 x, f64 y);

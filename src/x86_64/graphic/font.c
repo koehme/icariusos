@@ -12,13 +12,13 @@
 #include <stdint.h>
 
 /* EXTERNAL API */
-extern int errno;
+// -
 
 /* PUBLIC API */
-void font_setup(font_t* font, const u32 width, const u32 height, const u8 (*glyphs)[8]);
-const u8* font_get_glyph(const font_t* font, const char ch);
-bool font_get_pixel_at(const font_t* font, const char ch, const u8 pixel_x, const u8 pixel_y);
-const u8 default_glyph[128][8] = {
+void font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8]);
+const ch* font_get_glyph(const font_t* font, const ch c);
+b8 font_get_pixel_at(const font_t* font, const ch c, const u32 pixel_x, const u32 pixel_y);
+const ch default_glyph[128][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0002
@@ -153,22 +153,21 @@ font_t font;
 /* INTERNAL API */
 // -
 
-void font_setup(font_t* font, const u32 width, const u32 height, const u8 (*glyphs)[8])
+void font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8])
 {
 	font->width = width;
 	font->height = height;
 	font->glyphs = glyphs;
-	return;
 };
 
-const u8* font_get_glyph(const font_t* font, const char ch)
+const ch* font_get_glyph(const font_t* font, const ch c)
 {
-	if ((u8)ch >= 128)
+	if (c < 0)
 		return NULL;
-	return font->glyphs[(u8)ch];
+	return font->glyphs[(uc8)c];
 };
 
-bool font_get_pixel_at(const font_t* font, const char ch, const u8 pixel_x, const u8 pixel_y)
+b8 font_get_pixel_at(const font_t* font, const ch c, const u32 pixel_x, const u32 pixel_y)
 {
 	if (!font)
 		return false;
@@ -176,6 +175,6 @@ bool font_get_pixel_at(const font_t* font, const char ch, const u8 pixel_x, cons
 	if (pixel_x >= font->width || pixel_y >= font->height)
 		return false;
 	// Take the pixel row, move the desired pixel all the way to the right and check whether it is a 1
-	const u8 pixel_row = font_get_glyph(font, ch)[pixel_y];
+	const ch pixel_row = font_get_glyph(font, c)[pixel_y];
 	return (pixel_row >> pixel_x) & 1u;
 };

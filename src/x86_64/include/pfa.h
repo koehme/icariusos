@@ -33,7 +33,7 @@ typedef struct pfa {
 kresult_t pfa_init(const pmm_boot_adapter_t* adapter, const u8* bitmap_addr);
 pfa_t* pfa_get(void);
 kresult_t pfa_mark(const u64 base, const u64 length, const pfa_state_t state);
-kresult_t pfa_dump(const bool verbose);
+kresult_t pfa_dump(const b8 verbose);
 uptr pfa_alloc(void);
 kresult_t pfa_dealloc(const usize frame);
 kresult_t pfa_dump_used_frames(void);

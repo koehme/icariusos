@@ -5,21 +5,22 @@
  */
 
 #include "math.h"
+#include "types.h"
 
 /* EXTERNAL API */
 // -
 
 /* PUBLIC API */
-double pow(double x, double y);
+f64 pow(f64 x, f64 y);
 
 /* INTERNAL API */
 // -
 
-double pow(double x, double y)
+f64 pow(f64 x, f64 y)
 {
-	double result = 1.0;
+	f64 result = 1.0;
 
-	for (int i = 0; i < y; ++i)
+	for (usize i = 0; i < y; ++i)
 		result *= x;
 	return result;
 };

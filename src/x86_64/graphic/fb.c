@@ -31,7 +31,6 @@ void fb_setup(const fb_boot_adapter_t* adapter)
 	g_fb.frontbuffer = (u32*)adapter->vaddr;
 	g_fb.backbuffer = NULL;
 	memcpy(&g_fb.info, adapter, sizeof(g_fb.info));
-	return;
 };
 
 kresult_t fb_clear(const u32 color)
@@ -79,7 +78,6 @@ void fb_scroll(const u32 color, const u32 rows)
 	for (u32 y = g_fb.info.height - rows; y < g_fb.info.height; y++)
 		for (u32 x = 0; x < g_fb.info.width; x++)
 			fb_put_pixel_at(x, y, color);
-	return;
 };
 
 u32 fb_pack_rgba(const fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a)

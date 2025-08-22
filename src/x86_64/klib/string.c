@@ -5,47 +5,48 @@
  */
 
 #include "string.h"
+#include "types.h"
 
 /* EXTERNAL API */
 // -
 
 /* PUBLIC API */
-usize strlen(const char* str);
-s32 strcmp(const char* str1, const char* str2);
-char* strncpy(char* dest, const char* src, usize n);
-usize strlen(const char* str);
-bool isalpha(const char c);
-char* strchr(char* str, const char c);
-bool scmp(const char* s1, const char* s2);
-void sreverse(char* str, const usize length);
-char* scat(char* dest, const char* src);
-void* memset(void* ptr, int value, usize num);
+usize strlen(const ch* str);
+s32 strcmp(const ch* str1, const ch* str2);
+ch* strncpy(ch* dest, const ch* src, usize n);
+usize strlen(const ch* str);
+b8 isalpha(const ch c);
+ch* strchr(ch* str, const ch c);
+b8 scmp(const ch* s1, const ch* s2);
+void sreverse(ch* str, const usize length);
+ch* scat(ch* dest, const ch* src);
+void* memset(void* ptr, s32 value, usize num);
 void* memset16(void* ptr, u16 value, usize num);
 void* memmove(void* dest, const void* src, usize count);
 void* memcpy(void* dest, const void* src, usize n);
-int memcmp(const void* ptr1, const void* ptr2, usize num);
+s32 memcmp(const void* ptr1, const void* ptr2, usize num);
 
 /* INTERNAL API */
 // -
 
-usize strlen(const char* str)
+usize strlen(const ch* str)
 {
-	const char* s = str;
+	const ch* s = str;
 
 	while (*s)
 		s++;
 	return (usize)(s - str);
 };
-s32 strcmp(const char* str1, const char* str2)
+s32 strcmp(const ch* str1, const ch* str2)
 {
 	while (*str1 && (*str1 == *str2)) {
 		str1++;
 		str2++;
 	};
-	return *(const unsigned char*)str1 - *(const unsigned char*)str2;
+	return *(const ch*)str1 - *(const ch*)str2;
 };
 
-char* strncpy(char* dest, const char* src, usize n)
+ch* strncpy(ch* dest, const ch* src, usize n)
 {
 	usize i;
 
@@ -57,9 +58,9 @@ char* strncpy(char* dest, const char* src, usize n)
 	return dest;
 };
 
-bool isalpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
+b8 isalpha(const ch c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
 
-char* strchr(char* str, const char c)
+ch* strchr(ch* str, const ch c)
 {
 	while (*str != '\0') {
 		if (*str == c)
@@ -69,7 +70,7 @@ char* strchr(char* str, const char c)
 	return 0x0;
 };
 
-void sreverse(char* str, const usize length)
+void sreverse(ch* str, const usize length)
 {
 	usize start = 0;
 	usize end = length - 1;
@@ -81,12 +82,11 @@ void sreverse(char* str, const usize length)
 		start++;
 		end--;
 	};
-	return;
 };
 
-char* scat(char* dest, const char* src)
+ch* scat(ch* dest, const ch* src)
 {
-	char* concatenated = dest;
+	ch* concatenated = dest;
 
 	while (*dest != '\0')
 		dest++;
@@ -100,13 +100,13 @@ char* scat(char* dest, const char* src)
 	return concatenated;
 };
 
-void* memset(void* ptr, int value, usize num)
+void* memset(void* ptr, s32 value, usize num)
 {
-	// Cast ptr to unsigned char pointer for byte-wise operations
-	unsigned char* p = (unsigned char*)ptr;
+	// Cast ptr to unsigned ch pointer for byte-wise operations
+	ch* p = (ch*)ptr;
 	// Set each byte to the specified value
 	for (usize i = 0; i < num; i++)
-		p[i] = (unsigned char)value;
+		p[i] = (ch)value;
 	return ptr;
 };
 
@@ -121,8 +121,8 @@ void* memset16(void* ptr, u16 value, usize num)
 
 void* memmove(void* dest, const void* src, usize count)
 {
-	unsigned char* d = (unsigned char*)dest;
-	const unsigned char* s = (const unsigned char*)src;
+	ch* d = (ch*)dest;
+	const ch* s = (const ch*)src;
 
 	if (d == s || count == 0)
 		return dest;
@@ -151,7 +151,7 @@ void* memcpy(void* dest, const void* src, usize n)
 	return dest;
 };
 
-int memcmp(const void* ptr1, const void* ptr2, usize num)
+s32 memcmp(const void* ptr1, const void* ptr2, usize num)
 {
 	const u8* p1 = ptr1;
 	const u8* p2 = ptr2;

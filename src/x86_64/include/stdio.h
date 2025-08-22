@@ -8,6 +8,4 @@
 
 #include "types.h"
 
-#include <stdarg.h>
-
-usize kprintf(const char* fmt, ...);
+usize kprintf(const ch* fmt, ...);

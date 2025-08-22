@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "types.h"
+
 typedef enum kstatus {
 	K_OK = 0,
 	// STANDARD ERRORS
@@ -136,8 +138,8 @@ typedef enum kstatus {
 
 typedef struct kresult {
 	kstatus_t code;
-	const char* msg;
+	const ch* msg;
 } kresult_t;
 
-kresult_t kresult_ok(const char* msg);
-kresult_t kresult_err(kstatus_t c, const char* msg);
+kresult_t kresult_ok(const ch* msg);
+kresult_t kresult_err(kstatus_t c, const ch* msg);

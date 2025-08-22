@@ -16,8 +16,8 @@
 #include "types.h"
 
 /* EXTERNAL API */
-extern char kernel_start[];
-extern char kernel_end[];
+extern c8 kernel_start[];
+extern c8 kernel_end[];
 
 /* PUBLIC API */
 void bootstrap_setup(void);
@@ -43,7 +43,6 @@ void bootstrap_setup(void)
 		if (res.code != K_OK)
 			panic();
 	};
-	return;
 };
 
 /* INTERNAL API */
@@ -152,8 +151,8 @@ kresult_t _bootstrap_mm(void)
 			continue;
 
 		const usize avail = end_al - base_al;
-		const bool enough_bytes = avail >= pmm_bytes_al;
-		const bool smaller_chunk = avail < prev_avail;
+		const b8 enough_bytes = avail >= pmm_bytes_al;
+		const b8 smaller_chunk = avail < prev_avail;
 
 		if (enough_bytes && smaller_chunk) {
 			bitmap_phys_addr = base_al;

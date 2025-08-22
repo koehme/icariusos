@@ -31,13 +31,6 @@ void kmain(void)
 
 	pfa_dump(false);
 
-	for (usize i = 0; i < 70; ++i) {
-		uptr p = pfa_alloc();
-		kprintf("%P\n", p);
-	};
-	pfa_dump(false);
-
 	for (;;)
 		asm_hlt();
-	return;
 };
