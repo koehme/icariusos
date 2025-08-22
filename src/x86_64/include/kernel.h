@@ -18,5 +18,6 @@
 #include "renderer.h"
 #include "stdio.h"
 #include "tty.h"
+#include "types.h"
 
 void kmain(void);

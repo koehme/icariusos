@@ -5,13 +5,15 @@
  */
 
 #include "tty.h"
+#include "font.h"
+#include "string.h"
 
 /* EXTERNAL API */
 // -
 
 /* PUBLIC API */
 void tty_init(tty_t* tty, renderer_t* renderer);
-void tty_set_tabwidth(tty_t* tty, const size_t tab_width);
+void tty_set_tabwidth(tty_t* tty, const usize tab_width);
 void tty_putc(tty_t* tty, const char ch);
 void tty_puts(tty_t* tty, const char* text);
 void tty_set_active(tty_t* tty);
@@ -31,7 +33,7 @@ void tty_init(tty_t* tty, renderer_t* renderer)
 	return;
 };
 
-void tty_set_tabwidth(tty_t* tty, const size_t tab_width)
+void tty_set_tabwidth(tty_t* tty, const usize tab_width)
 {
 	if (tab_width <= 0) {
 		tty->tab_width = 1;
@@ -49,9 +51,9 @@ static void _carriage_return(tty_t* tty)
 
 static void _tab(tty_t* tty)
 {
-	const size_t curr_col = tty->renderer->cursor_x / tty->renderer->font->width;
-	const size_t next_col = ((curr_col / tty->tab_width) + 1) * tty->tab_width;
-	const size_t next_pixel_x = next_col * tty->renderer->font->width;
+	const usize curr_col = tty->renderer->cursor_x / tty->renderer->font->width;
+	const usize next_col = ((curr_col / tty->tab_width) + 1) * tty->tab_width;
+	const usize next_pixel_x = next_col * tty->renderer->font->width;
 
 	if (next_pixel_x >= tty->renderer->screen_w) {
 		renderer_set_cursor(tty->renderer, 0, tty->renderer->cursor_y + tty->renderer->font->height);
@@ -112,14 +114,14 @@ void tty_putc(tty_t* tty, const char ch)
 
 void tty_puts(tty_t* tty, const char* text)
 {
-	const size_t len = strlen(text);
+	const usize len = strlen(text);
 
-	for (size_t i = 0; i < len; i++) {
+	for (usize i = 0; i < len; i++) {
 		const char ch = text[i];
 		tty_putc(tty, ch);
 
 		// Testing :)
-		for (size_t i = 0; i < 50000; i++)
+		for (usize i = 0; i < 50000; i++)
 			;
 	};
 	return;

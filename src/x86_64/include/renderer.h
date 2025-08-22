@@ -8,24 +8,21 @@
 
 #include "fb.h"
 #include "font.h"
-#include "kres.h"
-
-#include <stdbool.h>
-#include <stdint.h>
+#include "types.h"
 
 typedef struct {
 	font_t* font;
-	uint32_t screen_w, screen_h;
-	uint32_t cursor_x, cursor_y;
-	uint32_t fg, bg;
+	u32 screen_w, screen_h;
+	u32 cursor_x, cursor_y;
+	u32 fg, bg;
 	bool bg_transparent;
 } renderer_t;
 
-void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w, const uint32_t screen_h, const bool bg_transparent);
-void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t y);
-void renderer_set_color(renderer_t* renderer, const uint32_t fg, const uint32_t bg);
+void renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const bool bg_transparent);
+void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
+void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
+void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y);
+void renderer_set_color(renderer_t* renderer, const u32 fg, const u32 bg);
 font_t* renderer_get_font(const renderer_t* renderer);
 void renderer_set_font(renderer_t* renderer, font_t* font);
 void renderer_scroll(renderer_t* renderer);

@@ -6,34 +6,29 @@
 
 #pragma once
 
-#include "icarius.h"
 #include "kres.h"
-#include "string.h"
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "types.h"
 
 typedef struct fb_boot_adapter {
 	void* vaddr; // Start address of the framebuffer in memory
-	uint32_t width;
-	uint32_t height;
-	uint32_t pitch; // Number of bytes per scanline (may include padding)
-	uint8_t bpp;	// Bits per pixel (e.g., 32 for ARGB8888)
+	u32 width;
+	u32 height;
+	u32 pitch; // Number of bytes per scanline (may include padding)
+	u8 bpp;	   // Bits per pixel (e.g., 32 for ARGB8888)
 	struct {
-		uint8_t r_shift, g_shift, b_shift, a_shift;
-		uint8_t r_size, g_size, b_size, a_size;
+		u8 r_shift, g_shift, b_shift, a_shift;
+		u8 r_size, g_size, b_size, a_size;
 	} fmt; // Describes how color data is stored in each pixel
 } fb_boot_adapter_t;
 
 typedef struct fb {
-	uint32_t* frontbuffer;	// Points to the actual framebuffer in video memory mmio-mapped (what is visible on screen)
-	uint32_t* backbuffer;	// Optional off-screen buffer for double buffering
+	u32* frontbuffer;	// Points to the actual framebuffer in video memory mmio-mapped (what is visible on screen)
+	u32* backbuffer;	// Optional off-screen buffer for double buffering
 	fb_boot_adapter_t info; // Framebuffer layout and pixel format details provided by the bootloader
 } fb_t;
 
-void fb_setup(const fb_boot_adapter_t* info);
-kresult_t fb_clear(const uint32_t color);
-kresult_t fb_put_pixel_at(const uint32_t x, const uint32_t y, const uint32_t color);
-void fb_scroll(const uint32_t color, const uint32_t rows);
-uint32_t fb_pack_rgba(const fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
+void fb_setup(const fb_boot_adapter_t* adapter);
+kresult_t fb_clear(const u32 color);
+kresult_t fb_put_pixel_at(const u32 x, const u32 y, const u32 color);
+void fb_scroll(const u32 color, const u32 rows);
+u32 fb_pack_rgba(const fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);

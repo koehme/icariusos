@@ -4,209 +4,64 @@
  * @copyright MIT
  */
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-#include "math.h"
 #include "stdlib.h"
+#include "string.h"
+#include "types.h"
+
+/* EXTERNAL API */
+// -
 
 /* PUBLIC API */
-size_t slen(const char* str);
-char* itoa(int value, char* str, int base);
-void dtoa(double n, char* res, int afterpoint);
-char* utoa(unsigned int num, char* str, int base);
-char* utoa64(uint64_t v, char* out, int base);
-void dtoa(double n, char* res, int afterpoint);
+usize itoa(s64 value, const int base, const bool upper, char* buf);
+usize utoa(u64 value, const int base, const bool upper, char* buf);
 
-size_t slen(const char* str)
+/* INTERNAL API */
+// -
+
+usize itoa(s64 value, const int base, const bool upper, char* buf)
 {
-	size_t i;
-
-	for (i = 0; str[i] != '\0'; ++i) {
+	if (base < 2 || base > 16) {
+		buf[0] = '0';
+		buf[1] = '\0';
+		return 0;
 	};
-	return i;
+
+	if (value < 0) {
+		*buf++ = '-';
+		u64 mag = (u64)(-(value + 1)) + 1;
+		return utoa(mag, base, upper, buf);
+	};
+	return utoa((u64)value, base, upper, buf);
 };
 
-// Reverses a string in place
-void reverse_string(char* str, size_t length)
+usize utoa(u64 value, const int base, const bool upper, char* buf)
 {
-	size_t start = 0;
-	size_t end = length - 1;
-
-	while (start < end) {
-		// Swap characters at positions start and end
-		char temp = str[start];
-		str[start] = str[end];
-		str[end] = temp;
-		// Move towards the middle
-		start++;
-		end--;
+	if (base < 2 || base > 16) {
+		buf[0] = '0';
+		buf[1] = '\0';
+		return 0;
 	};
-	return;
-};
+	usize count = 0;
+	static const char lower_case[] = "0123456789abcdef";
+	static const char upper_case[] = "0123456789ABCDEF";
+	const char* template = upper ? upper_case : lower_case;
 
-// Converts an integer to a string based on the specified base
-char* itoa(int value, char* str, int base)
-{
-	// Index for the resulting string
-	size_t i = 0;
-	// Flag for negative numbers
-	bool is_negative = false;
-	// Unsigned version of the value to handle overflow
-	unsigned int uvalue;
-	// Validate the base
-	if (base < 2 || base > 36) {
-		// Return an empty string for invalid bases
-		str[0] = '\0';
-		return str;
-	};
-	// Handle zero explicitly
+	char tmp[65]; // max. 64 digits (binary) + '\0'
+	usize i = 0;
+
 	if (value == 0) {
-		str[i++] = '0';
-		str[i] = '\0';
-		return str;
-	};
-	// Handle negative numbers for base 10
-	if (value < 0 && base == 10) {
-		is_negative = true;
-		// Convert to unsigned to avoid overflow with INT32_MIN
-		uvalue = (unsigned int)(-(value + 1)) + 1;
+		tmp[i++] = '0';
 	} else {
-		uvalue = (unsigned int)value;
-	};
-	// Process individual digits
-	while (uvalue != 0) {
-		unsigned int rem = uvalue % base;
-
-		if (rem > 9) {
-			// Convert remainder to corresponding lowercase letter (a-f)
-			str[i++] = (rem - 10) + 'a';
-		} else {
-			// Convert remainder to corresponding digit (0-9)
-			str[i++] = rem + '0';
+		while (value > 0) {
+			tmp[i++] = template[value % (u64)base];
+			value /= (u64)base;
 		};
-		uvalue = uvalue / base;
 	};
-	// Add negative sign if necessary
-	if (is_negative) {
-		str[i++] = '-';
-	};
-	// Null-terminate the string
-	str[i] = '\0';
-	// Reverse the string to get the correct order
-	reverse_string(str, i);
-	return str;
-};
+	// reverse into buf
+	for (usize j = 0; j < i; ++j)
+		buf[j] = tmp[i - j - 1];
 
-
-char* utoa(unsigned int num, char* str, int base)
-{
-	size_t i = 0;
-
-	if (num == 0) {
-		str[i++] = '0';
-		str[i] = '\0';
-		return str;
-	};
-
-	while (num != 0) {
-		const uint32_t rem = num % base;
-		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-		num = num / base;
-	};
-
-	str[i] = '\0';
-	reverse_string(str, i);
-	return str;
-};
-
-char* utoa64(uint64_t v, char* out, int base)
-{
-	static const char DIGITS[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	char tmp[65];
-	size_t i = 0;
-
-	if (!out)
-		return NULL;
-
-	if (base < 2 || base > 36) {
-		out[0] = '\0';
-		return out;
-	};
-
-	if (v == 0) {
-		out[0] = '0';
-		out[1] = '\0';
-		return out;
-	};
-
-	while (v != 0) {
-		uint32_t rem = (uint32_t)(v % (uint64_t)base);
-		tmp[i++] = DIGITS[rem];
-		v /= (uint64_t)base;
-	};
-
-	for (size_t j = 0; j < i; ++j)
-		out[j] = tmp[i - 1 - j];
-
-	out[i] = '\0';
-	return out;
-};
-
-void dtoa(double n, char* res, int afterpoint)
-{
-	// Handle negative numbers
-	bool is_negative = false;
-
-	if (n < 0) {
-		is_negative = true;
-		n = -n;
-	};
-	// Extract integer part
-	const int32_t ipart = (int32_t)n;
-	// Extract floating part
-	double fpart = n - (double)ipart;
-	// Convert integer part to string use base 10
-	itoa(ipart, res, 10);
-	// Get length of integer part
-	int i = slen(res);
-	// Add negative sign if necessary
-	if (is_negative) {
-		// Shift the string to the right to make space for '-'
-		for (int j = i; j >= 0; --j) {
-			res[j + 1] = res[j];
-		};
-		res[0] = '-';
-		i++;
-	};
-	// Check for display option after decimal point
-	if (afterpoint != 0) {
-		// Add decimal point
-		res[i] = '.';
-		i++;
-		// Multiply fractional part to get desired number of digits
-		for (int j = 0; j < afterpoint; j++) {
-			fpart *= 10;
-		};
-		// Round the fractional part
-		fpart += 0.5;
-		// Convert fractional part to string
-		itoa((int32_t)fpart, res + i, 10);
-	} else {
-		res[i] = '\0'; // Null-terminate the string
-	};
-	return;
-};
-
-int atoi(const char* str)
-{
-	int res = 0;
-
-	while (*str >= '0' && *str <= '9') {
-		res = res * 10 + (*str - '0');
-		str++;
-	};
-	return res;
+	buf[i] = '\0';
+	count = strlen(buf);
+	return count;
 };

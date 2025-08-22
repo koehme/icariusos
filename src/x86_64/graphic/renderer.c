@@ -5,16 +5,20 @@
  */
 
 #include "renderer.h"
+#include "kres.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 /* EXTERNAL API */
 extern fb_t g_fb;
 
 /* PUBLIC API */
-void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w, const uint32_t screen_h, const bool bg_transparent);
-void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a);
-void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t y);
-void renderer_set_color(renderer_t* renderer, const uint32_t fg, const uint32_t bg);
+void renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const bool bg_transparent);
+void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
+void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
+void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y);
+void renderer_set_color(renderer_t* renderer, const u32 fg, const u32 bg);
 font_t* renderer_get_font(const renderer_t* renderer);
 void renderer_set_font(renderer_t* renderer, font_t* font);
 void renderer_scroll(renderer_t* renderer);
@@ -24,7 +28,7 @@ void renderer_draw_text(renderer_t* renderer, const char* text);
 /* INTERNAL API */
 // -
 
-static inline void _put(renderer_t* renderer, const uint32_t x, const uint32_t y, const uint32_t color)
+static inline void _put(renderer_t* renderer, const u32 x, const u32 y, const u32 color)
 {
 	if (x >= renderer->screen_w || y >= renderer->screen_h)
 		return;
@@ -32,7 +36,7 @@ static inline void _put(renderer_t* renderer, const uint32_t x, const uint32_t y
 	return;
 };
 
-void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w, const uint32_t screen_h, const bool bg_transparent)
+void renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const bool bg_transparent)
 {
 	renderer->font = font;
 	renderer->screen_w = screen_w;
@@ -42,19 +46,19 @@ void renderer_setup(renderer_t* renderer, font_t* font, const uint32_t screen_w,
 	return;
 };
 
-void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a)
 {
 	renderer->fg = fb_pack_rgba(info, r, g, b, a);
 	return;
 };
 
-void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a)
 {
 	renderer->bg = fb_pack_rgba(info, r, g, b, a);
 	return;
 };
 
-void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t y)
+void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y)
 {
 	if (!renderer) {
 		return;
@@ -64,7 +68,7 @@ void renderer_set_cursor(renderer_t* renderer, const uint32_t x, const uint32_t 
 	return;
 };
 
-void renderer_set_color(renderer_t* renderer, const uint32_t fg, const uint32_t bg)
+void renderer_set_color(renderer_t* renderer, const u32 fg, const u32 bg)
 {
 	if (!renderer) {
 		return;
@@ -102,9 +106,9 @@ void renderer_draw_ch(renderer_t* renderer, const char ch)
 		renderer_scroll(renderer);
 	};
 
-	for (size_t y = 0; y < renderer->font->height; y++) {
-		for (size_t x = 0; x < renderer->font->width; x++) {
-			const bool on = font_get_pixel_at(renderer->font, ch, (uint8_t)x, (uint8_t)y);
+	for (usize y = 0; y < renderer->font->height; y++) {
+		for (usize x = 0; x < renderer->font->width; x++) {
+			const bool on = font_get_pixel_at(renderer->font, ch, (u8)x, (u8)y);
 
 			if (on) {
 				_put(renderer, renderer->cursor_x + x, renderer->cursor_y + y, renderer->fg);

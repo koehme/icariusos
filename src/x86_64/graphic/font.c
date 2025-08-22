@@ -5,15 +5,20 @@
  */
 
 #include "font.h"
+#include "icarius.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* EXTERNAL API */
 extern int errno;
 
 /* PUBLIC API */
-void font_setup(font_t* font, const uint32_t width, const uint32_t height, const uint8_t (*glyphs)[8]);
-const uint8_t* font_get_glyph(const font_t* font, const char ch);
-bool font_get_pixel_at(const font_t* font, const char ch, const uint8_t pixel_x, const uint8_t pixel_y);
-const uint8_t default_glyph[128][8] = {
+void font_setup(font_t* font, const u32 width, const u32 height, const u8 (*glyphs)[8]);
+const u8* font_get_glyph(const font_t* font, const char ch);
+bool font_get_pixel_at(const font_t* font, const char ch, const u8 pixel_x, const u8 pixel_y);
+const u8 default_glyph[128][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0002
@@ -148,7 +153,7 @@ font_t font;
 /* INTERNAL API */
 // -
 
-void font_setup(font_t* font, const uint32_t width, const uint32_t height, const uint8_t (*glyphs)[8])
+void font_setup(font_t* font, const u32 width, const u32 height, const u8 (*glyphs)[8])
 {
 	font->width = width;
 	font->height = height;
@@ -156,14 +161,14 @@ void font_setup(font_t* font, const uint32_t width, const uint32_t height, const
 	return;
 };
 
-const uint8_t* font_get_glyph(const font_t* font, const char ch)
+const u8* font_get_glyph(const font_t* font, const char ch)
 {
-	if ((uint8_t)ch >= 128)
+	if ((u8)ch >= 128)
 		return NULL;
-	return font->glyphs[(uint8_t)ch];
+	return font->glyphs[(u8)ch];
 };
 
-bool font_get_pixel_at(const font_t* font, const char ch, const uint8_t pixel_x, const uint8_t pixel_y)
+bool font_get_pixel_at(const font_t* font, const char ch, const u8 pixel_x, const u8 pixel_y)
 {
 	if (!font)
 		return false;
@@ -171,6 +176,6 @@ bool font_get_pixel_at(const font_t* font, const char ch, const uint8_t pixel_x,
 	if (pixel_x >= font->width || pixel_y >= font->height)
 		return false;
 	// Take the pixel row, move the desired pixel all the way to the right and check whether it is a 1
-	const uint8_t pixel_row = font_get_glyph(font, ch)[pixel_y];
+	const u8 pixel_row = font_get_glyph(font, ch)[pixel_y];
 	return (pixel_row >> pixel_x) & 1u;
 };

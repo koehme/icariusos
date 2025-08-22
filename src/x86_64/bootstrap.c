@@ -5,6 +5,15 @@
  */
 
 #include "bootstrap.h"
+#include "fb.h"
+#include "hal.h"
+#include "icarius.h"
+#include "kres.h"
+#include "limine.h"
+#include "panic.h"
+#include "pfa.h"
+#include "string.h"
+#include "types.h"
 
 /* EXTERNAL API */
 extern char kernel_start[];
@@ -27,7 +36,7 @@ static bootstrap_fn_t _bootstrap_handlers[] = {
 
 void bootstrap_setup(void)
 {
-	for (size_t i = 0; i < sizeof(_bootstrap_handlers) / sizeof(_bootstrap_handlers[0]); i++) {
+	for (usize i = 0; i < sizeof(_bootstrap_handlers) / sizeof(_bootstrap_handlers[0]); i++) {
 		const bootstrap_fn_t handler = _bootstrap_handlers[i];
 		const kresult_t res = handler();
 
@@ -68,7 +77,7 @@ kresult_t _bootstrap_fb(void)
 	if (l_fb->bpp != 32)
 		return kresult_err(-K_EINVAL, NULL);
 
-	fb_setup(&(fb_boot_adapter_t){
+	const fb_boot_adapter_t fb_adapter = {
 	    .vaddr = l_fb->address,
 	    .width = l_fb->width,
 	    .height = l_fb->height,
@@ -85,7 +94,8 @@ kresult_t _bootstrap_fb(void)
 		    .b_size = l_fb->blue_mask_size,
 		    .a_size = 0,
 		},
-	});
+	};
+	fb_setup(&fb_adapter);
 	return kresult_ok(NULL);
 };
 
@@ -102,11 +112,11 @@ kresult_t _bootstrap_mm(void)
 
 	// Determine maximum physical address
 	struct limine_memmap_entry** entries = mm->entries;
-	uintptr_t max_phys_addr = 0;
+	uptr max_phys_addr = 0;
 
-	for (size_t i = 0; i < mm->entry_count; i++) {
+	for (usize i = 0; i < mm->entry_count; i++) {
 		const struct limine_memmap_entry* entry = entries[i];
-		const uintptr_t end_phys_addr = entry->base + entry->length;
+		const uptr end_phys_addr = entry->base + entry->length;
 
 		switch (entry->type) {
 		case LIMINE_MEMMAP_USABLE:
@@ -120,28 +130,28 @@ kresult_t _bootstrap_mm(void)
 			break;
 		};
 	};
-	const uintptr_t max_phys_addr_al = ALIGN_UP(max_phys_addr, PAGE_SIZE);
-	const size_t pmm_frames = max_phys_addr_al / PAGE_SIZE;
-	const size_t pmm_bytes = (pmm_frames + (8 - 1)) / 8;
+	const uptr max_phys_addr_al = ALIGN_UP(max_phys_addr, PAGE_SIZE);
+	const usize pmm_frames = max_phys_addr_al / PAGE_SIZE;
+	const usize pmm_bytes = (pmm_frames + (8 - 1)) / 8;
 
 	// Search for the smallest amount of memory to store the bitmap himself
-	const uint64_t pmm_bytes_al = ALIGN_UP(pmm_bytes, PAGE_SIZE);
-	uint64_t prev_avail = UINT64_MAX;
-	uintptr_t bitmap_phys_addr = 0;
+	const u64 pmm_bytes_al = ALIGN_UP(pmm_bytes, PAGE_SIZE);
+	u64 prev_avail = UINT64_MAX;
+	uptr bitmap_phys_addr = 0;
 
-	for (size_t i = 0; i < mm->entry_count; i++) {
+	for (usize i = 0; i < mm->entry_count; i++) {
 		const struct limine_memmap_entry* entry = entries[i];
 
 		if (entry->type != LIMINE_MEMMAP_USABLE)
 			continue;
 
-		const uintptr_t base_al = ALIGN_UP(entry->base, PAGE_SIZE);
-		const uintptr_t end_al = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
+		const uptr base_al = ALIGN_UP(entry->base, PAGE_SIZE);
+		const uptr end_al = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
 
 		if (end_al <= base_al)
 			continue;
 
-		const size_t avail = end_al - base_al;
+		const usize avail = end_al - base_al;
 		const bool enough_bytes = avail >= pmm_bytes_al;
 		const bool smaller_chunk = avail < prev_avail;
 
@@ -154,23 +164,23 @@ kresult_t _bootstrap_mm(void)
 	if (!bitmap_phys_addr)
 		return kresult_err(-K_ENOMEM, "No suitable place for bitmap found");
 
-	const uint8_t* pmm_bitmap = (uint8_t*)(hhdm->offset + bitmap_phys_addr);
-	memset((uint8_t*)pmm_bitmap, FRAME_USED, pmm_bytes_al);
+	const u8* pmm_bitmap = (u8*)(hhdm->offset + bitmap_phys_addr);
+	memset((u8*)pmm_bitmap, FRAME_USED, pmm_bytes_al);
 
-	const kresult_t res = pfa_init(
-	    &(pmm_boot_adapter_t){
-		.bitmap_size = pmm_bytes_al,
-		.hhdm_offset = hhdm->offset,
-		.start_addr = bitmap_phys_addr,
-		.total_frames = pmm_frames,
-	    },
-	    pmm_bitmap);
+	const pmm_boot_adapter_t pmm_adapter = {
+	    .bitmap_size = pmm_bytes_al,
+	    .hhdm_offset = hhdm->offset,
+	    .start_addr = bitmap_phys_addr,
+	    .total_frames = pmm_frames,
+	};
+
+	const kresult_t res = pfa_init(&pmm_adapter, pmm_bitmap);
 
 	if (res.code != K_OK)
 		return kresult_err(-K_ENOMEM, "Pfa allocation failed");
 
 	// Mark USABLE/BOOTLOADER_RECLAIMABLE as FRAME_FREE
-	for (size_t i = 0; i < mm->entry_count; i++) {
+	for (usize i = 0; i < mm->entry_count; i++) {
 		const struct limine_memmap_entry* entry = entries[i];
 
 		switch (entry->type) {
@@ -182,7 +192,7 @@ kresult_t _bootstrap_mm(void)
 		};
 	};
 	// Mark KERNEL as FRAME_USED
-	for (size_t i = 0; i < mm->entry_count; i++) {
+	for (usize i = 0; i < mm->entry_count; i++) {
 		const struct limine_memmap_entry* entry = entries[i];
 
 		switch (entry->type) {

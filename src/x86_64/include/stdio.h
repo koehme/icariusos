@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "fb.h"
+#include "types.h"
 
 #include <stdarg.h>
-#include <stddef.h>
 
-int kprintf(const char* format, ...);
+usize kprintf(const char* fmt, ...);

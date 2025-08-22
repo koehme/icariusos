@@ -7,6 +7,7 @@
 #pragma once
 
 #include "hal.h"
+
 #include <stdnoreturn.h>
 
 noreturn void panic(void);

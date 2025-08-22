@@ -6,21 +6,18 @@
 
 #pragma once
 
-#include "hal.h"
-#include "icarius.h"
 #include "kres.h"
-#include "stdio.h"
-#include "string.h"
+#include "types.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 typedef struct pmm_boot_adapter {
-	uintptr_t hhdm_offset; // Directly access physical frames in the upper half 0xffff800000000000
-	uintptr_t start_addr;  // Physical start address of the PMM bitmap itself
-	uint64_t bitmap_size;  // Size of the PMM bitmap in aligned bytes
-	uint64_t total_frames; // Total number of physical frames managed by the PMM
+	uptr hhdm_offset; // Directly access physical frames in the upper half 0xffff800000000000
+	uptr start_addr;  // Physical start address of the PMM bitmap itself
+	u64 bitmap_size;  // Size of the PMM bitmap in aligned bytes
+	u64 total_frames; // Total number of physical frames managed by the PMM
 } pmm_boot_adapter_t;
 
 typedef enum pfa_state {
@@ -30,13 +27,13 @@ typedef enum pfa_state {
 
 typedef struct pfa {
 	pmm_boot_adapter_t info;
-	uint8_t* bitmap_addr; // Virtual start address of the PMM bitmap itself
+	u8* bitmap_addr; // Virtual start address of the PMM bitmap itself
 } pfa_t;
 
-kresult_t pfa_init(const pmm_boot_adapter_t* info, const uint8_t* bitmap_addr);
+kresult_t pfa_init(const pmm_boot_adapter_t* adapter, const u8* bitmap_addr);
 pfa_t* pfa_get(void);
-kresult_t pfa_mark(const uint64_t base, const uint64_t length, const pfa_state_t state);
+kresult_t pfa_mark(const u64 base, const u64 length, const pfa_state_t state);
 kresult_t pfa_dump(const bool verbose);
-uintptr_t pfa_alloc(void);
-kresult_t pfa_dealloc(const size_t frame);
+uptr pfa_alloc(void);
+kresult_t pfa_dealloc(const usize frame);
 kresult_t pfa_dump_used_frames(void);

@@ -10,33 +10,33 @@
 // -
 
 /* PUBLIC API */
-size_t strlen(const char* str);
-int32_t strcmp(const char* str1, const char* str2);
-char* strncpy(char* dest, const char* src, size_t n);
-size_t strlen(const char* str);
-bool is_alpha(const char c);
-char* sptr(char* str, const char c);
+usize strlen(const char* str);
+s32 strcmp(const char* str1, const char* str2);
+char* strncpy(char* dest, const char* src, usize n);
+usize strlen(const char* str);
+bool isalpha(const char c);
+char* strchr(char* str, const char c);
 bool scmp(const char* s1, const char* s2);
-void sreverse(char* str, const size_t length);
+void sreverse(char* str, const usize length);
 char* scat(char* dest, const char* src);
-void* memset(void* ptr, int value, size_t num);
-void* memset16(void* ptr, uint16_t value, size_t num);
-void* memmove(void* dest, const void* src, size_t count);
-void* memcpy(void* dest, const void* src, size_t n);
-int memcmp(const void* ptr1, const void* ptr2, size_t num);
+void* memset(void* ptr, int value, usize num);
+void* memset16(void* ptr, u16 value, usize num);
+void* memmove(void* dest, const void* src, usize count);
+void* memcpy(void* dest, const void* src, usize n);
+int memcmp(const void* ptr1, const void* ptr2, usize num);
 
 /* INTERNAL API */
 // -
 
-size_t strlen(const char* str)
+usize strlen(const char* str)
 {
 	const char* s = str;
 
 	while (*s)
 		s++;
-	return (size_t)(s - str);
+	return (usize)(s - str);
 };
-int32_t strcmp(const char* str1, const char* str2)
+s32 strcmp(const char* str1, const char* str2)
 {
 	while (*str1 && (*str1 == *str2)) {
 		str1++;
@@ -45,9 +45,9 @@ int32_t strcmp(const char* str1, const char* str2)
 	return *(const unsigned char*)str1 - *(const unsigned char*)str2;
 };
 
-char* strncpy(char* dest, const char* src, size_t n)
+char* strncpy(char* dest, const char* src, usize n)
 {
-	size_t i;
+	usize i;
 
 	for (i = 0; i < n && src[i] != '\0'; i++)
 		dest[i] = src[i];
@@ -57,9 +57,9 @@ char* strncpy(char* dest, const char* src, size_t n)
 	return dest;
 };
 
-bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
+bool isalpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); };
 
-char* sptr(char* str, const char c)
+char* strchr(char* str, const char c)
 {
 	while (*str != '\0') {
 		if (*str == c)
@@ -69,13 +69,13 @@ char* sptr(char* str, const char c)
 	return 0x0;
 };
 
-void sreverse(char* str, const size_t length)
+void sreverse(char* str, const usize length)
 {
-	size_t start = 0;
-	size_t end = length - 1;
+	usize start = 0;
+	usize end = length - 1;
 
 	while (start < end) {
-		uint8_t buffer = str[start];
+		u8 buffer = str[start];
 		str[start] = str[end];
 		str[end] = buffer;
 		start++;
@@ -100,26 +100,26 @@ char* scat(char* dest, const char* src)
 	return concatenated;
 };
 
-void* memset(void* ptr, int value, size_t num)
+void* memset(void* ptr, int value, usize num)
 {
 	// Cast ptr to unsigned char pointer for byte-wise operations
 	unsigned char* p = (unsigned char*)ptr;
 	// Set each byte to the specified value
-	for (size_t i = 0; i < num; i++)
+	for (usize i = 0; i < num; i++)
 		p[i] = (unsigned char)value;
 	return ptr;
 };
 
-void* memset16(void* ptr, uint16_t value, size_t num)
+void* memset16(void* ptr, u16 value, usize num)
 {
-	uint16_t* p = (uint16_t*)ptr;
+	u16* p = (u16*)ptr;
 
-	for (size_t i = 0; i < num; i++)
+	for (usize i = 0; i < num; i++)
 		p[i] = value;
 	return ptr;
 };
 
-void* memmove(void* dest, const void* src, size_t count)
+void* memmove(void* dest, const void* src, usize count)
 {
 	unsigned char* d = (unsigned char*)dest;
 	const unsigned char* s = (const unsigned char*)src;
@@ -128,19 +128,19 @@ void* memmove(void* dest, const void* src, size_t count)
 		return dest;
 
 	if (d < s) {
-		for (size_t i = 0; i < count; i++)
+		for (usize i = 0; i < count; i++)
 			d[i] = s[i];
 	} else {
-		for (size_t i = count; i != 0; i--)
+		for (usize i = count; i != 0; i--)
 			d[i - 1] = s[i - 1];
 	};
 	return dest;
 };
 
-void* memcpy(void* dest, const void* src, size_t n)
+void* memcpy(void* dest, const void* src, usize n)
 {
-	uint8_t* byte_dest = (uint8_t*)dest;
-	const uint8_t* src_ptr = (const uint8_t*)src;
+	u8* byte_dest = (u8*)dest;
+	const u8* src_ptr = (const u8*)src;
 
 	while (n) {
 		*byte_dest = *src_ptr;
@@ -151,14 +151,14 @@ void* memcpy(void* dest, const void* src, size_t n)
 	return dest;
 };
 
-int memcmp(const void* ptr1, const void* ptr2, size_t num)
+int memcmp(const void* ptr1, const void* ptr2, usize num)
 {
-	const uint8_t* p1 = ptr1;
-	const uint8_t* p2 = ptr2;
+	const u8* p1 = ptr1;
+	const u8* p2 = ptr2;
 
 	while (num > 0) {
 		if (*p1 != *p2) {
-			return (int32_t)(*p1) - (int32_t)(*p2);
+			return (s32)(*p1) - (s32)(*p2);
 		};
 		p1++;
 		p2++;

@@ -5,95 +5,151 @@
  */
 
 #include "stdio.h"
+#include "fb.h"
 #include "stdlib.h"
+#include "string.h"
 #include "tty.h"
 
-/* PUBLIC API */
-int kprintf(const char* fmt, ...);
+/* EXTERNAL API */
+// -
 
-static int vkprintf(tty_t* tty, const char* fmt, va_list args)
+/* PUBLIC API */
+usize kprintf(const char* fmt, ...);
+static int _vkprintf(tty_t* tty, const char* fmt, va_list args);
+
+/* INTERNAL API */
+// -
+
+static int _vkprintf(tty_t* tty, const char* fmt, va_list args)
 {
 	int count = 0;
 
-	while (*fmt != '\0') {
-		if (*fmt == '%') {
-			fmt++;
-
-			if (!*fmt)
-				break;
-
-			if (*fmt == '%') {
-				tty_putc(tty, '%');
-				count++;
-				fmt++;
-				continue;
-			} else {
-				switch (*fmt) {
-				case 'c': {
-					const int ch = va_arg(args, int);
-					tty_putc(tty, (char)ch);
-					count++;
-					break;
-				};
-				case 's': {
-					const char* str = va_arg(args, const char*);
-
-					if (!str)
-						str = "";
-					tty_puts(tty, str);
-					count += strlen(str);
-					break;
-				};
-				case 'd': {
-					char buf[64];
-					const int num = va_arg(args, int);
-					itoa(num, buf, 10);
-					tty_puts(tty, buf);
-					break;
-				};
-				case 'u': {
-					char buf[64];
-					unsigned int v = va_arg(args, unsigned int);
-					utoa(v, buf, 10);
-					tty_puts(tty, buf);
-					break;
-				};
-				case 'x': {
-					char buf[64];
-					const unsigned int val = va_arg(args, unsigned int);
-					utoa(val, buf, 16);
-					tty_puts(tty, buf);
-					break;
-				};
-				case 'p': {
-					char buf[64];
-					uintptr_t v = (uintptr_t)va_arg(args, void*);
-					tty_puts(tty, "0x");
-					utoa64((uint64_t)v, buf, 16);
-					tty_puts(tty, buf);
-					break;
-				};
-				case 'f': {
-					char buf[64];
-					double num = va_arg(args, double);
-					dtoa(num, buf, 6);
-					tty_puts(tty, buf);
-					break;
-				};
-				default:
-					break;
-				};
-			};
-		} else {
+	for (; *fmt; ++fmt) {
+		if (*fmt != '%') {
 			tty_putc(tty, *fmt);
-			count++;
+			++count;
+			continue;
 		};
-		fmt++;
+		// Parse minimal: %, [l|ll|z] [specifier]
+		bool long_mod = false, longlong_mod = false, size_mod = false;
+		++fmt;
+
+		while (*fmt == 'l' || *fmt == 'z') {
+			if (*fmt == 'z') {
+				size_mod = true;
+				++fmt;
+				break;
+			};
+			if (long_mod) {
+				longlong_mod = true;
+				++fmt;
+				break;
+			};
+			long_mod = true;
+			++fmt;
+		};
+
+		switch (*fmt) {
+		case 'c': {
+			s32 ch = va_arg(args, s32);
+			tty_putc(tty, ch);
+			++count;
+			break;
+		};
+		case 's': {
+			const char* str = va_arg(args, const char*);
+
+			if (!str)
+				str = "";
+
+			tty_puts(tty, str);
+			count += strlen(str);
+			break;
+		};
+		case 'd':
+		case 'i': {
+			char buf[64];
+			s64 val;
+
+			if (longlong_mod) {
+				val = (s64)va_arg(args, long long); // %lld
+			} else if (long_mod) {
+				val = (s64)va_arg(args, long); // %ld
+			} else if (size_mod) {
+				val = (s64)va_arg(args, ssize_t); // %zd
+			} else {
+				val = (s64)va_arg(args, int); // %d
+			};
+			count += itoa(val, 10, false, buf);
+			tty_puts(tty, buf);
+			break;
+		};
+		case 'u': {
+			char buf[64];
+			s64 val;
+
+			if (longlong_mod) {
+				val = va_arg(args, unsigned long long);
+			} else if (long_mod) {
+				val = va_arg(args, unsigned long);
+			} else if (size_mod) {
+				val = (u64)va_arg(args, usize);
+			} else {
+				val = va_arg(args, unsigned int);
+			};
+			count += utoa(val, 10, false, buf);
+			tty_puts(tty, buf);
+			break;
+		};
+		case 'x':
+		case 'X': {
+			char buf[64];
+			const bool upper = (*fmt == 'X');
+			u64 val;
+
+			if (longlong_mod) {
+				val = va_arg(args, unsigned long long);
+			} else if (long_mod) {
+				val = va_arg(args, unsigned long);
+			} else if (size_mod) {
+				val = (u64)va_arg(args, usize);
+			} else {
+				val = va_arg(args, unsigned int);
+			};
+			count += itoa(val, 16, upper, buf);
+			tty_puts(tty, buf);
+			break;
+		};
+		case 'p':
+		case 'P': {
+			char buf[64];
+			const bool upper = (*fmt == 'P');
+
+			void* ptr = va_arg(args, void*);
+			const u64 val = (u64)(uintptr_t)ptr;
+
+			tty_puts(tty, "0x");
+			count += 2;
+
+			count += utoa(val, 16, upper, buf);
+			tty_puts(tty, buf);
+			break;
+		};
+		case '%':
+			tty_putc(tty, '%');
+			++count;
+			break;
+		default:
+			tty_putc(tty, '%');
+			tty_putc(tty, *fmt);
+			count += 2;
+			break;
+		};
 	};
-	return 0;
+	return count;
 };
 
-int kprintf(const char* fmt, ...)
+usize kprintf(const char* fmt, ...)
 {
 	tty_t* tty = tty_get_active();
 
@@ -102,7 +158,7 @@ int kprintf(const char* fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	const int n = vkprintf(tty, fmt, args);
+	const usize n = _vkprintf(tty, fmt, args);
 	va_end(args);
 
 	return n;
