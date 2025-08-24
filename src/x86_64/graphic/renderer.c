@@ -15,11 +15,11 @@
 extern fb_t g_fb;
 
 /* PUBLIC API */
-kresult_t renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent);
+kresult_t renderer_setup(renderer_t* renderer, font_t* font, const usize screen_w, const usize screen_h, const b8 bg_transparent);
 void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
 void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
-void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y);
-void renderer_set_color(renderer_t* renderer, const u32 fg, const u32 bg);
+void renderer_set_cursor(renderer_t* renderer, const usize x, const usize y);
+void renderer_set_color(renderer_t* renderer, const usize fg, const usize bg);
 font_t* renderer_get_font(const renderer_t* renderer);
 void renderer_set_font(renderer_t* renderer, font_t* font);
 void renderer_scroll(renderer_t* renderer);
@@ -29,14 +29,14 @@ void renderer_draw_text(renderer_t* renderer, const c8* text);
 /* INTERNAL API */
 // -
 
-static inline void _put(renderer_t* renderer, const u32 x, const u32 y, const u32 color)
+static inline void _put(renderer_t* renderer, const usize x, const usize y, const usize color)
 {
 	if (x >= renderer->screen_w || y >= renderer->screen_h)
 		return;
 	fb_put_pixel_at(x, y, color);
 };
 
-kresult_t renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent)
+kresult_t renderer_setup(renderer_t* renderer, font_t* font, const usize screen_w, const usize screen_h, const b8 bg_transparent)
 {
 	if (!renderer)
 		return kresult_err(-K_EINVAL, "Renderer is NULL");
@@ -46,6 +46,7 @@ kresult_t renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w,
 
 	if (screen_w == 0 || screen_h == 0)
 		return kresult_err(-K_EINVAL, "Screen dimensions invalid");
+
 	renderer->font = font;
 	renderer->screen_w = screen_w;
 	renderer->screen_h = screen_h;
@@ -64,7 +65,7 @@ void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u
 	renderer->bg = fb_pack_rgba(info, r, g, b, a);
 };
 
-void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y)
+void renderer_set_cursor(renderer_t* renderer, const usize x, const usize y)
 {
 	if (!renderer)
 		return;
@@ -72,7 +73,7 @@ void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y)
 	renderer->cursor_y = y;
 };
 
-void renderer_set_color(renderer_t* renderer, const u32 fg, const u32 bg)
+void renderer_set_color(renderer_t* renderer, const usize fg, const usize bg)
 {
 	if (!renderer)
 		return;

@@ -29,6 +29,6 @@ typedef struct fb {
 
 void fb_setup(const fb_boot_adapter_t* adapter);
 kresult_t fb_clear(const u32 color);
-kresult_t fb_put_pixel_at(const u32 x, const u32 y, const u32 color);
-void fb_scroll(const u32 color, const u32 rows);
+kresult_t fb_put_pixel_at(const usize x, const usize y, const u32 color);
+void fb_scroll(const u32 color, const usize rows);
 u32 fb_pack_rgba(const fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);

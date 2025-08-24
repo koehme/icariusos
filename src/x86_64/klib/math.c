@@ -11,12 +11,12 @@
 // -
 
 /* PUBLIC API */
-f64 pow(f64 x, f64 y);
+f64 pow(const f64 x, const f64 y);
 
 /* INTERNAL API */
 // -
 
-f64 pow(f64 x, f64 y)
+f64 pow(const f64 x, const f64 y)
 {
 	f64 result = 1.0;
 

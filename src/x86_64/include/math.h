@@ -8,4 +8,4 @@
 
 #include "types.h"
 
-f64 pow(f64 x, f64 y);
+f64 pow(const f64 x, const f64 y);

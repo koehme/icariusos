@@ -20,10 +20,10 @@ void tty_set_active(tty_t* tty);
 tty_t* tty_get_active(void);
 
 /* INTERNAL API */
-static void _carriage_return(tty_t* tty);
-static void _tab(tty_t* tty);
-static void _newline(tty_t* tty);
-static void _backspace(tty_t* tty);
+static void _handle_carriage_return(tty_t* tty);
+static void _handle_tab(tty_t* tty);
+static void _handle_newline(tty_t* tty);
+static void _handle_backspace(tty_t* tty);
 static tty_t* active_tty = NULL;
 
 kresult_t tty_init(tty_t* tty, renderer_t* renderer)
@@ -46,9 +46,9 @@ void tty_set_tabwidth(tty_t* tty, const usize tab_width)
 	tty->tab_width = tab_width;
 };
 
-static void _carriage_return(tty_t* tty) { renderer_set_cursor(tty->renderer, 0, tty->renderer->cursor_y); };
+static void _handle_carriage_return(tty_t* tty) { renderer_set_cursor(tty->renderer, 0, tty->renderer->cursor_y); };
 
-static void _tab(tty_t* tty)
+static void _handle_tab(tty_t* tty)
 {
 	const usize curr_col = tty->renderer->cursor_x / tty->renderer->font->width;
 	const usize next_col = ((curr_col / tty->tab_width) + 1) * tty->tab_width;
@@ -59,7 +59,7 @@ static void _tab(tty_t* tty)
 	renderer_set_cursor(tty->renderer, next_pixel_x, tty->renderer->cursor_y);
 };
 
-static void _newline(tty_t* tty)
+static void _handle_newline(tty_t* tty)
 {
 	renderer_set_cursor(tty->renderer, 0, tty->renderer->cursor_y + tty->renderer->font->height);
 
@@ -67,7 +67,7 @@ static void _newline(tty_t* tty)
 		renderer_scroll(tty->renderer);
 };
 
-static void _backspace(tty_t* tty)
+static void _handle_backspace(tty_t* tty)
 {
 	// Backspace: Move cursor back and erase the previous character
 	if (tty->renderer->cursor_x >= tty->renderer->font->width)
@@ -82,16 +82,16 @@ void tty_putc(tty_t* tty, const ch ch)
 {
 	switch (ch) {
 	case '\t':
-		_tab(tty);
+		_handle_tab(tty);
 		break;
 	case '\n':
-		_newline(tty);
+		_handle_newline(tty);
 		break;
 	case '\r':
-		_carriage_return(tty);
+		_handle_carriage_return(tty);
 		break;
 	case '\b':
-		_backspace(tty);
+		_handle_backspace(tty);
 		break;
 	default:
 		renderer_draw_ch(tty->renderer, ch);

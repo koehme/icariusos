@@ -15,9 +15,9 @@
 // -
 
 /* PUBLIC API */
-kresult_t font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8]);
+kresult_t font_setup(font_t* font, const usize width, const usize height, const ch (*glyphs)[8]);
 const ch* font_get_glyph(const font_t* font, const ch c);
-b8 font_get_pixel_at(const font_t* font, const ch c, const u32 pixel_x, const u32 pixel_y);
+b8 font_get_pixel_at(const font_t* font, const ch c, const usize pixel_x, const usize pixel_y);
 const ch default_glyph[128][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
@@ -153,10 +153,10 @@ font_t font;
 /* INTERNAL API */
 // -
 
-kresult_t font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8])
+kresult_t font_setup(font_t* font, const usize width, const usize height, const ch (*glyphs)[8])
 {
 	if (!font)
-		return kresult_err(-K_EINVAL, "Font is NULL");
+		return kresult_err(-K_EINVAL, "Font is empty");
 
 	if (width == 0)
 		return kresult_err(-K_EINVAL, "Font width must be > 0");
@@ -165,10 +165,10 @@ kresult_t font_setup(font_t* font, const u32 width, const u32 height, const ch (
 		return kresult_err(-K_EINVAL, "Font height must be > 0");
 
 	if (!glyphs)
-		return kresult_err(-K_EINVAL, "Font glyph set is NULL");
+		return kresult_err(-K_EINVAL, "Font glyph set is empty");
 
 	if (width != 8 || height != 8)
-		return kresult_err(-K_EINVAL, "Only 8x8 glyphs supported");
+		return kresult_err(-K_EINVAL, "Only 8x8 glyphs are supported");
 
 	font->width = width;
 	font->height = height;
@@ -183,7 +183,7 @@ const ch* font_get_glyph(const font_t* font, const ch c)
 	return font->glyphs[(uc8)c];
 };
 
-b8 font_get_pixel_at(const font_t* font, const ch c, const u32 pixel_x, const u32 pixel_y)
+b8 font_get_pixel_at(const font_t* font, const ch c, const usize pixel_x, const usize pixel_y)
 {
 	if (!font)
 		return false;
