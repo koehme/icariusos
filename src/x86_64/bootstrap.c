@@ -133,11 +133,10 @@ kresult_t _bootstrap_mm(void)
 	const usize pmm_frames = max_phys_addr_al / PAGE_SIZE;
 	const usize pmm_bytes = (pmm_frames + (8 - 1)) / 8;
 
-	// Search for the smallest amount of memory to store the bitmap himself
 	const u64 pmm_bytes_al = ALIGN_UP(pmm_bytes, PAGE_SIZE);
 	u64 prev_avail = UINT64_MAX;
 	uptr bitmap_phys_addr = 0;
-
+	// We want the smallest usable region that still fits the bitmap to waste as little memory as possible
 	for (usize i = 0; i < mm->entry_count; i++) {
 		const struct limine_memmap_entry* entry = entries[i];
 

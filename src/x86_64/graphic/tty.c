@@ -12,7 +12,7 @@
 // -
 
 /* PUBLIC API */
-void tty_init(tty_t* tty, renderer_t* renderer);
+kresult_t tty_init(tty_t* tty, renderer_t* renderer);
 void tty_set_tabwidth(tty_t* tty, const usize tab_width);
 void tty_putc(tty_t* tty, const ch ch);
 void tty_puts(tty_t* tty, const ch* text);
@@ -26,11 +26,18 @@ static void _newline(tty_t* tty);
 static void _backspace(tty_t* tty);
 static tty_t* active_tty = NULL;
 
-void tty_init(tty_t* tty, renderer_t* renderer)
+kresult_t tty_init(tty_t* tty, renderer_t* renderer)
 {
+	if (!tty)
+		return kresult_err(-K_EINVAL, "Tty is NULL");
+
+	if (!renderer)
+		return kresult_err(-K_EINVAL, "Renderer is NULL");
+
 	tty->renderer = renderer;
 	tty->tab_width = 8;
-};
+	return kresult_ok(NULL);
+}
 
 void tty_set_tabwidth(tty_t* tty, const usize tab_width)
 {

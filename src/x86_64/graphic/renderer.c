@@ -8,13 +8,14 @@
 #include "kres.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /* EXTERNAL API */
 extern fb_t g_fb;
 
 /* PUBLIC API */
-void renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent);
+kresult_t renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent);
 void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
 void renderer_set_bg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a);
 void renderer_set_cursor(renderer_t* renderer, const u32 x, const u32 y);
@@ -35,13 +36,22 @@ static inline void _put(renderer_t* renderer, const u32 x, const u32 y, const u3
 	fb_put_pixel_at(x, y, color);
 };
 
-void renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent)
+kresult_t renderer_setup(renderer_t* renderer, font_t* font, const u32 screen_w, const u32 screen_h, const b8 bg_transparent)
 {
+	if (!renderer)
+		return kresult_err(-K_EINVAL, "Renderer is NULL");
+
+	if (!font)
+		return kresult_err(-K_EINVAL, "Font is NULL");
+
+	if (screen_w == 0 || screen_h == 0)
+		return kresult_err(-K_EINVAL, "Screen dimensions invalid");
 	renderer->font = font;
 	renderer->screen_w = screen_w;
 	renderer->screen_h = screen_h;
 	renderer->bg_transparent = bg_transparent;
 	renderer->bg = renderer->fg = 0x0;
+	return kresult_ok(NULL);
 };
 
 void renderer_set_fg_rgba(renderer_t* renderer, fb_boot_adapter_t* info, const u8 r, const u8 g, const u8 b, const u8 a)

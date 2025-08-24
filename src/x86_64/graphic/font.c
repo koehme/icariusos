@@ -15,7 +15,7 @@
 // -
 
 /* PUBLIC API */
-void font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8]);
+kresult_t font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8]);
 const ch* font_get_glyph(const font_t* font, const ch c);
 b8 font_get_pixel_at(const font_t* font, const ch c, const u32 pixel_x, const u32 pixel_y);
 const ch default_glyph[128][8] = {
@@ -153,11 +153,27 @@ font_t font;
 /* INTERNAL API */
 // -
 
-void font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8])
+kresult_t font_setup(font_t* font, const u32 width, const u32 height, const ch (*glyphs)[8])
 {
+	if (!font)
+		return kresult_err(-K_EINVAL, "Font is NULL");
+
+	if (width == 0)
+		return kresult_err(-K_EINVAL, "Font width must be > 0");
+
+	if (height == 0)
+		return kresult_err(-K_EINVAL, "Font height must be > 0");
+
+	if (!glyphs)
+		return kresult_err(-K_EINVAL, "Font glyph set is NULL");
+
+	if (width != 8 || height != 8)
+		return kresult_err(-K_EINVAL, "Only 8x8 glyphs supported");
+
 	font->width = width;
 	font->height = height;
 	font->glyphs = glyphs;
+	return kresult_ok(NULL);
 };
 
 const ch* font_get_glyph(const font_t* font, const ch c)

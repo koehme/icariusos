@@ -20,4 +20,4 @@
 #include "tty.h"
 #include "types.h"
 
-void kmain(void);
+noreturn void kmain(void);

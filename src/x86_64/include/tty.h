@@ -16,7 +16,7 @@ typedef struct {
 	usize tab_width;
 } tty_t;
 
-void tty_init(tty_t* tty, renderer_t* renderer);
+kresult_t tty_init(tty_t* tty, renderer_t* renderer);
 void tty_putc(tty_t* tty, const ch ch);
 void tty_puts(tty_t* tty, const ch* text);
 void tty_set_tabwidth(tty_t* tty, const usize tab_width);
